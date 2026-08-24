@@ -7,34 +7,31 @@ import { usePathname } from "next/navigation";
 import {
   Activity,
   Menu,
-  Sparkles,
-  ArrowRight,
   LogIn,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "./ui/sheet";
 import { RolePickerDialog } from "./role-picker-dialog";
-import { AccessibilityMenu } from "./accessibility-menu";
 
 const MARKETING_ITEMS = [
-  { href: "/#features", label: "Fitur" },
+  { href: "/#risk-check", label: "Cek Risiko" },
+  { href: "/#edukasi", label: "Edukasi" },
+  { href: "/#lapor", label: "Laporkan" },
   { href: "/tentang", label: "Tentang" },
-  { href: "/hubungi-kami", label: "Hubungi Kami" },
-  { href: "/warga", label: "Portal Warga" },
 ];
 
 function Wordmark() {
   return (
     <Link href="/" className="group flex items-center gap-2.5">
-      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm transition-transform group-hover:-rotate-6">
-        <Activity className="h-5 w-5" />
+      <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-white shadow-sm transition-transform group-hover:-rotate-6">
+        <Activity className="h-5 w-5 text-white" />
       </span>
       <span className="flex flex-col leading-none">
         <span className="text-base font-semibold tracking-tight text-foreground">
           Prakira
         </span>
-        <span className="mt-0.5 hidden text-[10px] uppercase tracking-wider text-muted-foreground sm:inline font-medium">
+        <span className="mt-0.5 hidden text-[11px] uppercase tracking-wider text-muted-foreground sm:inline font-medium">
           Peringatan Dini Risiko Iklim
         </span>
       </span>
@@ -57,12 +54,37 @@ export function Navbar() {
   return (
     <header
       className={cn(
-        "sticky top-0 z-50 w-full transition-all duration-200",
+        "sticky top-0 z-50 w-full transition-all duration-500",
         scrolled
-          ? "border-b border-border bg-background/90 shadow-xs"
-          : "border-b border-transparent bg-background/0",
+          ? [
+              "border-b shadow-lg",
+              // Liquid glass base
+              "bg-white/10 dark:bg-white/5",
+              "backdrop-blur-2xl backdrop-saturate-200",
+              // Shimmer border
+              "border-white/30 dark:border-white/15",
+              // Subtle inner glow
+              "[box-shadow:0_0_0_1px_rgba(255,255,255,0.15)_inset,0_4px_32px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)]",
+            ].join(" ")
+          : "border-b border-transparent bg-transparent",
       )}
+      style={
+        scrolled
+          ? {
+              // Extra liquid glass shimmer via CSS variable fallback
+              background:
+                "linear-gradient(135deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.12) 100%)",
+            }
+          : undefined
+      }
     >
+      {/* Top shimmer highlight line */}
+      {scrolled && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent"
+        />
+      )}
       <div className="container flex h-16 items-center justify-between gap-4 md:h-20">
         <Wordmark />
 
@@ -72,7 +94,7 @@ export function Navbar() {
             <Link
               key={item.href}
               href={item.href}
-              className="rounded-full px-3.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-paper-100 hover:text-foreground"
+              className="rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-paper-100 hover:text-foreground"
             >
               {item.label}
             </Link>
@@ -81,16 +103,12 @@ export function Navbar() {
 
         {/* Right side actions */}
         <div className="hidden items-center gap-2 md:flex">
-          <AccessibilityMenu />
           <RolePickerDialog>
             <Button size="sm" variant="ghost" className="font-semibold text-muted-foreground hover:text-foreground">
               <LogIn className="h-4 w-4 mr-1.5" />
               <span>Masuk</span>
             </Button>
           </RolePickerDialog>
-          <Button asChild size="sm" variant="blue" className="shadow-xs font-semibold">
-            <Link href="/dashboard">Buka Dashboard</Link>
-          </Button>
         </div>
 
         {/* Mobile menu trigger */}
@@ -124,9 +142,6 @@ export function Navbar() {
                   <span>Masuk / Pilih Peran</span>
                 </Button>
               </RolePickerDialog>
-              <Button asChild onClick={() => setMobileOpen(false)} variant="blue" className="w-full font-semibold">
-                <Link href="/dashboard">Buka Dashboard</Link>
-              </Button>
             </div>
           </SheetContent>
         </Sheet>

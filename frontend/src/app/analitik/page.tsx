@@ -56,9 +56,9 @@ export default function AnalitikPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <Button size="sm" variant="blue" onClick={() => setExportModal(true)}>
-              <Download className="h-3.5 w-3.5" />
-              <span>Ekspor Laporan Resmi</span>
+            <Button size="sm" variant="blue" onClick={() => setExportModal(true)} className="text-white font-semibold shadow-xs">
+              <Download className="h-4 w-4 text-white" />
+              <span className="text-white">Ekspor Laporan Resmi</span>
             </Button>
           </div>
         </div>
@@ -163,18 +163,18 @@ export default function AnalitikPage() {
                 variant="blue"
                 loading={exporting}
                 onClick={() => handleExport("PDF Resmi")}
-                className="flex flex-col h-auto py-3 gap-1"
+                className="flex flex-col h-auto py-4 gap-1.5 text-white font-semibold rounded-2xl shadow-xs"
               >
-                <FileText className="h-5 w-5" />
-                <span>Unduh PDF</span>
+                <FileText className="h-5 w-5 text-white" />
+                <span className="text-white">Unduh PDF</span>
               </Button>
               <Button
                 variant="outline"
                 loading={exporting}
                 onClick={() => handleExport("Excel Spreadsheet")}
-                className="flex flex-col h-auto py-3 gap-1"
+                className="flex flex-col h-auto py-4 gap-1.5 font-semibold rounded-2xl shadow-xs"
               >
-                <Table className="h-5 w-5 text-risk-low" />
+                <Table className="h-5 w-5 text-brand-700" />
                 <span>Unduh Excel</span>
               </Button>
             </div>

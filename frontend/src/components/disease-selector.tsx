@@ -1,4 +1,4 @@
-﻿import * as React from "react";
+import * as React from "react";
 import { Bug, Wind, Droplets } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { DiseaseType } from "@/types";
@@ -51,16 +51,16 @@ export function DiseaseSelector({ selected, onSelect, className }: DiseaseSelect
             key={opt.id}
             onClick={() => onSelect(opt.id)}
             className={cn(
-              "flex flex-1 min-w-[200px] items-center justify-between gap-3 rounded-xl px-4 py-2.5 text-left transition-all duration-200",
+              "flex flex-1 min-w-[220px] items-center justify-between gap-3 rounded-2xl px-5 py-3.5 text-left transition-all duration-200",
               isSelected
-                ? "bg-white shadow-card border border-brand-100 text-foreground ring-2 ring-primary/20 scale-[1.01]"
+                ? "bg-white shadow-card border border-brand-200 text-foreground ring-2 ring-primary/20 scale-[1.01]"
                 : "text-muted-foreground hover:bg-white/60 hover:text-foreground",
             )}
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3.5">
               <div
                 className={cn(
-                  "flex h-9 w-9 items-center justify-center rounded-xl transition-transform",
+                  "flex h-11 w-11 items-center justify-center rounded-2xl transition-transform",
                   isSelected
                     ? "bg-primary text-white shadow-sm scale-105"
                     : "bg-paper-100 text-paper-600",
@@ -69,17 +69,17 @@ export function DiseaseSelector({ selected, onSelect, className }: DiseaseSelect
                 {opt.icon}
               </div>
               <div className="flex flex-col">
-                <span className="text-sm font-semibold tracking-tight">{opt.label}</span>
-                <span className="text-[11px] text-muted-foreground">{opt.sub}</span>
+                <span className="text-sm font-semibold tracking-tight text-foreground">{opt.label}</span>
+                <span className="text-xs text-muted-foreground">{opt.sub}</span>
               </div>
             </div>
 
             <span
               className={cn(
-                "rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                "rounded-full px-2.5 py-1 text-xs font-semibold",
                 isSelected
-                  ? "bg-brand-50 text-brand-700 border border-brand-100"
-                  : "bg-paper-100 text-paper-500",
+                  ? "bg-brand-50 text-brand-700 border border-brand-200"
+                  : "bg-paper-100 text-paper-600",
               )}
             >
               {opt.badge}

@@ -89,7 +89,7 @@ export function CustomSelect({
                   className={cn(
                     "w-full text-left rounded-xl px-3 py-2.5 text-xs font-medium transition-all duration-150 flex items-center justify-between",
                     isSelected
-                      ? "bg-primary text-primary-foreground shadow-sm"
+                      ? "bg-primary text-white font-semibold shadow-sm"
                       : "text-foreground hover:bg-muted/60"
                   )}
                 >

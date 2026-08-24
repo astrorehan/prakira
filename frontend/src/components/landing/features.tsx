@@ -1,89 +1,117 @@
-import {
-  CloudRain,
-  Activity,
-  Users,
-  ShieldCheck,
-  type LucideIcon,
-} from "lucide-react";
+"use client";
 
-interface Feature {
-  icon: LucideIcon;
-  title: string;
-  description: string;
-  accent?: "primary" | "amber" | "clay";
-}
+import { Bug, Wind, Droplets, CheckCircle2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-const FEATURES: Feature[] = [
+const EDUCATION_CARDS = [
   {
-    icon: Activity,
-    title: "Prediksi Dini Multi-Penyakit",
-    description:
-      "Estimasi risiko lonjakan DBD, ISPA, dan Diare per kecamatan 2-4 minggu ke depan berbasis Random Forest & XGBoost.",
-    accent: "primary",
+    emoji: "🦟",
+    title: "Cegah Demam Berdarah",
+    subtitle: "Gerakan 3M Plus",
+    icon: Bug,
+    color: "border-brand-300/40",
+    iconBg: "bg-brand-100 text-brand-700",
+    tips: [
+      "Kuras bak mandi & tampungan air minimal 1× seminggu",
+      "Tutup rapat semua wadah penampung air bersih",
+      "Kubur atau daur ulang barang bekas penampung air hujan",
+      "Oleskan lotion anti nyamuk & pasang kelambu saat tidur",
+    ],
   },
   {
-    icon: CloudRain,
-    title: "Korelasi Cuaca & Iklim BMKG",
-    description:
-      "Sinkronisasi otomatis observasi curah hujan, suhu, dan kelembaban udara dari stasiun BMKG Kota Semarang.",
+    emoji: "🌬️",
+    title: "Cegah ISPA & Batuk",
+    subtitle: "Jaga Saluran Napas",
+    icon: Wind,
+    color: "border-climate-rain/30",
+    iconBg: "bg-blue-50 text-blue-700",
+    tips: [
+      "Gunakan masker saat di luar ruangan, terutama di kawasan berdebu",
+      "Buka ventilasi rumah setiap pagi untuk sirkulasi udara",
+      "Perbanyak minum air putih dan konsumsi vitamin C",
+      "Segera ke puskesmas jika batuk pilek > 3 hari disertai sesak",
+    ],
   },
   {
-    icon: Users,
-    title: "Portal Publik & Edukasi Warga",
-    description:
-      "Akses terbuka bagi masyarakat untuk mengecek status risiko tempat tinggal serta panduan 3M Plus dan PHBS.",
-    accent: "amber",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Manajemen Data & Audit Trail",
-    description:
-      "Pencatatan log perubahan data kasus dan inferensi model Machine Learning yang transparan dan akuntabel.",
-    accent: "clay",
+    emoji: "💧",
+    title: "Cegah Diare",
+    subtitle: "Higienitas & Air Bersih",
+    icon: Droplets,
+    color: "border-risk-low-br",
+    iconBg: "bg-risk-low-bg text-risk-low",
+    tips: [
+      "Rebus air minum sampai benar-benar mendidih (100°C)",
+      "Cuci tangan pakai sabun sebelum makan & setelah dari toilet",
+      "Waspadai kontaminasi air sumur saat banjir/genangan",
+      "Siapkan oralit di rumah untuk penanganan pertama dehidrasi",
+    ],
   },
 ];
 
-const ACCENT_CLASSES: Record<NonNullable<Feature["accent"]> | "default", string> = {
-  default: "bg-brand-100 text-brand-700",
-  primary: "bg-primary text-white shadow-sm",
-  amber: "bg-risk-medium-bg text-risk-medium",
-  clay: "bg-brand-100 text-brand-800",
-};
-
-export function Features() {
+export function EducationSection() {
   return (
-    <section id="features" className="container scroll-mt-24 py-20 md:py-32">
-      <div className="mx-auto max-w-2xl text-center">
-        <div className="eyebrow">Fitur Utama Platform</div>
-        <h2 className="mt-5 h-section text-balance">
-          Satu platform untuk seluruh siklus surveilans kesehatan
-        </h2>
-        <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-          Dari deteksi anomali cuaca hingga intervensi taktis — mengubah pola penanganan reaktif menjadi tindakan preventif terarah.
-        </p>
-      </div>
+    <section
+      id="edukasi"
+      className="scroll-mt-20 py-16 md:py-24 bg-paper-50/60 border-y border-paper-200/60"
+    >
+      <div className="container">
+        <div className="mx-auto max-w-2xl text-center">
+          <div className="eyebrow">Edukasi Pencegahan</div>
+          <h2 className="mt-5 h-section text-balance">
+            Langkah sederhana, dampak besar
+          </h2>
+          <p className="mt-4 text-base leading-relaxed text-muted-foreground">
+            Pencegahan penyakit terkait iklim bisa dimulai dari rumah Anda sendiri.
+            Berikut panduan ringkas yang bisa langsung diterapkan.
+          </p>
+        </div>
 
-      <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {FEATURES.map(({ icon: Icon, title, description, accent }, i) => (
-          <div
-            key={title}
-            className="group relative overflow-hidden rounded-2xl border border-paper-200/90 bg-white p-7 shadow-card transition-all hover:-translate-y-1 hover:border-primary/30 hover:shadow-elevated"
-            style={{ animationDelay: (i * 60) + "ms" }}
-          >
-            <div
-              className={"flex h-12 w-12 items-center justify-center rounded-xl transition-transform group-hover:scale-110 " + ACCENT_CLASSES[accent ?? "default"]}
-            >
-              <Icon className="h-6 w-6" />
-            </div>
-            <h3 className="mt-5 text-lg font-semibold tracking-tight text-foreground">
-              {title}
-            </h3>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              {description}
-            </p>
-            <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-primary-soft opacity-0 blur-2xl transition-opacity group-hover:opacity-60" />
-          </div>
-        ))}
+        <div className="mt-12 grid gap-5 sm:grid-cols-3">
+          {EDUCATION_CARDS.map((card, idx) => {
+            const Icon = card.icon;
+            return (
+              <div
+                key={card.title}
+                className={cn(
+                  "group rounded-2xl border bg-white p-6 shadow-card transition-all hover:-translate-y-1 hover:shadow-lift",
+                  card.color,
+                )}
+                style={{ animationDelay: `${idx * 60}ms` }}
+              >
+                {/* Header */}
+                <div className="flex items-center gap-3">
+                  <div
+                    className={cn(
+                      "flex h-12 w-12 items-center justify-center rounded-xl transition-transform group-hover:scale-110 shadow-sm",
+                      card.iconBg,
+                    )}
+                  >
+                    <Icon className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-semibold tracking-tight text-foreground">
+                      {card.title}
+                    </h3>
+                    <p className="text-xs text-muted-foreground">{card.subtitle}</p>
+                  </div>
+                </div>
+
+                {/* Tips */}
+                <ul className="mt-5 space-y-2.5">
+                  {card.tips.map((tip, tIdx) => (
+                    <li
+                      key={tIdx}
+                      className="flex items-start gap-2 text-sm text-paper-700 leading-relaxed"
+                    >
+                      <CheckCircle2 className="h-4 w-4 text-risk-low shrink-0 mt-0.5" />
+                      <span>{tip}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </section>
   );

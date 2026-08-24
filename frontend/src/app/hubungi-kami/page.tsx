@@ -135,9 +135,9 @@ export default function HubungiKamiPage() {
                   />
                 </div>
 
-                <Button type="submit" variant="blue" className="w-full font-semibold">
-                  <Send className="h-4 w-4 mr-2" />
-                  <span>Kirim Pesan</span>
+                <Button type="submit" variant="blue" className="w-full font-semibold text-white shadow-xs">
+                  <Send className="h-4 w-4 mr-2 text-white" />
+                  <span className="text-white">Kirim Pesan</span>
                 </Button>
               </form>
             )}

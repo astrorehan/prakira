@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import * as React from "react";
 import { useState, useMemo } from "react";
@@ -74,16 +74,16 @@ export function DistrictRankingTable({
         </div>
 
         {/* Risk Level Filter Chips */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
           {(["all", "tinggi", "sedang", "rendah"] as const).map((lvl) => (
             <button
               key={lvl}
               onClick={() => setRiskFilter(lvl)}
               className={cn(
-                "rounded-full px-3 py-1 text-xs font-medium transition-all capitalize",
+                "rounded-full px-4 py-2 text-xs font-semibold transition-all capitalize shadow-xs",
                 riskFilter === lvl
-                  ? "bg-primary text-white shadow-sm"
-                  : "bg-white/80 border border-paper-200/80 text-muted-foreground hover:bg-paper-100",
+                  ? "bg-primary text-white shadow-sm font-semibold"
+                  : "bg-white/80 border border-paper-200/80 text-muted-foreground hover:bg-paper-100 hover:text-foreground",
               )}
             >
               {lvl === "all" ? "Semua Zona" : lvl}
@@ -211,10 +211,10 @@ export function DistrictRankingTable({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-7 px-2 text-primary hover:bg-brand-100"
+                      className="h-9 px-3 rounded-xl text-primary hover:bg-brand-100 font-semibold"
                     >
                       <span>Detail</span>
-                      <ChevronRight className="h-3 w-3" />
+                      <ChevronRight className="h-3.5 w-3.5" />
                     </Button>
                   </td>
                 </tr>

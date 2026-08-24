@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import * as React from "react";
 import { useState } from "react";
@@ -156,10 +156,10 @@ export function AdminDataImport({ className }: { className?: string }) {
               variant="default"
               loading={syncing}
               onClick={handleTriggerSync}
-              className="text-xs"
+              className="text-xs text-white font-semibold"
             >
-              <RefreshCw className={cn("h-3.5 w-3.5", syncing && "animate-spin")} />
-              <span>Sinkronkan Sekarang</span>
+              <RefreshCw className={cn("h-3.5 w-3.5 text-white", syncing && "animate-spin")} />
+              <span className="text-white">Sinkronkan Sekarang</span>
             </Button>
           </div>
         </LiquidGlassCard>

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import * as React from "react";
 import { useState } from "react";
@@ -158,16 +158,16 @@ export function PublicRiskChecker({ className }: { className?: string }) {
               <span>Nomor terdaftar untuk Kecamatan {selectedKecName}!</span>
             </div>
           ) : (
-            <form onSubmit={handleSubscribe} className="flex items-center gap-2 w-full md:w-auto">
+            <form onSubmit={handleSubscribe} className="flex items-center gap-2.5 w-full md:w-auto">
               <input
                 type="tel"
                 placeholder="No WhatsApp (08...)"
                 value={broadcastPhone}
                 onChange={(e) => setBroadcastPhone(e.target.value)}
                 required
-                className="rounded-xl border border-paper-200 bg-white px-3.5 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary min-w-[200px]"
+                className="h-10 rounded-full border border-paper-200 bg-white px-4 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary min-w-[220px]"
               />
-              <Button size="sm" type="submit" className="whitespace-nowrap text-xs">
+              <Button size="sm" type="submit" className="whitespace-nowrap text-xs text-white font-semibold">
                 Aktifkan
               </Button>
             </form>

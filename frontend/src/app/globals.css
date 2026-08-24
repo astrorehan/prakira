@@ -26,12 +26,12 @@
 
     /* Density — the console is dense, the public surface is roomy.
        --base-size stays in rem so the a11y text-size classes keep working. */
-    --row-h: 40px;
-    --card-pad: 20px;
-    --base-size: 0.9375rem;
+    --row-h: 44px;
+    --card-pad: 22px;
+    --base-size: 1.0625rem;
 
-    --radius: 14px;
-    --radius-control: 10px;
+    --radius: 16px;
+    --radius-control: 14px;
 
     --ease-out: cubic-bezier(0.2, 0.7, 0.3, 1);
     --ease-inout: cubic-bezier(0.5, 0, 0.2, 1);
@@ -47,9 +47,9 @@
     --surface-sunken: #f2ede3;
     --border: #e5ddcc;
     --border-strong: #d2c6ae;
-    --row-h: 52px;
+    --row-h: 56px;
     --card-pad: 28px;
-    --base-size: 1.0625rem;
+    --base-size: 1.125rem;
   }
 
   * {
@@ -57,6 +57,7 @@
   }
 
   html {
+    font-size: 112.5%;
     scroll-behavior: smooth;
   }
 
@@ -118,12 +119,12 @@
     font-family: var(--font-sans);
   }
 
-  /* ── Accessibility: text size. UI is rem-based, so scaling root scales all. */
+  /* ── Accessibility: text size. Large is standard (112.5%). */
   html.a11y-small-text {
-    font-size: 90%;
+    font-size: 100%;
   }
   html.a11y-large-text {
-    font-size: 112.5%;
+    font-size: 125%;
   }
 
   /* ── Accessibility: high contrast redefines tokens, not utility classes. */

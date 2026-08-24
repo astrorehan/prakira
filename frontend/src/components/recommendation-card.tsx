@@ -1,4 +1,4 @@
-﻿import * as React from "react";
+import * as React from "react";
 import { AlertOctagon, CheckCircle2, Clock, MapPin, ShieldAlert, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ActionRecommendation } from "@/types";
@@ -99,10 +99,10 @@ export function RecommendationCard({
           size="sm"
           variant={isHighPriority ? "destructive" : "default"}
           onClick={() => onExecute && onExecute(recommendation.id)}
-          className="text-xs h-8 px-3"
+          className="text-xs text-white font-semibold"
         >
-          <span>Instruksikan Tim</span>
-          <ArrowRight className="h-3 w-3" />
+          <span className="text-white">Instruksikan Tim</span>
+          <ArrowRight className="h-3.5 w-3.5 text-white" />
         </Button>
       </div>
     </LiquidGlassCard>

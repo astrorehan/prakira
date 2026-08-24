@@ -11,41 +11,39 @@ import { cn } from "@/lib/utils";
  * No `active:scale-*` — presses shift background, they don't shrink geometry.
  */
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg font-medium transition-colors duration-fast ease-out focus-visible:outline-none focus-visible:shadow-focus disabled:pointer-events-none disabled:opacity-45 [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full font-semibold transition-all duration-fast ease-out focus-visible:outline-none focus-visible:shadow-focus disabled:pointer-events-none disabled:opacity-45 [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-current",
   {
     variants: {
       variant: {
         primary:
-          "bg-brand-700 text-brand-foreground shadow-xs hover:bg-brand-600 active:bg-brand-800",
+          "bg-brand-700 text-white shadow-xs hover:bg-brand-600 hover:text-white active:bg-brand-800 active:text-white",
         secondary:
-          "bg-paper-100 text-paper-800 shadow-hairline hover:bg-paper-200 active:bg-paper-300",
+          "bg-paper-100 text-paper-800 shadow-hairline hover:bg-paper-200 hover:text-paper-900 active:bg-paper-300",
         outline:
           "border border-paper-300 bg-surface text-paper-800 hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700",
         ghost: "text-paper-700 hover:bg-paper-100 hover:text-brand-700",
-        danger: "bg-risk-high text-white shadow-xs hover:bg-risk-critical",
+        danger: "bg-risk-high text-white shadow-xs hover:bg-risk-critical hover:text-white active:bg-risk-critical active:text-white",
         link: "h-auto p-0 text-brand-500 underline-offset-4 hover:underline",
 
-        /* Legacy aliases — kept so existing call sites keep compiling.
-           Deprecated: use primary / secondary / outline / ghost / danger. */
+        /* Aliases — with guaranteed high contrast text on dark backgrounds */
         default:
-          "bg-brand-700 text-brand-foreground shadow-xs hover:bg-brand-600 active:bg-brand-800",
-        blue: "bg-brand-700 text-brand-foreground shadow-xs hover:bg-brand-600 active:bg-brand-800",
+          "bg-brand-700 text-white shadow-xs hover:bg-brand-600 hover:text-white active:bg-brand-800 active:text-white",
+        blue: "bg-brand-700 text-white shadow-xs hover:bg-brand-600 hover:text-white active:bg-brand-800 active:text-white",
         glass:
           "border border-paper-300 bg-surface text-paper-800 hover:border-brand-300 hover:bg-brand-50",
-        "glass-blue": "bg-brand-100 text-brand-700 hover:bg-brand-300/40",
-        destructive: "bg-risk-high text-white shadow-xs hover:bg-risk-critical",
-        "risk-low": "bg-risk-low text-white shadow-xs hover:brightness-95",
-        "risk-medium": "bg-risk-medium text-white shadow-xs hover:brightness-95",
+        "glass-blue": "bg-brand-100 text-brand-700 hover:bg-brand-300/40 hover:text-brand-800",
+        destructive: "bg-risk-high text-white shadow-xs hover:bg-risk-critical hover:text-white active:bg-risk-critical active:text-white",
+        "risk-low": "bg-risk-low text-white shadow-xs hover:brightness-95 hover:text-white",
+        "risk-medium": "bg-risk-medium text-white shadow-xs hover:brightness-95 hover:text-white",
       },
       size: {
-        sm: "h-8 px-3 text-caption",
-        default: "h-[38px] px-4 text-body-sm",
-        md: "h-[38px] px-4 text-body-sm",
-        lg: "h-11 px-5 text-body",
-        icon: "h-[38px] w-[38px] p-0",
-        "icon-sm": "h-8 w-8 p-0",
-        // Legacy: xl collapses onto lg. 56px buttons don't exist in this system.
-        xl: "h-11 px-5 text-body",
+        sm: "h-10 px-5 text-xs rounded-full",
+        default: "h-12 px-6 text-sm rounded-full",
+        md: "h-12 px-6 text-sm rounded-full",
+        lg: "h-14 px-7 text-base rounded-full",
+        xl: "h-16 px-8 text-lg rounded-full",
+        icon: "h-12 w-12 p-0 rounded-full",
+        "icon-sm": "h-10 w-10 p-0 rounded-full",
       },
     },
     defaultVariants: {
