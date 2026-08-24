@@ -1,0 +1,217 @@
+﻿"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import type { Feature, GeoJsonObject } from "geojson";
+import type { KecamatanData, DiseaseType, GeoDistrictCollection } from "@/types";
+import { RISK_CONFIG, formatIncidence, DISEASE_CONFIG } from "@/lib/utils";
+import L from "leaflet";
+
+type ChoroplethMapProps = {
+  geojson: GeoDistrictCollection;
+  districts: KecamatanData[];
+  disease?: DiseaseType;
+  selectedId?: string | null;
+  onSelect?: (id: string) => void;
+  center?: [number, number];
+  zoom?: number;
+  height?: string;
+};
+
+const SEMARANG_CENTER: [number, number] = [-7.005, 110.42];
+
+export default function ChoroplethMap({
+  geojson,
+  districts,
+  disease = "DBD",
+  selectedId,
+  onSelect,
+  center = SEMARANG_CENTER,
+  zoom = 12,
+  height = "520px",
+}: ChoroplethMapProps) {
+  const [activeDistrict, setActiveDistrict] = useState<KecamatanData | null>(null);
+
+  const byId = useMemo(() => {
+    const map = new Map<string, KecamatanData>();
+    for (const d of districts) map.set(d.id, d);
+    return map;
+  }, [districts]);
+
+  useEffect(() => {
+    // Fix default marker icon assets
+    // @ts-expect-error private leaflet property
+    delete L.Icon.Default.prototype._getIconUrl;
+    L.Icon.Default.mergeOptions({
+      iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+      iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+      shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+    });
+  }, []);
+
+  const styleFor = (feature?: Feature) => {
+    const id = (feature?.properties as { id?: string } | undefined)?.id;
+    const item = id ? byId.get(id) : undefined;
+    const isSelected = selectedId === id;
+
+    // "Data tidak memadai" is its own class, never a fallback to low risk.
+    let fillColor = "#E3E8E8";
+    let fillOpacity = 1;
+
+    if (item) {
+      // Map areas use the lighter `fill` token, not the text colour. Lightness
+      // descends monotonically across classes so the ordinal survives grayscale.
+      fillColor = RISK_CONFIG[item.tingkat_risiko].fill;
+      fillOpacity = 1;
+    }
+
+    return {
+      // White hairline borders read the fills as districts, not as blotches.
+      color: isSelected ? "#0E2225" : "#FFFFFF",
+      weight: isSelected ? 2.5 : 1,
+      fillColor,
+      fillOpacity: isSelected ? 1 : fillOpacity,
+    };
+  };
+
+  const onEachFeature = (feature: Feature, layer: L.Layer) => {
+    const props = feature.properties as { id?: string; nama?: string; kode_bps?: string };
+    const item = props.id ? byId.get(props.id) : undefined;
+
+    if (item) {
+      const riskCfg = RISK_CONFIG[item.tingkat_risiko];
+      const html = `
+        <div style="font-family:var(--font-sans, system-ui);font-size:12px;min-width:230px;color:#0E2225;line-height:1.4">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <span style="font-size:10px;text-transform:uppercase;font-weight:600;letter-spacing:0.06em;color:#5A6C6E">
+              KECAMATAN
+            </span>
+            <span style="background:${riskCfg.color};color:#FFFFFF;padding:2px 8px;border-radius:9999px;font-size:10px;font-weight:600">
+              ${riskCfg.label.toUpperCase()}
+            </span>
+          </div>
+
+          <div style="font-size:16px;font-weight:600;margin-bottom:8px;color:#0E2225">
+            ${item.nama}
+          </div>
+
+          <div style="display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:11px;border-top:1px solid #DFE6E6;padding-top:6px">
+            <span style="color:#5A6C6E">Kasus Aktif:</span>
+            <span style="font-weight:600;color:#0E2225">${item.kasus_aktif} kasus</span>
+            
+            <span style="color:#5A6C6E">Prediksi 2-4 Mgg:</span>
+            <span style="font-weight:600;color:#A32B1F">${item.kasus_prediksi} kasus (+${item.delta_mingguan}%)</span>
+            
+            <span style="color:#5A6C6E">Incidence Rate:</span>
+            <span style="font-weight:600">${formatIncidence(item.incidence_rate)}</span>
+            
+            <span style="color:#5A6C6E">Curah Hujan BMKG:</span>
+            <span style="font-weight:600;color:#0B4A57">${item.cuaca.curah_hujan_mm} mm (${item.cuaca.status_cuaca})</span>
+            
+            <span style="color:#5A6C6E">Skor Risiko AI:</span>
+            <span style="font-weight:600;color:${riskCfg.color}">${item.skor_risiko}/100</span>
+          </div>
+
+          <div style="margin-top:8px;padding-top:6px;border-top:1px dashed #DFE6E6;font-size:10px;color:#0B4A57;font-weight:600">
+            Klik untuk rekomendasi intervensi lengkap →
+          </div>
+        </div>
+      `;
+
+      layer.bindTooltip(html, {
+        sticky: true,
+        direction: "top",
+        offset: [0, -8],
+        className: "dsdc-map-tooltip",
+      });
+    }
+
+    layer.on({
+      mouseover: (e) => {
+        const l = e.target as L.Path;
+        l.setStyle({ fillOpacity: 0.95, weight: 3 });
+        if (item) setActiveDistrict(item);
+      },
+      mouseout: (e) => {
+        const l = e.target as L.Path;
+        l.setStyle(styleFor(feature));
+      },
+      click: () => {
+        if (props.id && onSelect) {
+          onSelect(props.id);
+        }
+      },
+    });
+  };
+
+  return (
+    <div className="relative w-full overflow-hidden rounded-2xl border border-paper-200/90 shadow-card">
+      <style jsx global>{`
+        .leaflet-tooltip.dsdc-map-tooltip {
+          background: rgba(255, 255, 255, 0.92);
+          border: 1px solid rgba(255, 255, 255, 0.9);
+          border-radius: 14px;
+          padding: 12px 14px;
+          color: #0E2225;
+          box-shadow: 0 10px 30px rgba(2, 132, 199, 0.12), 0 4px 12px rgba(15, 23, 42, 0.08);
+        }
+        .leaflet-tooltip.dsdc-map-tooltip::before {
+          display: none;
+        }
+        .leaflet-control-zoom a {
+          background-color: #ffffff !important;
+          color: #0E2225 !important;
+          border: 1px solid #DFE6E6 !important;
+          border-radius: 10px !important;
+          margin-bottom: 4px !important;
+          box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06) !important;
+        }
+        .leaflet-control-zoom a:hover {
+          background-color: #EAF4F5 !important;
+          color: #0B4A57 !important;
+        }
+      `}</style>
+
+      {/* Floating Map Header / Legend */}
+      <div className="absolute top-3 left-3 z-[400] flex flex-wrap items-center gap-2 rounded-xl p-2.5 liquid-glass border border-white/90 shadow-glass-sm text-xs">
+        <div className="flex items-center gap-1.5 font-semibold text-foreground pr-2 border-r border-paper-200">
+          <span>Peta Risiko {disease}</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="flex items-center gap-1">
+            <span className="h-2.5 w-2.5 rounded-full bg-risk-low" />
+            <span className="text-paper-600 font-medium">Rendah</span>
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="h-2.5 w-2.5 rounded-full bg-risk-medium" />
+            <span className="text-paper-600 font-medium">Waspada</span>
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="h-2.5 w-2.5 rounded-full bg-risk-high animate-pulse" />
+            <span className="text-paper-600 font-medium">Tinggi (Siaga)</span>
+          </span>
+        </div>
+      </div>
+
+      <MapContainer
+        center={center}
+        zoom={zoom}
+        style={{ height, width: "100%" }}
+        zoomControl={true}
+        className="z-0"
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://carto.com/">CARTO</a> Positron'
+          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+        />
+        <GeoJSON
+          key={`semarang-${disease}-${selectedId}`}
+          data={geojson as unknown as GeoJsonObject}
+          style={styleFor}
+          onEachFeature={onEachFeature}
+        />
+      </MapContainer>
+    </div>
+  );
+}
