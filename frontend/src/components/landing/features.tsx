@@ -1,117 +1,201 @@
 "use client";
 
-import { Bug, Wind, Droplets, CheckCircle2 } from "lucide-react";
+import * as React from "react";
+import { useState } from "react";
+import { Bug, Wind, Droplets, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { DiseaseType } from "@/types";
 
-const EDUCATION_CARDS = [
+import { Reveal } from "./reveal";
+import { SectionHeading } from "./section-heading";
+
+type Guide = {
+  key: DiseaseType;
+  tab: string;
+  icon: React.ElementType;
+  headline: string;
+  standfirst: string;
+  steps: { title: string; detail: string }[];
+  seekCare: string;
+};
+
+/* One disease at a time. The previous version stacked twelve bullets in three
+   columns, which is a wall no resident reads — here the reader chooses the one
+   that applies to them and gets four steps with room to breathe. */
+const GUIDES: Guide[] = [
   {
-    emoji: "🦟",
-    title: "Cegah Demam Berdarah",
-    subtitle: "Gerakan 3M Plus",
+    key: "DBD",
+    tab: "Demam Berdarah",
     icon: Bug,
-    color: "border-brand-300/40",
-    iconBg: "bg-brand-100 text-brand-700",
-    tips: [
-      "Kuras bak mandi & tampungan air minimal 1× seminggu",
-      "Tutup rapat semua wadah penampung air bersih",
-      "Kubur atau daur ulang barang bekas penampung air hujan",
-      "Oleskan lotion anti nyamuk & pasang kelambu saat tidur",
+    headline: "Nyamuk bertelur di air yang diam",
+    standfirst:
+      "Aedes aegypti butuh air bersih yang tenang selama seminggu untuk menetas. Memutus satu minggu itu memutus seluruh siklusnya.",
+    steps: [
+      {
+        title: "Kuras seminggu sekali",
+        detail:
+          "Bak mandi, ember, dan tampungan dispenser. Sikat dindingnya — telur menempel di sana, bukan mengapung.",
+      },
+      {
+        title: "Tutup rapat tampungan air",
+        detail: "Tandon, gentong, dan drum. Tutup yang longgar sama saja terbuka.",
+      },
+      {
+        title: "Daur ulang barang bekas",
+        detail:
+          "Ban, kaleng, dan pot bekas menampung air hujan tanpa terlihat. Kubur atau singkirkan.",
+      },
+      {
+        title: "Lindungi jam menggigit",
+        detail:
+          "Aedes aktif pagi dan sore. Pakai lotion dan kelambu, terutama untuk anak dan lansia.",
+      },
     ],
+    seekCare:
+      "Ke puskesmas bila demam tinggi mendadak lebih dari 2 hari, apalagi disertai nyeri sendi, mimisan, atau bintik merah.",
   },
   {
-    emoji: "🌬️",
-    title: "Cegah ISPA & Batuk",
-    subtitle: "Jaga Saluran Napas",
+    key: "ISPA",
+    tab: "ISPA & Batuk",
     icon: Wind,
-    color: "border-climate-rain/30",
-    iconBg: "bg-blue-50 text-blue-700",
-    tips: [
-      "Gunakan masker saat di luar ruangan, terutama di kawasan berdebu",
-      "Buka ventilasi rumah setiap pagi untuk sirkulasi udara",
-      "Perbanyak minum air putih dan konsumsi vitamin C",
-      "Segera ke puskesmas jika batuk pilek > 3 hari disertai sesak",
+    headline: "Udara kering dan berdebu melukai saluran napas",
+    standfirst:
+      "Saat kelembaban turun dan suhu berayun tajam antara siang dan malam, lapisan pelindung saluran napas menipis dan infeksi lebih mudah masuk.",
+    steps: [
+      {
+        title: "Masker di kawasan berdebu",
+        detail: "Terutama di jalur padat kendaraan dan area konstruksi.",
+      },
+      {
+        title: "Buka ventilasi tiap pagi",
+        detail:
+          "Udara yang berputar mengurangi penumpukan partikel dan uap air di dalam rumah.",
+      },
+      {
+        title: "Cukupi cairan",
+        detail: "Air putih menjaga lendir tetap encer sehingga lebih mudah dikeluarkan.",
+      },
+      {
+        title: "Jaga jarak saat bergejala",
+        detail: "Batuk dan pilek menyebar paling cepat di ruang tertutup dan ramai.",
+      },
     ],
+    seekCare:
+      "Ke puskesmas bila batuk lebih dari 3 hari disertai sesak, napas berbunyi, atau demam yang tidak turun.",
   },
   {
-    emoji: "💧",
-    title: "Cegah Diare",
-    subtitle: "Higienitas & Air Bersih",
+    key: "Diare",
+    tab: "Diare",
     icon: Droplets,
-    color: "border-risk-low-br",
-    iconBg: "bg-risk-low-bg text-risk-low",
-    tips: [
-      "Rebus air minum sampai benar-benar mendidih (100°C)",
-      "Cuci tangan pakai sabun sebelum makan & setelah dari toilet",
-      "Waspadai kontaminasi air sumur saat banjir/genangan",
-      "Siapkan oralit di rumah untuk penanganan pertama dehidrasi",
+    headline: "Setelah banjir, air sumur belum tentu bersih",
+    standfirst:
+      "Genangan membawa cemaran ke sumber air rumah tangga. Kasus diare biasanya naik satu sampai dua minggu setelah hujan ekstrem.",
+    steps: [
+      {
+        title: "Rebus air sampai mendidih",
+        detail: "Biarkan mendidih penuh sekitar satu menit sebelum diangkat.",
+      },
+      {
+        title: "Cuci tangan pakai sabun",
+        detail: "Sebelum makan, sebelum menyiapkan makanan, dan setelah dari toilet.",
+      },
+      {
+        title: "Periksa sumur setelah genangan",
+        detail: "Air keruh atau berbau perlu diklorinasi sebelum dipakai.",
+      },
+      {
+        title: "Sediakan oralit di rumah",
+        detail:
+          "Dehidrasi jauh lebih berbahaya daripada diarenya sendiri, terutama pada balita.",
+      },
     ],
+    seekCare:
+      "Ke puskesmas bila diare lebih dari 2 hari, ada darah pada tinja, atau muncul tanda dehidrasi seperti lemas dan jarang buang air kecil.",
   },
 ];
 
 export function EducationSection() {
+  const [active, setActive] = useState<DiseaseType>("DBD");
+  const guide = GUIDES.find((g) => g.key === active) ?? GUIDES[0];
+  const Icon = guide.icon;
+
   return (
-    <section
-      id="edukasi"
-      className="scroll-mt-20 py-16 md:py-24 bg-paper-50/60 border-y border-paper-200/60"
-    >
+    <section id="edukasi" className="scroll-mt-24 bg-grad-sand py-16 md:py-24">
       <div className="container">
-        <div className="mx-auto max-w-2xl text-center">
-          <div className="eyebrow">Edukasi Pencegahan</div>
-          <h2 className="mt-5 h-section text-balance">
-            Langkah sederhana, dampak besar
-          </h2>
-          <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-            Pencegahan penyakit terkait iklim bisa dimulai dari rumah Anda sendiri.
-            Berikut panduan ringkas yang bisa langsung diterapkan.
-          </p>
-        </div>
+        <SectionHeading
+          kicker="Pencegahan"
+          title="Yang bisa dilakukan dari rumah"
+          lead="Peringatan hanya berguna kalau ada yang bisa dikerjakan setelahnya. Pilih penyakit yang sedang jadi perhatian di wilayah Anda."
+          aside={
+            <div
+              role="tablist"
+              aria-label="Pilih panduan pencegahan"
+              className="inline-flex flex-wrap gap-1 rounded-full border border-sand-200 bg-white p-1"
+            >
+              {GUIDES.map((g) => (
+                <button
+                  key={g.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={active === g.key}
+                  onClick={() => setActive(g.key)}
+                  className={cn(
+                    "rounded-full px-4 py-2 text-sm font-medium transition-colors duration-fast",
+                    active === g.key
+                      ? "bg-brand-700 text-white"
+                      : "text-paper-600 hover:text-foreground",
+                  )}
+                >
+                  {g.tab}
+                </button>
+              ))}
+            </div>
+          }
+        />
 
-        <div className="mt-12 grid gap-5 sm:grid-cols-3">
-          {EDUCATION_CARDS.map((card, idx) => {
-            const Icon = card.icon;
-            return (
-              <div
-                key={card.title}
-                className={cn(
-                  "group rounded-2xl border bg-white p-6 shadow-card transition-all hover:-translate-y-1 hover:shadow-lift",
-                  card.color,
-                )}
-                style={{ animationDelay: `${idx * 60}ms` }}
-              >
-                {/* Header */}
-                <div className="flex items-center gap-3">
-                  <div
-                    className={cn(
-                      "flex h-12 w-12 items-center justify-center rounded-xl transition-transform group-hover:scale-110 shadow-sm",
-                      card.iconBg,
-                    )}
-                  >
-                    <Icon className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-semibold tracking-tight text-foreground">
-                      {card.title}
-                    </h3>
-                    <p className="text-xs text-muted-foreground">{card.subtitle}</p>
-                  </div>
-                </div>
+        <Reveal
+          key={guide.key}
+          delay={60}
+          className="mt-10 overflow-hidden rounded-3xl border border-sand-200 bg-grad-paper"
+        >
+          <div className="grid gap-10 p-7 md:grid-cols-12 md:p-10">
+            <div className="md:col-span-4">
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-grad-brand-soft">
+                <Icon className="h-6 w-6 text-brand-700" aria-hidden />
+              </span>
+              <h3 className="mt-5 text-h2 text-balance text-foreground">
+                {guide.headline}
+              </h3>
+              <p className="mt-4 text-body text-paper-600">{guide.standfirst}</p>
 
-                {/* Tips */}
-                <ul className="mt-5 space-y-2.5">
-                  {card.tips.map((tip, tIdx) => (
-                    <li
-                      key={tIdx}
-                      className="flex items-start gap-2 text-sm text-paper-700 leading-relaxed"
-                    >
-                      <CheckCircle2 className="h-4 w-4 text-risk-low shrink-0 mt-0.5" />
-                      <span>{tip}</span>
-                    </li>
-                  ))}
-                </ul>
+              <div className="mt-6 flex gap-3 rounded-2xl border border-risk-medium-br bg-risk-medium-bg p-4">
+                <AlertCircle
+                  className="mt-0.5 h-4 w-4 shrink-0 text-risk-medium"
+                  aria-hidden
+                />
+                <p className="text-body-sm text-paper-700">{guide.seekCare}</p>
               </div>
-            );
-          })}
-        </div>
+            </div>
+
+            <ol className="grid gap-x-8 gap-y-7 md:col-span-8 md:grid-cols-2">
+              {guide.steps.map((step, i) => (
+                <li key={step.title}>
+                  <div className="flex items-baseline gap-3 border-t border-sand-200 pt-4">
+                    <span className="tabular font-mono text-overline text-brand-500">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <div>
+                      <h4 className="text-h3 text-foreground">{step.title}</h4>
+                      <p className="mt-1.5 text-body-sm leading-relaxed text-paper-600">
+                        {step.detail}
+                      </p>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </Reveal>
       </div>
     </section>
   );

@@ -11,7 +11,9 @@ import { Button } from "./ui/button";
 import { RiskGauge } from "./ui/risk-gauge";
 
 export function PublicRiskChecker({ className }: { className?: string }) {
-  const [selectedKecName, setSelectedKecName] = useState("Pedurungan");
+  /* No district is pre-picked: this page asks the reader where they live, and
+     answering it for them would put one kecamatan in front of every visitor. */
+  const [selectedKecName, setSelectedKecName] = useState("");
   const [broadcastPhone, setBroadcastPhone] = useState("");
   const [subscribed, setSubscribed] = useState(false);
 
@@ -20,9 +22,17 @@ export function PublicRiskChecker({ className }: { className?: string }) {
   const ispaList = getKecamatanDataList("ISPA");
   const diareList = getKecamatanDataList("Diare");
 
-  const currentDbd = dbdList.find((k) => k.nama === selectedKecName) || dbdList[0];
-  const currentIspa = ispaList.find((k) => k.nama === selectedKecName) || ispaList[0];
-  const currentDiare = diareList.find((k) => k.nama === selectedKecName) || diareList[0];
+  const currentDbd = dbdList.find((k) => k.nama === selectedKecName);
+  const currentIspa = ispaList.find((k) => k.nama === selectedKecName);
+  const currentDiare = diareList.find((k) => k.nama === selectedKecName);
+  const selected =
+    currentDbd && currentIspa && currentDiare
+      ? [
+          { data: currentDbd, type: "DBD" as const, desc: "Demam Berdarah Dengue" },
+          { data: currentIspa, type: "ISPA" as const, desc: "Infeksi Saluran Pernapasan" },
+          { data: currentDiare, type: "Diare" as const, desc: "Penyakit Diare & Pencernaan" },
+        ]
+      : null;
 
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,6 +65,7 @@ export function PublicRiskChecker({ className }: { className?: string }) {
               onChange={(e) => setSelectedKecName(e.target.value)}
               className="rounded-xl border border-brand-300 bg-white px-4 py-2.5 text-sm font-semibold text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
             >
+              <option value="">Pilih kecamatan Anda…</option>
               {SEMARANG_KECAMATAN_RAW.map((k) => (
                 <option key={k.id} value={k.nama}>
                   Kecamatan {k.nama}
@@ -66,12 +77,19 @@ export function PublicRiskChecker({ className }: { className?: string }) {
       </LiquidGlassCard>
 
       {/* Disease Cards Grid */}
+      {!selected ? (
+        <LiquidGlassCard variant="default" className="p-8 text-center">
+          <MapPin className="mx-auto h-6 w-6 text-paper-400" aria-hidden />
+          <h4 className="mt-3 font-semibold text-foreground">
+            Pilih kecamatan tempat tinggal Anda
+          </h4>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Status DBD, ISPA, dan Diare ditampilkan setelah kecamatan dipilih.
+          </p>
+        </LiquidGlassCard>
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {[
-          { data: currentDbd, type: "DBD" as const, desc: "Demam Berdarah Dengue" },
-          { data: currentIspa, type: "ISPA" as const, desc: "Infeksi Saluran Pernapasan" },
-          { data: currentDiare, type: "Diare" as const, desc: "Penyakit Diare & Pencernaan" },
-        ].map((item, idx) => {
+        {selected.map((item, idx) => {
           const risk = RISK_CONFIG[item.data.tingkat_risiko];
           return (
             <LiquidGlassCard
@@ -134,6 +152,7 @@ export function PublicRiskChecker({ className }: { className?: string }) {
           );
         })}
       </div>
+      )}
 
       {/* Broadcast Alert Simulator */}
       <LiquidGlassCard variant="default" className="p-6">
