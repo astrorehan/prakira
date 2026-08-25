@@ -115,7 +115,7 @@ export function RecommendationCard({
 
           <span
             className={cn(
-              "font-mono text-[10px] font-bold uppercase tracking-wider rounded-full px-2.5 py-0.5 border shrink-0 transition-colors",
+              "font-mono text-[10px] font-semibold uppercase tracking-wider rounded-full px-2.5 py-0.5 border shrink-0 transition-colors",
               isCompleted
                 ? "bg-risk-low-bg text-risk-low border-risk-low-br"
                 : isInProgress
@@ -132,7 +132,7 @@ export function RecommendationCard({
         </div>
 
         {/* Title */}
-        <h4 className="font-display font-bold text-[15px] sm:text-base text-foreground leading-snug group-hover:text-brand-700 transition-colors">
+        <h4 className="font-display font-semibold text-[15px] sm:text-base text-foreground leading-snug group-hover:text-brand-700 transition-colors">
           {recommendation.title}
         </h4>
 

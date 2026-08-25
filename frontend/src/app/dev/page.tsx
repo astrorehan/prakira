@@ -431,6 +431,8 @@ export default function DesignSystemPage() {
                   label="Kasus Aktif DBD"
                   value="178"
                   unit="kasus"
+                  range={null}
+                  coverage="high"
                   delta="+14.2%"
                   positive={false}
                   status="warning"
@@ -441,6 +443,8 @@ export default function DesignSystemPage() {
                   label="Wilayah Siaga Tinggi"
                   value="3"
                   unit="kecamatan"
+                  range={null}
+                  coverage="medium"
                   delta="+1 kec"
                   positive={false}
                   status="danger"
@@ -451,6 +455,8 @@ export default function DesignSystemPage() {
                   label="Curah Hujan Rata-rata"
                   value="225"
                   unit="mm"
+                  range={null}
+                  coverage="high"
                   description="BMKG Stasiun Semarang"
                   status="normal"
                   variant="glass-blue"
@@ -461,6 +467,8 @@ export default function DesignSystemPage() {
                   label="Akurasi Model ML"
                   value="91.4"
                   unit="%"
+                  range={null}
+                  coverage="high"
                   delta="+1.2%"
                   positive={true}
                   status="success"
@@ -501,7 +509,7 @@ export default function DesignSystemPage() {
               <div className="flex items-center justify-between pb-4 mb-4 border-b border-paper-200">
                 <div>
                   <Badge variant="official">Komponen Lengkap</Badge>
-                  <h3 className="font-display text-xl font-bold text-foreground mt-2">
+                  <h3 className="font-display text-xl font-semibold text-foreground mt-2">
                     Early Action Orchestration Center (Live Demo)
                   </h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
@@ -518,7 +526,7 @@ export default function DesignSystemPage() {
 
             {/* Individual Card States Showcase */}
             <div className="space-y-4">
-              <h4 className="font-display text-lg font-bold text-foreground">
+              <h4 className="font-display text-lg font-semibold text-foreground">
                 Matriks Status & Variasi Kartu Rekomendasi
               </h4>
               <p className="text-xs text-muted-foreground">

@@ -111,7 +111,7 @@ export function EarlyActionDeck({
                     <div>
                       <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-paper-200/80">
                         <div className="flex items-center gap-2">
-                          <div className="flex items-center gap-1.5 rounded-lg bg-paper-100 px-2.5 py-1 border border-paper-200 text-xs font-bold text-paper-900 shadow-xs">
+                          <div className="flex items-center gap-1.5 rounded-lg bg-paper-100 px-2.5 py-1 border border-paper-200 text-xs font-semibold text-paper-900 shadow-xs">
                             {getActionIcon(rec.action_type)}
                             <span>{getActionTypeLabel(rec.action_type)}</span>
                           </div>
@@ -140,7 +140,7 @@ export function EarlyActionDeck({
                         <div className="flex items-center gap-2">
                           <span
                             className={cn(
-                              "font-mono text-[10px] font-bold uppercase tracking-wider rounded-full px-2.5 py-0.5 border",
+                              "font-mono text-[10px] font-semibold uppercase tracking-wider rounded-full px-2.5 py-0.5 border",
                               isDone
                                 ? "bg-risk-low-bg text-risk-low border-risk-low-br"
                                 : isRunning
@@ -162,7 +162,7 @@ export function EarlyActionDeck({
                       </div>
 
                       {/* Main Title (Punchy, Clean, No Wall of Text) */}
-                      <h4 className="font-display font-bold text-lg sm:text-xl text-foreground mt-3 leading-snug">
+                      <h4 className="font-display font-semibold text-lg sm:text-xl text-foreground mt-3 leading-snug">
                         {rec.title}
                       </h4>
                     </div>
@@ -174,7 +174,7 @@ export function EarlyActionDeck({
                           <Clock className="h-3 w-3 text-brand-700" />
                           <span>Lead Time</span>
                         </span>
-                        <div className="font-display font-bold text-sm text-foreground mt-1">
+                        <div className="font-display font-semibold text-sm text-foreground mt-1">
                           {rec.lead_time_days || 14} Hari
                         </div>
                       </div>
@@ -184,7 +184,7 @@ export function EarlyActionDeck({
                           <Sparkles className="h-3 w-3 text-brand-700" />
                           <span>Akurasi AI</span>
                         </span>
-                        <div className="font-display font-bold text-sm text-brand-700 mt-1">
+                        <div className="font-display font-semibold text-sm text-brand-700 mt-1">
                           {rec.ai_confidence || 94.2}%
                         </div>
                       </div>
@@ -194,7 +194,7 @@ export function EarlyActionDeck({
                           <ShieldAlert className="h-3 w-3 text-risk-low" />
                           <span>Pencegahan</span>
                         </span>
-                        <div className="font-display font-bold text-xs text-risk-low mt-1 truncate">
+                        <div className="font-display font-semibold text-xs text-risk-low mt-1 truncate">
                           {rec.estimated_impact?.split("&")[0] || "~45 Kasus"}
                         </div>
                       </div>
@@ -204,7 +204,7 @@ export function EarlyActionDeck({
                           <MapPin className="h-3 w-3 text-brand-700" />
                           <span>Populasi</span>
                         </span>
-                        <div className="font-display font-bold text-sm text-foreground mt-1 truncate">
+                        <div className="font-display font-semibold text-sm text-foreground mt-1 truncate">
                           {rec.target_population?.split(" ")[0] || "120k"} Jiwa
                         </div>
                       </div>
@@ -212,7 +212,7 @@ export function EarlyActionDeck({
 
                     {/* Interactive Target Kecamatan Pills */}
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="text-xs font-bold text-paper-600 font-mono uppercase tracking-wider">
+                      <span className="text-xs font-semibold text-paper-600 font-mono uppercase tracking-wider">
                         Wilayah:
                       </span>
                       {rec.target_kecamatan.map((kec, i) => (
@@ -300,7 +300,7 @@ export function EarlyActionDeck({
 
                     {/* Vertical / Compact Title in Collapsed Mode */}
                     <div className="flex-1 lg:my-auto">
-                      <div className="font-bold text-xs text-paper-800 line-clamp-1 lg:line-clamp-2">
+                      <div className="font-semibold text-xs text-paper-800 line-clamp-1 lg:line-clamp-2">
                         {rec.title}
                       </div>
                       <div className="text-[10px] font-mono text-paper-500 mt-0.5 hidden lg:block">

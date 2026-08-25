@@ -42,7 +42,6 @@ export function AppleGlassDate({
         "shadow-[0_4px_20px_-2px_rgba(11,74,87,0.08),0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_1.5px_0_rgba(255,255,255,0.95),inset_0_-1px_1px_0_rgba(0,0,0,0.03)]",
         // Hover & Active tactile micro-physics
         "hover:scale-[1.015] hover:bg-white/85 hover:border-white hover:shadow-[0_8px_28px_-4px_rgba(11,74,87,0.14),0_2px_6px_rgba(0,0,0,0.04),inset_0_1px_2px_0_rgba(255,255,255,1)]",
-        "active:scale-[0.985]",
 
         // Variant styling
         variant === "default" && "bg-gradient-to-b from-white/85 via-white/60 to-white/45",
@@ -97,10 +96,10 @@ export function AppleGlassDate({
 
       {/* Apple Live Pulse Indicator (VisionOS / Dynamic Island style) */}
       {showLivePulse && (
-        <div className="relative hidden sm:inline-flex items-center gap-1.5 pl-2 pr-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 text-[10.5px] font-medium tracking-tight shrink-0 shadow-xs">
+        <div className="relative hidden sm:inline-flex items-center gap-1.5 pl-2 pr-2.5 py-0.5 rounded-full bg-risk-low-bg border border-risk-low-br text-risk-low text-[10.5px] font-medium tracking-tight shrink-0 shadow-xs">
           <span className="relative flex h-1.5 w-1.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)]" />
+            <span className="animate-beacon absolute inline-flex h-full w-full rounded-full bg-risk-low" />
+            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-risk-low" />
           </span>
           <span className="font-medium text-[10px]">{liveLabel}</span>
         </div>

@@ -166,7 +166,7 @@ export function EarlyActionCenter({
                   "font-mono text-[10px] px-1.5 py-0.2 rounded-full",
                   statusFilter === tab.id
                     ? tab.alert
-                      ? "bg-risk-high-bg text-risk-high font-bold"
+                      ? "bg-risk-high-bg text-risk-high font-semibold"
                       : "bg-brand-100 text-brand-800"
                     : "bg-paper-200 text-paper-600"
                 )}
@@ -195,7 +195,7 @@ export function EarlyActionCenter({
           <div className="h-12 w-12 rounded-2xl bg-paper-100 text-paper-400 flex items-center justify-center mx-auto">
             <Info className="h-6 w-6" />
           </div>
-          <h4 className="text-sm font-bold text-foreground">Tidak ada tindakan berstatus ini</h4>
+          <h4 className="text-sm font-semibold text-foreground">Tidak ada tindakan berstatus ini</h4>
           <Button
             variant="outline"
             size="sm"
@@ -232,7 +232,7 @@ export function EarlyActionCenter({
                 <Zap className="h-5 w-5" />
               </div>
               <div>
-                <h4 className="font-display font-bold text-base text-foreground">
+                <h4 className="font-display font-semibold text-base text-foreground">
                   Instruksikan Semua Tindakan
                 </h4>
                 <p className="text-xs text-muted-foreground mt-0.5">
@@ -244,7 +244,7 @@ export function EarlyActionCenter({
             <div className="p-3.5 rounded-xl bg-paper-50 border border-paper-200 space-y-2 text-xs">
               <div className="flex justify-between font-semibold text-paper-800">
                 <span>Tindakan pending:</span>
-                <span className="font-mono text-risk-high font-bold">{pendingCount}</span>
+                <span className="font-mono text-risk-high font-semibold">{pendingCount}</span>
               </div>
               <div className="flex justify-between gap-4 text-paper-600">
                 <span className="shrink-0">Kecamatan target:</span>

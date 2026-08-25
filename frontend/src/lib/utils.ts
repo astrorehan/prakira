@@ -219,3 +219,19 @@ export function coverageFromConfidence(confidence: number): DataCoverage {
   if (confidence >= 0.75) return "low";
   return "insufficient";
 }
+
+/** Worst coverage in the set, ordered high → insufficient. */
+const COVERAGE_RANK: DataCoverage[] = ["high", "medium", "low", "insufficient"];
+
+/**
+ * Coverage of a figure aggregated over several districts. The weakest input
+ * decides: a city total built on one district with no history is not a
+ * high-coverage number, however complete the other fifteen are.
+ */
+export function aggregateCoverage(parts: DataCoverage[]): DataCoverage {
+  return parts.reduce<DataCoverage>(
+    (worst, c) =>
+      COVERAGE_RANK.indexOf(c) > COVERAGE_RANK.indexOf(worst) ? c : worst,
+    "high",
+  );
+}

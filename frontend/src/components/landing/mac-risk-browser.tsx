@@ -65,7 +65,7 @@ const DISEASE_CONFIG: Record<
     shortLabel: "Diare",
     icon: Droplets,
     color: "#4E8C7E",
-    bgBadge: "bg-emerald-50 text-emerald-800 border-emerald-200",
+    bgBadge: "bg-risk-low-bg text-risk-low border-risk-low-br",
   },
 };
 
@@ -153,7 +153,7 @@ export function MacRiskBrowser({
       {/* Ambient Backlight Glow (Apple Display effect) */}
       <div
         aria-hidden="true"
-        className="absolute -inset-2.5 -z-10 rounded-[34px] bg-gradient-to-tr from-brand-700/15 via-brand-500/10 to-amber-500/10 blur-xl opacity-70 group-hover/browser:opacity-95 transition-opacity duration-500"
+        className="absolute -inset-2.5 -z-10 rounded-[34px] bg-gradient-to-tr from-brand-700/15 via-brand-500/10 to-risk-medium/10 blur-xl opacity-70 group-hover/browser:opacity-95 transition-opacity duration-500"
       />
 
       {/* ── macOS Browser Window Outer Shell ────────────────────────────────── */}
@@ -169,7 +169,7 @@ export function MacRiskBrowser({
               title="Tutup Drawer"
               onClick={() => setIsDrawerOpen(false)}
             >
-              <span className="opacity-0 group-hover/lights:opacity-100 text-[8px] font-bold text-black/60 leading-none">
+              <span className="opacity-0 group-hover/lights:opacity-100 text-[8px] font-semibold text-black/60 leading-none">
                 ×
               </span>
             </button>
@@ -179,7 +179,7 @@ export function MacRiskBrowser({
               title="Toggle Drawer"
               onClick={() => setIsDrawerOpen(!isDrawerOpen)}
             >
-              <span className="opacity-0 group-hover/lights:opacity-100 text-[8px] font-bold text-black/60 leading-none">
+              <span className="opacity-0 group-hover/lights:opacity-100 text-[8px] font-semibold text-black/60 leading-none">
                 –
               </span>
             </button>
@@ -189,7 +189,7 @@ export function MacRiskBrowser({
               title="Scroll ke Hasil Lengkap"
               onClick={scrollToResults}
             >
-              <span className="opacity-0 group-hover/lights:opacity-100 text-[7px] font-bold text-black/60 leading-none">
+              <span className="opacity-0 group-hover/lights:opacity-100 text-[7px] font-semibold text-black/60 leading-none">
                 +
               </span>
             </button>
@@ -199,7 +199,7 @@ export function MacRiskBrowser({
           <div className="flex-1 max-w-[270px] mx-2">
             <div className="flex items-center justify-between gap-1.5 rounded-full bg-white/90 border border-paper-200/90 px-3 py-1 text-[11px] shadow-[0_1px_2px_rgba(14,34,37,0.04),inset_0_1px_1px_rgba(255,255,255,1)]">
               <div className="flex items-center gap-1.5 truncate text-paper-700">
-                <Lock className="h-3 w-3 text-emerald-600 shrink-0" />
+                <Lock className="h-3 w-3 text-risk-low shrink-0" />
                 <span className="font-semibold text-brand-900 tracking-tight">prakira.id</span>
                 <span className="text-paper-400 font-light">/</span>
                 <span className="text-paper-600 truncate font-mono text-[10.5px]">
@@ -210,8 +210,8 @@ export function MacRiskBrowser({
               {/* BMKG Live Sync Dot */}
               <div className="flex items-center gap-1 shrink-0 pl-1">
                 <span className="relative flex h-1.5 w-1.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500 shadow-[0_0_4px_rgba(16,185,129,0.8)]" />
+                  <span className="animate-beacon absolute inline-flex h-full w-full rounded-full bg-risk-low" />
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-risk-low" />
                 </span>
               </div>
             </div>
@@ -222,7 +222,7 @@ export function MacRiskBrowser({
             <button
               type="button"
               onClick={handleRefresh}
-              className="p-1 rounded-md hover:bg-paper-200/70 active:scale-95 transition-all text-paper-600 cursor-pointer"
+              className="p-1 rounded-md hover:bg-paper-200/70 active:bg-paper-300 transition-all text-paper-600 cursor-pointer"
               title="Muat Ulang Data BMKG"
             >
               <RotateCw
@@ -313,7 +313,7 @@ export function MacRiskBrowser({
               className={cn(
                 "flex items-center gap-1 rounded-lg px-2 py-0.5 transition-all cursor-pointer",
                 riskFilter === "tinggi"
-                  ? "bg-risk-high text-white font-bold shadow-xs scale-105"
+                  ? "bg-risk-high text-white font-semibold shadow-xs scale-105"
                   : "bg-risk-high/10 text-risk-high hover:bg-risk-high/20",
               )}
               title="Filter Hanya SIAGA"
@@ -328,7 +328,7 @@ export function MacRiskBrowser({
               className={cn(
                 "flex items-center gap-1 rounded-lg px-2 py-0.5 transition-all cursor-pointer",
                 riskFilter === "sedang"
-                  ? "bg-risk-medium text-white font-bold shadow-xs scale-105"
+                  ? "bg-risk-medium text-white font-semibold shadow-xs scale-105"
                   : "bg-risk-medium/10 text-risk-medium hover:bg-risk-medium/20",
               )}
               title="Filter Hanya WASPADA"
@@ -343,7 +343,7 @@ export function MacRiskBrowser({
               className={cn(
                 "flex items-center gap-1 rounded-lg px-2 py-0.5 transition-all cursor-pointer",
                 riskFilter === "rendah"
-                  ? "bg-risk-low text-white font-bold shadow-xs scale-105"
+                  ? "bg-risk-low text-white font-semibold shadow-xs scale-105"
                   : "bg-risk-low/10 text-risk-low hover:bg-risk-low/20",
               )}
               title="Filter Hanya RENDAH"
@@ -389,12 +389,12 @@ export function MacRiskBrowser({
                   {/* Pulsing beacon on SIAGA hotspots */}
                   {kec.tingkat_risiko === "tinggi" && (
                     <span className="absolute top-1 right-1 flex h-1.5 w-1.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-90" />
+                      <span className="animate-beacon absolute inline-flex h-full w-full rounded-full bg-white" />
                       <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white" />
                     </span>
                   )}
 
-                  <span className="text-[12px] sm:text-[12.5px] font-bold leading-tight truncate w-full tracking-tight drop-shadow-xs">
+                  <span className="text-[12px] sm:text-[12.5px] font-semibold leading-tight truncate w-full tracking-tight drop-shadow-xs">
                     {kec.nama.replace("Semarang ", "Smg ")}
                   </span>
                   <span className="text-[10px] sm:text-[10.5px] font-semibold opacity-90 mt-0.5 tracking-wider uppercase drop-shadow-xs">
@@ -415,12 +415,12 @@ export function MacRiskBrowser({
                   </div>
                   <div>
                     <div className="flex items-center gap-1.5">
-                      <h4 className="text-xs font-bold text-foreground">
+                      <h4 className="text-xs font-semibold text-foreground">
                         Kecamatan {activeDistrictData.nama}
                       </h4>
                       <span
                         className={cn(
-                          "rounded-md px-1.5 py-0.2 text-[9.5px] font-bold uppercase tracking-wider border",
+                          "rounded-md px-1.5 py-0.2 text-[9.5px] font-semibold uppercase tracking-wider border",
                           getRiskColor(activeDistrictData.tingkat_risiko).badgeBg,
                         )}
                       >
@@ -447,7 +447,7 @@ export function MacRiskBrowser({
               <div className="grid grid-cols-3 gap-2 mt-2 text-center">
                 <div className="rounded-xl bg-paper-50/80 p-1.5 border border-paper-100">
                   <span className="block text-[10px] text-paper-500 font-medium">Kasus Aktif</span>
-                  <span className="text-xs font-bold text-foreground">
+                  <span className="text-xs font-semibold text-foreground">
                     {activeDistrictData.kasus_aktif}
                     <span className="text-[9px] font-normal text-paper-400 ml-0.5">kasus</span>
                   </span>
@@ -457,7 +457,7 @@ export function MacRiskBrowser({
                   <span className="block text-[10px] text-paper-500 font-medium">Prediksi 14h</span>
                   <span
                     className={cn(
-                      "text-xs font-bold",
+                      "text-xs font-semibold",
                       activeDistrictData.delta_mingguan > 0 ? "text-risk-high" : "text-risk-low",
                     )}
                   >
@@ -468,7 +468,7 @@ export function MacRiskBrowser({
 
                 <div className="rounded-xl bg-paper-50/80 p-1.5 border border-paper-100">
                   <span className="block text-[10px] text-paper-500 font-medium">Cuaca BMKG</span>
-                  <span className="text-xs font-bold text-foreground">
+                  <span className="text-xs font-semibold text-foreground">
                     {activeDistrictData.cuaca.curah_hujan_mm}
                     <span className="text-[9px] font-normal text-paper-400 ml-0.5">mm</span>
                   </span>
@@ -482,10 +482,10 @@ export function MacRiskBrowser({
                   onSelectKecamatan(activeDistrictData.nama);
                   scrollToResults();
                 }}
-                className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-xl bg-brand-700 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-brand-800 active:scale-[0.99] transition-all cursor-pointer"
+                className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-xl bg-brand-700 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-brand-800 active:bg-brand-900 transition-colors cursor-pointer"
               >
                 <span>Lihat Rekomendasi & Analisis Lengkap</span>
-                <ArrowDown className="h-3 w-3 animate-bounce" />
+                <ArrowDown className="h-3 w-3" />
               </button>
             </div>
           )}

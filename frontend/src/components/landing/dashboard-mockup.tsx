@@ -109,8 +109,8 @@ export function DashboardMockup() {
 
       <div className="absolute -left-3 top-1/3 hidden -translate-y-1/2 rounded-2xl border border-paper-200/90 bg-white/95 px-3.5 py-2 shadow-card md:flex md:items-center md:gap-2.5">
         <span className="relative flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
+          <span className="animate-beacon absolute inline-flex h-full w-full rounded-full bg-brand-700" />
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-700" />
         </span>
         <div className="text-[10px] leading-tight">
           <div className="font-semibold tracking-tight text-foreground">BMKG AWS Live</div>

@@ -69,7 +69,7 @@ export function DistrictDetailPanel({
           <span className="text-[10px] font-semibold text-paper-500 uppercase tracking-wider block">
             Detail Wilayah
           </span>
-          <h3 className="font-display text-xl sm:text-2xl font-bold text-foreground">
+          <h3 className="font-display text-xl sm:text-2xl font-semibold text-foreground">
             Kecamatan {district.nama}
           </h3>
         </div>
@@ -89,7 +89,7 @@ export function DistrictDetailPanel({
             Kasus Aktif
           </span>
           <div className="mt-1 flex items-baseline gap-1">
-            <span className="font-display text-2xl font-bold text-foreground">
+            <span className="font-display text-2xl font-semibold text-foreground">
               {formatNumber(district.kasus_aktif)}
             </span>
             <span className="text-xs text-muted-foreground">kasus</span>
@@ -107,14 +107,14 @@ export function DistrictDetailPanel({
             Proyeksi 2–4 Minggu
           </span>
           <div className="mt-1 flex items-baseline gap-1">
-            <span className="font-display text-2xl font-bold text-risk-high">
+            <span className="font-display text-2xl font-semibold text-risk-high">
               {formatNumber(district.kasus_prediksi)}
             </span>
             <span className="text-xs font-semibold text-risk-high">kasus</span>
           </div>
           <div className="mt-1 flex items-center justify-between text-[10px] text-risk-high pt-1 border-t border-paper-100/80 font-medium">
             <span>Potensi Lonjakan:</span>
-            <span className="font-bold">
+            <span className="font-semibold">
               {district.delta_mingguan >= 0 ? "+" : ""}
               {district.delta_mingguan}%
             </span>

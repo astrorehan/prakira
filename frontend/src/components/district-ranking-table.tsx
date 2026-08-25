@@ -110,7 +110,7 @@ export function DistrictRankingTable({
                     <div className="flex items-center gap-2.5">
                       <span
                         className={cn(
-                          "flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold",
+                          "flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-semibold",
                           index < 3
                             ? "bg-risk-high-bg text-risk-high border border-risk-high-br/60"
                             : "bg-paper-100 text-paper-700",
@@ -136,7 +136,7 @@ export function DistrictRankingTable({
                   <td className="py-3 px-3">
                     <div className="flex items-center gap-2">
                       <span
-                        className="font-display font-bold text-sm"
+                        className="font-display font-semibold text-sm"
                         style={{ color: riskCfg.color }}
                       >
                         {kec.skor_risiko}
@@ -157,7 +157,7 @@ export function DistrictRankingTable({
                   </td>
 
                   <td className="py-3 px-3">
-                    <div className="font-bold text-foreground">
+                    <div className="font-semibold text-foreground">
                       {formatNumber(kec.kasus_aktif)} kasus
                     </div>
                     <div className="text-[10px] text-muted-foreground font-mono">
@@ -166,7 +166,7 @@ export function DistrictRankingTable({
                   </td>
 
                   <td className="py-3 px-3">
-                    <div className="font-bold text-risk-high">
+                    <div className="font-semibold text-risk-high">
                       {formatNumber(kec.kasus_prediksi)} kasus
                     </div>
                     <div

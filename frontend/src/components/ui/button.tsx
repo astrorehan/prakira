@@ -6,9 +6,11 @@ import { cn } from "@/lib/utils";
 /**
  * Button — docs/DESIGN-SYSTEM.md §7.1
  *
- * Radius is `lg` (10px), not a full pill: full-round controls at 44px+ read as
- * a consumer app, not a public-sector instrument. Label weight stops at 500.
- * No `active:scale-*` — presses shift background, they don't shrink geometry.
+ * Full pill, 40/48/56/64px, label weight 600. This departs from the v1.0 spec
+ * (10px radius, 44px cap, weight 500) on purpose: the controls are read from
+ * across a room and tapped on phones, and the taller pill won both tests.
+ * What still holds: one primary button per screen, and no `active:scale-*` —
+ * presses shift background, they don't shrink geometry.
  */
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full font-semibold transition-all duration-fast ease-out focus-visible:outline-none focus-visible:shadow-focus disabled:pointer-events-none disabled:opacity-45 [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-current",

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { LayoutWrapper } from "@/components/layout-wrapper";
+import { CONSOLE_ROUTES } from "@/lib/routes";
 
 /* One typeface. Inter carries everything — UI, headings, and data alike; its
    tabular figures cover what a separate mono used to do. */
@@ -35,11 +36,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="id" suppressHydrationWarning>
       <head>
         {/* Resolve the surface and the saved a11y prefs before first paint, so
-            the canvas colour and text size never flash. LayoutWrapper keeps
-            data-surface in sync on client-side navigation. */}
+            the canvas colour and text size never flash. The route list is the
+            same CONSOLE_ROUTES the wrapper uses — inlining a second copy here
+            is how /tindakan ended up painting warm and then flipping cold.
+            LayoutWrapper keeps data-surface in sync on client-side navigation. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var d=document.documentElement;var p=location.pathname;var c=['/dashboard','/analitik','/admin','/verifikasi'].some(function(r){return p.indexOf(r)===0});d.setAttribute('data-surface',c?'console':'public');if(localStorage.getItem('prakira.a11y.contrast')==='1')d.classList.add('a11y-contrast');var f=localStorage.getItem('prakira.a11y.font');if(f==='lg')d.classList.add('a11y-large-text');else if(f==='sm')d.classList.add('a11y-small-text');}catch(e){}})();`,
+            __html: `(function(){try{var d=document.documentElement;var p=location.pathname;var c=${JSON.stringify(
+              CONSOLE_ROUTES,
+            )}.some(function(r){return p.indexOf(r)===0});d.setAttribute('data-surface',c?'console':'public');if(localStorage.getItem('prakira.a11y.contrast')==='1')d.classList.add('a11y-contrast');var f=localStorage.getItem('prakira.a11y.font');if(f==='lg')d.classList.add('a11y-large-text');else if(f==='sm')d.classList.add('a11y-small-text');}catch(e){}})();`,
           }}
         />
       </head>

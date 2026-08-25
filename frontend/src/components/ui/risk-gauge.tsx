@@ -24,7 +24,7 @@ export function RiskGauge({
     sm: {
       radius: 40,
       stroke: 6,
-      scoreSize: "text-base font-bold",
+      scoreSize: "text-base font-semibold",
       labelSize: "text-[7.5px] font-medium tracking-wider",
       labelMargin: "mt-0.5",
       bottomOffset: "pb-0.5",
@@ -32,7 +32,7 @@ export function RiskGauge({
     md: {
       radius: 52,
       stroke: 7,
-      scoreSize: "text-xl font-bold",
+      scoreSize: "text-xl font-semibold",
       labelSize: "text-[8px] font-medium tracking-widest",
       labelMargin: "mt-0.5",
       bottomOffset: "pb-1",
@@ -40,7 +40,7 @@ export function RiskGauge({
     lg: {
       radius: 76,
       stroke: 9.5,
-      scoreSize: "text-2xl sm:text-3xl font-bold",
+      scoreSize: "text-2xl sm:text-3xl font-semibold",
       labelSize: "text-[10px] font-medium tracking-widest",
       labelMargin: "mt-1",
       bottomOffset: "pb-1.5",

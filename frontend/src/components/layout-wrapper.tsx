@@ -7,15 +7,7 @@ import { Footer } from "./footer";
 import { Sidebar } from "./sidebar";
 import { SistemMasthead } from "./sistem/masthead";
 import { SistemFooter } from "./sistem/sistem-footer";
-
-/** Routes that render the operational console: cool, dense, mono-heavy. */
-export const CONSOLE_ROUTES = ["/dashboard", "/tindakan", "/analitik", "/admin", "/verifikasi"];
-
-/** Routes that render the public-service treatment: same tokens, official chrome. */
-export const SISTEM_ROUTES = ["/sistem"];
-
-/** Routes that bring their own full-page chrome: no navbar, no footer. */
-export const BARE_ROUTES = ["/masuk"];
+import { BARE_ROUTES, CONSOLE_ROUTES, SISTEM_ROUTES } from "@/lib/routes";
 
 export function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

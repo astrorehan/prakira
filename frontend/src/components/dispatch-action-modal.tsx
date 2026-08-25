@@ -141,7 +141,7 @@ export function DispatchActionModal({
             </div>
           </div>
 
-          <DialogTitle className="font-display text-base sm:text-lg font-bold text-foreground leading-tight">
+          <DialogTitle className="font-display text-base sm:text-lg font-semibold text-foreground leading-tight">
             {recommendation.title}
           </DialogTitle>
 
@@ -151,7 +151,7 @@ export function DispatchActionModal({
               <Sparkles className="h-4 w-4 text-brand-700 shrink-0" />
               <div>
                 <div className="text-[10px] font-mono text-paper-500 uppercase">Akurasi Model AI</div>
-                <div className="text-xs font-bold text-brand-700">{recommendation.ai_confidence || 94.2}% XGBoost</div>
+                <div className="text-xs font-semibold text-brand-700">{recommendation.ai_confidence || 94.2}% XGBoost</div>
               </div>
             </div>
 
@@ -159,7 +159,7 @@ export function DispatchActionModal({
               <Calendar className="h-4 w-4 text-primary shrink-0" />
               <div>
                 <div className="text-[10px] font-mono text-paper-500 uppercase">Lead Time Intervensi</div>
-                <div className="text-xs font-bold text-foreground">
+                <div className="text-xs font-semibold text-foreground">
                   {recommendation.lead_time_days || 14} Hari Sebelum Puncak
                 </div>
               </div>
@@ -169,7 +169,7 @@ export function DispatchActionModal({
               <Users className="h-4 w-4 text-risk-low shrink-0" />
               <div>
                 <div className="text-[10px] font-mono text-paper-500 uppercase">Populasi Terdampak</div>
-                <div className="text-xs font-bold text-foreground">
+                <div className="text-xs font-semibold text-foreground">
                   {recommendation.target_population || "120.000 warga"}
                 </div>
               </div>
@@ -225,7 +225,7 @@ export function DispatchActionModal({
               <div className="p-3.5 rounded-xl bg-brand-50 border border-brand-200/80 flex items-start gap-3">
                 <CloudRain className="h-4 w-4 text-brand-700 shrink-0 mt-0.5" />
                 <div>
-                  <h5 className="text-xs font-bold text-brand-900">Pemicu Parameter Iklim BMKG:</h5>
+                  <h5 className="text-xs font-semibold text-brand-900">Pemicu Parameter Iklim BMKG:</h5>
                   <p className="text-xs text-brand-800 mt-0.5 leading-relaxed">
                     {recommendation.climate_trigger}
                   </p>
@@ -238,7 +238,7 @@ export function DispatchActionModal({
               <div className="p-3.5 rounded-xl bg-risk-low-bg border border-risk-low-br flex items-start gap-3">
                 <CheckCircle2 className="h-4 w-4 text-risk-low shrink-0 mt-0.5" />
                 <div>
-                  <h5 className="text-xs font-bold text-risk-low">Proyeksi Efektivitas Intervensi:</h5>
+                  <h5 className="text-xs font-semibold text-risk-low">Proyeksi Efektivitas Intervensi:</h5>
                   <p className="text-xs text-paper-700 mt-0.5 leading-relaxed">
                     {recommendation.estimated_impact}
                   </p>
@@ -249,7 +249,7 @@ export function DispatchActionModal({
             {/* Checklist Section */}
             <div className="space-y-2.5 pt-2">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-foreground uppercase tracking-wider font-mono">
+                <label className="text-xs font-semibold text-foreground uppercase tracking-wider font-mono">
                   Checklist Kesiapan Intervensi Lapangan
                 </label>
                 <span className="text-xs font-mono font-semibold text-paper-600">
@@ -317,7 +317,7 @@ export function DispatchActionModal({
                       <Building2 className="h-4 w-4" />
                     </div>
                     <div>
-                      <h5 className="text-xs font-bold text-foreground">{pusk.name}</h5>
+                      <h5 className="text-xs font-semibold text-foreground">{pusk.name}</h5>
                       <p className="text-[11px] text-muted-foreground">Kepala: {pusk.head}</p>
                       <div className="flex items-center gap-1.5 mt-1">
                         <Phone className="h-3 w-3 text-paper-400" />
@@ -362,7 +362,7 @@ export function DispatchActionModal({
         {activeTab === "draft" && (
           <div className="p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-foreground uppercase tracking-wider font-mono">
+              <label className="text-xs font-semibold text-foreground uppercase tracking-wider font-mono">
                 Draft Pesan Instruksi / Surat Edaran Resmi
               </label>
               <Button

@@ -1,55 +1,65 @@
 # PRAKIRA Design System — "Buletin"
 
 **Sistem visual untuk platform peringatan dini kesehatan-iklim.**
-Pendamping [`PRD.md`](./PRD.md) · Versi 1.0 · 24 Agustus 2026
+Pendamping [`PRD.md`](./PRD.md) · Versi 2.0 · 26 Agustus 2026
+
+> **Status dokumen.** Versi 1.0 ditulis sebagai rencana, lalu kode bergerak lebih jauh
+> dari rencananya. Versi 2.0 membalik arahnya: **yang tertulis di sini adalah yang
+> benar-benar dikirim**, dibaca langsung dari `frontend/tailwind.config.ts`,
+> `frontend/src/app/globals.css`, dan komponen di `frontend/src/components/`.
+> Bagian yang masih menyimpang dari aturan dicatat apa adanya di [§12](#12-utang-desain-drift-ledger),
+> bukan disembunyikan.
+>
+> Sumber kebenaran, berurutan: `tailwind.config.ts` → `globals.css` → dokumen ini.
+> Kalau ketiganya berbeda, kodenya yang menang dan dokumen ini yang salah — perbaiki di sini.
 
 ---
 
-## 0. Kenapa versi sebelumnya terasa "AI slop"
+## 0. Yang berubah dari v1.0
 
-Ini bukan soal selera. Ada sepuluh sebab teknis yang bisa ditunjuk, dan semuanya berasal dari satu kesalahan pola: **strukturnya rapi, tapi bahan bakunya diambil dari nilai bawaan Tailwind.** Kesan mahal justru ditentukan bahan baku, bukan struktur.
-
-| # | Gejala | Sebab teknis |
-|---|---|---|
-| 1 | Terasa seperti template dashboard generik | Palet netralnya adalah ramp `slate` bawaan Tailwind (`#F8FAFC`, `#E2E8F0`, `#F1F5F9`). Netral hangat kustom akan terbaca seperti kertas; ramp bawaan terbaca seperti Bootstrap |
-| 2 | Warna berisik, tidak ada hierarki | ±25 warna terpakai: 7 varian `primary`, 6 warna risiko, 3 warna penyakit, plus `emerald-700` `rose-700` `sky-500` `amber-700` `blue-700` `indigo-600` `teal-600` yang dipanggil langsung di komponen. Anggaran yang sehat: 1 warna merek + 2 aksen + 4 status |
-| 3 | Warna risiko terasa murah | `#059669 / #D97706 / #E11D48` persis `emerald-600 / amber-600 / rose-600` bawaan Tailwind. Warna default framework selalu terbaca sebagai default |
-| 4 | *Liquid glass* | `backdrop-filter: blur()` pada latar terang adalah penanda paling kuat UI hasil generate |
-| 5 | Font terasa seperti "startup 2022" | Ditambahkan `Outfit` sebagai `--font-display`. Dua *typeface* geometris tanpa alasan. Selain itu `font-feature-settings` diubah ke `cv02,cv03,cv04,cv11` yang mengaktifkan varian *single-storey* — membuat Inter menyerupai Product Sans |
-| 6 | Semua berteriak, tidak ada penekanan | Hampir seluruh elemen `font-semibold` — *eyebrow*, chip, pill, tombol, badge. Bobot seragam meniadakan hierarki |
-| 7 | Terasa seperti aplikasi konsumen, bukan sistem publik | Tombol `rounded-full` setinggi `h-12`/`h-14` + `active:scale-[0.98]` |
-| 8 | Latar terasa kotor, bukan atmosferik | Mesh gradient dilemahkan (alpha 0.12/0.08/0.06 dari 0.18/0.12/0.10) sementara *dot grid* dikuatkan (0.08–0.09 @ `opacity-60` dari 0.06 @ `opacity-50`). Hasilnya kisi yang ramai alih-alih sapuan lembut |
-| 9 | Perkelahian spesifisitas CSS | `.eyebrow`, `.chip`, `.bg-mesh` didefinisikan di akar `globals.css`, di luar `@layer`. Seharusnya di `@layer components` / `@layer utilities` |
-| 10 | Kode mati & bug diam | `liquid-glass-frost`, `liquid-glass-risk-*`, `shadow-glass-sm/md/lg` dipakai komponen tapi tidak pernah didefinisikan. `extend.colors.amber = "#C97B1A"` menimpa seluruh skala amber Tailwind, sehingga `bg-amber-50` pada `Badge variant="risk-medium"` **tidak menghasilkan warna apa pun** |
-
-**Kesimpulan yang perlu dipegang:** kesan mewah tidak datang dari efek (glass, glow, gradien). Kesan mewah datang dari **netral yang dipilih sendiri, jumlah warna yang sedikit, bobot huruf yang menahan diri, dan ruang kosong yang berani.** Tiga hal pertama gratis; yang keempat butuh disiplin.
+| # | v1.0 (rencana) | v2.0 (terkirim) | Kenapa |
+|---|---|---|---|
+| 1 | Dua *typeface*: Inter + IBM Plex Mono | **Satu**: Inter. `font-mono` dan `font-display` di-alias ke Inter | Angka bertabulasi Inter sudah menutup peran mono. Satu font = satu unduhan, LCP portal warga lebih aman |
+| 2 | Ramp risiko klinis (`#1B6B4F / #A8690C / #A32B1F`) | Ramp **tanah**: `#1F5132 / #D4933A / #A8442C / #8A2E1A` | Nada tanah menyatu dengan kanvas hangat portal warga tanpa kehilangan urutan terang |
+| 3 | Label risiko: Rendah / Sedang / Tinggi | **Rendah / Waspada / Siaga** (+ `critical` untuk KLB) | Istilah operasional dinas, bukan istilah statistik |
+| 4 | "Tanpa gradien" | Keluarga `bg-grad-*` resmi, dibangun dari token yang sudah ada | Gradien tidak dilarang; **hue baru** yang dilarang. Semua perhentian gradien memakai hex yang sudah ada di palet |
+| 5 | Satu animasi tak terbatas | Lapisan gerak *landing*: aurora, marquee, beacon, sheen, rise-fall, grow-x, reveal | Halaman depan adalah permukaan pemasaran, bukan konsol. Konsol tetap tenang |
+| 6 | Kanvas konsol `paper-50`, publik `sand-50`, dasar 15/17px | `data-surface` di `<html>`; dasar 17px (konsol) / 18px (publik), root 112.5% | Diuji di proyektor: 15px terlalu kecil dari jarak 3 meter |
+| 7 | Tombol radius 10px, tinggi 32/38/44, bobot 500 | Pil penuh, tinggi 40/48/56/64, bobot 600 | Keputusan sadar setelah uji tampil. Dicatat sebagai **penyimpangan yang diterima**, bukan kelalaian — §7.1 |
+| 8 | `liquid-glass*` dimigrasi lalu dihapus | Masih hidup: 27 pemakaian di 12 berkas, didefinisikan ulang sebagai permukaan datar | Tidak ada `backdrop-filter` tersisa, jadi utangnya kosmetik: nama kelas, bukan efek |
+| 9 | `<Metric>` wajib untuk semua KPI | `KpiCard` yang dipakai konsol, dengan kontrak `range` + `coverage` yang sama | Kejujuran datanya sudah tampil; yang tersisa duplikasi primitif. Lihat §7.3 dan §12 |
 
 ---
 
 ## 1. Posisi & Prinsip
 
-PRAKIRA bukan aplikasi konsumen dan bukan situs SaaS. Ini **instrumen kerja lembaga publik** yang juga punya wajah untuk warga. Referensinya buletin meteorologi dan jurnalisme data, bukan halaman *landing* startup.
+PRAKIRA bukan aplikasi konsumen dan bukan situs SaaS. Ini **instrumen kerja lembaga publik**
+yang juga punya wajah untuk warga. Referensinya buletin meteorologi dan jurnalisme data.
 
 Nama sistem: **Buletin**.
 
 ### Enam prinsip
 
-1. **Warna adalah data.** Satu-satunya kejenuhan tinggi di layar adalah tingkat risiko. Merek, permukaan, dan navigasi berbicara dengan netral. Kalau segalanya berwarna, tidak ada yang berarti.
-2. **Angka adalah pahlawannya.** Tipografi dirancang untuk metrik: angka bertabulasi, nol bergaris, label mono, satuan yang tidak ikut membesar.
-3. **Menahan diri = mahal.** Bobot huruf berhenti di 600. Radius tidak melebihi 18px kecuali panel besar. Bayangan tidak melebihi tiga lapis.
-4. **Ketidakpastian ikut ditampilkan.** Setiap komponen angka punya slot bawaan untuk rentang dan cakupan data. Sistem desain yang tidak menyediakan tempat untuk kejujuran akan membuat kejujuran dilupakan.
-5. **Dua permukaan, satu sistem.** Konsol (dinas/puskesmas) dan Publik (warga) memakai token yang sama dengan suhu berbeda — dingin & padat vs hangat & lapang.
-6. **Bisa dibaca dalam abu-abu.** Kelas risiko dibedakan oleh terang-gelap yang monoton menurun, bukan hanya hue. Aman untuk buta warna, fotokopi, dan proyektor ruang pameran.
+1. **Warna adalah data.** Satu-satunya kejenuhan tinggi di layar adalah tingkat risiko. Merek, permukaan, dan navigasi berbicara dengan netral.
+2. **Angka adalah pahlawannya.** Angka bertabulasi, nol bergaris, satuan yang tidak ikut membesar.
+3. **Menahan diri = mahal.** Bayangan tidak melebihi tiga lapis. Tidak ada `backdrop-filter`. Tidak ada hue di luar palet.
+4. **Ketidakpastian ikut ditampilkan.** Setiap angka prediksi membawa rentang dan cakupan data.
+5. **Dua permukaan, satu sistem.** Konsol dan Publik memakai token yang sama dengan suhu berbeda.
+6. **Bisa dibaca dalam abu-abu.** Kelas risiko dibedakan oleh terang-gelap yang menurun monoton, bukan hanya hue.
+
+Prinsip yang **dilepas** dari v1.0: "tidak ada gradien" dan "bobot berhenti di 600".
+Keduanya tidak dipatuhi kode dan tidak dipertahankan saat uji tampil.
+Aturan yang tidak dipatuhi lebih berbahaya daripada aturan yang dicabut — lihat §4.3.
 
 ---
 
 ## 2. Token Warna
 
-Semua token hidup di `frontend/tailwind.config.ts` dan `frontend/src/app/globals.css`. Jangan pernah menulis hex langsung di komponen.
+Semua token hidup di `frontend/tailwind.config.ts`. Jangan pernah menulis hex langsung di komponen.
 
 ### 2.1 Netral — ramp "Kertas"
 
-Bukan `slate`. Ramp kustom pada hue ±192° dengan kroma sangat rendah, sehingga netralnya condong ke merek dan seluruh layar terasa satu keluarga.
+Ramp kustom pada hue ±192°, kroma sangat rendah. Bukan `slate`.
 
 | Token | Hex | Pakai untuk |
 |---|---|---|
@@ -67,42 +77,43 @@ Bukan `slate`. Ramp kustom pada hue ±192° dengan kroma sangat rendah, sehingga
 
 ### 2.2 Merek — "Petrol"
 
-Teal-biru dalam. Bukan hijau agrikultur, bukan biru SaaS bawaan. Mengkodekan iklim + klinis tanpa bersaing dengan ramp risiko.
-
 | Token | Hex | Pakai untuk |
 |---|---|---|
 | `brand-900` | `#06282F` | Latar gelap, footer, sidebar |
-| `brand-800` | `#093843` | Hover pada permukaan gelap |
-| `brand-700` | `#0B4A57` | **Primary** — tombol utama, ikon aktif |
+| `brand-800` | `#093843` | Keadaan *active* tombol primer |
+| `brand-700` | `#0B4A57` | **Primary** — tombol utama, ikon aktif. Juga `brand` DEFAULT |
 | `brand-600` | `#0F5F6E` | Hover tombol primer |
 | `brand-500` | `#17808F` | Tautan, deret grafik ke-1 |
 | `brand-300` | `#7FB8C0` | Border aksen, keadaan nonaktif |
 | `brand-100` | `#D6E9EC` | Isian chip & *eyebrow* |
 | `brand-50` | `#EAF4F5` | Latar blok tersorot |
 
-Kontras `brand-700` di atas putih ≈ 9.4:1 — aman untuk teks kecil dan ikon.
+`brand.foreground` = `#FFFFFF`. Kontras `brand-700` di atas putih ≈ 9.4:1.
 
-### 2.3 Ramp Risiko — "Sinyal"
+### 2.3 Ramp Risiko — "Sinyal Tanah"
 
-Satu-satunya warna jenuh di produk. Nilai kustom, lebih gelap dan lebih rendah kroma daripada default Tailwind, sehingga bertahan saat dicetak dan diproyeksikan.
+Satu-satunya warna jenuh di produk. Empat sub-token per kelas: isi/teks, latar lembut (`-bg`),
+border (`-br`), isian peta (`-fill`).
 
-| Kelas | Isi/teks | Latar lembut | Border | Isian peta | Terang (L*) |
-|---|---|---|---|---|---:|
-| Rendah | `#1B6B4F` | `#E3F0EA` | `#BEDBCE` | `#BCD9C9` | 84 |
-| Sedang | `#A8690C` | `#FAF0DC` | `#EAD3A3` | `#E0AF63` | 74 |
-| Tinggi | `#A32B1F` | `#F9E6E2` | `#EBC0B7` | `#B34434` | 45 |
-| KLB *(cadangan)* | `#6B140E` | `#F1D9D4` | `#E0B3AB` | `#7C2318` | 32 |
-| Data tidak memadai | `#5A6C6E` | `#ECF0F0` | `#DFE6E6` | `#E3E8E8` | — |
+| Kelas | Label UI | Teks (`risk-*`) | `-bg` | `-br` | `-fill` (peta) |
+|---|---|---|---|---|---|
+| `low` | Rendah | `#1F5132` | `#EDF4EC` | `#C5DEC2` | `#7AA876` |
+| `medium` | **Waspada** | `#D4933A` | `#FDF6E9` | `#F6DBA9` | `#E5AA52` |
+| `high` | **Siaga** | `#A8442C` | `#FBECE8` | `#F3C2B4` | `#C95E42` |
+| `critical` | KLB | `#8A2E1A` | `#F9DFD8` | `#E8A28E` | `#A8442C` |
+| `none` | Data tidak memadai | `#5A6C6E` | `#ECF0F0` | `#DFE6E6` | `#E3E8E8` |
+
+Label dan salinan teksnya tinggal di `src/lib/utils.ts` (`RISK_CONFIG`) — **satu sumber**,
+bukan diketik ulang di komponen.
 
 **Aturan yang mengikat:**
-- Terang isian peta **menurun monoton** (84 → 74 → 45 → 32). Artinya urutan risiko tetap terbaca dalam abu-abu, buta warna, dan hasil cetak.
-- Kelas risiko **tidak boleh** disampaikan lewat warna saja. Wajib disertai label teks dan ikon (WCAG 1.4.1).
-- `Data tidak memadai` adalah kelas tersendiri dan **tidak pernah** ditampilkan sebagai "Rendah". Ini kesalahan kepercayaan yang paling mudah ditemukan juri.
-- Isian risiko `Tinggi` pada peta memakai *hatch* diagonal 45° tipis di atas isian, agar tetap terpisah dari `Sedang` bagi penderita protanopia.
+- Terang isian peta menurun monoton dari `low` ke `critical`. Urutan risiko tetap terbaca dalam abu-abu dan hasil cetak.
+- Kelas risiko **tidak boleh** disampaikan lewat warna saja. Wajib label teks + ikon (WCAG 1.4.1). Ikon ditetapkan di `RISK_CONFIG.iconName`: `ShieldCheck` / `AlertTriangle` / `Siren`.
+- `Data tidak memadai` (`none`) adalah kelas tersendiri dan **tidak pernah** ditampilkan sebagai "Rendah".
+- Kelas `high` memakai *hatch* diagonal 45° di atas isian peta (`RISK_CONFIG.tinggi.hatch === true`, utilitas `.risk-hatch`), agar tetap terpisah dari `medium` bagi penderita protanopia.
+- `critical` sudah dipakai nyata (tombol `danger`, badge KLB), bukan lagi cadangan.
 
 ### 2.4 Kategorikal (grafik saja)
-
-Untuk membedakan penyakit atau deret pada grafik multi-seri. **Tidak pernah** mengkodekan risiko.
 
 | Token | Hex |
 |---|---|
@@ -112,45 +123,111 @@ Untuk membedakan penyakit atau deret pada grafik multi-seri. **Tidak pernah** me
 | `cat-4` | `#5B4A70` |
 | `cat-5` | `#2C6650` |
 
-**Aturan silang:** warna risiko tidak pernah muncul di grafik kategorikal; warna kategorikal tidak pernah mengkodekan risiko. Pelanggaran aturan ini adalah penyebab utama kekacauan visual pada versi sebelumnya.
-
-Penyakit **tidak** dibedakan warna di peta risiko — di sana warna sudah dipakai untuk risiko. Penyakit dibedakan lewat ikon + label + pemilih (*selector*).
+**Aturan silang:** warna risiko tidak pernah muncul di grafik kategorikal; warna kategorikal
+tidak pernah mengkodekan risiko. Penyakit dibedakan lewat ikon + label + *selector*, tidak lewat warna peta.
 
 ### 2.5 Variabel iklim (pengkodean tetap)
 
-Selalu sama di seluruh produk, agar pembaca tidak perlu membaca ulang legenda.
+Token Tailwind `climate-*`, dengan kembaran nilai JS di `CLIMATE_COLORS` (`src/lib/utils.ts`) untuk Recharts.
 
-| Variabel | Hex |
-|---|---|
-| Curah hujan | `#2E6F8E` |
-| Suhu | `#B4552A` |
-| Kelembaban | `#4E8C7E` |
+| Variabel | Token | Hex |
+|---|---|---|
+| Curah hujan | `climate-rain` | `#2E6F8E` |
+| Suhu | `climate-temp` | `#B4552A` |
+| Kelembaban | `climate-humid` | `#4E8C7E` |
 
 ### 2.6 Permukaan hangat — "Tanah" (portal warga)
 
 | Token | Hex |
 |---|---|
 | `sand-50` | `#FAF7F1` |
-| `sand-100` | `#F2EDE3` |
+| `sand-100` | `#F2EDE3` (juga `sand` DEFAULT) |
 | `sand-200` | `#E5DDCC` |
+| `sand-300` | `#D2C6AE` |
+
+### 2.7 Slot semantik (kompatibel shadcn)
+
+`background` `#F5F7F7` · `surface` `#FFFFFF` · `foreground` `#0E2225` ·
+`muted` `#ECF0F0` / `muted-foreground` `#5A6C6E` · `border` & `input` `#DFE6E6` ·
+`ring` `#0B4A57` · `card` / `popover` putih · `accent` `#D6E9EC` ·
+`secondary` `#ECF0F0` · `destructive` `#DC2626`.
+
+> `destructive` masih memakai merah bawaan Tailwind (`red-600`). Ini satu-satunya hex
+> di luar palet yang tersisa di konfigurasi. Komponen produk memakai `risk-high` untuk
+> aksi merusak, jadi slot ini praktis tidak terpakai — hapus atau arahkan ke `#A8442C`.
+
+### 2.8 Alias warisan
+
+`primary.*` (DEFAULT/deep/dark/soft/light/accent/royal) dan `clay` diarahkan ke nilai
+`brand-*` / `cat-2`, supaya kelas lama ikut berubah warna tanpa disentuh.
+**Jangan dipakai di kode baru.**
+
+### 2.9 Gradien
+
+Diperkenalkan di v2.0 dan sah, dengan satu syarat: **setiap perhentian gradien adalah hex
+yang sudah ada di palet.** Gradien tidak boleh memasukkan hue baru.
+
+| Token | Pakai untuk | Pemakaian |
+|---|---|---:|
+| `bg-grad-page` | Kanvas halaman publik (pasir + kabut merek) | 3 |
+| `bg-grad-sand` | Blok bagian pada permukaan hangat | 5 |
+| `bg-grad-paper` | Kartu terang, sedikit lebih hidup dari putih rata | 9 |
+| `bg-grad-brand` | Panel gelap, CTA, *masthead* | 0 |
+| `bg-grad-brand-soft` | Blok tersorot terang | 4 |
+| `bg-grad-risk-{low,medium,high}` | Latar kartu risiko | 1 tiap kelas |
+| `bg-grad-bar-{low,medium,high}` | Isian bar distribusi | 3 tiap kelas |
+| `bg-wash`, `bg-wash-warm` | Sapuan atmosferik satu lapis | 0 |
+| `bg-hatch` | Overlay *hatch* peta | 0 |
+
+Gradien risiko mempertahankan urutan terang yang sama dengan ramp datar, jadi §2.3 tetap berlaku di atasnya.
 
 ---
 
 ## 3. Dua Permukaan (Dual Surface)
 
-Ide struktural yang membedakan PRAKIRA dari sistem desain dashboard mana pun yang disalin: **suhu permukaan mengkodekan audiens.**
+**Suhu permukaan mengkodekan audiens.** Implementasi: atribut `data-surface` pada
+`<html>`, bukan pada pembungkus rute — supaya `body` dan seluruh token melihatnya.
 
-| | Konsol — `/dashboard`, `/analitik`, `/admin` | Publik — `/warga`, `/`, `/model` |
+| | Konsol — `console` | Publik — `public` |
 |---|---|---|
-| Kanvas | `paper-50` (dingin) | `sand-50` (hangat) |
-| Kepadatan | Padat — tinggi baris 40px, padding kartu 20px | Lapang — tinggi baris 52px, padding kartu 28px |
-| Ukuran teks dasar | 15px | 17px |
-| Peran mono | Berat — label, kode, satuan, cap waktu | Ringan — hanya *eyebrow* |
-| Nada | Instrumen. Angka dulu, kalimat belakangan | Kalimat dulu, angka sebagai penopang |
+| Rute | `/dashboard`, `/tindakan`, `/analitik`, `/admin`, `/verifikasi` | selain itu |
+| `--canvas` | `#F5F7F7` | `#FAF7F1` |
+| `--surface-sunken` | `#ECF0F0` | `#F2EDE3` |
+| `--border` / `--border-strong` | `#DFE6E6` / `#C9D4D4` | `#E5DDCC` / `#D2C6AE` |
+| `--row-h` | 44px | 56px |
+| `--card-pad` | 22px | 28px |
+| `--base-size` | 1.0625rem | 1.125rem |
 
-Implementasi: atribut `data-surface="console" \| "public"` pada `<body>` atau pembungkus rute. Token yang bergantung permukaan didefinisikan ulang di dalam pemilih atribut tersebut. Komponen tidak perlu tahu sedang berada di permukaan mana.
+Root `html` memakai `font-size: 112.5%`, jadi 1rem = 18px. `--base-size` ditulis dalam `rem`
+supaya kelas ukuran teks aksesibilitas (§8) tetap bekerja, dan hanya dipasang di `body` —
+memasangnya di `html` juga akan berlipat.
 
-Kenapa ini bagus untuk penilaian: bukan dekorasi, melainkan jawaban desain atas kebutuhan produk (dua audiens dengan literasi data yang jauh berbeda), dan dapat dijelaskan dalam satu kalimat saat tanya jawab.
+Alur penerapan, tiga bagian yang harus tetap sinkron:
+
+0. `src/lib/routes.ts` — **satu** daftar rute (`CONSOLE_ROUTES`, `SISTEM_ROUTES`, `BARE_ROUTES`).
+1. `src/app/layout.tsx` — skrip inline sebelum *paint* pertama menetapkan `data-surface` + preferensi a11y, supaya warna kanvas dan ukuran teks tidak berkedip.
+2. `src/components/layout-wrapper.tsx` — menjaga atribut tetap benar saat navigasi sisi klien, dan memilih *chrome*.
+3. `globals.css` — `:root[data-surface="public"]` mendefinisikan ulang token.
+
+Komponen tidak pernah bercabang berdasarkan permukaan. Kalau sebuah komponen butuh tahu
+sedang di mana, yang kurang adalah tokennya.
+
+> **Kenapa daftar rutenya tinggal di `src/lib/routes.ts`, bukan di `layout-wrapper.tsx`.**
+> Dua kali sistem ini kehilangan permukaan pada `/tindakan`: pertama karena skrip
+> *pre-paint* menyalin daftarnya sendiri dan lupa menambah rute baru, kedua karena
+> `layout.tsx` (komponen server) mengimpor konstanta dari berkas `"use client"` —
+> yang sampai di server sebagai *client reference*, bukan data, sehingga
+> `JSON.stringify` menghasilkan `{}` dan **semua** rute konsol berkedip hangat dulu.
+> Konstanta rute wajib hidup di modul biasa yang dibaca kedua sisi.
+
+Chrome per permukaan:
+
+| Rute | Chrome |
+|---|---|
+| `CONSOLE_ROUTES` | `Sidebar` + main bergulir |
+| `/sistem` (`SISTEM_ROUTES`) | `SistemMasthead` + `SistemFooter` — identitas resmi, navigasi layanan, status operasional |
+| `/masuk` (`BARE_ROUTES`) | Tanpa navbar & footer; halamannya adalah komposisi utuh |
+| sisanya | `Navbar` + `Footer` |
 
 ---
 
@@ -158,54 +235,59 @@ Kenapa ini bagus untuk penilaian: bukan dekorasi, melainkan jawaban desain atas 
 
 ### 4.1 Typeface
 
-| Peran | Font | Alasan |
-|---|---|---|
-| UI & teks | **Inter** (variabel) | Netral, x-height tinggi, angka bertabulasi tersedia |
-| Data & label | **IBM Plex Mono** | Nol bergaris bawaan, nada kelembagaan, bukan "hacker". Memberi rasa terukur pada label, kode BPS, cap waktu, satuan |
+**Satu typeface: Inter** (variabel, via `next/font`, `--font-sans`).
 
-**Hanya dua.** `Outfit` dibuang. Menambahkan *typeface* display geometris adalah persis langkah yang membuat versi sebelumnya terbaca sebagai template.
+`font-mono` dan `font-display` tetap ada sebagai token, tetapi keduanya mengarah ke Inter.
+Nama kelasnya dipertahankan sebagai **peran**, bukan sebagai janji font berbeda:
+`font-mono` menandai "ini label / kode / cap waktu" dan berpasangan dengan `tabular`.
+Ada 135 pemakaian `font-mono` di `src/` — semuanya kini murni penanda peran.
 
-Fitur OpenType untuk Inter:
+Fitur OpenType (di `globals.css`):
 
 ```css
 font-feature-settings: "cv05" 1, "cv08" 1, "ss03" 1, "calt" 1;
 ```
 
-`cv05` memberi ekor pada huruf `l` (membedakannya dari `1` dan `I`), `cv08` memberi serif pada `I` kapital, `ss03` merapikan tanda kutip dan koma. Ketiganya menaikkan keterbacaan data. Jangan aktifkan `cv11` — itu membuat `a` menjadi *single-storey* dan Inter kehilangan karakternya.
+`cv11` sengaja **mati** — itu membuat `a` menjadi *single-storey* dan Inter kehilangan karakternya.
 
-Untuk seluruh angka metrik: `font-variant-numeric: tabular-nums slashed-zero;`. Angka yang tidak bertabulasi membuat kolom tabel bergoyang saat data berubah — detail kecil yang langsung membedakan produk data yang serius dari yang tidak.
-
-> **Varian opsional.** Bila tim ingin nada editorial yang lebih berwibawa, ganti `--font-display` menjadi **Source Serif 4** dan pakai hanya pada `display` dan `h1`. Satu baris di `layout.tsx`. Rekomendasi: baru lakukan ini setelah 29 Agustus, bukan sekarang.
+Angka metrik: `font-variant-numeric: tabular-nums slashed-zero`, diterapkan otomatis pada
+`table td`, `table th`, `[data-numeric]`, dan kelas `.tabular`.
 
 ### 4.2 Skala
-
-Basis 16px. Ukuran ditulis dalam `rem`.
 
 | Token | Ukuran | Tinggi baris | *Tracking* | Bobot | Pakai untuk |
 |---|---|---|---|---:|---|
 | `display` | `clamp(2.25rem, 1.6rem + 2.6vw, 3.5rem)` | 1.04 | −0.022em | 600 | H1 hero |
-| `h1` | 2rem / 32px | 1.15 | −0.02em | 600 | Judul halaman |
-| `h2` | 1.5rem / 24px | 1.2 | −0.018em | 600 | Judul bagian |
-| `h3` | 1.125rem / 18px | 1.35 | −0.012em | 600 | Judul kartu |
-| `body-lg` | 1.0625rem / 17px | 1.65 | 0 | 400 | Paragraf permukaan publik |
-| `body` | 0.9375rem / 15px | 1.6 | 0 | 400 | Teks baku konsol |
-| `body-sm` | 0.875rem / 14px | 1.55 | 0 | 400 | Teks pendukung |
-| `caption` | 0.8125rem / 13px | 1.45 | 0 | 400 | Keterangan, catatan kaki |
-| `overline` | 0.6875rem / 11px | 1 | +0.08em | 500 | Label mono huruf besar |
-| `metric-xl` | 2.5rem / 40px | 1.0 | −0.02em | 600 | KPI utama |
-| `metric` | 2rem / 32px | 1.05 | −0.02em | 600 | Nilai kartu metrik |
-| `metric-sm` | 1.375rem / 22px | 1.1 | −0.01em | 600 | Angka dalam tabel padat |
+| `h1` | 2rem | 1.15 | −0.02em | 600 | Judul halaman |
+| `h2` | 1.5rem | 1.2 | −0.018em | 600 | Judul bagian |
+| `h3` | 1.125rem | 1.35 | −0.012em | 600 | Judul kartu |
+| `body-lg` | 1.0625rem | 1.65 | 0 | 400 | Paragraf permukaan publik |
+| `body` | 0.9375rem | 1.6 | 0 | 400 | Teks baku konsol |
+| `body-sm` | 0.875rem | 1.55 | 0 | 400 | Teks pendukung |
+| `caption` | 0.8125rem | 1.45 | 0 | 400 | Keterangan, catatan kaki |
+| `overline` | 0.6875rem | 1.4 | +0.08em | 500 | Label huruf besar |
+| `metric-xl` | 2.5rem | 1.0 | −0.02em | 600 | KPI utama |
+| `metric` | 2rem | 1.05 | −0.02em | 600 | Nilai kartu metrik |
+| `metric-sm` | 1.375rem | 1.1 | −0.01em | 600 | Angka dalam tabel padat |
+
+Kelas bantu di `@layer components`: `.overline`, `.eyebrow`, `.chip`, `.h-section`, `.h-display`.
+
+**Kenyataan pemakaian:** 196 pemakaian skala sistem berbanding 320 kelas ukuran bawaan
+Tailwind (`text-sm`, `text-2xl`, …) dan 198 ukuran *arbitrary* `text-[…]`.
+Skala ini belum menang di kodenya sendiri. Lihat §12.
 
 ### 4.3 Aturan bobot
 
 | Bobot | Boleh dipakai untuk |
 |---|---|
-| 400 | Seluruh teks berjalan. Ini keadaan baku |
-| 500 | Label UI, kepala tabel, teks tombol, item nav aktif |
-| 600 | Judul dan nilai metrik. **Titik berhenti** |
-| 700+ | **Dilarang.** Kalau butuh 700 untuk menonjol, masalahnya ada di tata letak, bukan di bobot |
+| 400 | Seluruh teks berjalan. Keadaan baku |
+| 500 | Label UI, kepala tabel, item nav aktif, badge |
+| 600 | Judul, nilai metrik, teks tombol. Ini **titik berhenti** |
+| 700+ | Tidak dipakai di mana pun. Nol `font-bold` / `font-extrabold` di `src/` per 26 Agustus 2026 |
 
-Ini perbaikan tunggal dengan dampak terbesar terhadap kesan "AI slop": versi sebelumnya memakai `font-semibold` pada hampir semua elemen kecil.
+Perubahan jujur dari v1.0: teks tombol memakai 600, bukan 500. `<strong>` / `<b>` dipaksa
+600 di `@layer base`; `th` dipaksa 500 karena kepala tabel adalah label, bukan judul;
+kontrol zoom Leaflet dipaksa 400.
 
 ---
 
@@ -213,11 +295,8 @@ Ini perbaikan tunggal dengan dampak terbesar terhadap kesan "AI slop": versi seb
 
 ### 5.1 Ruang
 
-Basis 4px. Skala: `1=4 2=8 3=12 4=16 5=20 6=24 8=32 10=40 12=48 16=64 20=80 24=96`.
-
-Ritme bagian halaman: `py-16` di mobile, `py-24` di desktop untuk permukaan publik; `py-8`/`py-10` untuk konsol.
-
-Padding kartu: konsol `20px`, publik `28px`. Kartu di dalam kartu: `16px`.
+Basis 4px. Padding kartu memakai `var(--card-pad)` dan tinggi baris tabel `var(--row-h)` (§3),
+jadi komponen yang sama menjadi padat di konsol dan lapang di publik tanpa prop.
 
 ### 5.2 Radius
 
@@ -225,19 +304,20 @@ Padding kartu: konsol `20px`, publik `28px`. Kartu di dalam kartu: `16px`.
 |---|---:|---|
 | `xs` | 4px | Kotak centang, indikator kecil |
 | `sm` | 6px | Tag, chip mungil |
-| `md` | 8px | Input dalam, tombol ikon kecil |
-| `lg` | 10px | **Tombol, input, select** |
-| `xl` | 14px | **Kartu** |
-| `2xl` | 18px | Panel besar, wadah peta, modal |
-| `full` | 9999px | Badge dan pill **saja** |
+| `md` / DEFAULT | 8px | Input dalam, tombol ikon kecil |
+| `lg` | 10px | Input, select |
+| `xl` | 14px | **Kartu** (`<Card>`, `.card-surface`) |
+| `2xl` | 18px | Panel besar, wadah peta, modal, `LiquidGlassCard` |
+| `3xl` | 24px | Panel *hero* halaman depan |
+| `full` | 9999px | Badge, pill, **dan tombol** (§7.1) |
 
-Angka 10/14/18 memang bukan angka bulat. Itu disengaja — skala radius kustom adalah tanda tangan sistem desain yang dirancang, bukan yang diambil dari bawaan.
-
-Yang berubah dari versi lama: tombol berhenti menjadi pil penuh. Pil penuh pada kontrol setinggi 48px membuat produk terbaca sebagai aplikasi konsumen. Badge tetap pil — itu justru menegaskan bedanya kontrol dan label.
+`globals.css` masih menyimpan `--radius: 16px` dan `--radius-control: 14px` yang tidak
+dirujuk siapa pun. Hapus, atau jadikan sumber untuk skala di atas — jangan biarkan dua
+skala radius hidup berdampingan.
 
 ### 5.3 Bayangan
 
-Semua bayangan berwarna tinta merek (`#0E2225`), bukan hitam murni. Bayangan hitam pada latar berwarna selalu terlihat kotor.
+Semua bayangan berwarna tinta merek (`#0E2225`), bukan hitam murni.
 
 | Token | Nilai |
 |---|---|
@@ -249,141 +329,264 @@ Semua bayangan berwarna tinta merek (`#0E2225`), bukan hitam murni. Bayangan hit
 | `pop` | `0 4px 8px rgba(14,34,37,.06), 0 28px 56px -20px rgba(14,34,37,.22)` |
 | `focus` | `0 0 0 2px #FFFFFF, 0 0 0 4px rgba(11,74,87,.55)` |
 
-**Aturan:** area padat (tabel, daftar, panel bersebelahan) dipisahkan oleh **garis rambut**, bukan bayangan. Bayangan hanya untuk yang benar-benar mengambang: *popover*, *dropdown*, modal, kartu yang bisa diseret. Menumpuk bayangan pada elemen yang tidak mengambang adalah sebab utama tampilan "berbusa".
+Alias warisan `elevated`, `glow`, `glass`, `glass-sm/md/lg` dipetakan ke nilai di atas —
+**tidak ada yang bercahaya lagi**, tapi namanya masih beredar (5 pemakaian `shadow-glass*`).
 
-`glow` dan seluruh varian `glass` dihapus dari sistem.
+**Aturan:** area padat (tabel, daftar, panel bersebelahan) dipisahkan **garis rambut**,
+bukan bayangan. Bayangan hanya untuk yang benar-benar mengambang: *popover*, *dropdown*, modal.
 
 ---
 
 ## 6. Gerak
 
+### 6.1 Token
+
 | Token | Nilai |
 |---|---|
-| `--ease-out` | `cubic-bezier(.2,.7,.3,1)` |
-| `--ease-inout` | `cubic-bezier(.5,0,.2,1)` |
-| `--dur-fast` | 140ms |
-| `--dur-base` | 200ms |
-| `--dur-slow` | 320ms |
+| `--ease-out` / `ease-out` | `cubic-bezier(.2,.7,.3,1)` |
+| `--ease-inout` / `ease-inout` | `cubic-bezier(.5,0,.2,1)` |
+| `--dur-fast` / `duration-fast` | 140ms |
+| `--dur-base` / `duration-base` | 200ms |
+| `--dur-slow` / `duration-slow` | 320ms |
 
-**Aturan:**
-1. Animasi masuk hanya untuk konten di atas lipatan (*above the fold*). Bagian bawah halaman tidak dianimasikan saat digulir.
-2. Pembaruan data memakai *crossfade* 200ms, tanpa geseran posisi. Angka yang melompat saat diperbarui membuat pembaca tidak percaya.
-3. Animasi berulang tak terbatas hanya boleh satu: titik "langsung" (*live*) pada status sinkronisasi BMKG.
-4. `active:scale-*` dilarang pada tombol. Ganti dengan pergeseran warna latar.
-5. Seluruh animasi mati pada `prefers-reduced-motion: reduce`.
+### 6.2 Dua anggaran gerak
+
+Penyesuaian terbesar dari v1.0. Konsol dan halaman pemasaran tidak punya anggaran yang sama.
+
+**Konsol** (`data-surface="console"`): hanya `fade-in`, `fade-in-up`, dan `pulse-dot`.
+Tidak ada gerak tak terbatas selain titik status *live*. Pembaruan data memakai *crossfade*,
+tanpa geseran posisi — angka yang melompat saat diperbarui membuat pembaca tidak percaya.
+
+**Halaman depan & portal publik**: lapisan gerak di `globals.css` boleh dipakai —
+
+| Utilitas | Keyframe | Untuk |
+|---|---|---|
+| `animate-aurora`, `animate-aurora-alt` | `aurora-drift` | Sapuan latar lambat 22–28s |
+| `animate-marquee` | `marquee` | Strip status bergulir (pasangkan `.mask-edges`, `.pause-on-hover`) |
+| `animate-beacon` | `beacon` | Cincin melebar di balik indikator *live*. Lebih lambat & lemah dari `ping` |
+| `animate-rise-fall` | `rise-fall` | Apung halus pada ilustrasi |
+| `animate-sheen` | `sheen` | Kilau sekali-lewat pada kartu sorot |
+| `animate-grow-x` | `grow-x` | Bar distribusi menggambar diri saat pertama muncul |
+| `draw-line` | `draw-line` | Garis grafik menggambar diri (`stroke-dashoffset`) |
+| `[data-reveal]` | — | Sistem *reveal* saat gulir, dikendalikan `<Reveal>` (82 pemakaian) |
+
+`<Reveal>` hanya membalik `data-visible`; transisinya hidup di CSS. Artinya pembaca dengan
+`prefers-reduced-motion` mendapat keadaan akhir tanpa satu pun *frame* animasi.
+
+Utilitas tekstur pendamping: `.bg-grain` (butir kertas, mencegah *banding* pada bidang datar
+besar di proyektor), `.mask-edges`, `.pause-on-hover`, `.stagger-1`…`.stagger-6`.
+
+### 6.3 Aturan
+
+1. `active:scale-*` dilarang pada tombol. Ganti dengan pergeseran warna latar.
+2. Seluruh animasi mati pada `prefers-reduced-motion: reduce` — blok di `@layer base` sudah menetralkan semuanya secara global.
+3. Bar dan garis yang menganimasikan dirinya harus berdegradasi ke "sudah tergambar", bukan ke "tak terlihat", kalau animasinya dilewati.
+4. Jangan memakai `animate-ping` / `animate-bounce` bawaan Tailwind: keduanya terbaca seperti alarm dan bersaing dengan status *live* yang asli. `animate-beacon` dan `animate-pulse-dot` adalah penggantinya. Nol pemakaian tersisa; `animate-pulse` hanya boleh untuk *skeleton* saat memuat.
 
 ---
 
 ## 7. Komponen
 
-### 7.1 Tombol
+Inventaris yang benar-benar ada di `src/components/`, plus kondisi pemakaiannya.
 
-| Varian | Tampilan | Pakai untuk |
-|---|---|---|
-| `primary` | Isi `brand-700`, teks putih | Satu per layar. Aksi utama |
-| `secondary` | Isi `paper-100`, teks `paper-800`, garis rambut | Aksi pendamping |
-| `outline` | Transparan, border `paper-300` | Aksi tersier |
-| `ghost` | Transparan, hover `paper-100` | Aksi di dalam toolbar & tabel |
-| `danger` | Isi `risk-high` | Hapus, tolak laporan |
-| `link` | Teks `brand-500`, garis bawah saat hover | Navigasi sebaris |
+### 7.1 Tombol — `ui/button.tsx`
 
-Ukuran: `sm` 32px · `md` 38px (baku) · `lg` 44px. Tidak ada `xl`. Radius `lg` (10px). Teks bobot 500, bukan 600.
+| Varian | Tampilan |
+|---|---|
+| `primary` (baku) | Isi `brand-700`, teks putih, hover `brand-600`, aktif `brand-800` |
+| `secondary` | Isi `paper-100`, teks `paper-800`, `shadow-hairline` |
+| `outline` | Border `paper-300`, hover ke `brand-50` |
+| `ghost` | Transparan, hover `paper-100` |
+| `danger` | Isi `risk-high`, hover `risk-critical` |
+| `link` | Teks `brand-500`, garis bawah saat hover |
+| `risk-low`, `risk-medium` | Isi warna kelas — hanya untuk aksi yang terikat kelas risiko |
+| `default`, `blue`, `glass`, `glass-blue`, `destructive` | Alias warisan. Jangan dipakai di kode baru |
 
-### 7.2 Kartu
+Ukuran: `sm` 40px · `default`/`md` 48px · `lg` 56px · `xl` 64px · `icon` 48px · `icon-sm` 40px.
+Radius `full`. Teks bobot 600. Prop `loading` mengunci tombol dan menyetel `aria-busy`.
 
-Permukaan `paper-0`, radius `xl`, garis rambut `paper-200`, bayangan `card`. Header memakai `h3` + deskripsi `caption`. Jangan menumpuk bayangan pada kartu yang bersarang — gunakan `paper-100` tanpa bayangan.
+> **Penyimpangan yang diterima.** v1.0 menetapkan radius 10px, tinggi maksimum 44px, bobot 500.
+> Yang terkirim adalah pil penuh yang lebih tinggi dan lebih tebal — keputusan sadar demi
+> target sentuh dan keterbacaan proyektor. **Komentar di kepala `button.tsx` masih menyalin
+> aturan v1.0 dan harus diperbaiki.**
+> Yang tetap berlaku: satu tombol primer per layar, tanpa `active:scale-*`.
 
-### 7.3 Metrik (primitif baru)
+### 7.2 Kartu — `ui/card.tsx`
 
-Blok angka baku. Wajib dipakai untuk semua KPI agar konsisten dan agar ketidakpastian tidak pernah hilang.
+Permukaan `surface`, radius `xl`, border `border`, bayangan `card`, padding `var(--card-pad)`.
+Prop `nested` membuang bayangan dan memakai `paper-100` — kartu bersarang tidak menumpuk bayangan.
+Prop `interactive` hanya menggeser warna, tidak pernah mengangkat atau menskalakan.
+`CardTitle` = `text-h3`; `CardDescription` = `text-caption text-paper-600`.
 
-```
-┌─────────────────────────────────┐
-│ KASUS DIPREDIKSI     [overline] │  11px mono, uppercase, paper-500
-│                                 │
-│ 54  kasus            [metric]   │  32px tabular, 600 · satuan 14px 400
-│ 41 – 68              [caption]  │  13px mono, paper-500  ← rentang WAJIB
-│                                 │
-│ ▲ 12,4%  vs minggu lalu         │  chip delta + konteks
-│ ▇▇▅▃▂▁▂▄  Cakupan: Tinggi       │  sparkline 32px + label cakupan
-└─────────────────────────────────┘
-```
+### 7.3 Metrik — `ui/metric.tsx`
 
-Aturan: `range` dan `coverage` adalah properti wajib, bukan opsional. Sistem desain yang menjadikan kejujuran opsional akan membuatnya terlupa saat deadline mendekat.
+Blok angka baku. `range` dan `coverage` adalah properti **wajib**: sistem desain yang
+menjadikan kejujuran opsional akan membuatnya terlupa saat *deadline* mendekat.
+`range={null}` hanya untuk besaran yang memang tanpa ketidakpastian (hitungan yang sudah teramati).
+Keadaan `coverage === "insufficient"` mengganti angka dengan kalimat, bukan menampilkan nol.
+Berisi `<Sparkline>` polos 20px — tekstur, bukan grafik.
 
-### 7.4 Badge risiko
+> **Belum dipakai.** Tidak ada satu pun halaman yang me-*render* `<Metric>` — konsol
+> memakai `KpiCard`. Sejak 26 Agustus 2026 keduanya menuntut `range` + `coverage`, jadi
+> klaim PRD §7-H1/H2 sudah tampak di layar; yang tersisa adalah duplikasi primitif,
+> bukan lubang kejujuran. Lihat §12.
 
-Pil, `full`, tinggi 22px, teks 12px bobot 500. Isi = latar lembut kelas, teks = warna kelas, border = border kelas. **Selalu** membawa ikon + label. Ikon: Rendah `shield-check`, Sedang `alert-triangle`, Tinggi `siren`, Data tidak memadai `help-circle`.
+### 7.4 Badge — `ui/badge.tsx`
 
-### 7.5 Tabel
+Pil, teks `caption`, bobot 500 (600 untuk `default` / `secondary`).
+Varian risiko: `risk-low`, `risk-medium`, `risk-high`, `risk-critical`, `risk-none`.
+`risk-none` adalah kelas kelas satu, bukan mundur ke "low".
+Varian provenans: `official` (data Dinkes) vs `citizen` (border putus-putus, sinyal warga
+terverifikasi) — diwajibkan PRD §7-H4.
+Prop `pulse` memberi satu titik berdenyut lambat; simpan untuk status yang benar-benar *live*.
+Badge risiko **selalu** membawa ikon + label.
 
-Tinggi baris 40px (konsol) / 52px (publik). Kepala tabel: mono 11px huruf besar, latar `paper-100`, menempel saat digulir. Pemisah baris: garis rambut `paper-200`, tanpa zebra. Kolom angka rata kanan dengan `tabular-nums`. Baris dapat diklik seluruhnya, bukan hanya tautan di dalamnya.
+### 7.5 KpiCard — `components/kpi-card.tsx`
 
-### 7.6 Peta
+Primitif KPI yang sebenarnya dipakai konsol. Dibangun di atas `LiquidGlassCard`, memakai
+`animate-fade-in-up` + kelas `stagger-*`. Menerima `delta`, `status`, `sparkline`.
 
-Wadah radius `2xl`, latar `paper-100`. Isian mengikuti §2.3. Garis batas kecamatan `#FFFFFF` 1px — batas putih membuat isian gelap terbaca sebagai wilayah, bukan sebagai noda. Legenda **wajib** menampilkan ambang numerik tiap kelas, bukan hanya nama kelas. *Tooltip* memuat: nama kecamatan, kelas, skor, prediksi + rentang, cakupan data.
+`range` dan `coverage` **wajib**, aturan yang sama dengan `<Metric>` (§7.3): rentang
+tercetak tepat di bawah angkanya, cakupan data pada baris sendiri di kaki kartu, dan
+`coverage: "insufficient"` mengganti angka dengan kalimat — bukan menampilkan nol.
+Angka gabungan sekota mewarisi cakupan kecamatan terlemah lewat `aggregateCoverage()`
+(`src/lib/utils.ts`): total hanya sekuat masukan tertipisnya.
 
-### 7.7 Grafik
+Dua primitif KPI kini hidup berdampingan dengan kontrak kejujuran yang sama.
+Konsolidasinya (satu primitif, `<Metric>` sebagai isi `<Card>`) masih terbuka — §12.
 
-Sumbu `paper-400`, kisi horizontal saja `paper-200`, tanpa kisi vertikal. Deret aktual: garis padat `cat-1` 2px. Deret prediksi: garis putus-putus `cat-1` 2px. Pita ketidakpastian: `cat-1` pada alpha 0.12. Pemisah train/test: garis vertikal `paper-400` putus-putus dengan label. Tanpa gradien di bawah kurva — itu dekorasi yang menyembunyikan nilai.
+### 7.6 LiquidGlassCard — `ui/liquid-glass-card.tsx` *(warisan)*
 
-### 7.8 Status kosong / gagal / tidak memadai
+Namanya bohong, dan itu disengaja untuk sementara: tidak ada `backdrop-filter` di mana pun
+di produk. Kelas `.liquid-glass*` di `globals.css` sudah didefinisikan ulang sebagai
+permukaan datar buram, sehingga 27 pemakaian di 12 berkas ikut *repaint* tanpa disentuh.
+Varian `risk-*` memetakan langsung ke ramp §2.3. Prop `sheen` inert; `glowBorder` menunjuk
+alias bayangan yang sudah diratakan.
+Arah: migrasikan ke `<Card>`, lalu hapus blok kelas dan berkas komponennya.
 
-Tiga state ini wajib ada di setiap tampilan data, dan tampilannya berbeda satu sama lain. `Data tidak memadai` bukan error dan bukan kosong — ia menyampaikan bahwa sistem tahu batas pengetahuannya.
+### 7.7 Tabel
+
+Tinggi baris `var(--row-h)`. Kepala tabel: huruf besar 11px, latar `paper-100`, menempel
+saat digulir, bobot 500. Pemisah baris garis rambut, tanpa zebra. Kolom angka rata kanan
+dengan `tabular-nums` (otomatis lewat `@layer base`). Baris dapat diklik seluruhnya,
+bukan hanya tautan di dalamnya.
+
+### 7.8 Peta — `components/choropleth-map.tsx`
+
+Wadah radius `2xl`, latar `--surface-sunken` (dipaksa lewat `.leaflet-container`).
+Isian mengikuti `RISK_CONFIG.fill`; batas kecamatan putih 1px supaya isian gelap terbaca
+sebagai wilayah, bukan noda. Legenda **wajib** menampilkan ambang numerik tiap kelas,
+bukan hanya namanya. *Tooltip* memuat nama kecamatan, kelas, skor, prediksi + rentang,
+dan cakupan data.
+
+### 7.9 Grafik
+
+Sumbu `paper-400`, kisi horizontal saja, tanpa kisi vertikal.
+Deret aktual: garis padat `cat-1`. Deret prediksi: garis putus-putus `cat-1`.
+Pita ketidakpastian: `cat-1` alpha 0.12. Pemisah train/test: garis vertikal putus-putus berlabel.
+Variabel iklim memakai `CLIMATE_COLORS`, tidak pernah warna risiko.
+
+### 7.10 Status kosong / memuat / gagal / tidak memadai
+
+Empat keadaan ini wajib ada di setiap tampilan data, dan tampilannya berbeda satu sama lain.
+`Data tidak memadai` bukan error dan bukan kosong — ia menyampaikan bahwa sistem tahu
+batas pengetahuannya. Salinan teksnya ada di `COVERAGE_CONFIG` (`src/lib/utils.ts`).
 
 ---
 
 ## 8. Aksesibilitas
 
-| Aturan | Ambang |
+| Aturan | Ambang / implementasi |
 |---|---|
 | Kontras teks normal | ≥ 4.5:1 |
-| Kontras teks besar (≥18.66px/600) & ikon | ≥ 3:1 |
-| Target sentuh | ≥ 44×44px pada permukaan publik |
-| Fokus keyboard | Selalu terlihat, memakai bayangan `focus`. Jangan pernah `outline: none` tanpa pengganti |
+| Kontras teks besar & ikon | ≥ 3:1 |
+| Target sentuh | ≥ 44×44px — dipenuhi tombol setinggi 48px pada permukaan publik |
+| Fokus keyboard | `:focus-visible` global memakai bayangan `focus`. Jangan pernah `outline: none` tanpa pengganti |
+| Ukuran teks | `html.a11y-small-text` 100% · baku 112.5% · `html.a11y-large-text` 125%. Disimpan di `localStorage` (`prakira.a11y.font`), diterapkan sebelum *paint* |
+| Kontras tinggi | `html.a11y-contrast` mendefinisikan ulang **token**, bukan menimpa kelas utilitas satu per satu (`prakira.a11y.contrast`) |
 | Informasi warna | Selalu didampingi teks atau ikon |
-| Pengubah ukuran teks | Tetap dipertahankan (90% / 100% / 112.5% pada `html`) karena UI berbasis `rem` |
-| Kontras tinggi | Mode `a11y-contrast` mendefinisikan ulang token, bukan menimpa kelas utilitas satu per satu |
-| Gerak | `prefers-reduced-motion` mematikan seluruh transisi |
+| Gerak | `prefers-reduced-motion` mematikan seluruh animasi & transisi secara global |
+
+Kontrolnya ada di `components/accessibility-menu.tsx`.
 
 ---
 
-## 9. Pemetaan ke Figma (wajib menurut Rulebook §7.9)
-
-Struktur token dirancang agar dipindahkan langsung menjadi Figma Variables:
+## 9. Pemetaan ke Figma
 
 | Koleksi Figma | Isi | Mode |
 |---|---|---|
-| `color/primitive` | `paper-*`, `brand-*`, `risk-*`, `cat-*`, `sand-*` | — |
-| `color/semantic` | `canvas`, `surface`, `border`, `text-*`, `risk-*` | `console`, `public` |
-| `radius` | `xs`…`2xl` | — |
-| `space` | 4-based | — |
+| `color/primitive` | `paper-*`, `brand-*`, `risk-*` (4 sub-token per kelas), `cat-*`, `sand-*`, `climate-*` | — |
+| `color/semantic` | `canvas`, `surface`, `surface-sunken`, `border`, `border-strong`, `text`, `text-2`, `text-3`, `brand`, `brand-soft` | `console`, `public` |
+| `radius` | `xs`…`3xl` | — |
+| `space` | Basis 4 + `row-h`, `card-pad` | `console`, `public` |
 | `type` | Text styles per §4.2 | — |
 
-Kerjakan koleksi semantik dengan dua mode sejak awal. Itu membuat papan Konsol dan Publik dibangun dari komponen yang sama — dan itu poin yang mudah ditunjukkan saat presentasi.
+Koleksi semantik memakai dua mode sejak awal, sehingga papan Konsol dan Publik dibangun
+dari komponen yang sama.
 
 ---
 
 ## 10. Aturan Implementasi
 
-1. **Tidak ada hex di komponen.** Semua warna lewat token Tailwind. Kalau warna yang dibutuhkan belum ada tokennya, tambahkan tokennya — jangan tulis hex.
-2. **Tidak memanggil skala warna bawaan Tailwind** (`emerald-600`, `rose-500`, `sky-400`, `slate-*`). Palet produk sudah lengkap.
-3. **Kelas kustom hidup di `@layer`.** `@layer components` untuk `.chip`, `.eyebrow`, `.hairline`; `@layer utilities` untuk latar dekoratif.
-4. **`liquid-glass*` sudah usang.** Nama kelasnya dipertahankan sementara dan didefinisikan ulang sebagai permukaan datar buram, supaya ±60 pemakaian yang tersebar langsung ikut berubah tanpa menyentuh komponennya. Migrasikan ke `<Card>` secara bertahap; hapus definisinya sebelum submit akhir.
-5. **Angka memakai `tabular-nums`.** Tanpa kecuali.
-6. **Satu tombol primer per layar.**
+1. **Tidak ada hex di komponen.** Semua warna lewat token. Kalau warnanya belum ada tokennya, tambahkan tokennya. Pengecualian sah: nilai JS untuk Recharts/Leaflet, yang wajib diambil dari `RISK_CONFIG` / `CLIMATE_COLORS`.
+2. **Tidak memanggil skala warna bawaan Tailwind** (`emerald-*`, `rose-*`, `slate-*`). Palet produk sudah lengkap.
+3. **Gradien hanya lewat token `bg-grad-*`.** Jangan menulis `bg-gradient-to-*` dengan `from-` / `to-` warna baru.
+4. **Ukuran teks memakai skala sistem** (`text-body`, `text-h3`, `text-metric`, …), bukan `text-sm` atau `text-[13px]`.
+5. **Kelas kustom hidup di `@layer`.** `@layer components` untuk `.chip`, `.eyebrow`, `.overline`, `.hairline`, `.card-surface`; `@layer utilities` untuk latar dekoratif dan utilitas gerak.
+6. **`liquid-glass*` usang.** Definisinya bertahan agar pemakaian lama ikut *repaint*; jangan tambah pemakaian baru.
+7. **Angka memakai `tabular-nums`.** Tanpa kecuali.
+8. **Satu tombol primer per layar.**
+9. **Setiap angka prediksi membawa rentang dan cakupan.** Kalau primitifnya belum punya slot itu, perbaiki primitifnya — jangan hilangkan angkanya.
 
 ---
 
 ## 11. Daftar Periksa Sebelum Submit
 
-- [ ] Tidak ada `backdrop-filter` yang tersisa di kode
-- [ ] Tidak ada nama warna bawaan Tailwind di `src/`
-- [ ] Tidak ada `font-bold` / `font-extrabold`
-- [ ] Seluruh nilai metrik membawa rentang dan cakupan data
-- [ ] Peta terbaca benar dalam mode abu-abu (uji dengan `filter: grayscale(1)`)
-- [ ] Setiap tampilan data punya state kosong, memuat, gagal, dan tidak memadai
-- [ ] Fokus keyboard terlihat di seluruh kontrol
-- [ ] `prefers-reduced-motion` mematikan animasi
+- [x] Tidak ada `backdrop-filter` yang tersisa di kode
+- [x] `prefers-reduced-motion` mematikan animasi
+- [x] Fokus keyboard terlihat di seluruh kontrol
+- [x] Setiap kelas risiko membawa ikon + label; `none` tidak jatuh ke "Rendah"
+- [x] Tidak ada nama warna bawaan Tailwind di `src/`
+- [x] Tidak ada `font-bold` / `font-extrabold` di mana pun
+- [x] Tidak ada `active:scale-*`, `animate-ping`, atau `animate-bounce`
+- [x] Setiap KPI membawa rentang prediksi dan cakupan data
+- [x] Permukaan konsol tidak berkedip saat dimuat, termasuk `/tindakan`
+- [ ] Satu primitif KPI, bukan dua (`<Metric>` vs `KpiCard`)
+- [ ] Skala tipografi sistem dipakai di seluruh halaman
+- [ ] `liquid-glass*` dihapus dari kode
+- [ ] Peta diuji dalam `filter: grayscale(1)`
 - [ ] Portal warga lolos LCP < 2,5 detik pada simulasi 3G cepat
-- [ ] Figma Variables selaras dengan `frontend/tailwind.config.ts`
+- [ ] Figma Variables selaras dengan `tailwind.config.ts`
+
+---
+
+## 12. Utang Desain (drift ledger)
+
+Diukur dari `frontend/src/`. Kolom terakhir menandai apa yang sudah ditutup 26 Agustus 2026.
+
+### Sudah ditutup
+
+| Utang | Ukuran semula | Yang dikerjakan |
+|---|---:|---|
+| KPI tanpa rentang & cakupan | 7 kartu | `range` + `coverage` jadi properti **wajib** `KpiCard`, sejajar `<Metric>`. Dashboard mengalirkan batas prediksi asli dan `aggregateCoverage()` sekota |
+| `/tindakan` berkedip hangat → dingin | 1 rute | Daftar rute pindah ke `src/lib/routes.ts` dan dibaca kedua sisi. Penyebab sebenarnya lebih dalam dari rute yang lupa ditulis: `layout.tsx` mengimpor konstanta dari modul `"use client"`, jadi skripnya menyerialkan `{}` dan **semua** rute konsol berkedip |
+| `font-bold` / `font-extrabold` | 49 pemakaian, 9 berkas | Semua turun ke `font-semibold` |
+| Warna bawaan Tailwind | 11 pemakaian `emerald-*` + 1 `amber-500` | Dipetakan ke `risk-low` / `risk-medium` |
+| `animate-ping` / `animate-bounce` | 5 pemakaian | Diganti `animate-beacon`; panah *nagging* kehilangan animasinya |
+| `active:scale-*` | 3 pemakaian | Diganti pergeseran warna latar (§6.3) |
+| Komentar `ui/button.tsx` menyalin aturan v1.0 | 1 blok | Diselaraskan dengan §7.1 |
+
+### Masih terbuka
+
+| # | Utang | Ukuran | Dampak | Perbaikan |
+|---|---|---:|---|---|
+| 1 | Dua primitif KPI dengan kontrak sama: `<Metric>` (0 pemakaian) dan `KpiCard` (7) | 2 komponen | Kontributor berikutnya harus menebak yang mana | Jadikan `KpiCard` pembungkus tipis `<Card>` + `<Metric>`, lalu hapus duplikasi angkanya |
+| 2 | Skala tipografi sistem kalah dari kelas bawaan & *arbitrary* | 196 sistem vs 320 bawaan + 198 `text-[…]` | Hierarki tidak konsisten antar halaman | Sapu per halaman: `text-sm` → `text-body-sm`, `text-2xl` → `text-h2`, dst. |
+| 3 | `liquid-glass*` masih hidup | 27 pemakaian, 12 berkas | Kosmetik — efeknya sudah datar, tinggal namanya | Migrasi ke `<Card>`, lalu hapus blok `globals.css` + `ui/liquid-glass-card.tsx` |
+| 4 | `--radius` / `--radius-control` tak dirujuk siapa pun | 2 variabel | Dua skala radius hidup berdampingan | Hapus, atau jadikan sumber tunggal skala Tailwind |
+| 5 | `destructive: #DC2626` (red-600 bawaan) | 1 token | Satu-satunya hex luar palet di konfigurasi | Arahkan ke `#A8442C` atau hapus slotnya |
+| 6 | `shadow-glass*` dan alias bayangan warisan | 5 pemakaian | Nama menyesatkan; nilainya sudah rata | Ganti ke `shadow-card` / `shadow-lift`, lalu hapus aliasnya |
+
+Urutan kerja bila waktunya terbatas: **2 → 3 → 1**.
+Nomor 2 paling terlihat di layar dan paling mekanis; 3 menghapus satu lapis komponen
+sekaligus; 1 baru sepadan setelah keduanya beres, karena menyentuh setiap halaman konsol.

@@ -16,7 +16,7 @@ import {
   ArrowRight,
   CheckCircle2,
 } from "lucide-react";
-import { formatNumber } from "@/lib/utils";
+import { aggregateCoverage, formatNumber } from "@/lib/utils";
 import { LiquidGlassCard } from "@/components/ui/liquid-glass-card";
 import { AppleGlassDate } from "@/components/ui/apple-glass-date";
 import { Button } from "@/components/ui/button";
@@ -93,6 +93,9 @@ export default function DashboardPrediksiPage() {
       medium,
       low,
       history,
+      /* City-wide figures inherit the weakest district's coverage — a total is
+         only as trustworthy as its thinnest input (PRD §7-H2). */
+      coverage: aggregateCoverage(districts.map((d) => d.coverage)),
       /* Observed: this week vs last week. */
       deltaWeekly: lastWeek === 0 ? 0 : Math.round(((active - lastWeek) / lastWeek) * 100),
       /* Projected: forecast vs today. */
@@ -145,10 +148,13 @@ export default function DashboardPrediksiPage() {
 
         {/* 2. KPI summary */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Observed count — no prediction interval to show. */}
           <KpiCard
             label={`Kasus Aktif ${selectedDisease}`}
             value={formatNumber(totals.active)}
             unit="kasus"
+            range={null}
+            coverage={totals.coverage}
             delta={`${totals.deltaWeekly >= 0 ? "+" : ""}${totals.deltaWeekly}% vs minggu lalu`}
             positive={totals.deltaWeekly <= 0}
             sparkline={totals.history}
@@ -156,21 +162,26 @@ export default function DashboardPrediksiPage() {
             index={0}
           />
 
+          {/* Forecast — the interval rides with the number, never beside it. */}
           <KpiCard
             label="Proyeksi 2–4 Minggu"
             value={formatNumber(totals.pred)}
             unit="kasus"
+            range={{ lower: totals.lower, upper: totals.upper }}
+            coverage={totals.coverage}
             delta={`+${totals.deltaForecast}%`}
             positive={false}
-            description={`Rentang ${formatNumber(totals.lower)}–${formatNumber(totals.upper)}`}
             icon={<TrendingUp className="h-4 w-4 text-risk-high" />}
             index={1}
           />
 
+          {/* Classified districts — a tally of things already decided. */}
           <KpiCard
             label="Kecamatan Zona Siaga"
             value={totals.high}
             unit={`dari ${districts.length}`}
+            range={null}
+            coverage={totals.coverage}
             description={`Waspada ${totals.medium} · Rendah ${totals.low}`}
             icon={<ShieldAlert className="h-4 w-4 text-risk-high" />}
             index={2}
