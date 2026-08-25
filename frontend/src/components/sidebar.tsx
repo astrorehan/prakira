@@ -10,7 +10,7 @@ import {
   Users,
   LogOut,
   Menu,
-  Radio,
+  Siren,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,9 +20,11 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { clearSession } from "@/lib/auth";
 
 const APP_ITEMS = [
   { href: "/dashboard", label: "Dashboard Prediksi", icon: Activity },
+  { href: "/tindakan", label: "Aksi Dini", icon: Siren },
   { href: "/analitik", label: "Analitik & Riwayat", icon: BarChart3 },
   { href: "/admin", label: "Manajemen Data BMKG", icon: ShieldCheck },
   { href: "/warga", label: "Portal Publik Warga", icon: Users },
@@ -52,6 +54,7 @@ export function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   function handleLogout() {
+    clearSession();
     router.push("/");
   }
 

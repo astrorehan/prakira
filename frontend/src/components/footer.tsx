@@ -29,8 +29,18 @@ export function Footer() {
             </h4>
             <ul className="space-y-1.5 text-xs">
               <li>
-                <Link href="/#features" className="hover:text-primary transition-colors">
-                  Fitur Utama
+                <Link href="/#risk-check" className="hover:text-primary transition-colors">
+                  Cek Risiko Wilayah
+                </Link>
+              </li>
+              <li>
+                <Link href="/#cara-kerja" className="hover:text-primary transition-colors">
+                  Cara Kerja Prakiraan
+                </Link>
+              </li>
+              <li>
+                <Link href="/#edukasi" className="hover:text-primary transition-colors">
+                  Panduan Pencegahan
                 </Link>
               </li>
               <li>
