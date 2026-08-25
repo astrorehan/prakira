@@ -256,7 +256,7 @@ export function TrendChart({
                   background: `repeating-linear-gradient(to right, ${forecastColor} 0, ${forecastColor} 2.5px, transparent 2.5px, transparent 5px)`,
                 }}
               />
-              <span className="font-semibold text-risk-high">Prediksi AI (2–4 Mgg)</span>
+              <span className="font-semibold text-risk-high">Proyeksi 2–4 minggu</span>
             </span>
             {showClimateOverlay && (
               <span className="flex items-center gap-1.5">
@@ -266,9 +266,6 @@ export function TrendChart({
             )}
           </div>
 
-          <div className="text-[10px] text-muted-foreground">
-            Lead time: <strong className="text-paper-700">14–28 hari</strong>
-          </div>
         </div>
       )}
     </div>

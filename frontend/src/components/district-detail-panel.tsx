@@ -86,7 +86,7 @@ export function DistrictDetailPanel({
       <div className="grid grid-cols-2 gap-3 shrink-0">
         <div className="rounded-xl bg-white/75 backdrop-blur-md p-3 border border-white/90 shadow-[0_2px_8px_-2px_rgba(14,34,37,0.04),inset_0_1px_0_rgba(255,255,255,0.9)]">
           <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider block">
-            Kasus Aktif Saat Ini
+            Kasus Aktif
           </span>
           <div className="mt-1 flex items-baseline gap-1">
             <span className="font-display text-2xl font-bold text-foreground">
@@ -95,7 +95,7 @@ export function DistrictDetailPanel({
             <span className="text-xs text-muted-foreground">kasus</span>
           </div>
           <div className="mt-1 flex items-center justify-between text-[10px] text-muted-foreground pt-1 border-t border-paper-100/80">
-            <span>Incidence Rate:</span>
+            <span>Insiden:</span>
             <span className="font-semibold text-foreground">
               {formatIncidence(district.incidence_rate)}
             </span>
@@ -104,7 +104,7 @@ export function DistrictDetailPanel({
 
         <div className="rounded-xl bg-white/75 backdrop-blur-md p-3 border border-white/90 shadow-[0_2px_8px_-2px_rgba(14,34,37,0.04),inset_0_1px_0_rgba(255,255,255,0.9)]">
           <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider block">
-            Prediksi 2–4 Mgg ({disease})
+            Proyeksi 2–4 Minggu
           </span>
           <div className="mt-1 flex items-baseline gap-1">
             <span className="font-display text-2xl font-bold text-risk-high">
@@ -114,7 +114,10 @@ export function DistrictDetailPanel({
           </div>
           <div className="mt-1 flex items-center justify-between text-[10px] text-risk-high pt-1 border-t border-paper-100/80 font-medium">
             <span>Potensi Lonjakan:</span>
-            <span className="font-bold">+{district.delta_mingguan}%</span>
+            <span className="font-bold">
+              {district.delta_mingguan >= 0 ? "+" : ""}
+              {district.delta_mingguan}%
+            </span>
           </div>
         </div>
       </div>
@@ -157,7 +160,7 @@ export function DistrictDetailPanel({
           </div>
           <span className="text-[10px] text-brand-800 bg-brand-50 px-2 py-0.5 rounded-full font-medium border border-brand-200/60 flex items-center gap-1">
             <Sparkles className="h-3 w-3 text-primary" />
-            <span>Lead time 14–28 hari</span>
+            <span>Keyakinan model {Math.round(district.confidence * 100)}%</span>
           </span>
         </div>
 

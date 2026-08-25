@@ -4,16 +4,11 @@ import * as React from "react";
 import { useState, useMemo } from "react";
 import {
   ArrowUpDown,
-  Search,
   ChevronRight,
-  ShieldCheck,
-  AlertTriangle,
-  Siren,
   CloudRain,
-  MapPin,
 } from "lucide-react";
 import { cn, formatIncidence, formatNumber, RISK_CONFIG } from "@/lib/utils";
-import type { KecamatanData, RiskLevel } from "@/types";
+import type { KecamatanData } from "@/types";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 
@@ -32,35 +27,18 @@ export function DistrictRankingTable({
   onSelectDistrict,
   className,
 }: DistrictRankingTableProps) {
-  const [search, setSearch] = useState("");
-  const [riskFilter, setRiskFilter] = useState<RiskLevel | "all">("all");
   const [sortField, setSortField] = useState<SortField>("skor_risiko");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
-  const filteredAndSorted = useMemo(() => {
-    let result = [...districts];
-
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      result = result.filter(
-        (d) =>
-          d.nama.toLowerCase().includes(q) ||
-          d.kode_bps.includes(q),
-      );
-    }
-
-    if (riskFilter !== "all") {
-      result = result.filter((d) => d.tingkat_risiko === riskFilter);
-    }
-
-    result.sort((a, b) => {
+  /* Sixteen rows fit on one screen: sorting is enough, a search box and risk
+     chips would only duplicate what the map already filters spatially. */
+  const sorted = useMemo(() => {
+    return [...districts].sort((a, b) => {
       const valA = a[sortField];
       const valB = b[sortField];
       return sortOrder === "desc" ? valB - valA : valA - valB;
     });
-
-    return result;
-  }, [districts, search, riskFilter, sortField, sortOrder]);
+  }, [districts, sortField, sortOrder]);
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) {
@@ -73,48 +51,6 @@ export function DistrictRankingTable({
 
   return (
     <div className={cn("flex flex-col gap-3.5", className)}>
-      {/* Search & Filter Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="relative flex-1 min-w-[220px]">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Cari kecamatan (mis: Pedurungan, Banyumanik)..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-xl border border-paper-200 bg-white/90 pl-9 pr-4 py-2 text-xs text-foreground placeholder:text-muted-foreground shadow-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-          />
-        </div>
-
-        {/* Risk Level Filter Chips */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-          {(["all", "tinggi", "sedang", "rendah"] as const).map((lvl) => {
-            const isActive = riskFilter === lvl;
-            return (
-              <button
-                key={lvl}
-                type="button"
-                onClick={() => setRiskFilter(lvl)}
-                className={cn(
-                  "rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all shadow-xs",
-                  isActive
-                    ? "bg-primary text-white shadow-sm font-bold"
-                    : "bg-white/80 border border-paper-200/80 text-muted-foreground hover:bg-paper-100 hover:text-foreground",
-                )}
-              >
-                {lvl === "all"
-                  ? "Semua Zona"
-                  : lvl === "tinggi"
-                  ? "Zona Siaga (Tinggi)"
-                  : lvl === "sedang"
-                  ? "Zona Waspada (Sedang)"
-                  : "Zona Rendah (Aman)"}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
       {/* Table Surface */}
       <div className="overflow-x-auto rounded-2xl border border-paper-200/90 bg-white/90 shadow-card">
         <table className="w-full text-left text-xs">
@@ -139,13 +75,13 @@ export function DistrictRankingTable({
                   <ArrowUpDown className="h-3 w-3" />
                 </div>
               </th>
-              <th className="py-3.5 px-3">Proyeksi 2–4 Mgg</th>
+              <th className="py-3.5 px-3">Proyeksi 2–4 Minggu</th>
               <th
                 className="py-3.5 px-3 cursor-pointer hover:text-primary transition-colors"
                 onClick={() => toggleSort("incidence_rate")}
               >
                 <div className="flex items-center gap-1">
-                  <span>Incidence Rate</span>
+                  <span>Insiden /100rb</span>
                   <ArrowUpDown className="h-3 w-3" />
                 </div>
               </th>
@@ -155,7 +91,7 @@ export function DistrictRankingTable({
           </thead>
 
           <tbody className="divide-y divide-paper-100">
-            {filteredAndSorted.map((kec, index) => {
+            {sorted.map((kec, index) => {
               const riskCfg = RISK_CONFIG[kec.tingkat_risiko];
               const isSelected = kec.id === selectedId;
 
@@ -233,8 +169,14 @@ export function DistrictRankingTable({
                     <div className="font-bold text-risk-high">
                       {formatNumber(kec.kasus_prediksi)} kasus
                     </div>
-                    <div className="text-[10px] text-risk-high font-semibold">
-                      +{kec.delta_mingguan}% potensi lonjakan
+                    <div
+                      className={cn(
+                        "text-[10px] font-semibold",
+                        kec.delta_mingguan >= 0 ? "text-risk-high" : "text-risk-low",
+                      )}
+                    >
+                      {kec.delta_mingguan >= 0 ? "+" : ""}
+                      {kec.delta_mingguan}% vs kasus aktif
                     </div>
                   </td>
 
@@ -268,10 +210,10 @@ export function DistrictRankingTable({
               );
             })}
 
-            {filteredAndSorted.length === 0 && (
+            {sorted.length === 0 && (
               <tr>
                 <td colSpan={7} className="py-8 text-center text-muted-foreground text-xs">
-                  Tidak ada kecamatan yang cocok dengan kriteria pencarian & filter.
+                  Belum ada data kecamatan untuk penyakit ini.
                 </td>
               </tr>
             )}

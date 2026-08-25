@@ -17,6 +17,8 @@ import {
   CloudRain,
   ShieldAlert,
   ExternalLink,
+  Send,
+  Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LiquidGlassCard } from "@/components/ui/liquid-glass-card";
@@ -29,15 +31,19 @@ import { DiseaseSelector } from "@/components/disease-selector";
 import { TrendChart } from "@/components/trend-chart";
 import { ClimateCorrelationChart } from "@/components/climate-correlation-chart";
 import { BacktestCard } from "@/components/backtest-card";
+import { EarlyActionCenter } from "@/components/early-action-center";
+import { RecommendationCard } from "@/components/recommendation-card";
+import { DispatchActionModal } from "@/components/dispatch-action-modal";
 import {
   TREND_DATA,
   CLIMATE_CORRELATION_DATA,
   BACKTEST_METRICS,
+  ACTION_RECOMMENDATIONS,
 } from "@/lib/mock-data";
-import type { DiseaseType } from "@/types";
+import type { DiseaseType, ActionRecommendation } from "@/types";
 
 export default function DesignSystemPage() {
-  const [activeTab, setActiveTab] = useState<"foundations" | "liquid-glass" | "components" | "charts" | "playground">(
+  const [activeTab, setActiveTab] = useState<"foundations" | "liquid-glass" | "components" | "early-action" | "charts" | "playground">(
     "foundations"
   );
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -48,6 +54,7 @@ export default function DesignSystemPage() {
   const [selectedDisease, setSelectedDisease] = useState<DiseaseType>("DBD");
   const [riskScoreKnob, setRiskScoreKnob] = useState(84);
   const [buttonLoading, setButtonLoading] = useState(false);
+  const [demoModalRec, setDemoModalRec] = useState<ActionRecommendation | null>(null);
 
   const copyToClipboard = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
@@ -111,6 +118,7 @@ export default function DesignSystemPage() {
             { id: "foundations" as const, label: "Foundations (Color & Typography)", icon: <Palette className="h-4 w-4" /> },
             { id: "liquid-glass" as const, label: "Liquid Glass System", icon: <Sparkles className="h-4 w-4" /> },
             { id: "components" as const, label: "UI Components & Badges", icon: <Layers className="h-4 w-4" /> },
+            { id: "early-action" as const, label: "AI Early Action & Dispatch", icon: <Send className="h-4 w-4" /> },
             { id: "charts" as const, label: "Health Visualizations & Charts", icon: <Activity className="h-4 w-4" /> },
             { id: "playground" as const, label: "Live Interactive Sandbox", icon: <Sliders className="h-4 w-4" /> },
           ].map((tab) => (
@@ -482,6 +490,63 @@ export default function DesignSystemPage() {
                 </div>
               </div>
             </LiquidGlassCard>
+          </div>
+        )}
+
+        {/* TAB: EARLY ACTION & DISPATCH SHOWCASE */}
+        {activeTab === "early-action" && (
+          <div className="space-y-8 animate-fade-in">
+            {/* Live Interactive Early Action Center */}
+            <div className="rounded-2xl border border-paper-300/90 bg-paper-0 p-6 shadow-card">
+              <div className="flex items-center justify-between pb-4 mb-4 border-b border-paper-200">
+                <div>
+                  <Badge variant="official">Komponen Lengkap</Badge>
+                  <h3 className="font-display text-xl font-bold text-foreground mt-2">
+                    Early Action Orchestration Center (Live Demo)
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Modul manajemen intervensi taktis dinas kesehatan lengkap dengan status beacon, toolbar filter, pencarian kecamatan, kartu cerdas, dan modal siaran resmi.
+                  </p>
+                </div>
+                <code className="text-[11px] font-mono text-brand-700 bg-brand-50 px-2.5 py-1 rounded-md border border-brand-200">
+                  &lt;EarlyActionCenter /&gt;
+                </code>
+              </div>
+
+              <EarlyActionCenter initialRecommendations={ACTION_RECOMMENDATIONS} />
+            </div>
+
+            {/* Individual Card States Showcase */}
+            <div className="space-y-4">
+              <h4 className="font-display text-lg font-bold text-foreground">
+                Matriks Status & Variasi Kartu Rekomendasi
+              </h4>
+              <p className="text-xs text-muted-foreground">
+                Representasi kartu intervensi dalam 3 fase status operasional utama (Menunggu Tindakan, Sedang Berjalan, dan Terkirim).
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {ACTION_RECOMMENDATIONS.slice(0, 3).map((rec, i) => (
+                  <RecommendationCard
+                    key={rec.id}
+                    recommendation={rec}
+                    onOpenDispatch={(r) => setDemoModalRec(r)}
+                  />
+                ))}
+              </div>
+
+              {/* Demo Modal Mount */}
+              <DispatchActionModal
+                recommendation={demoModalRec}
+                open={Boolean(demoModalRec)}
+                onOpenChange={(open) => {
+                  if (!open) setDemoModalRec(null);
+                }}
+                onConfirmDispatch={(id) => {
+                  setDemoModalRec(null);
+                }}
+              />
+            </div>
           </div>
         )}
 

@@ -2,36 +2,28 @@
 
 import * as React from "react";
 import { useState, useMemo } from "react";
+import Link from "next/link";
 import dynamic from "next/dynamic";
 import {
   Activity,
   Bug,
-  Wind,
-  Droplets,
-  CloudRain,
   ShieldAlert,
-  AlertTriangle,
   Download,
-  Calendar,
-  Sparkles,
   MapPin,
   TrendingUp,
   FileText,
   Table,
+  ArrowRight,
   CheckCircle2,
-  Clock,
-  Send,
 } from "lucide-react";
-import { cn, formatNumber, formatIncidence } from "@/lib/utils";
+import { formatNumber } from "@/lib/utils";
 import { LiquidGlassCard } from "@/components/ui/liquid-glass-card";
 import { AppleGlassDate } from "@/components/ui/apple-glass-date";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { KpiCard } from "@/components/kpi-card";
 import { DiseaseSelector } from "@/components/disease-selector";
 import { DistrictDetailPanel } from "@/components/district-detail-panel";
 import { DistrictRankingTable } from "@/components/district-ranking-table";
-import { RecommendationCard } from "@/components/recommendation-card";
 import {
   getKecamatanDataList,
   getSemarangGeoJSON,
@@ -52,9 +44,10 @@ const ChoroplethMap = dynamic(() => import("@/components/choropleth-map"), {
 
 export default function DashboardPrediksiPage() {
   const [selectedDisease, setSelectedDisease] = useState<DiseaseType>("DBD");
-  const [selectedDistrictId, setSelectedDistrictId] = useState<string | null>("KEC_SMG_03"); // Default Pedurungan
+  const [selectedDistrictId, setSelectedDistrictId] = useState<string | null>(null);
   const [exportModal, setExportModal] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
 
   const districts = useMemo(() => {
     return getKecamatanDataList(selectedDisease);
@@ -65,7 +58,14 @@ export default function DashboardPrediksiPage() {
   }, []);
 
   const selectedDistrict = useMemo(() => {
-    return districts.find((d) => d.id === selectedDistrictId) || districts[0];
+    /* Before the officer picks a district, open on whichever one the current
+       disease ranks worst — an operations dashboard should start on what needs
+       attention, and it should re-point when the disease filter changes. A
+       fixed district id would freeze one kecamatan into every session. */
+    return (
+      districts.find((d) => d.id === selectedDistrictId) ??
+      [...districts].sort((a, b) => b.skor_risiko - a.skor_risiko)[0]
+    );
   }, [districts, selectedDistrictId]);
 
   const totals = useMemo(() => {
@@ -73,136 +73,118 @@ export default function DashboardPrediksiPage() {
     const pred = districts.reduce((s, d) => s + d.kasus_prediksi, 0);
     const lower = districts.reduce((s, d) => s + d.kasus_prediksi_lower, 0);
     const upper = districts.reduce((s, d) => s + d.kasus_prediksi_upper, 0);
-    const highRisk = districts.filter((d) => d.tingkat_risiko === "tinggi").length;
-    const avgRain = Math.round(
-      districts.reduce((s, d) => s + d.cuaca.curah_hujan_mm, 0) / districts.length,
+    const high = districts.filter((d) => d.tingkat_risiko === "tinggi").length;
+    const medium = districts.filter((d) => d.tingkat_risiko === "sedang").length;
+    const low = districts.filter((d) => d.tingkat_risiko === "rendah").length;
+
+    /* Real 3-week history, summed across districts. The sparkline and the
+       week-over-week delta read the same series — never a synthetic ratio. */
+    const history = [0, 1, 2].map((week) =>
+      districts.reduce((s, d) => s + d.historical_cases_3w[week], 0),
     );
-    const delta = active === 0 ? 0 : Math.round(((pred - active) / active) * 100);
+    const lastWeek = history[1];
 
     return {
       active,
       pred,
       lower,
       upper,
-      highRisk,
-      avgRain,
-      delta,
+      high,
+      medium,
+      low,
+      history,
+      /* Observed: this week vs last week. */
+      deltaWeekly: lastWeek === 0 ? 0 : Math.round(((active - lastWeek) / lastWeek) * 100),
+      /* Projected: forecast vs today. */
+      deltaForecast: active === 0 ? 0 : Math.round(((pred - active) / active) * 100),
     };
   }, [districts]);
 
-  const filteredRecommendations = useMemo(() => {
-    return ACTION_RECOMMENDATIONS.filter((r) => r.disease === selectedDisease);
-  }, [selectedDisease]);
+  const pendingActions = useMemo(() => {
+    return ACTION_RECOMMENDATIONS.filter((r) => r.status === "pending").length;
+  }, []);
 
   const handleExport = (format: string) => {
     setExporting(true);
     setTimeout(() => {
       setExporting(false);
       setExportModal(false);
-      alert(`Laporan Prediksi Epidemiologi (${selectedDisease}) format ${format} berhasil diunduh!`);
+      setToast(`Laporan ${selectedDisease} (${format}) berhasil diunduh.`);
+      setTimeout(() => setToast(null), 4000);
     }, 1200);
   };
 
   return (
     <div className="min-h-screen bg-background py-8 px-4 sm:px-6 lg:px-8 bg-mesh-blue">
       <div className="container max-w-7xl mx-auto space-y-8">
-        {/* 1. Header Toolbar */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-4 border-b border-paper-200/80">
-          <div>
+        {/* 1. Header — title, disease filter, period, export */}
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-5 pb-4 border-b border-paper-200/80">
+          <div className="space-y-3">
             <h1 className="h-display text-2xl sm:text-3xl lg:text-4xl font-semibold text-foreground">
-              Dashboard Prediksi Risiko Epidemiologi Iklim
+              Prediksi Risiko Penyakit
             </h1>
-            <p className="text-xs text-muted-foreground mt-1 max-w-2xl">
-              Peringatan dini lonjakan kasus DBD, ISPA, dan Diare berbasis cuaca BMKG dan model AI per kecamatan Kota Semarang (2–4 minggu ke depan).
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <AppleGlassDate
-              week="Minggu 34"
-              monthYear="Agustus 2026"
-            />
-          </div>
-        </div>
-
-        {/* 2. Disease Selector Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="space-y-1.5">
-            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground block">
-              Pilih Penyakit untuk Prediksi:
-            </span>
             <DiseaseSelector
               selected={selectedDisease}
               onSelect={(d) => setSelectedDisease(d)}
             />
           </div>
+
+          <div className="flex flex-wrap items-center gap-3 shrink-0">
+            <AppleGlassDate week="Minggu 34" monthYear="Agustus 2026" />
+            <Button
+              size="sm"
+              variant="blue"
+              onClick={() => setExportModal(true)}
+              className="text-white font-semibold shadow-xs"
+            >
+              <Download className="h-4 w-4 text-white mr-1.5" />
+              <span className="text-white">Ekspor Laporan</span>
+            </Button>
+          </div>
         </div>
 
-        {/* 3. Primary KPI Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* 2. KPI summary */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <KpiCard
-            label={`Kasus Aktif Saat Ini (${selectedDisease})`}
+            label={`Kasus Aktif ${selectedDisease}`}
             value={formatNumber(totals.active)}
             unit="kasus"
-            delta={totals.delta >= 0 ? `+${totals.delta}%` : `${totals.delta}%`}
-            positive={totals.delta <= 0}
-            status="warning"
-            sparkline={[
-              Math.round(totals.active * 0.72),
-              Math.round(totals.active * 0.86),
-              totals.active,
-            ]}
+            delta={`${totals.deltaWeekly >= 0 ? "+" : ""}${totals.deltaWeekly}% vs minggu lalu`}
+            positive={totals.deltaWeekly <= 0}
+            sparkline={totals.history}
             icon={<Bug className="h-4 w-4" />}
             index={0}
           />
 
           <KpiCard
-            label="Proyeksi 2–4 Minggu ke Depan"
+            label="Proyeksi 2–4 Minggu"
             value={formatNumber(totals.pred)}
             unit="kasus"
-            delta={`+${totals.delta}% potensi lonjakan`}
+            delta={`+${totals.deltaForecast}%`}
             positive={false}
-            status="danger"
-            description={`Rentang: ${totals.lower} – ${totals.upper} kasus`}
+            description={`Rentang ${formatNumber(totals.lower)}–${formatNumber(totals.upper)}`}
             icon={<TrendingUp className="h-4 w-4 text-risk-high" />}
             index={1}
           />
 
           <KpiCard
-            label="Kecamatan Zona Siaga (Tinggi)"
-            value={`${totals.highRisk} dari 16`}
-            unit="wilayah"
-            status={totals.highRisk > 0 ? "danger" : "success"}
-            description="Perlu intervensi terarah segera"
+            label="Kecamatan Zona Siaga"
+            value={totals.high}
+            unit={`dari ${districts.length}`}
+            description={`Waspada ${totals.medium} · Rendah ${totals.low}`}
             icon={<ShieldAlert className="h-4 w-4 text-risk-high" />}
             index={2}
           />
-
-          <KpiCard
-            label="Curah Hujan Rata-rata BMKG"
-            value={totals.avgRain}
-            unit="mm"
-            description="Pancaroba Hangat · Kelembaban Tinggi"
-            status="normal"
-            sparkline={[140, 180, 205, totals.avgRain]}
-            icon={<CloudRain className="h-4 w-4 text-brand-600" />}
-            index={3}
-          />
         </div>
 
-        {/* 4. Spatial Map & District Detail Section */}
+        {/* 3. Spatial map & district detail */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
           <div className="lg:col-span-7 flex flex-col h-full">
             <LiquidGlassCard variant="default" className="p-5 flex flex-col justify-between h-full space-y-3 min-h-[580px]">
-              <div className="shrink-0">
-                <h3 className="font-display text-lg font-semibold text-foreground flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-brand-700" />
-                  <span>Peta Zona Risiko Spasial</span>
-                </h3>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Arahkan kursor atau klik poligon wilayah untuk memuat metrik insiden dan proyeksi tren waktu.
-                </p>
-              </div>
+              <h3 className="font-display text-lg font-semibold text-foreground flex items-center gap-2 shrink-0">
+                <MapPin className="h-4 w-4 text-brand-700" />
+                <span>Peta Zona Risiko</span>
+              </h3>
 
               <div className="flex-1 min-h-[440px] relative w-full">
                 <ChoroplethMap
@@ -216,22 +198,20 @@ export default function DashboardPrediksiPage() {
               </div>
 
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-muted-foreground pt-2 border-t border-paper-200/60 shrink-0">
-                <span>Klik kecamatan untuk melihat analisis terperinci pada panel kanan</span>
-                
-                {/* Bar Petunjuk Tingkat Risiko di Paling Bawah */}
+                <span>Klik kecamatan untuk detail</span>
+
                 <div className="flex items-center gap-3">
-                  <span className="font-medium text-paper-500">Tingkat Risiko:</span>
                   <span className="flex items-center gap-1.5">
                     <span className="h-2 w-2 rounded-full bg-risk-low" />
-                    <span className="text-paper-700 font-medium text-[11px]">Rendah</span>
+                    <span className="text-paper-700 font-medium">Rendah</span>
                   </span>
                   <span className="flex items-center gap-1.5">
                     <span className="h-2 w-2 rounded-full bg-risk-medium" />
-                    <span className="text-paper-700 font-medium text-[11px]">Waspada</span>
+                    <span className="text-paper-700 font-medium">Waspada</span>
                   </span>
                   <span className="flex items-center gap-1.5">
                     <span className="h-2 w-2 rounded-full bg-risk-high" />
-                    <span className="text-paper-700 font-medium text-[11px]">Siaga</span>
+                    <span className="text-paper-700 font-medium">Siaga</span>
                   </span>
                 </div>
               </div>
@@ -248,44 +228,30 @@ export default function DashboardPrediksiPage() {
           </div>
         </div>
 
-        {/* 5. Automated AI Early Action Recommendations */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-display text-xl font-semibold text-foreground flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-primary" />
-                <span>Rekomendasi Tindakan Otomatis Berbasis Skor Risiko AI</span>
-              </h3>
-              <p className="text-xs text-muted-foreground">
-                Instruksi taktis terarah untuk dinas kesehatan dan puskesmas setempat sebelum terjadi lonjakan kasus (intervensi preventif).
-              </p>
+        {/* 4. Pending early-action strip — the workflow itself lives on /tindakan */}
+        {pendingActions > 0 && (
+          <Link
+            href="/tindakan"
+            className="group flex items-center justify-between gap-3 rounded-2xl border border-risk-high-br/70 bg-risk-high-bg/60 px-5 py-3.5 shadow-xs transition-colors hover:bg-risk-high-bg"
+          >
+            <div className="flex items-center gap-2.5">
+              <ShieldAlert className="h-4 w-4 text-risk-high shrink-0" />
+              <span className="text-sm font-semibold text-foreground">
+                {pendingActions} tindakan menunggu instruksi
+              </span>
             </div>
-            <Badge variant="outline">Early Action Support</Badge>
-          </div>
+            <span className="flex items-center gap-1 text-xs font-semibold text-risk-high shrink-0">
+              <span>Buka Aksi Dini</span>
+              <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+            </span>
+          </Link>
+        )}
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {filteredRecommendations.slice(0, 3).map((rec) => (
-              <RecommendationCard
-                key={rec.id}
-                recommendation={rec}
-                onExecute={(id) =>
-                  alert(`Instruksi tindakan #${id} berhasil dikirimkan ke puskesmas wilayah terkait!`)
-                }
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* 6. District Ranking & Priority Table */}
+        {/* 5. District ranking */}
         <div className="space-y-4">
-          <div>
-            <h3 className="font-display text-xl font-semibold text-foreground">
-              Ranking Prioritas Intervensi Kecamatan
-            </h3>
-            <p className="text-xs text-muted-foreground">
-              Daftar kecamatan yang diurutkan berdasarkan tingkat keparahan risiko AI dan laju insiden per 100.000 penduduk.
-            </p>
-          </div>
+          <h3 className="font-display text-xl font-semibold text-foreground">
+            Peringkat Prioritas Kecamatan
+          </h3>
 
           <DistrictRankingTable
             districts={districts}
@@ -293,42 +259,15 @@ export default function DashboardPrediksiPage() {
             onSelectDistrict={(id) => setSelectedDistrictId(id)}
           />
         </div>
-
-        {/* 7. Bottom Export Report Section */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-paper-200/90 bg-white/90 p-5 shadow-card">
-          <div className="flex items-center gap-3.5">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700 border border-brand-100 shadow-xs">
-              <FileText className="h-5 w-5" />
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-foreground">
-                Ekspor Laporan Prediksi Resmi ({selectedDisease})
-              </h4>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Unduh rekapitulasi data epidemiologi dan proyeksi risiko 16 kecamatan dalam format PDF atau Excel.
-              </p>
-            </div>
-          </div>
-
-          <Button
-            size="sm"
-            variant="blue"
-            onClick={() => setExportModal(true)}
-            className="text-white font-semibold shadow-xs shrink-0 self-start sm:self-auto"
-          >
-            <Download className="h-4 w-4 text-white mr-1.5" />
-            <span className="text-white">Ekspor Laporan</span>
-          </Button>
-        </div>
       </div>
 
-      {/* Export Report Modal */}
+      {/* Export modal */}
       {exportModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-paper-900/40 p-4 animate-fade-in">
           <div className="w-full max-w-md rounded-2xl liquid-glass p-6 shadow-elevated border border-white space-y-4">
             <div className="flex items-center justify-between border-b border-paper-200 pb-3">
               <h4 className="font-display font-semibold text-base text-foreground">
-                Ekspor Laporan Prediksi Epidemiologi
+                Ekspor Laporan {selectedDisease}
               </h4>
               <button
                 onClick={() => setExportModal(false)}
@@ -338,29 +277,43 @@ export default function DashboardPrediksiPage() {
               </button>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Pilih format ekspor laporan berkala prediksi risiko penyakit ({selectedDisease}) Kota Semarang untuk koordinasi operasional.
+              Rekapitulasi {districts.length} kecamatan, Minggu 34 Agustus 2026.
             </p>
             <div className="grid grid-cols-2 gap-3 pt-2">
               <Button
                 variant="blue"
                 loading={exporting}
-                onClick={() => handleExport("PDF Resmi")}
+                onClick={() => handleExport("PDF")}
                 className="flex flex-col h-auto py-4 gap-1.5 text-white font-semibold rounded-2xl shadow-xs"
               >
                 <FileText className="h-5 w-5 text-white" />
-                <span className="text-white">Unduh PDF</span>
+                <span className="text-white">PDF</span>
               </Button>
               <Button
                 variant="outline"
                 loading={exporting}
-                onClick={() => handleExport("Excel Spreadsheet")}
+                onClick={() => handleExport("Excel")}
                 className="flex flex-col h-auto py-4 gap-1.5 font-semibold rounded-2xl shadow-xs"
               >
                 <Table className="h-5 w-5 text-brand-700" />
-                <span>Unduh Excel</span>
+                <span>Excel</span>
               </Button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Toast */}
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-xl bg-paper-900 text-white p-4 shadow-pop border border-paper-700 animate-fade-in max-w-md">
+          <CheckCircle2 className="h-5 w-5 text-risk-low shrink-0" />
+          <p className="text-xs font-medium leading-snug">{toast}</p>
+          <button
+            onClick={() => setToast(null)}
+            className="text-paper-400 hover:text-white text-xs ml-auto shrink-0"
+          >
+            ✕
+          </button>
         </div>
       )}
     </div>

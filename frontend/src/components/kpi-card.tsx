@@ -99,46 +99,55 @@ export function KpiCard({
         )}
       </div>
 
-      {/* Footer / Delta & Description */}
-      <div className="flex items-center justify-between gap-2 pt-1 border-t border-paper-200/50">
-        {delta ? (
-          <div
-            className={cn(
-              "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium",
-              positive
-                ? "bg-risk-low-bg text-risk-low border border-risk-low-br/60"
-                : "bg-risk-high-bg text-risk-high border border-risk-high-br/60",
-            )}
-          >
-            {positive ? (
-              <TrendingDown className="h-3.5 w-3.5" />
-            ) : (
-              <TrendingUp className="h-3.5 w-3.5" />
-            )}
-            <span>{delta}</span>
-          </div>
-        ) : (
-          <span className="text-[11px] font-medium text-muted-foreground">
-            {description ?? "Data terverifikasi BMKG & Dinkes"}
-          </span>
-        )}
+      {/* Footer — delta on the left, supporting figure on the right.
+          `status` only renders when there is no description to show: the risk
+          colour already carries the level, so the pill is a fallback, never a
+          third label on top of both. */}
+      {(delta || description || status !== "normal") && (
+        <div className="flex items-center justify-between gap-2 pt-1 border-t border-paper-200/50">
+          {delta && (
+            <div
+              className={cn(
+                "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium",
+                positive
+                  ? "bg-risk-low-bg text-risk-low border border-risk-low-br/60"
+                  : "bg-risk-high-bg text-risk-high border border-risk-high-br/60",
+              )}
+            >
+              {positive ? (
+                <TrendingDown className="h-3.5 w-3.5" />
+              ) : (
+                <TrendingUp className="h-3.5 w-3.5" />
+              )}
+              <span>{delta}</span>
+            </div>
+          )}
 
-        {status === "warning" && (
-          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-risk-medium">
-            <AlertTriangle className="h-3 w-3" /> Waspada
-          </span>
-        )}
-        {status === "danger" && (
-          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-risk-high">
-            <AlertTriangle className="h-3 w-3" /> Zona Bahaya
-          </span>
-        )}
-        {status === "success" && (
-          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-risk-low">
-            <ShieldCheck className="h-3 w-3" /> Terkendali
-          </span>
-        )}
-      </div>
+          {description ? (
+            <span className="text-[11px] font-medium text-muted-foreground ml-auto">
+              {description}
+            </span>
+          ) : (
+            <>
+              {status === "warning" && (
+                <span className="inline-flex items-center gap-1 text-[11px] font-medium text-risk-medium ml-auto">
+                  <AlertTriangle className="h-3 w-3" /> Waspada
+                </span>
+              )}
+              {status === "danger" && (
+                <span className="inline-flex items-center gap-1 text-[11px] font-medium text-risk-high ml-auto">
+                  <AlertTriangle className="h-3 w-3" /> Siaga
+                </span>
+              )}
+              {status === "success" && (
+                <span className="inline-flex items-center gap-1 text-[11px] font-medium text-risk-low ml-auto">
+                  <ShieldCheck className="h-3 w-3" /> Terkendali
+                </span>
+              )}
+            </>
+          )}
+        </div>
+      )}
     </LiquidGlassCard>
   );
 }
