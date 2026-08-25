@@ -93,6 +93,21 @@ export type ActionRecommendation = {
   action_type: "fogging" | "psn" | "masker" | "klorinasi" | "logistik_obat" | "penyuluhan";
   status: "pending" | "in_progress" | "completed";
   due_date: string;
+  lead_time_days?: number;
+  estimated_impact?: string;
+  ai_confidence?: number; // e.g. 94.5
+  pic_unit?: string;
+  target_population?: string;
+  climate_trigger?: string;
+  sop_checklist?: string[];
+  target_puskesmas?: {
+    name: string;
+    head: string;
+    phone: string;
+    readiness: "Siaga 1" | "Siaga 2" | "Siap Operasi";
+  }[];
+  broadcast_template?: string;
+  dispatched_at?: string;
 };
 
 export type AuditLog = {

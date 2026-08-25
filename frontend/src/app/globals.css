@@ -172,7 +172,7 @@
 @layer components {
   /* Small-caps mono label. The signature of the data surface. */
   .overline {
-    @apply font-mono text-overline uppercase text-paper-500 no-underline;
+    @apply text-overline font-medium uppercase tracking-[0.1em] text-paper-500 no-underline;
     text-decoration: none !important;
   }
 
@@ -305,4 +305,113 @@
 
 ::-webkit-scrollbar-corner {
   background: transparent;
+}
+
+/* ============================================================================
+   Landing motion layer
+   Scroll reveals, ambient background motion, and the marquee used by the
+   live-status strip. Everything here is decorative: the reduced-motion block
+   in @layer base already neutralises it, and no content depends on it to
+   become readable.
+   ========================================================================= */
+
+/* ── Scroll reveal ─────────────────────────────────────────────────────────
+   <Reveal> only flips data-visible; the transition lives here so a reader with
+   reduced motion gets the end state with no animation frame at all. */
+[data-reveal] {
+  opacity: 0;
+  transform: translate3d(var(--reveal-offset, 0px, 22px, 0px)) scale(var(--reveal-scale, 1));
+  transition:
+    opacity var(--reveal-duration, 700ms) var(--ease-out) var(--reveal-delay, 0ms),
+    transform var(--reveal-duration, 700ms) var(--ease-out) var(--reveal-delay, 0ms);
+}
+
+[data-reveal][data-visible="true"] {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes aurora-drift {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(3%, -2%, 0) scale(1.08); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes aurora-drift-alt {
+  0%   { transform: translate3d(0, 0, 0) scale(1.05); }
+  50%  { transform: translate3d(-4%, 3%, 0) scale(1); }
+  100% { transform: translate3d(0, 0, 0) scale(1.05); }
+}
+
+@keyframes marquee {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-50%, 0, 0); }
+}
+
+/* Expanding ring behind a live indicator. Slower and weaker than Tailwind's
+   `ping`, which reads as an alarm when several sit on one screen. */
+@keyframes beacon {
+  0%   { transform: scale(1); opacity: 0.55; }
+  70%  { transform: scale(2.4); opacity: 0; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+
+@keyframes draw-line {
+  from { stroke-dashoffset: var(--dash, 400); }
+  to   { stroke-dashoffset: 0; }
+}
+
+@keyframes rise-fall {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+
+@keyframes sheen {
+  from { transform: translateX(-120%) skewX(-18deg); }
+  to   { transform: translateX(220%) skewX(-18deg); }
+}
+
+@layer utilities {
+  .animate-aurora     { animation: aurora-drift 22s var(--ease-inout) infinite; }
+  .animate-aurora-alt { animation: aurora-drift-alt 28s var(--ease-inout) infinite; }
+  .animate-marquee    { animation: marquee 42s linear infinite; }
+  .animate-beacon     { animation: beacon 2.8s var(--ease-out) infinite; }
+  .animate-rise-fall  { animation: rise-fall 5s var(--ease-inout) infinite; }
+  .animate-sheen      { animation: sheen 2.6s var(--ease-out) infinite; }
+
+  /* Paper grain. Keeps the large flat fills from banding on a projector. */
+  .bg-grain {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.42'/%3E%3C/svg%3E");
+  }
+
+  /* Fades a marquee/scroller into its container instead of clipping mid-glyph. */
+  .mask-edges {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+    mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+  }
+
+  .pause-on-hover:hover * {
+    animation-play-state: paused;
+  }
+}
+
+/* Bar that draws itself in from the left on first paint. Used by the city
+   distribution strip — the final state is the natural width, so a dropped
+   animation frame degrades to "already drawn" rather than "invisible". */
+@keyframes grow-x {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+@layer utilities {
+  .animate-grow-x {
+    animation: grow-x 900ms var(--ease-out) both;
+  }
 }

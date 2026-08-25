@@ -1,21 +1,13 @@
 import type { Metadata } from "next";
-import { Inter, IBM_Plex_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { LayoutWrapper } from "@/components/layout-wrapper";
 
-/* Two typefaces, no more. Inter carries the UI; IBM Plex Mono carries the data
-   (labels, codes, units, timestamps). A third display face is what made the
-   previous iteration read as a template — see docs/DESIGN-SYSTEM.md §0. */
+/* One typeface. Inter carries everything — UI, headings, and data alike; its
+   tabular figures cover what a separate mono used to do. */
 const sans = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
-  display: "swap",
-});
-
-const mono = IBM_Plex_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-mono",
   display: "swap",
 });
 
@@ -52,7 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body
-        className={`${sans.variable} ${mono.variable} min-h-screen font-sans text-foreground antialiased`}
+        className={`${sans.variable} min-h-screen font-sans text-foreground antialiased`}
       >
         <LayoutWrapper>{children}</LayoutWrapper>
       </body>

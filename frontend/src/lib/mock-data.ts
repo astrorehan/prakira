@@ -278,6 +278,7 @@ export const BACKTEST_METRICS: BacktestMetric[] = [
 ];
 
 // Automated Action Recommendations
+// Automated Action Recommendations
 export const ACTION_RECOMMENDATIONS: ActionRecommendation[] = [
   {
     id: "ACT_001",
@@ -289,6 +290,25 @@ export const ACTION_RECOMMENDATIONS: ActionRecommendation[] = [
     action_type: "fogging",
     status: "pending",
     due_date: "28 Agustus 2026",
+    lead_time_days: 14,
+    estimated_impact: "Pencegahan ~45 proyeksi kasus DBD & penekanan transmisi lokal",
+    ai_confidence: 94.2,
+    pic_unit: "Satgas Vektor & Entomologi DKK Semarang",
+    target_population: "148.200 warga",
+    climate_trigger: "Curah hujan 240mm (Lag-2 minggu) + Suhu rata-rata 29.2°C memicu perindukan Aedes",
+    sop_checklist: [
+      "Instruksikan Kepala Puskesmas Pedurungan, Banyumanik & Rowosari",
+      "Mobilisasi Gasurkes (Petugas Surveilans Kesehatan) & Kader Jumantik RW",
+      "Distribusi 150 kg bubuk Larvasida (Abate) ke kelurahan zona merah",
+      "Pelaksanaan Fogging Siklus 1 (Radius 200m dari kasus indeks)",
+      "Verifikasi Angka Bebas Jentik (ABJ) target >95% pasca intervensi",
+    ],
+    target_puskesmas: [
+      { name: "Puskesmas Pedurungan", head: "dr. Sugiyanto, M.Kes", phone: "+62 812-2849-0112", readiness: "Siaga 1" },
+      { name: "Puskesmas Banyumanik", head: "dr. Endang Sri Wahyuni", phone: "+62 813-9021-4458", readiness: "Siaga 1" },
+      { name: "Puskesmas Rowosari (Tembalang)", head: "dr. Ahmad Fauzi", phone: "+62 811-2703-9981", readiness: "Siap Operasi" },
+    ],
+    broadcast_template: `[INSTRUKSI RESMI DINAS KESEHATAN KOTA SEMARANG]\nNomor: 440/1892/DKK-P2P/VIII/2026\nPerihal: Intervensi Dini Pengendalian Lonjakan DBD Minggu 34\n\nKepada Yth. Kepala Puskesmas Pedurungan, Banyumanik, dan Rowosari.\nBerdasarkan sistem prediksi iklim-kesehatan Prakira, terdeteksi kenaikan skor risiko DBD signifikan. Segera laksanakan Fogging Fokus & PSN 3M Plus serentak sebelum 28 Agustus 2026. Laporkan progres ABJ via portal Prakira.`,
   },
   {
     id: "ACT_002",
@@ -300,6 +320,25 @@ export const ACTION_RECOMMENDATIONS: ActionRecommendation[] = [
     action_type: "masker",
     status: "in_progress",
     due_date: "30 Agustus 2026",
+    lead_time_days: 10,
+    estimated_impact: "Melindungi ~23.000 balita & lansia dari komplikasi ISPA akut",
+    ai_confidence: 91.8,
+    pic_unit: "Seksi Pencegahan Penyakit Menular (P2M) DKK",
+    target_population: "115.000 warga",
+    climate_trigger: "Kelembaban turun drastis ke 62% + Indeks pancaroba aktif di pesisir utara",
+    sop_checklist: [
+      "Dropping 50.000 masker medis ke 6 puskesmas pesisir",
+      "Penyuluhan etika batuk dan penggunaan air purifier sederhana di Posyandu",
+      "Pemasangan banner edukasi sanitasi udara di titik simpul industri",
+      "Skrining proaktif ISPA balita di Posyandu & PAUD wilayah industri Genuk",
+    ],
+    target_puskesmas: [
+      { name: "Puskesmas Genuk", head: "dr. Nurul Hidayati", phone: "+62 815-7740-1290", readiness: "Siaga 1" },
+      { name: "Puskesmas Bandarharjo (Smg Utara)", head: "dr. Budi Santoso", phone: "+62 812-3341-8890", readiness: "Siap Operasi" },
+      { name: "Puskesmas Halmahera (Smg Timur)", head: "dr. Tri Wahyudi", phone: "+62 813-2219-0045", readiness: "Siap Operasi" },
+    ],
+    broadcast_template: `[PERINGATAN ISPA PANCAROBA DKK SEMARANG]\nKepada Puskesmas wilayah Genuk, Smg Utara, dan Smg Timur: Mohon percepat dropping masker dan aktifkan pemantauan ISPA kelompok rentan menyusul lonjakan partikulat udara kering.`,
+    dispatched_at: "23 Agustus 2026, 09:15 WIB",
   },
   {
     id: "ACT_003",
@@ -311,6 +350,23 @@ export const ACTION_RECOMMENDATIONS: ActionRecommendation[] = [
     action_type: "klorinasi",
     status: "pending",
     due_date: "26 Agustus 2026",
+    lead_time_days: 7,
+    estimated_impact: "Mencegah KLB diare akut pada 8.500 KK terdampak rob",
+    ai_confidence: 93.4,
+    pic_unit: "Tim Kesehatan Lingkungan (Kesling) DKK Semarang",
+    target_population: "62.000 warga",
+    climate_trigger: "Banjir rob pasang 1.2m bertepatan dengan hujan lokal 180mm mencemari sumur dangkal",
+    sop_checklist: [
+      "Pengambilan sampel mikrobiologis air sumur gali di 12 titik rob",
+      "Klorinasi sumur warga (kaporit 15 mg/L) di kelurahan Kaligawe & Trimulyo",
+      "Distribusi 10.000 sachet Oralit & tablet Zinc ke posko kesehatan rob",
+      "Edukasi memasak air hingga mendidih (100°C) via mobil ambulans keliling",
+    ],
+    target_puskesmas: [
+      { name: "Puskesmas Genuk", head: "dr. Nurul Hidayati", phone: "+62 815-7740-1290", readiness: "Siaga 1" },
+      { name: "Puskesmas Gayamsari", head: "dr. Ratna Dewi", phone: "+62 812-4450-8911", readiness: "Siaga 2" },
+    ],
+    broadcast_template: `[SIAGA KESLING PESISIR DKK SEMARANG]\nInstruksi segera klorinasi massal dan pembagian oralit di titik pengungsian/posko rob Semarang Utara dan Genuk. Waspadai potensi transmisi bakteri Vibrio/E. coli.`,
   },
   {
     id: "ACT_004",
@@ -322,6 +378,25 @@ export const ACTION_RECOMMENDATIONS: ActionRecommendation[] = [
     action_type: "logistik_obat",
     status: "in_progress",
     due_date: "02 September 2026",
+    lead_time_days: 21,
+    estimated_impact: "Memastikan ketersediaan 100% reagen diagnostik dini & cairan infus di 5 Faskes",
+    ai_confidence: 88.6,
+    pic_unit: "Instalasi Farmasi & Logistik Kesehatan DKK",
+    target_population: "96.400 warga",
+    climate_trigger: "Tren peningkatan kelembaban 78% di daerah perbukitan & transisi lembah",
+    sop_checklist: [
+      "Pemeriksaan sisa buffer stock reagen RDT NS1 di Gudang Farmasi",
+      "Pengiriman 500 kit RDT NS1 & 200 botol Ringer Lactate ke Puskesmas Manyaran",
+      "Verifikasi suhu cold-chain penyimpanan reagen laboratorium",
+      "Sinkronisasi sistem pelaporan ketersediaan obat logistik DKK",
+    ],
+    target_puskesmas: [
+      { name: "Puskesmas Manyaran (Smg Barat)", head: "dr. Hendra Kusuma", phone: "+62 811-9982-1200", readiness: "Siap Operasi" },
+      { name: "Puskesmas Candilama (Candisari)", head: "dr. Siti Aminah", phone: "+62 813-8871-3320", readiness: "Siap Operasi" },
+      { name: "Puskesmas Tambakaji (Ngaliyan)", head: "dr. Wahyu Pratama", phone: "+62 812-7761-4450", readiness: "Siap Operasi" },
+    ],
+    broadcast_template: `[LOGISTIK FARMASI DKK SEMARANG]\nAlokasi buffer stock reagen RDT NS1 dan kristaloid untuk Puskesmas Semarang Barat, Candisari, dan Ngaliyan dalam proses pengiriman via Gudang Farmasi DKK.`,
+    dispatched_at: "22 Agustus 2026, 14:00 WIB",
   },
   {
     id: "ACT_005",
@@ -333,6 +408,24 @@ export const ACTION_RECOMMENDATIONS: ActionRecommendation[] = [
     action_type: "penyuluhan",
     status: "completed",
     due_date: "24 Agustus 2026",
+    lead_time_days: 14,
+    estimated_impact: "Terkirim ke 45.280 nomor WhatsApp warga dengan tingkat keterbacaan 98.4%",
+    ai_confidence: 96.1,
+    pic_unit: "Bidang Promosi Kesehatan & Humas DKK Semarang",
+    target_population: "45.280 warga terdaftar",
+    climate_trigger: "Aktivitas siklus perkembangbiakan nyamuk puncak menjelang akhir Agustus",
+    sop_checklist: [
+      "Penyusunan copy pesan edukasi 3M Plus dan kontak darurat Satgas Vektor",
+      "Segmentasi nomor WhatsApp warga terverifikasi di zona merah Pedurungan & Genuk",
+      "Pengiriman otomatis broadcast melalui WhatsApp Business API Resmi Pemkot",
+      "Monitoring respons pengaduan sarang nyamuk dari warga melalui hotline DKK",
+    ],
+    target_puskesmas: [
+      { name: "Puskesmas Pedurungan", head: "dr. Sugiyanto, M.Kes", phone: "+62 812-2849-0112", readiness: "Siaga 1" },
+      { name: "Puskesmas Genuk", head: "dr. Nurul Hidayati", phone: "+62 815-7740-1290", readiness: "Siaga 1" },
+    ],
+    broadcast_template: `[WASPADA DBD KOTA SEMARANG]\nHalo Warga Semarang! Sistem Prakira mendeteksi peningkatan risiko DBD di wilayah Anda dalam 2 minggu ke depan karena curah hujan tinggi. Mari lakukan PSN 3M Plus: Menguras, Menutup, Mendaur ulang barang bekas. Hubungi Hotline Satgas DBD DKK: 119 / 0812-2849-0112 jika ada jentik di lingkungan sekitar.`,
+    dispatched_at: "24 Agustus 2026, 08:30 WIB",
   },
 ];
 

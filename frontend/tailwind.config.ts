@@ -154,13 +154,15 @@ const config: Config = {
 
       fontFamily: {
         sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
-        mono: ["var(--font-mono)", "ui-monospace", "SFMono-Regular", "monospace"],
-        // Legacy alias — display no longer has its own typeface by design.
+        // Label role, not a second typeface: `font-mono` now resolves to Inter
+        // with tabular figures. Kept as a token so existing call sites hold.
+        mono: ["var(--font-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
+        // Legacy alias — display has no separate typeface by design.
         display: ["var(--font-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
       },
 
       fontSize: {
-        overline: ["0.6875rem", { lineHeight: "1", letterSpacing: "0.08em", fontWeight: "500" }],
+        overline: ["0.6875rem", { lineHeight: "1.4", letterSpacing: "0.08em", fontWeight: "500" }],
         caption: ["0.8125rem", { lineHeight: "1.45" }],
         "body-sm": ["0.875rem", { lineHeight: "1.55" }],
         body: ["0.9375rem", { lineHeight: "1.6" }],
@@ -236,6 +238,28 @@ const config: Config = {
           "radial-gradient(1200px 520px at 8% -8%, rgba(11,74,87,.10) 0%, transparent 62%), radial-gradient(900px 460px at 92% 4%, rgba(23,128,143,.07) 0%, transparent 58%)",
         "wash-warm":
           "radial-gradient(1200px 520px at 8% -8%, rgba(122,92,46,.09) 0%, transparent 62%), radial-gradient(900px 460px at 92% 4%, rgba(11,74,87,.05) 0%, transparent 58%)",
+        /* ── Gradients ─────────────────────────────────────────────────────
+           Every gradient is built from tokens already in this file, so they
+           stay inside the palette instead of introducing new hues. Risk
+           gradients keep the same lightness order as the flat risk ramp. */
+        "grad-page":
+          "radial-gradient(1100px 620px at 12% -10%, rgba(232,201,155,.38) 0%, transparent 62%), radial-gradient(900px 520px at 92% 8%, rgba(214,233,236,.55) 0%, transparent 60%), linear-gradient(180deg, #FDFBF7 0%, #FAF7F1 100%)",
+        "grad-sand": "linear-gradient(180deg, #FAF7F1 0%, #F4EEE2 100%)",
+        "grad-paper": "linear-gradient(180deg, #FFFFFF 0%, #FBF9F5 100%)",
+        "grad-brand": "linear-gradient(135deg, #17808F 0%, #0B4A57 52%, #06282F 100%)",
+        "grad-brand-soft": "linear-gradient(135deg, #EAF4F5 0%, #D6E9EC 60%, #FFFFFF 100%)",
+
+        "grad-risk-high":
+          "linear-gradient(158deg, #F9DFD8 0%, #FBECE8 42%, #FFFFFF 100%)",
+        "grad-risk-medium":
+          "linear-gradient(158deg, #FAECCF 0%, #FDF6E9 42%, #FFFFFF 100%)",
+        "grad-risk-low":
+          "linear-gradient(158deg, #DDEBDA 0%, #EDF4EC 42%, #FFFFFF 100%)",
+
+        "grad-bar-high": "linear-gradient(90deg, #E08A6E 0%, #C95E42 58%, #A8442C 100%)",
+        "grad-bar-medium": "linear-gradient(90deg, #F2C67F 0%, #E5AA52 58%, #D4933A 100%)",
+        "grad-bar-low": "linear-gradient(90deg, #A5C79F 0%, #7AA876 58%, #4A7C4E 100%)",
+
         hatch:
           "repeating-linear-gradient(45deg, rgba(255,255,255,.32) 0 2px, transparent 2px 6px)",
 
