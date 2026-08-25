@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import * as React from "react";
 import {
@@ -133,9 +133,9 @@ export function ClimateCorrelationChart({
               yAxisId="climate"
               type="monotone"
               dataKey="suhu_c"
-              stroke="#A8690C"
+              stroke="#EA580C"
               strokeWidth={2}
-              dot={{ r: 2.5, fill: "#A8690C" }}
+              dot={{ r: 2.5, fill: "#EA580C" }}
               name="Suhu (°C)"
             />
 

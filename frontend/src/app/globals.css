@@ -172,7 +172,8 @@
 @layer components {
   /* Small-caps mono label. The signature of the data surface. */
   .overline {
-    @apply font-mono text-overline uppercase text-paper-500;
+    @apply font-mono text-overline uppercase text-paper-500 no-underline;
+    text-decoration: none !important;
   }
 
   /* Eyebrow above section titles. Restrained: 500 weight, not 600. */
@@ -260,4 +261,48 @@
   .stagger-4 { animation-delay: 190ms; }
   .stagger-5 { animation-delay: 240ms; }
   .stagger-6 { animation-delay: 290ms; }
+}
+
+/* ============================================================================
+   Custom Scrollbar — Prakira Design System
+   Webkit (Chrome, Edge, Safari) + Firefox
+   ========================================================================= */
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(11, 74, 87, 0.35) transparent;
+}
+
+/* Webkit */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(11, 74, 87, 0.28);
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  transition: background 200ms ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(11, 74, 87, 0.55);
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: rgba(11, 74, 87, 0.75);
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
 }

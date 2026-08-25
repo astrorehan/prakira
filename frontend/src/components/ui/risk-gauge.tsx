@@ -1,4 +1,4 @@
-﻿import * as React from "react";
+import * as React from "react";
 import { cn } from "@/lib/utils";
 import type { RiskLevel } from "@/types";
 
@@ -19,61 +19,99 @@ export function RiskGauge({
 }: RiskGaugeProps) {
   const normalizedScore = Math.min(100, Math.max(0, score));
 
-  // Circular gauge dimensions
+  // Gauge dimension definitions calibrated for ample clearance inside arc
   const dimensions = {
-    sm: { radius: 36, stroke: 7, width: 90, height: 55, fontSize: "text-base" },
-    md: { radius: 52, stroke: 10, width: 130, height: 80, fontSize: "text-2xl" },
-    lg: { radius: 72, stroke: 13, width: 180, height: 110, fontSize: "text-3xl" },
+    sm: {
+      radius: 40,
+      stroke: 6,
+      scoreSize: "text-base font-bold",
+      labelSize: "text-[7.5px] font-medium tracking-wider",
+      labelMargin: "mt-0.5",
+      bottomOffset: "pb-0.5",
+    },
+    md: {
+      radius: 52,
+      stroke: 7,
+      scoreSize: "text-xl font-bold",
+      labelSize: "text-[8px] font-medium tracking-widest",
+      labelMargin: "mt-0.5",
+      bottomOffset: "pb-1",
+    },
+    lg: {
+      radius: 76,
+      stroke: 9.5,
+      scoreSize: "text-2xl sm:text-3xl font-bold",
+      labelSize: "text-[10px] font-medium tracking-widest",
+      labelMargin: "mt-1",
+      bottomOffset: "pb-1.5",
+    },
   }[size];
 
-  const circumference = Math.PI * dimensions.radius; // Half circle
+  const R = dimensions.radius;
+  const S = dimensions.stroke;
+  const pad = S / 2 + 4;
+  const svgWidth = 2 * R + 2 * pad;
+  const svgHeight = R + pad + S / 2;
+  const cx = svgWidth / 2;
+  const cy = R + pad;
+
+  const circumference = Math.PI * R; // Half circle circumference
   const strokeDashoffset = circumference - (normalizedScore / 100) * circumference;
 
   const colorConfig = {
     rendah: {
-      stroke: "#1B6B4F",
+      stroke: "#1F5132",
       text: "text-risk-low",
       bgSoft: "bg-risk-low-bg",
+      border: "border-risk-low-br",
       label: "Rendah",
     },
     sedang: {
-      stroke: "#A8690C",
+      stroke: "#D4933A",
       text: "text-risk-medium",
       bgSoft: "bg-risk-medium-bg",
-      label: "Sedang",
+      border: "border-risk-medium-br",
+      label: "Waspada",
     },
     tinggi: {
-      stroke: "#A32B1F",
+      stroke: "#A8442C",
       text: "text-risk-high",
       bgSoft: "bg-risk-high-bg",
-      label: "Tinggi",
+      border: "border-risk-high-br",
+      label: "Siaga",
     },
   }[level];
 
+  // SVG arc path from left (cx - R, cy) to right (cx + R, cy)
+  const arcPath = `M ${cx - R},${cy} A ${R},${R} 0 0,1 ${cx + R},${cy}`;
+
   return (
-    <div className={cn("flex flex-col items-center justify-center", className)}>
-      <div className="relative flex items-center justify-center">
+    <div className={cn("inline-flex flex-col items-center justify-center", className)}>
+      <div
+        className="relative flex items-center justify-center"
+        style={{ width: svgWidth, height: svgHeight }}
+      >
         <svg
-          width={dimensions.width}
-          height={dimensions.height}
-          viewBox={`0 0 ${dimensions.width} ${dimensions.height + 10}`}
-          className="overflow-visible"
+          width={svgWidth}
+          height={svgHeight}
+          viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+          className="overflow-visible block"
         >
-          {/* Background Arc */}
+          {/* Background Arc Track */}
           <path
-            d={`M ${dimensions.stroke / 2},${dimensions.height} A ${dimensions.radius},${dimensions.radius} 0 0,1 ${dimensions.width - dimensions.stroke / 2},${dimensions.height}`}
+            d={arcPath}
             fill="none"
             stroke="#DFE6E6"
-            strokeWidth={dimensions.stroke}
+            strokeWidth={S}
             strokeLinecap="round"
           />
 
-          {/* Active Value Arc */}
+          {/* Active Progress Arc */}
           <path
-            d={`M ${dimensions.stroke / 2},${dimensions.height} A ${dimensions.radius},${dimensions.radius} 0 0,1 ${dimensions.width - dimensions.stroke / 2},${dimensions.height}`}
+            d={arcPath}
             fill="none"
             stroke={colorConfig.stroke}
-            strokeWidth={dimensions.stroke}
+            strokeWidth={S}
             strokeDasharray={circumference}
             strokeDashoffset={strokeDashoffset}
             strokeLinecap="round"
@@ -81,12 +119,29 @@ export function RiskGauge({
           />
         </svg>
 
-        {/* Center Score */}
-        <div className="absolute bottom-0 flex flex-col items-center justify-center">
-          <span className={cn("font-display font-semibold tracking-tight", dimensions.fontSize, colorConfig.text)}>
+        {/* Center Score & Label inside arc */}
+        <div
+          className={cn(
+            "absolute inset-x-0 bottom-0 flex flex-col items-center justify-end pointer-events-none select-none",
+            dimensions.bottomOffset
+          )}
+        >
+          <span
+            className={cn(
+              "font-display leading-none tracking-tight",
+              dimensions.scoreSize,
+              colorConfig.text
+            )}
+          >
             {Math.round(score)}
           </span>
-          <span className="text-[10px] uppercase font-medium text-muted-foreground -mt-1">
+          <span
+            className={cn(
+              "uppercase text-paper-500",
+              dimensions.labelMargin,
+              dimensions.labelSize
+            )}
+          >
             Skor Risiko
           </span>
         </div>
@@ -95,9 +150,10 @@ export function RiskGauge({
       {showLabel && (
         <span
           className={cn(
-            "mt-1.5 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium uppercase tracking-wider",
+            "mt-1.5 inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider border shadow-2xs",
             colorConfig.bgSoft,
-            colorConfig.text,
+            colorConfig.border,
+            colorConfig.text
           )}
         >
           {colorConfig.label}
@@ -106,3 +162,4 @@ export function RiskGauge({
     </div>
   );
 }
+

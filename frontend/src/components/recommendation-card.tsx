@@ -1,3 +1,5 @@
+"use client";
+
 import * as React from "react";
 import { AlertOctagon, CheckCircle2, Clock, MapPin, ShieldAlert, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -6,25 +8,35 @@ import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { LiquidGlassCard } from "./ui/liquid-glass-card";
 
-type RecommendationCardProps = {
+interface RecommendationCardProps {
   recommendation: ActionRecommendation;
   onExecute?: (id: string) => void;
   className?: string;
-};
+}
 
 export function RecommendationCard({
   recommendation,
   onExecute,
   className,
 }: RecommendationCardProps) {
+  const [executed, setExecuted] = React.useState(recommendation.status === "completed");
   const isHighPriority = recommendation.priority === "high";
+
+  const handleAction = () => {
+    setExecuted(true);
+    if (onExecute) {
+      onExecute(recommendation.id);
+    } else {
+      alert(`Instruksi tindakan #${recommendation.id} berhasil dikirimkan ke puskesmas wilayah terkait!`);
+    }
+  };
 
   return (
     <LiquidGlassCard
       variant={isHighPriority ? "risk-high" : "blue"}
       elevation="sm"
       interactive
-      className={cn("p-5 flex flex-col justify-between gap-3", className)}
+      className={cn("p-5 flex flex-col justify-between gap-3 animate-fade-in-up", className)}
     >
       <div>
         <div className="flex items-start justify-between gap-2">
@@ -37,6 +49,7 @@ export function RecommendationCard({
                   ? "disease-ispa"
                   : "disease-diare"
               }
+              size="sm"
             >
               {recommendation.disease}
             </Badge>
@@ -44,6 +57,7 @@ export function RecommendationCard({
             <Badge
               variant={isHighPriority ? "risk-high" : "risk-medium"}
               pulse={isHighPriority}
+              size="sm"
             >
               {isHighPriority ? "Prioritas Tinggi" : "Prioritas Sedang"}
             </Badge>
@@ -51,23 +65,23 @@ export function RecommendationCard({
 
           <span
             className={cn(
-              "text-[10px] font-medium uppercase tracking-wider rounded-full px-2 py-0.5",
-              recommendation.status === "completed"
-                ? "bg-risk-low-bg text-risk-low"
+              "text-[10px] font-semibold uppercase tracking-wider rounded-full px-2 py-0.5",
+              executed || recommendation.status === "completed"
+                ? "bg-risk-low-bg text-risk-low border border-risk-low-br/60"
                 : recommendation.status === "in_progress"
-                ? "bg-brand-100 text-brand-800"
-                : "bg-risk-medium-bg text-risk-medium",
+                ? "bg-brand-100 text-brand-800 border border-brand-300/60"
+                : "bg-risk-medium-bg text-risk-medium border border-risk-medium-br/60",
             )}
           >
-            {recommendation.status === "completed"
-              ? "Selesai"
+            {executed || recommendation.status === "completed"
+              ? "Terkirim"
               : recommendation.status === "in_progress"
               ? "Sedang Berjalan"
               : "Menunggu Tindakan"}
           </span>
         </div>
 
-        <h4 className="font-display font-semibold text-base text-foreground mt-2.5">
+        <h4 className="font-display font-semibold text-base text-foreground mt-2.5 leading-snug">
           {recommendation.title}
         </h4>
 
@@ -81,7 +95,7 @@ export function RecommendationCard({
           {recommendation.target_kecamatan.map((kec, i) => (
             <span
               key={i}
-              className="rounded-md bg-white/80 border border-paper-200/80 px-2 py-0.5 text-[10px] font-medium text-paper-800 shadow-sm"
+              className="rounded-md bg-white/90 border border-paper-200/80 px-2 py-0.5 text-[10px] font-medium text-paper-800 shadow-xs"
             >
               {kec}
             </span>
@@ -98,11 +112,20 @@ export function RecommendationCard({
         <Button
           size="sm"
           variant={isHighPriority ? "destructive" : "default"}
-          onClick={() => onExecute && onExecute(recommendation.id)}
-          className="text-xs text-white font-semibold"
+          onClick={handleAction}
+          className="text-xs text-white font-semibold shadow-xs"
         >
-          <span className="text-white">Instruksikan Tim</span>
-          <ArrowRight className="h-3.5 w-3.5 text-white" />
+          {executed ? (
+            <>
+              <CheckCircle2 className="h-3.5 w-3.5 mr-1 text-white" />
+              <span className="text-white">Instruksi Terkirim</span>
+            </>
+          ) : (
+            <>
+              <span className="text-white">Instruksikan Tim</span>
+              <ArrowRight className="h-3.5 w-3.5 text-white" />
+            </>
+          )}
         </Button>
       </div>
     </LiquidGlassCard>

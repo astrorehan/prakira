@@ -67,27 +67,27 @@ const config: Config = {
           300: "#D2C6AE",
         },
 
-        /* ── Risk ramp: the only saturated colour in the product ────────── */
+        /* ── Risk ramp: Earth-tone status palette (Surplus, Cukup, Waspada, Defisit) ── */
         risk: {
-          low: "#1B6B4F",
-          "low-bg": "#E3F0EA",
-          "low-br": "#BEDBCE",
-          "low-fill": "#BCD9C9",
+          low: "#1F5132",
+          "low-bg": "#EDF4EC",
+          "low-br": "#C5DEC2",
+          "low-fill": "#7AA876",
 
-          medium: "#A8690C",
-          "medium-bg": "#FAF0DC",
-          "medium-br": "#EAD3A3",
-          "medium-fill": "#E0AF63",
+          medium: "#D4933A",
+          "medium-bg": "#FDF6E9",
+          "medium-br": "#F6DBA9",
+          "medium-fill": "#E5AA52",
 
-          high: "#A32B1F",
-          "high-bg": "#F9E6E2",
-          "high-br": "#EBC0B7",
-          "high-fill": "#B34434",
+          high: "#A8442C",
+          "high-bg": "#FBECE8",
+          "high-br": "#F3C2B4",
+          "high-fill": "#C95E42",
 
-          critical: "#6B140E",
-          "critical-bg": "#F1D9D4",
-          "critical-br": "#E0B3AB",
-          "critical-fill": "#7C2318",
+          critical: "#8A2E1A",
+          "critical-bg": "#F9DFD8",
+          "critical-br": "#E8A28E",
+          "critical-fill": "#A8442C",
 
           none: "#5A6C6E",
           "none-bg": "#ECF0F0",
@@ -123,7 +123,7 @@ const config: Config = {
         popover: { DEFAULT: "#FFFFFF", foreground: "#0E2225" },
         accent: { DEFAULT: "#D6E9EC", foreground: "#0B4A57" },
         secondary: { DEFAULT: "#ECF0F0", foreground: "#24373A" },
-        destructive: { DEFAULT: "#A32B1F", foreground: "#FFFFFF" },
+        destructive: { DEFAULT: "#DC2626", foreground: "#FFFFFF" },
 
         /* ── Legacy aliases — repoint old class names onto new values ──────
            Deprecated. Do not use in new code; migrate to brand-* / paper-*. */

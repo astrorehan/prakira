@@ -1,4 +1,4 @@
-﻿import type {
+import type {
   KecamatanData,
   DiseaseType,
   TrendPoint,
@@ -10,24 +10,27 @@
   GeoDistrictCollection,
 } from "@/types";
 
-// 16 Kecamatan Kota Semarang & Baseline Profile
+import { coverageFromConfidence } from "@/lib/utils";
+import semarangKecamatanJson from "@/data/semarang-kecamatan.json";
+
+// 16 Kecamatan Kota Semarang & Baseline Profile (Official BPS codes & real GIS centroids)
 export const SEMARANG_KECAMATAN_RAW = [
-  { id: "KEC_SMG_01", nama: "Semarang Barat", kode_bps: "3374010", pop: 154200, luas: 21.74, coords: [-6.985, 110.385] as [number, number] },
-  { id: "KEC_SMG_02", nama: "Banyumanik", kode_bps: "3374020", pop: 142800, luas: 25.69, coords: [-7.065, 110.418] as [number, number] },
-  { id: "KEC_SMG_03", nama: "Pedurungan", kode_bps: "3374030", pop: 191500, luas: 20.72, coords: [-7.002, 110.468] as [number, number] },
-  { id: "KEC_SMG_04", nama: "Candisari", kode_bps: "3374040", pop: 78900, luas: 6.54, coords: [-7.012, 110.428] as [number, number] },
-  { id: "KEC_SMG_05", nama: "Tembalang", kode_bps: "3374050", pop: 188400, luas: 44.20, coords: [-7.054, 110.450] as [number, number] },
-  { id: "KEC_SMG_06", nama: "Gajahmungkur", kode_bps: "3374060", pop: 57400, luas: 9.07, coords: [-7.018, 110.405] as [number, number] },
-  { id: "KEC_SMG_07", nama: "Genuk", kode_bps: "3374070", pop: 114600, luas: 27.39, coords: [-6.962, 110.478] as [number, number] },
-  { id: "KEC_SMG_08", nama: "Tugu", kode_bps: "3374080", pop: 33800, luas: 31.78, coords: [-6.974, 110.320] as [number, number] },
-  { id: "KEC_SMG_09", nama: "Mijen", kode_bps: "3374090", pop: 72100, luas: 57.55, coords: [-7.060, 110.325] as [number, number] },
-  { id: "KEC_SMG_10", nama: "Gayamsari", kode_bps: "3374100", pop: 71200, luas: 6.18, coords: [-6.982, 110.448] as [number, number] },
-  { id: "KEC_SMG_11", nama: "Semarang Selatan", kode_bps: "3374110", pop: 73500, luas: 5.93, coords: [-6.998, 110.418] as [number, number] },
-  { id: "KEC_SMG_12", nama: "Semarang Tengah", kode_bps: "3374120", pop: 63200, luas: 6.14, coords: [-6.980, 110.420] as [number, number] },
-  { id: "KEC_SMG_13", nama: "Semarang Timur", kode_bps: "3374130", pop: 74100, luas: 7.70, coords: [-6.975, 110.440] as [number, number] },
-  { id: "KEC_SMG_14", nama: "Semarang Utara", kode_bps: "3374140", pop: 122800, luas: 10.97, coords: [-6.960, 110.415] as [number, number] },
-  { id: "KEC_SMG_15", nama: "Gunungpati", kode_bps: "3374150", pop: 96800, luas: 54.11, coords: [-7.085, 110.370] as [number, number] },
-  { id: "KEC_SMG_16", nama: "Ngaliyan", kode_bps: "3374160", pop: 141600, luas: 37.99, coords: [-7.010, 110.345] as [number, number] },
+  { id: "KEC_SMG_01", nama: "Semarang Barat", kode_bps: "3374140", pop: 154200, luas: 21.74, coords: [-6.9805, 110.3828] as [number, number] },
+  { id: "KEC_SMG_02", nama: "Banyumanik", kode_bps: "3374030", pop: 142800, luas: 25.69, coords: [-7.0683, 110.4257] as [number, number] },
+  { id: "KEC_SMG_03", nama: "Pedurungan", kode_bps: "3374080", pop: 191500, luas: 20.72, coords: [-7.0016, 110.4767] as [number, number] },
+  { id: "KEC_SMG_04", nama: "Candisari", kode_bps: "3374060", pop: 78900, luas: 6.54, coords: [-7.0144, 110.4303] as [number, number] },
+  { id: "KEC_SMG_05", nama: "Tembalang", kode_bps: "3374070", pop: 188400, luas: 44.20, coords: [-7.0458, 110.4647] as [number, number] },
+  { id: "KEC_SMG_06", nama: "Gajahmungkur", kode_bps: "3374040", pop: 57400, luas: 9.07, coords: [-7.0129, 110.4034] as [number, number] },
+  { id: "KEC_SMG_07", nama: "Genuk", kode_bps: "3374090", pop: 114600, luas: 27.39, coords: [-6.9657, 110.4735] as [number, number] },
+  { id: "KEC_SMG_08", nama: "Tugu", kode_bps: "3374150", pop: 33800, luas: 31.78, coords: [-6.9620, 110.3277] as [number, number] },
+  { id: "KEC_SMG_09", nama: "Mijen", kode_bps: "3374010", pop: 72100, luas: 57.55, coords: [-7.0592, 110.3167] as [number, number] },
+  { id: "KEC_SMG_10", nama: "Gayamsari", kode_bps: "3374100", pop: 71200, luas: 6.18, coords: [-6.9777, 110.4462] as [number, number] },
+  { id: "KEC_SMG_11", nama: "Semarang Selatan", kode_bps: "3374050", pop: 73500, luas: 5.93, coords: [-6.9963, 110.4257] as [number, number] },
+  { id: "KEC_SMG_12", nama: "Semarang Tengah", kode_bps: "3374130", pop: 63200, luas: 6.14, coords: [-6.9807, 110.4169] as [number, number] },
+  { id: "KEC_SMG_13", nama: "Semarang Timur", kode_bps: "3374110", pop: 74100, luas: 7.70, coords: [-6.9735, 110.4379] as [number, number] },
+  { id: "KEC_SMG_14", nama: "Semarang Utara", kode_bps: "3374120", pop: 122800, luas: 10.97, coords: [-6.9567, 110.4205] as [number, number] },
+  { id: "KEC_SMG_15", nama: "Gunungpati", kode_bps: "3374020", pop: 96800, luas: 54.11, coords: [-7.0660, 110.3727] as [number, number] },
+  { id: "KEC_SMG_16", nama: "Ngaliyan", kode_bps: "3374160", pop: 141600, luas: 37.99, coords: [-6.9960, 110.3339] as [number, number] },
 ];
 
 export function getKecamatanDataList(disease: DiseaseType = "DBD"): KecamatanData[] {
@@ -115,6 +118,11 @@ export function getKecamatanDataList(disease: DiseaseType = "DBD"): KecamatanDat
 
     const incidence_rate = Number(((kasus_aktif / kec.pop) * 100000).toFixed(1));
 
+    /* The interval widens as confidence drops, so a shaky district can never
+       present a crisp-looking number. PRD §7-H1. */
+    const confidence = 0.91 + (idx % 7) * 0.01;
+    const halfWidth = Math.max(1, Math.round(kasus_prediksi * (1 - confidence) * 2.2));
+
     return {
       id: kec.id,
       nama: kec.nama,
@@ -127,7 +135,10 @@ export function getKecamatanDataList(disease: DiseaseType = "DBD"): KecamatanDat
       incidence_rate,
       skor_risiko,
       tingkat_risiko,
-      confidence: 0.91 + (idx % 7) * 0.01,
+      confidence,
+      kasus_prediksi_lower: Math.max(0, kasus_prediksi - halfWidth),
+      kasus_prediksi_upper: kasus_prediksi + halfWidth,
+      coverage: coverageFromConfidence(confidence),
       delta_mingguan: delta,
       cuaca: {
         curah_hujan_mm: 185 + (idx * 14) % 120,
@@ -147,42 +158,9 @@ export function getKecamatanDataList(disease: DiseaseType = "DBD"): KecamatanDat
   });
 }
 
-// Generate GeoJSON Polygons for Semarang 16 Kecamatan for Leaflet Map
+// Return Real GeoJSON Polygons for Semarang 16 Kecamatan (Official BPS Boundary Dataset)
 export function getSemarangGeoJSON(): GeoDistrictCollection {
-  return {
-    type: "FeatureCollection",
-    features: SEMARANG_KECAMATAN_RAW.map((kec) => {
-      const [lat, lng] = kec.coords;
-      const dLat = 0.022 + ((kec.luas % 10) * 0.001);
-      const dLng = 0.025 + ((kec.luas % 15) * 0.001);
-
-      // Create an approximate polygonal district boundary around coordinates
-      const polygonCoords: number[][][] = [
-        [
-          [lng - dLng, lat - dLat],
-          [lng + dLng * 0.8, lat - dLat * 0.9],
-          [lng + dLng * 1.1, lat + dLat * 0.4],
-          [lng + dLng * 0.2, lat + dLat * 1.1],
-          [lng - dLng * 0.9, lat + dLat * 0.7],
-          [lng - dLng, lat - dLat],
-        ],
-      ];
-
-      return {
-        type: "Feature",
-        properties: {
-          id: kec.id,
-          nama: kec.nama,
-          kode_bps: kec.kode_bps,
-          level: "kecamatan",
-        },
-        geometry: {
-          type: "Polygon",
-          coordinates: polygonCoords,
-        },
-      };
-    }),
-  };
+  return semarangKecamatanJson as unknown as GeoDistrictCollection;
 }
 
 // Trend Points (Past 8 weeks actual + Next 4 weeks ML Forecast)

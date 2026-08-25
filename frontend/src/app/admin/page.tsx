@@ -3,6 +3,7 @@
 import * as React from "react";
 import { ShieldCheck, Database, Server, RefreshCw, FileSpreadsheet } from "lucide-react";
 import { AdminDataImport } from "@/components/admin-data-import";
+import { AppleGlassDate } from "@/components/ui/apple-glass-date";
 
 export default function AdminPage() {
   return (
@@ -20,6 +21,13 @@ export default function AdminPage() {
             <p className="text-xs text-muted-foreground mt-1 max-w-2xl">
               Pusat kendali integrasi data cuaca BMKG otomatis, upload manual CSV kasus penyakit, serta log audit untuk akuntabilitas publik.
             </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <AppleGlassDate
+              week="Minggu 34"
+              monthYear="Agustus 2026"
+            />
           </div>
         </div>
 

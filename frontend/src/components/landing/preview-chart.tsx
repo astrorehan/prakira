@@ -60,10 +60,10 @@ export default function PreviewChart() {
         <Line
           type="monotone"
           dataKey="prediksi"
-          stroke="#A32B1F"
+          stroke="#A8442C"
           strokeWidth={2.2}
           strokeDasharray="4 4"
-          dot={{ r: 3.5, fill: "#A32B1F" }}
+          dot={{ r: 3.5, fill: "#A8442C" }}
           connectNulls
         />
       </LineChart>

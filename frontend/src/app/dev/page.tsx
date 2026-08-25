@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LiquidGlassCard } from "@/components/ui/liquid-glass-card";
+import { AppleGlassDate } from "@/components/ui/apple-glass-date";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { RiskGauge } from "@/components/ui/risk-gauge";
@@ -179,9 +180,9 @@ export default function DesignSystemPage() {
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {[
-                    { name: "Risiko Rendah (Aman)", hex: "#1B6B4F", bg: "#E3F0EA", desc: "Insiden terkendali, monitoring rutin" },
-                    { name: "Risiko Sedang (Waspada)", hex: "#A8690C", bg: "#FAF0DC", desc: "Peningkatan iklim memicu vektor" },
-                    { name: "Risiko Tinggi (Bahaya)", hex: "#A32B1F", bg: "#F9E6E2", desc: "Potensi KLB 2-4 minggu, intervensi segera" },
+                    { name: "Risiko Rendah", hex: "#1F5132", bg: "#EDF4EC", desc: "Insiden terkendali, monitoring sanitasi rutin" },
+                    { name: "Risiko Waspada (Sedang)", hex: "#D4933A", bg: "#FDF6E9", desc: "Pola iklim mulai memicu peningkatan vektor" },
+                    { name: "Risiko Siaga (Tinggi)", hex: "#A8442C", bg: "#FBECE8", desc: "Potensi lonjakan kasus 2-4 minggu, intervensi segera" },
                   ].map((risk, i) => (
                     <div
                       key={i}
@@ -292,6 +293,79 @@ export default function DesignSystemPage() {
                 </div>
               </LiquidGlassCard>
             </div>
+
+            {/* Apple Liquid Glass Date Showcase */}
+            <LiquidGlassCard variant="default" className="p-6 space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-paper-200">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="official">Apple Design System</Badge>
+                    <span className="text-xs font-semibold text-foreground">Liquid Glass Date & Period Capsules</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Komponen container tanggal optik VisionOS / iOS 18 dengan material liquid glass, specular reflection 1px, nested week capsule, dan live status beacon.
+                  </p>
+                </div>
+                <code className="text-[11px] font-mono text-brand-700 bg-brand-50 px-2 py-1 rounded-md border border-brand-200">
+                  &lt;AppleGlassDate /&gt;
+                </code>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-4 rounded-xl bg-mesh-blue border border-paper-200/80 space-y-3">
+                  <span className="text-xs font-semibold text-paper-700 uppercase tracking-wider block">1. Default Pure Liquid Glass</span>
+                  <div>
+                    <AppleGlassDate
+                      week="Minggu 34"
+                      monthYear="Agustus 2026"
+                    />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">Varian utama dengan latar gradien optik transparan, shadow ambient difusi, dan specular highlight rim.</p>
+                </div>
+
+                <div className="p-4 rounded-xl bg-mesh-blue border border-paper-200/80 space-y-3">
+                  <span className="text-xs font-semibold text-paper-700 uppercase tracking-wider block">2. With Date Range (18 – 24 Ags 2026)</span>
+                  <div>
+                    <AppleGlassDate
+                      week="Minggu 34"
+                      monthYear="Agustus 2026"
+                      dateRange="18 – 24 Ags 2026"
+                    />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">Menampilkan rentang hari epidemiologi riil bersama nama bulan dan tahun.</p>
+                </div>
+
+                <div className="p-4 rounded-xl bg-mesh-blue border border-paper-200/80 space-y-3">
+                  <span className="text-xs font-semibold text-paper-700 uppercase tracking-wider block">3. Brand Sky Tint & Compact Size</span>
+                  <div className="flex flex-wrap gap-2 items-center">
+                    <AppleGlassDate
+                      variant="brand"
+                      week="Minggu 34"
+                      monthYear="Agustus 2026"
+                    />
+                    <AppleGlassDate
+                      size="sm"
+                      week="W34"
+                      monthYear="Ags 2026"
+                      showCalendarIcon={false}
+                    />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">Varian bernuansa brand teal dan ukuran compact untuk toolbar sempit.</p>
+                </div>
+
+                <div className="p-4 rounded-xl bg-mesh-blue border border-paper-200/80 space-y-3">
+                  <span className="text-xs font-semibold text-paper-700 uppercase tracking-wider block">4. VisionOS Large Capsule (Header Prominent)</span>
+                  <div>
+                    <AppleGlassDate
+                      size="lg"
+                      week="Minggu 34"
+                      monthYear="Agustus 2026"
+                    />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">Ukuran large dengan padding 18px dan font lebih besar untuk highlight dashboard eksekutif.</p>
+                </div>
+              </div>
+            </LiquidGlassCard>
           </div>
         )}
 

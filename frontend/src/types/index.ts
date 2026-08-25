@@ -1,6 +1,9 @@
-﻿export type DiseaseType = "DBD" | "ISPA" | "Diare";
+export type DiseaseType = "DBD" | "ISPA" | "Diare";
 
 export type RiskLevel = "rendah" | "sedang" | "tinggi";
+
+/** Historical data completeness. A thin-history district is NOT a safe one. */
+export type DataCoverage = "high" | "medium" | "low" | "insufficient";
 
 export type Role = "dinas" | "puskesmas" | "warga" | "admin";
 
@@ -35,6 +38,11 @@ export type KecamatanData = {
   skor_risiko: number; // 0 - 100
   tingkat_risiko: RiskLevel;
   confidence: number; // 0.0 - 1.0 (e.g. 0.94)
+  /** Prediction interval for `kasus_prediksi`. The point value never ships alone. */
+  kasus_prediksi_lower: number;
+  kasus_prediksi_upper: number;
+  /** Drives the honesty label on <Metric>. Derived from `confidence`. */
+  coverage: DataCoverage;
   delta_mingguan: number; // % change (+15.4%)
   cuaca: DistrictClimate;
   rekomendasi: string[];

@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LiquidGlassCard } from "@/components/ui/liquid-glass-card";
+import { AppleGlassDate } from "@/components/ui/apple-glass-date";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DiseaseSelector } from "@/components/disease-selector";
@@ -55,7 +56,11 @@ export default function AnalitikPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <AppleGlassDate
+              week="Minggu 34"
+              monthYear="Agustus 2026"
+            />
             <Button size="sm" variant="blue" onClick={() => setExportModal(true)} className="text-white font-semibold shadow-xs">
               <Download className="h-4 w-4 text-white" />
               <span className="text-white">Ekspor Laporan Resmi</span>

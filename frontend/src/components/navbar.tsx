@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useState, useEffect } from "react";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -41,50 +41,29 @@ function Wordmark() {
 
 export function Navbar() {
   const pathname = usePathname();
-  const [scrolled, setScrolled] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  const [mobileOpen, setMobileOpen] = React.useState(false);
 
   return (
     <header
       className={cn(
-        "sticky top-0 z-50 w-full transition-all duration-500",
-        scrolled
-          ? [
-              "border-b shadow-lg",
-              // Liquid glass base
-              "bg-white/10 dark:bg-white/5",
-              "backdrop-blur-2xl backdrop-saturate-200",
-              // Shimmer border
-              "border-white/30 dark:border-white/15",
-              // Subtle inner glow
-              "[box-shadow:0_0_0_1px_rgba(255,255,255,0.15)_inset,0_4px_32px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)]",
-            ].join(" ")
-          : "border-b border-transparent bg-transparent",
+        "sticky top-0 z-50 w-full transition-all duration-300",
+        // Liquid glass — always active
+        "border-b shadow-lg",
+        "bg-white/10 dark:bg-white/5",
+        "backdrop-blur-2xl backdrop-saturate-200",
+        "border-white/30 dark:border-white/15",
+        "[box-shadow:0_0_0_1px_rgba(255,255,255,0.15)_inset,0_4px_32px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)]",
       )}
-      style={
-        scrolled
-          ? {
-              // Extra liquid glass shimmer via CSS variable fallback
-              background:
-                "linear-gradient(135deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.12) 100%)",
-            }
-          : undefined
-      }
+      style={{
+        background:
+          "linear-gradient(135deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.12) 100%)",
+      }}
     >
       {/* Top shimmer highlight line */}
-      {scrolled && (
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent"
-        />
-      )}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent"
+      />
       <div className="container flex h-16 items-center justify-between gap-4 md:h-20">
         <Wordmark />
 

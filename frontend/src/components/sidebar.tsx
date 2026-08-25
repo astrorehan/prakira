@@ -85,13 +85,6 @@ export function Sidebar() {
           <Wordmark href="/dashboard" />
         </div>
 
-        <div className="px-4 pt-4 pb-2">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-risk-low-bg border border-risk-low-br px-2.5 py-1 text-[10px] font-semibold text-risk-low">
-            <span className="h-1.5 w-1.5 rounded-full bg-risk-low animate-pulse" />
-            <span>Early Warning Live</span>
-          </div>
-        </div>
-
         <nav className="flex-1 space-y-1 px-4 py-3">{navLinks()}</nav>
 
         <div className="border-t border-border p-4 space-y-2">

@@ -1,7 +1,20 @@
+"use client";
+
 import * as React from "react";
 import { Bug, Wind, Droplets } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { DiseaseType } from "@/types";
+
+/**
+ * DiseaseSelector — segmented control.
+ *
+ * Three options do not need three cards. The previous card layout spent 224px
+ * of vertical space and pushed the map below the fold; a segmented control
+ * spends 40px and reads as a filter, which is what it is.
+ *
+ * Diseases carry an icon + label, never a colour: colour belongs to risk
+ * (docs/DESIGN-SYSTEM.md §2.4).
+ */
 
 type DiseaseSelectorProps = {
   selected: DiseaseType;
@@ -9,81 +22,40 @@ type DiseaseSelectorProps = {
   className?: string;
 };
 
-export function DiseaseSelector({ selected, onSelect, className }: DiseaseSelectorProps) {
-  const options: { id: DiseaseType; label: string; sub: string; icon: React.ReactNode; color: string; badge: string }[] = [
-    {
-      id: "DBD",
-      label: "Demam Berdarah (DBD)",
-      sub: "Vektor Nyamuk & Hujan",
-      icon: <Bug className="h-4 w-4" />,
-      color: "from-brand-500/20 to-brand-500/20 border-brand-500 text-brand-700",
-      badge: "3 Wilayah Siaga",
-    },
-    {
-      id: "ISPA",
-      label: "Infeksi Pernapasan (ISPA)",
-      sub: "Partikulat Udara & Debu",
-      icon: <Wind className="h-4 w-4" />,
-      color: "from-brand-500/20 to-brand-500/20 border-brand-500 text-brand-700",
-      badge: "4 Wilayah Siaga",
-    },
-    {
-      id: "Diare",
-      label: "Diare & Saluran Cerna",
-      sub: "Sanitasi & Banjir Rob",
-      icon: <Droplets className="h-4 w-4" />,
-      color: "from-brand-500/20 to-risk-low/20 border-brand-500 text-brand-700",
-      badge: "3 Wilayah Siaga",
-    },
-  ];
+const OPTIONS: { id: DiseaseType; label: string; icon: React.ReactNode }[] = [
+  { id: "DBD", label: "DBD", icon: <Bug className="h-3.5 w-3.5" /> },
+  { id: "ISPA", label: "ISPA", icon: <Wind className="h-3.5 w-3.5" /> },
+  { id: "Diare", label: "Diare", icon: <Droplets className="h-3.5 w-3.5" /> },
+];
 
+export function DiseaseSelector({ selected, onSelect, className }: DiseaseSelectorProps) {
   return (
     <div
+      role="tablist"
+      aria-label="Jenis penyakit"
       className={cn(
-        "flex flex-wrap items-center gap-2 rounded-2xl p-1.5 liquid-glass border border-white/90 shadow-glass-sm",
+        "inline-flex items-center gap-0.5 rounded-lg border border-border bg-paper-100 p-0.5",
         className,
       )}
     >
-      {options.map((opt) => {
+      {OPTIONS.map((opt) => {
         const isSelected = selected === opt.id;
         return (
           <button
             key={opt.id}
+            role="tab"
+            aria-selected={isSelected}
             onClick={() => onSelect(opt.id)}
             className={cn(
-              "flex flex-1 min-w-[220px] items-center justify-between gap-3 rounded-2xl px-5 py-3.5 text-left transition-all duration-200",
+              "inline-flex h-9 items-center gap-1.5 rounded-md px-3.5 text-body-sm font-medium",
+              "transition-colors duration-fast ease-out",
               isSelected
-                ? "bg-white shadow-card border border-brand-200 text-foreground ring-2 ring-primary/20 scale-[1.01]"
-                : "text-muted-foreground hover:bg-white/60 hover:text-foreground",
+                ? "bg-surface text-foreground shadow-xs"
+                : "text-paper-600 hover:text-foreground",
             )}
           >
-            <div className="flex items-center gap-3.5">
-              <div
-                className={cn(
-                  "flex h-11 w-11 items-center justify-center rounded-2xl transition-transform",
-                  isSelected
-                    ? "bg-primary text-white shadow-sm scale-105"
-                    : "bg-paper-100 text-paper-600",
-                )}
-              >
-                {opt.icon}
-              </div>
-              <div className="flex flex-col">
-                <span className="text-sm font-semibold tracking-tight text-foreground">{opt.label}</span>
-                <span className="text-xs text-muted-foreground">{opt.sub}</span>
-              </div>
-            </div>
-
-            <span
-              className={cn(
-                "rounded-full px-2.5 py-1 text-xs font-semibold",
-                isSelected
-                  ? "bg-brand-50 text-brand-700 border border-brand-200"
-                  : "bg-paper-100 text-paper-600",
-              )}
-            >
-              {opt.badge}
-            </span>
+            {opt.icon}
+            <span>{opt.label}</span>
           </button>
         );
       })}

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import * as React from "react";
 import {
@@ -14,13 +14,16 @@ import {
   Legend,
 } from "recharts";
 import type { TrendPoint, DiseaseType } from "@/types";
-import { DISEASE_CONFIG } from "@/lib/utils";
+import { DISEASE_CONFIG, cn } from "@/lib/utils";
 
 type TrendChartProps = {
   data: TrendPoint[];
   disease?: DiseaseType;
   showClimateOverlay?: boolean;
   className?: string;
+  chartHeightClass?: string;
+  hideFooterLegend?: boolean;
+  compact?: boolean;
 };
 
 export function TrendChart({
@@ -28,6 +31,9 @@ export function TrendChart({
   disease = "DBD",
   showClimateOverlay = true,
   className,
+  chartHeightClass,
+  hideFooterLegend = false,
+  compact = false,
 }: TrendChartProps) {
   const cfg = DISEASE_CONFIG[disease];
 
@@ -51,16 +57,20 @@ export function TrendChart({
   }
 
   const primaryColor = cfg.color; // e.g. #0B4A57
-  const forecastColor = "#A32B1F"; // Alert Rose for high forecast or #EA580C
+  const forecastColor = "#A8442C"; // Alert Terracotta for high forecast
   const rainColor = "#17808F";
 
   return (
-    <div className="w-full flex flex-col">
-      <div className="h-80 w-full">
+    <div className={cn("w-full flex flex-col flex-1 min-h-0", className)}>
+      <div className={cn("w-full relative", chartHeightClass || "h-72 sm:h-80")}>
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart
             data={formattedData}
-            margin={{ top: 16, right: 16, bottom: 0, left: -8 }}
+            margin={
+              compact
+                ? { top: 8, right: 8, bottom: 0, left: -20 }
+                : { top: 16, right: 16, bottom: 0, left: -8 }
+            }
           >
             <defs>
               <linearGradient id="actualAreaGrad" x1="0" y1="0" x2="0" y2="1">
@@ -77,8 +87,8 @@ export function TrendChart({
 
             <XAxis
               dataKey="periode"
-              tick={{ fill: "#5A6C6E", fontSize: 11 }}
-              tickMargin={8}
+              tick={{ fill: "#5A6C6E", fontSize: compact ? 9.5 : 11 }}
+              tickMargin={compact ? 4 : 8}
               axisLine={false}
               tickLine={false}
             />
@@ -86,11 +96,11 @@ export function TrendChart({
             {/* Left Axis: Kasus Penyakit */}
             <YAxis
               yAxisId="left"
-              tick={{ fill: "#5A6C6E", fontSize: 11 }}
-              tickMargin={4}
+              tick={{ fill: "#5A6C6E", fontSize: compact ? 9.5 : 11 }}
+              tickMargin={2}
               axisLine={false}
               tickLine={false}
-              width={40}
+              width={compact ? 30 : 40}
             />
 
             {/* Right Axis: Curah Hujan (mm) */}
@@ -227,33 +237,40 @@ export function TrendChart({
       </div>
 
       {/* Legend & Indicator Footer */}
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-4 border-t border-paper-200/70 pt-3 text-xs">
-        <div className="flex flex-wrap items-center gap-4 text-muted-foreground">
-          <span className="flex items-center gap-1.5">
-            <span className="h-2.5 w-4 rounded-sm" style={{ background: primaryColor }} />
-            <span className="font-medium text-foreground">Kasus Aktual (Dinkes)</span>
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span
-              className="h-2.5 w-4 rounded-sm"
-              style={{
-                background: `repeating-linear-gradient(to right, ${forecastColor} 0, ${forecastColor} 3px, transparent 3px, transparent 6px)`,
-              }}
-            />
-            <span className="font-semibold text-risk-high">Prediksi AI (XGBoost/RF)</span>
-          </span>
-          {showClimateOverlay && (
-            <span className="flex items-center gap-1.5">
-              <span className="h-2.5 w-3 rounded-sm bg-brand-500/40" />
-              <span>Curah Hujan BMKG (mm)</span>
-            </span>
+      {!hideFooterLegend && (
+        <div
+          className={cn(
+            "mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-paper-200/70 pt-2.5 text-xs",
+            compact && "mt-2 pt-2 text-[11px] gap-2"
           )}
-        </div>
+        >
+          <div className="flex flex-wrap items-center gap-3 text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-3.5 rounded-xs" style={{ background: primaryColor }} />
+              <span className="font-medium text-foreground">Aktual</span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span
+                className="h-2 w-3.5 rounded-xs"
+                style={{
+                  background: `repeating-linear-gradient(to right, ${forecastColor} 0, ${forecastColor} 2.5px, transparent 2.5px, transparent 5px)`,
+                }}
+              />
+              <span className="font-semibold text-risk-high">Prediksi AI (2–4 Mgg)</span>
+            </span>
+            {showClimateOverlay && (
+              <span className="flex items-center gap-1.5">
+                <span className="h-2 w-3 rounded-xs bg-brand-500/40" />
+                <span>Hujan BMKG</span>
+              </span>
+            )}
+          </div>
 
-        <div className="text-[11px] text-muted-foreground">
-          * Lead time prediksi: <strong>14-28 hari ke depan</strong> (Early Warning)
+          <div className="text-[10px] text-muted-foreground">
+            Lead time: <strong className="text-paper-700">14–28 hari</strong>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

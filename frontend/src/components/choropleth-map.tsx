@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
@@ -57,21 +57,20 @@ export default function ChoroplethMap({
 
     // "Data tidak memadai" is its own class, never a fallback to low risk.
     let fillColor = "#E3E8E8";
-    let fillOpacity = 1;
+    let fillOpacity = 0.7;
 
     if (item) {
-      // Map areas use the lighter `fill` token, not the text colour. Lightness
-      // descends monotonically across classes so the ordinal survives grayscale.
+      // Map areas use the lighter `fill` token with 70% transparency
       fillColor = RISK_CONFIG[item.tingkat_risiko].fill;
-      fillOpacity = 1;
+      fillOpacity = 0.7;
     }
 
     return {
       // White hairline borders read the fills as districts, not as blotches.
       color: isSelected ? "#0E2225" : "#FFFFFF",
-      weight: isSelected ? 2.5 : 1,
+      weight: isSelected ? 2.5 : 1.2,
       fillColor,
-      fillOpacity: isSelected ? 1 : fillOpacity,
+      fillOpacity: isSelected ? 0.88 : fillOpacity,
     };
   };
 
@@ -101,7 +100,7 @@ export default function ChoroplethMap({
             <span style="font-weight:600;color:#0E2225">${item.kasus_aktif} kasus</span>
             
             <span style="color:#5A6C6E">Prediksi 2-4 Mgg:</span>
-            <span style="font-weight:600;color:#A32B1F">${item.kasus_prediksi} kasus (+${item.delta_mingguan}%)</span>
+            <span style="font-weight:600;color:#A8442C">${item.kasus_prediksi} kasus (+${item.delta_mingguan}%)</span>
             
             <span style="color:#5A6C6E">Incidence Rate:</span>
             <span style="font-weight:600">${formatIncidence(item.incidence_rate)}</span>
@@ -130,7 +129,7 @@ export default function ChoroplethMap({
     layer.on({
       mouseover: (e) => {
         const l = e.target as L.Path;
-        l.setStyle({ fillOpacity: 0.95, weight: 3 });
+        l.setStyle({ fillOpacity: 0.88, weight: 2.5 });
         if (item) setActiveDistrict(item);
       },
       mouseout: (e) => {
@@ -146,15 +145,15 @@ export default function ChoroplethMap({
   };
 
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl border border-paper-200/90 shadow-card">
+    <div className="relative w-full h-full min-h-[420px] overflow-hidden rounded-2xl border border-border">
       <style jsx global>{`
         .leaflet-tooltip.dsdc-map-tooltip {
-          background: rgba(255, 255, 255, 0.92);
-          border: 1px solid rgba(255, 255, 255, 0.9);
+          background: #ffffff;
+          border: 1px solid rgba(14, 34, 37, 0.12);
           border-radius: 14px;
-          padding: 12px 14px;
+          padding: 10px 12px;
           color: #0E2225;
-          box-shadow: 0 10px 30px rgba(2, 132, 199, 0.12), 0 4px 12px rgba(15, 23, 42, 0.08);
+          box-shadow: 0 4px 8px rgba(14, 34, 37, 0.06), 0 28px 56px -20px rgba(14, 34, 37, 0.22);
         }
         .leaflet-tooltip.dsdc-map-tooltip::before {
           display: none;
@@ -172,27 +171,6 @@ export default function ChoroplethMap({
           color: #0B4A57 !important;
         }
       `}</style>
-
-      {/* Floating Map Header / Legend */}
-      <div className="absolute top-3 left-3 z-[400] flex flex-wrap items-center gap-2 rounded-xl p-2.5 liquid-glass border border-white/90 shadow-glass-sm text-xs">
-        <div className="flex items-center gap-1.5 font-semibold text-foreground pr-2 border-r border-paper-200">
-          <span>Peta Risiko {disease}</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1">
-            <span className="h-2.5 w-2.5 rounded-full bg-risk-low" />
-            <span className="text-paper-600 font-medium">Rendah</span>
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="h-2.5 w-2.5 rounded-full bg-risk-medium" />
-            <span className="text-paper-600 font-medium">Waspada</span>
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="h-2.5 w-2.5 rounded-full bg-risk-high animate-pulse" />
-            <span className="text-paper-600 font-medium">Tinggi (Siaga)</span>
-          </span>
-        </div>
-      </div>
 
       <MapContainer
         center={center}

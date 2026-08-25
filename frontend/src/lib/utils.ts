@@ -1,6 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import type { DiseaseType, RiskLevel } from "@/types";
+import type { DiseaseType, RiskLevel, DataCoverage } from "@/types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -36,9 +36,9 @@ export type RiskConfig = {
 
 export const RISK_CONFIG: Record<RiskLevel, RiskConfig> = {
   rendah: {
-    label: "Risiko Rendah",
-    color: "#1B6B4F",
-    fill: "#BCD9C9",
+    label: "Rendah",
+    color: "#1F5132",
+    fill: "#7AA876",
     textColor: "text-risk-low",
     bgSoft: "bg-risk-low-bg",
     border: "border-risk-low-br",
@@ -50,9 +50,9 @@ export const RISK_CONFIG: Record<RiskLevel, RiskConfig> = {
     glassClass: "liquid-glass-risk-low",
   },
   sedang: {
-    label: "Risiko Sedang",
-    color: "#A8690C",
-    fill: "#E0AF63",
+    label: "Waspada",
+    color: "#D4933A",
+    fill: "#E5AA52",
     textColor: "text-risk-medium",
     bgSoft: "bg-risk-medium-bg",
     border: "border-risk-medium-br",
@@ -64,9 +64,9 @@ export const RISK_CONFIG: Record<RiskLevel, RiskConfig> = {
     glassClass: "liquid-glass-risk-medium",
   },
   tinggi: {
-    label: "Risiko Tinggi",
-    color: "#A32B1F",
-    fill: "#B34434",
+    label: "Siaga",
+    color: "#A8442C",
+    fill: "#C95E42",
     textColor: "text-risk-high",
     bgSoft: "bg-risk-high-bg",
     border: "border-risk-high-br",
@@ -84,7 +84,8 @@ export const RISK_CONFIG: Record<RiskLevel, RiskConfig> = {
    class, its own colour, and its own copy. This is the single easiest trust
    bug for a judge to find, so it is modelled explicitly. */
 
-export type DataCoverage = "high" | "medium" | "low" | "insufficient";
+/** Canonical definition lives in @/types; re-exported so existing imports hold. */
+export type { DataCoverage };
 
 export const COVERAGE_CONFIG: Record<
   DataCoverage,
@@ -209,4 +210,12 @@ export function formatPercent(val: number, showSign: boolean = true): string {
 /** "41 – 68" — always render a prediction with its bounds (PRD §7-H1). */
 export function formatRange(lower: number, upper: number): string {
   return `${formatNumber(lower)} – ${formatNumber(upper)}`;
+}
+
+/** Coverage class from model confidence. One place, so the thresholds stay honest. */
+export function coverageFromConfidence(confidence: number): DataCoverage {
+  if (confidence >= 0.94) return "high";
+  if (confidence >= 0.88) return "medium";
+  if (confidence >= 0.75) return "low";
+  return "insufficient";
 }

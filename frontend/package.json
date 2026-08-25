@@ -29,6 +29,7 @@
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
+    "@turf/turf": "^7.4.0",
     "@types/geojson": "^7946.0.14",
     "@types/leaflet": "^1.9.14",
     "@types/node": "^22.9.0",
