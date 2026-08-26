@@ -7,6 +7,7 @@ import { ArrowRight, Bug, Wind, Droplets, Check, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getKecamatanDataList } from "@/lib/mock-data";
 import { getCityRiskSummary } from "@/lib/city-risk";
+import { withKecamatan } from "@/lib/kecamatan-selection";
 import { Button } from "@/components/ui/button";
 import type { DiseaseType, KecamatanData, RiskLevel } from "@/types";
 
@@ -460,9 +461,12 @@ function DistrictResult({ selectedKecamatan }: { selectedKecamatan: string }) {
           Melihat gejala atau genangan air di sekitar rumah? Laporan Anda
           diverifikasi puskesmas dan ikut memperbaiki prakiraan minggu depan.
         </p>
+        {/* Kecamatan yang sedang dilihat ikut ke formulir. Pembaca sudah
+            menjawab "di mana Anda tinggal" untuk sampai ke layar ini;
+            menanyakannya lagi di halaman berikutnya membuang jawabannya. */}
         <Button asChild size="lg" className="group w-full shrink-0 sm:w-auto">
-          <Link href="/warga">
-            Laporkan gejala
+          <Link href={withKecamatan("/warga/lapor", selectedKecamatan)}>
+            Laporkan temuan
             <ArrowRight className="transition-transform duration-fast group-hover:translate-x-0.5" />
           </Link>
         </Button>

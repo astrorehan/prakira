@@ -45,7 +45,7 @@ const SERVICES: Service[] = [
     description:
       "Kirim laporan kasus demam berdarah atau temuan jentik di lingkungan Anda untuk diverifikasi petugas surveilans.",
     icon: Bug,
-    href: "/warga",
+    href: "/warga/lapor",
     meta: "Verifikasi petugas · 1×24 jam kerja",
   },
   {

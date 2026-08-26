@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Activity, Menu, LogIn, Landmark, Radio, ShieldCheck, X } from "lucide-react";
+import { Menu, LogIn, Landmark, Radio, ShieldCheck, X } from "lucide-react";
+import { BrandMark } from "@/components/brand-mark";
 
 import { cn } from "@/lib/utils";
 import { BMKG_SYNC_STATUS } from "@/lib/mock-data";
@@ -52,7 +53,7 @@ function Wordmark() {
   return (
     <Link href="/sistem" className="flex items-center gap-3">
       <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-700 text-white">
-        <Activity className="h-6 w-6" />
+        <BrandMark className="h-6 w-6" />
       </span>
       <span className="flex flex-col leading-none">
         <span className="text-xl font-semibold tracking-tight text-foreground">Prakira</span>
