@@ -91,7 +91,7 @@ function DistrictLine({ kecamatan }: { kecamatan: string }) {
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-sand-200 bg-white p-5 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex min-w-0 items-start gap-3">
-        <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-paper-400" aria-hidden="true" />
+        <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-paper-600" aria-hidden="true" />
         <div className="min-w-0">
           <p className="text-body-sm text-paper-600">
             Kecamatan Anda ·{" "}
@@ -152,7 +152,7 @@ function VerifiedNearby({ reports, kecamatan }: { reports: CitizenReport[]; keca
               {r.kecamatan}
               {r.kelurahan ? ` · ${r.kelurahan}` : ""}
             </span>
-            <span className="ml-auto text-caption text-paper-500">
+            <span className="ml-auto text-caption text-paper-600">
               {relativeAge(r.submittedAt)}
             </span>
           </li>

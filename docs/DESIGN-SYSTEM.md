@@ -1,7 +1,7 @@
 # PRAKIRA Design System — "Buletin"
 
 **Sistem visual untuk platform peringatan dini kesehatan-iklim.**
-Pendamping [`PRD.md`](./PRD.md) · Versi 2.3 · 26 Agustus 2026
+Pendamping [`PRD.md`](./PRD.md) · Versi 2.4 · 26 Agustus 2026
 
 > **Status dokumen.** Versi 1.0 ditulis sebagai rencana, lalu kode bergerak lebih jauh
 > dari rencananya. Versi 2.0 membalik arahnya: **yang tertulis di sini adalah yang
@@ -68,12 +68,23 @@ Ramp kustom pada hue ±192°, kroma sangat rendah. Bukan `slate`.
 | `paper-100` | `#ECF0F0` | Permukaan cekung, header tabel, *well* |
 | `paper-200` | `#DFE6E6` | Garis rambut / border baku |
 | `paper-300` | `#C9D4D4` | Border tegas, pemisah |
-| `paper-400` | `#A3B2B3` | Teks nonaktif, sumbu grafik |
-| `paper-500` | `#7C8D8F` | Teks tersier |
-| `paper-600` | `#5A6C6E` | Teks sekunder (`muted-foreground`) |
-| `paper-700` | `#3D4E50` | Teks kuat sekunder |
+| `paper-400` | `#A3B2B3` | Sumbu grafik, ikon dekoratif. **Bukan warna teks** — 2,19:1 di atas putih |
+| `paper-500` | `#7C8D8F` | Dekorasi. **Bukan warna teks** — 2,92–3,46:1, gagal AA di semua latar |
+| `paper-600` | `#5A6C6E` | Teks tersier — lantai AA (`muted-foreground`) |
+| `paper-700` | `#3D4E50` | Teks sekunder |
 | `paper-800` | `#24373A` | Judul pada latar terang |
 | `paper-900` | `#0E2225` | Teks utama (tinta) |
+
+> **Tangga teks naik satu anak di v2.4.** Sampai v2.3 `paper-500` adalah tingkat
+> teks tersier dan `paper-400` dipakai untuk teks nonaktif. Keduanya gagal 4,5:1
+> di setiap latar nyata — terukur 3,46:1 di putih, 3,15:1 di `sand-50`, dan
+> 2,92:1 di `sand-100`. Tidak ada nilai di antara `paper-400` dan `paper-600`
+> yang bisa lolos, jadi tangganya digeser, bukan dikarang nilai baru: 211
+> pemakaian `text-paper-400/500` pindah ke `text-paper-600`.
+>
+> Ramp-nya sendiri tidak berubah — hanya dua anak tangga yang keluar dari
+> kosakata teks. Di seluruh `src/` tinggal 2 pemakaian non-teks (`bg-paper-400`,
+> `border-paper-400`), jadi biayanya nol.
 
 ### 2.2 Merek — "Petrol"
 
@@ -302,18 +313,49 @@ Angka metrik: `font-variant-numeric: tabular-nums slashed-zero`, diterapkan otom
 | `body-sm` | 0.875rem | 1.55 | 0 | 400 | Teks pendukung |
 | `caption` | 0.8125rem | 1.45 | 0 | 400 | Keterangan, catatan kaki |
 | `overline` | 0.6875rem | 1.4 | +0.08em | 500 | Label huruf besar |
+| `2xs` | 0.6111rem | 1.45 | — | — | Label mikro |
+| `3xs` | 0.5556rem | 1.4 | — | — | Label mikro (paling ramai) |
+| `4xs` | 0.5rem | 1.4 | — | — | Label mikro |
+| `5xs` | 0.4444rem | 1.4 | — | — | Label mikro |
 | `metric-xl` | 2.5rem | 1.0 | −0.02em | 600 | KPI utama |
 | `metric` | 2rem | 1.05 | −0.02em | 600 | Nilai kartu metrik |
 | `metric-sm` | 1.375rem | 1.1 | −0.01em | 600 | Angka dalam tabel padat |
 
+Empat anak tangga terbawah masuk di v2.4. Sebelumnya skala berhenti di `overline`
+(0.6875rem) dan **160 tempat** memakai px arbitrer di bawahnya — `text-[10px]` sendiri
+99 kali. Px tidak menanggapi ukuran font akar, jadi kontrol ukuran teks aksesibilitas
+menggeser seluruh halaman *mengelilingi* label-label itu (§8).
+
+Keempatnya sengaja **hanya ukuran** — tanpa *tracking*, tanpa bobot. Tidak seperti
+`overline` mereka tidak memikul peran: sepertiga pemanggilnya bukan label mono huruf
+besar, dan rung yang memaksakan *tracking* akan merusaknya. Nilainya px lama dibagi 18
+(akar 112,5%), jadi penukarannya identik secara visual.
+
 Kelas bantu di `@layer components`: `.overline`, `.eyebrow`, `.chip`, `.h-section`, `.h-display`.
 
-**Kenyataan pemakaian:** 308 pemakaian skala sistem berbanding 229 kelas ukuran bawaan
-Tailwind (`text-sm`, `text-2xl`, …) dan 165 ukuran *arbitrary* `text-[…]`.
-Skala sistem **sudah unggul** sejak sapuan halaman nakes: seluruh `/tindakan`,
-`/analitik`, `/admin`, dan `Sidebar` kini nol kelas bawaan dan nol `text-[…]`.
-Yang tersisa terkonsentrasi di `/dashboard`, `/warga`, `/dev`, dan komponen
-*landing*. Lihat §12.
+**Kenyataan pemakaian:** 559 pemakaian skala sistem berbanding 212 kelas ukuran bawaan
+Tailwind (`text-sm`, `text-2xl`, …) dan **1** ukuran *arbitrary* `text-[…]`.
+Angka ketiga itu turun dari 165 di v2.3: seluruh px arbitrer sudah pindah ke skala.
+Satu yang tersisa, `ui/badge.tsx` `text-[0.6875rem]`, ditulis dalam rem — ia menskala,
+jadi ia bukan utang aksesibilitas; menukarnya ke `text-overline` akan memaksakan
+*tracking* dan bobot ke badge. Sisa kelas bawaan Tailwind terkonsentrasi di
+`/dashboard`, `/dev`, dan komponen *landing*. Lihat §12.
+
+### 4.4 `cn()` dan skala kustom
+
+`cn()` membungkus `tailwind-merge`, yang hanya mengenal nama ukuran bawaan Tailwind.
+Nama asing sesudah `text-` ia arsipkan sebagai **warna teks** — jadi `text-overline`
+dan `text-paper-600` terbaca satu golongan, dan warnanya, karena belakangan, menang.
+Ukurannya hilang sebelum sampai ke DOM.
+
+Itu sebabnya label cakupan `KpiCard` selama ini render pada ukuran warisan 19,125px,
+bukan 12,375px. Ukuran yang ditulis sebagai nilai arbitrer (`text-[10px]`) kebal, dan
+itulah yang menyembunyikan bug ini selama kode masih memakainya.
+
+`src/lib/utils.ts` kini mendaftarkan seluruh skala lewat `extendTailwindMerge`.
+**Setiap penambahan `fontSize` di `tailwind.config.ts` harus ikut didaftarkan di sana**,
+kalau tidak ia akan diam-diam dibuang di setiap pemanggilan `cn()` yang juga membawa
+warna teks.
 
 ### 4.3 Aturan bobot
 
@@ -627,8 +669,32 @@ akan diselesaikan dengan tombol yang paling sedikit gesekannya.
 | Kontras tinggi | `html.a11y-contrast` mendefinisikan ulang **token**, bukan menimpa kelas utilitas satu per satu (`prakira.a11y.contrast`) |
 | Informasi warna | Selalu didampingi teks atau ikon |
 | Gerak | `prefers-reduced-motion` mematikan seluruh animasi & transisi secara global |
+| Lewati navigasi | `SkipLink` di `layout-wrapper.tsx`, target `#konten` pada tiap `<main>` (WCAG 2.4.1) |
 
-Kontrolnya ada di `components/accessibility-menu.tsx`.
+**Kontrolnya ada di `components/accessibility-menu.tsx` — dan sampai v2.4 tidak
+dirender di mana pun.** Berkasnya lengkap, kelas targetnya hidup di `globals.css`,
+dan skrip di `app/layout.tsx` sudah memulihkan preferensi sebelum *paint*. Yang tidak
+ada hanyalah satu `import`. Seluruh ongkos fiturnya sudah dibayar tanpa satu pun
+pembaca bisa memakainya.
+
+Cacatnya lebih dalam dari itu: menu lama **mengaku** menyimpan preferensi
+("disimpan pada sesi peramban Anda") tetapi tidak pernah menulis ke `localStorage`.
+Skrip pra-*paint* itu memulihkan nilai yang tidak pernah ada yang mengisi. v2.4
+menutup kontraknya di kedua ujung, dan kuncinya dicatat sebagai kontrak eksplisit di
+kedua berkas.
+
+**Tempatnya dipilih, bukan ditaruh di mana saja.** Menu ini **tidak** ada di navbar
+*landing*: bar itu menjual, dan ikon *slider* di antara "Lapor" dan "Masuk" menarik
+pajak perhatian dari setiap pembaca demi kontrol yang dicari segelintir. Ia tinggal
+di kaki halaman (`footer`, `sistem-footer`) dan di dasar rel konsol (`sidebar`,
+di bawah blok akun) — tempat orang mencarinya dengan sengaja, dan tempat situs
+layanan publik di Indonesia memang menaruhnya. Dua varian pemicu: `icon` untuk baris
+*chrome* padat, `inline` berlabel untuk kaki halaman.
+
+**Dekorasi dikecualikan dengan sengaja.** Delapan `text-paper-300` yang tersisa
+seluruhnya pemisah (`·`, `/`, `–`) dan *chevron* yang muncul saat *hover*; sebagian
+sudah `aria-hidden`. WCAG 1.4.3 mengecualikan dekorasi murni, jadi itu keputusan,
+bukan kelalaian.
 
 ---
 
@@ -747,12 +813,25 @@ Keputusan pembukanya dicatat di [`.council/fungsi-dan-nasib-rute-warga.md`](../.
 | `bg-mesh-blue` di permukaan hangat | 1 rute | PRD §5.3 menetapkan `/warga` memakai *surface* hangat, bukan tampilan konsol. Diganti `bg-grad-paper` |
 | "Lapor" tak terjangkau dari halaman mana pun selain depan | 1 nav | Ditambahkan ke `MARKETING_ITEMS` di `navbar.tsx`. Sebelumnya pembaca di `/tentang` tidak punya jalan ke sana sama sekali |
 
+### Ditutup di sapuan aksesibilitas (v2.4)
+
+| Utang | Ukuran semula | Yang dikerjakan |
+|---|---:|---|
+| `AccessibilityMenu` tidak pernah dirender | 1 komponen, 0 pemanggil | Kontrol ukuran teks dan kontras tinggi sudah utuh, kelas targetnya hidup, skrip pra-*paint* sudah menunggunya — yang hilang cuma `import`. Dipasang di `footer`, `sistem-footer`, dan dasar `sidebar`. **Tidak** di navbar *landing* (§8) |
+| Menu itu mengaku menyimpan preferensi tapi tidak | 2 kunci | Tidak ada yang pernah menulis `prakira.a11y.font` / `prakira.a11y.contrast`; skrip di `layout.tsx` memulihkan nilai kosong selamanya. Kini ditulis dan dibaca di kedua ujung, dan menu membaca keadaan hidup dari `<html>` supaya kontrol tidak berselisih dengan halaman yang ia kendalikan |
+| Ukuran font terkunci px | 160 pemakaian, 20 berkas | `text-[10px]` (99), `text-[11px]` (39), dan sembilan varian lain pindah ke empat anak tangga baru `2xs`–`5xs` (§4.2). Px tidak menanggapi ukuran font akar, jadi `a11y-large-text` menggeser halaman mengelilingi label-label ini — kontrolnya terlihat berbohong |
+| Teks di bawah ambang AA | 211 pemakaian | `text-paper-500` (135) dan `text-paper-400` (76) terukur 2,19–3,46:1. Semuanya pindah ke `paper-600`; token `--text-2`/`--text-3` ikut digeser (§2.1) |
+| `--text-2` / `--text-3` tidak dirujuk siapa pun | 2 variabel | Dideklarasikan di `globals.css`, nol pemakaian — komponen memakai utilitas `text-paper-*` langsung. Nilainya diselaraskan agar lapisan token berhenti berbohong; rujukannya masih utang |
+| Ukuran hilang di `cn()` | seluruh skala | `tailwind-merge` menganggap nama ukuran kustom sebagai warna teks dan membuangnya. `text-overline`, `text-metric`, dan seluruh skala satu-kata terdampak; `KpiCard` render 19,125px alih-alih 12,375px. Diperbaiki di akar lewat `extendTailwindMerge` (§4.4) |
+| Tanpa *skip link* | 3 permukaan | *Masthead* `/sistem` menaruh strip pemerintah, enam tautan layanan, dan baris status sebelum konten. `SkipLink` + `#konten` dengan `tabIndex={-1}` di tiap `<main>` |
+| Nama aksesibel lockup berubah antar-*breakpoint* | 6 pemanggil | `sublineClassName="hidden sm:block"` menjatuhkan subline dari pohon aksesibilitas, jadi tautan yang sama berbunyi "Prakira" di ponsel dan "Prakira Sistem Peringatan Dini…" di desktop. Subline jadi `aria-hidden`; namanya terkunci di "Prakira", cocok dengan teks terlihat (WCAG 2.5.3) |
+
 ### Masih terbuka
 
 | # | Utang | Ukuran | Dampak | Perbaikan |
 |---|---|---:|---|---|
 | 1 | Dua primitif KPI dengan kontrak sama: `<Metric>` (0 pemakaian) dan `KpiCard` (7) | 2 komponen | Kontributor berikutnya harus menebak yang mana | Jadikan `KpiCard` pembungkus tipis `<Card>` + `<Metric>`, lalu hapus duplikasi angkanya |
-| 2 | Skala tipografi sistem belum menyeluruh | 389 sistem vs 216 bawaan + 164 `text-[…]` | Hierarki tidak konsisten antar halaman | Sapuan halaman nakes dan portal warga selesai. Sisanya terkonsentrasi di `/dashboard`, `/dev`, dan *landing* |
+| 2 | Skala tipografi sistem belum menyeluruh | 559 sistem vs 212 bawaan + 1 `text-[…]` | Hierarki tidak konsisten antar halaman | `text-[…]` praktis tuntas di v2.4 (165 → 1, dan yang tersisa ditulis dalam rem). Sisa kelas bawaan Tailwind terkonsentrasi di `/dashboard`, `/dev`, dan *landing* |
 | 3 | `liquid-glass*` masih hidup | 23 pemakaian, 5 berkas (dari 60 di 12) | Kosmetik — efeknya sudah datar, tinggal namanya | Migrasi ke `<Card>`, lalu hapus blok `globals.css` + `ui/liquid-glass-card.tsx` |
 | 4 | `--radius` / `--radius-control` tak dirujuk siapa pun | 2 variabel | Dua skala radius hidup berdampingan | Hapus, atau jadikan sumber tunggal skala Tailwind |
 | 5 | `destructive: #DC2626` (red-600 bawaan) | 1 token | Satu-satunya hex luar palet di konfigurasi | Arahkan ke `#A8442C` atau hapus slotnya |
@@ -762,6 +841,7 @@ Keputusan pembukanya dicatat di [`.council/fungsi-dan-nasib-rute-warga.md`](../.
 | 9 | `<Metric>` tetap 0 pemakaian setelah `KpiCard` menutup kontraknya | 1 komponen | Sama dengan no. 1 | Digabung bersama no. 1 |
 | 10 | `CtaBanner` masih memuat formulir langganan WhatsApp | 1 blok | PRD §4 menaruh "notifikasi broadcast" di daftar **WON'T** untuk babak ini, jadi ini janji layanan yang tidak akan ada | Formulir kembarannya di `/warga` sudah ikut terhapus bersama `PublicRiskChecker`. Yang di *landing* tinggal satu — ganti jadi tautan ke `/hubungi-kami`, atau beri label "belum aktif" |
 | 11 | `lib/reports.ts` menyimpan di `localStorage` saja | 1 modul | Loop warga→verifikasi hanya bergerak dalam satu peramban. Demo lintas perangkat (warga di ponsel, petugas di laptop) tidak akan jalan | Batasnya sudah tercetak di `/verifikasi` dan `/warga/status`, bukan disembunyikan. Tukar `loadReports`/`saveReports` dengan panggilan gateway saat backend-nya ada — tidak ada tempat lain yang perlu berubah |
+| 12b | `--text-2` / `--text-3` masih tak dirujuk | 2 variabel | Nilainya kini benar, tapi tak ada yang membacanya — hierarki teks hidup di utilitas `text-paper-*`. Token yang tidak dipakai akan menyimpang lagi | Arahkan utilitasnya ke token, atau hapus tokennya. Sama polanya dengan no. 4 |
 | 12 | `ui/input.tsx` memakai `text-sm` (14px) | 1 primitif | Safari iOS memperbesar viewport pada bidang di bawah 16px, dan halaman melompat tiap kali bidang difokuskan | Formulir warga menyiasatinya per-instans dengan `text-base sm:text-sm`. Perbaikan sebenarnya ada di primitifnya, tapi itu menyentuh seluruh konsol |
 
 Urutan kerja bila waktunya terbatas: **7 → 3 → 10**.

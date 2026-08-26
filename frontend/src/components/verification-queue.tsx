@@ -128,7 +128,7 @@ function ReportRow({
               <span className="text-body-sm font-semibold text-foreground">
                 {kind.label}
               </span>
-              <span className="tabular font-mono text-overline uppercase text-paper-500">
+              <span className="tabular font-mono text-overline uppercase text-paper-600">
                 {report.id}
               </span>
             </div>
@@ -191,7 +191,7 @@ function ReportRow({
                 onChange={(e) => setNote(e.target.value)}
                 rows={2}
                 placeholder="Mis. lokasi tidak bisa ditelusuri, atau sudah tercakup laporan lain."
-                className="w-full rounded-xl border border-border bg-surface px-3.5 py-2.5 text-body-sm text-foreground shadow-sm placeholder:text-paper-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="w-full rounded-xl border border-border bg-surface px-3.5 py-2.5 text-body-sm text-foreground shadow-sm placeholder:text-paper-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               />
               <div className="flex flex-wrap gap-2">
                 <Button
@@ -213,7 +213,7 @@ function ReportRow({
                   Batal
                 </Button>
                 {note.trim().length < 8 && (
-                  <span className="self-center text-caption text-paper-500">
+                  <span className="self-center text-caption text-paper-600">
                     Alasan minimal 8 karakter.
                   </span>
                 )}
@@ -238,7 +238,7 @@ function ReportRow({
                 <X className="h-4 w-4" aria-hidden="true" />
                 Tolak
               </Button>
-              <span className="ml-auto text-caption text-paper-500">
+              <span className="ml-auto text-caption text-paper-600">
                 Terima tanpa catatan; penolakan wajib beralasan.
               </span>
             </div>

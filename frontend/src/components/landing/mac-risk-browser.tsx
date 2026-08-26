@@ -169,7 +169,7 @@ export function MacRiskBrowser({
               title="Tutup Drawer"
               onClick={() => setIsDrawerOpen(false)}
             >
-              <span className="opacity-0 group-hover/lights:opacity-100 text-[8px] font-semibold text-black/60 leading-none">
+              <span className="opacity-0 group-hover/lights:opacity-100 text-5xs font-semibold text-black/60 leading-none">
                 ×
               </span>
             </button>
@@ -179,7 +179,7 @@ export function MacRiskBrowser({
               title="Toggle Drawer"
               onClick={() => setIsDrawerOpen(!isDrawerOpen)}
             >
-              <span className="opacity-0 group-hover/lights:opacity-100 text-[8px] font-semibold text-black/60 leading-none">
+              <span className="opacity-0 group-hover/lights:opacity-100 text-5xs font-semibold text-black/60 leading-none">
                 –
               </span>
             </button>
@@ -189,7 +189,7 @@ export function MacRiskBrowser({
               title="Scroll ke Hasil Lengkap"
               onClick={scrollToResults}
             >
-              <span className="opacity-0 group-hover/lights:opacity-100 text-[7px] font-semibold text-black/60 leading-none">
+              <span className="opacity-0 group-hover/lights:opacity-100 text-5xs font-semibold text-black/60 leading-none">
                 +
               </span>
             </button>
@@ -197,12 +197,12 @@ export function MacRiskBrowser({
 
           {/* Safari / Arc Omnibar (Mac Address Bar) */}
           <div className="flex-1 max-w-[270px] mx-2">
-            <div className="flex items-center justify-between gap-1.5 rounded-full bg-white/90 border border-paper-200/90 px-3 py-1 text-[11px] shadow-[0_1px_2px_rgba(14,34,37,0.04),inset_0_1px_1px_rgba(255,255,255,1)]">
+            <div className="flex items-center justify-between gap-1.5 rounded-full bg-white/90 border border-paper-200/90 px-3 py-1 text-2xs shadow-[0_1px_2px_rgba(14,34,37,0.04),inset_0_1px_1px_rgba(255,255,255,1)]">
               <div className="flex items-center gap-1.5 truncate text-paper-700">
                 <Lock className="h-3 w-3 text-risk-low shrink-0" />
                 <span className="font-semibold text-brand-900 tracking-tight">prakira.id</span>
-                <span className="text-paper-400 font-light">/</span>
-                <span className="text-paper-600 truncate font-mono text-[10.5px]">
+                <span className="text-paper-600 font-light">/</span>
+                <span className="text-paper-600 truncate font-mono text-3xs">
                   semarang?p={selectedDisease.toLowerCase()}
                 </span>
               </div>
@@ -218,7 +218,7 @@ export function MacRiskBrowser({
           </div>
 
           {/* Navigation Controls */}
-          <div className="flex items-center gap-1 text-paper-500">
+          <div className="flex items-center gap-1 text-paper-600">
             <button
               type="button"
               onClick={handleRefresh}
@@ -247,7 +247,7 @@ export function MacRiskBrowser({
             >
               <DiseaseIcon className="h-3.5 w-3.5 text-brand-700" />
               <span>{currentDiseaseInfo.shortLabel}</span>
-              <span className="text-[10px] text-paper-400 font-normal">▾</span>
+              <span className="text-3xs text-paper-600 font-normal">▾</span>
             </button>
 
             {/* Disease Dropdown Menu (Muncul ke atas / popover) */}
@@ -257,7 +257,7 @@ export function MacRiskBrowser({
                   "absolute left-0 top-full mt-1.5 z-50 w-64 rounded-2xl border border-paper-200/90 bg-white/98 p-1.5 shadow-[0_12px_36px_-6px_rgba(14,34,37,0.18),0_2px_8px_rgba(0,0,0,0.06)] backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150",
                 )}
               >
-                <div className="px-2.5 py-1.5 text-[10.5px] font-semibold uppercase tracking-wider text-paper-400">
+                <div className="px-2.5 py-1.5 text-3xs font-semibold uppercase tracking-wider text-paper-600">
                   Pilih Monitoring Penyakit
                 </div>
                 {(["DBD", "ISPA", "Diare"] as DiseaseType[]).map((type) => {
@@ -294,7 +294,7 @@ export function MacRiskBrowser({
                           <span>{cfg.label}</span>
                           {isSelected && <Check className="h-3.5 w-3.5 text-brand-700 shrink-0" />}
                         </div>
-                        <p className="text-[10px] text-paper-500 mt-0.5 leading-tight">
+                        <p className="text-3xs text-paper-600 mt-0.5 leading-tight">
                           Zona: {hotspotsFor(type)}
                         </p>
                       </div>
@@ -306,7 +306,7 @@ export function MacRiskBrowser({
           </div>
 
           {/* Quick Risk Stat Badges (Interactive Filter) */}
-          <div className="flex items-center gap-1.5 text-[11px] font-medium">
+          <div className="flex items-center gap-1.5 text-2xs font-medium">
             <button
               type="button"
               onClick={() => setRiskFilter(riskFilter === "tinggi" ? "all" : "tinggi")}
@@ -394,10 +394,10 @@ export function MacRiskBrowser({
                     </span>
                   )}
 
-                  <span className="text-[12px] sm:text-[12.5px] font-semibold leading-tight truncate w-full tracking-tight drop-shadow-xs">
+                  <span className="text-overline sm:text-overline font-semibold leading-tight truncate w-full tracking-tight drop-shadow-xs">
                     {kec.nama.replace("Semarang ", "Smg ")}
                   </span>
-                  <span className="text-[10px] sm:text-[10.5px] font-semibold opacity-90 mt-0.5 tracking-wider uppercase drop-shadow-xs">
+                  <span className="text-3xs sm:text-3xs font-semibold opacity-90 mt-0.5 tracking-wider uppercase drop-shadow-xs">
                     {risk.label}
                   </span>
                 </button>
@@ -420,14 +420,14 @@ export function MacRiskBrowser({
                       </h4>
                       <span
                         className={cn(
-                          "rounded-md px-1.5 py-0.2 text-[9.5px] font-semibold uppercase tracking-wider border",
+                          "rounded-md px-1.5 py-0.2 text-3xs font-semibold uppercase tracking-wider border",
                           getRiskColor(activeDistrictData.tingkat_risiko).badgeBg,
                         )}
                       >
                         {activeDistrictData.tingkat_risiko}
                       </span>
                     </div>
-                    <p className="text-[10.5px] text-paper-500">
+                    <p className="text-3xs text-paper-600">
                       Monitoring {selectedDisease} · BPS: {activeDistrictData.kode_bps}
                     </p>
                   </div>
@@ -436,7 +436,7 @@ export function MacRiskBrowser({
                 <button
                   type="button"
                   onClick={() => setIsDrawerOpen(false)}
-                  className="p-1 rounded-md text-paper-400 hover:text-paper-600 hover:bg-paper-100 transition-colors"
+                  className="p-1 rounded-md text-paper-600 hover:text-paper-600 hover:bg-paper-100 transition-colors"
                   title="Sembunyikan panel"
                 >
                   <X className="h-3.5 w-3.5" />
@@ -446,15 +446,15 @@ export function MacRiskBrowser({
               {/* Quick Metrics Strip */}
               <div className="grid grid-cols-3 gap-2 mt-2 text-center">
                 <div className="rounded-xl bg-paper-50/80 p-1.5 border border-paper-100">
-                  <span className="block text-[10px] text-paper-500 font-medium">Kasus Aktif</span>
+                  <span className="block text-3xs text-paper-600 font-medium">Kasus Aktif</span>
                   <span className="text-xs font-semibold text-foreground">
                     {activeDistrictData.kasus_aktif}
-                    <span className="text-[9px] font-normal text-paper-400 ml-0.5">kasus</span>
+                    <span className="text-4xs font-normal text-paper-600 ml-0.5">kasus</span>
                   </span>
                 </div>
 
                 <div className="rounded-xl bg-paper-50/80 p-1.5 border border-paper-100">
-                  <span className="block text-[10px] text-paper-500 font-medium">Prediksi 14h</span>
+                  <span className="block text-3xs text-paper-600 font-medium">Prediksi 14h</span>
                   <span
                     className={cn(
                       "text-xs font-semibold",
@@ -467,10 +467,10 @@ export function MacRiskBrowser({
                 </div>
 
                 <div className="rounded-xl bg-paper-50/80 p-1.5 border border-paper-100">
-                  <span className="block text-[10px] text-paper-500 font-medium">Cuaca BMKG</span>
+                  <span className="block text-3xs text-paper-600 font-medium">Cuaca BMKG</span>
                   <span className="text-xs font-semibold text-foreground">
                     {activeDistrictData.cuaca.curah_hujan_mm}
-                    <span className="text-[9px] font-normal text-paper-400 ml-0.5">mm</span>
+                    <span className="text-4xs font-normal text-paper-600 ml-0.5">mm</span>
                   </span>
                 </div>
               </div>
@@ -494,7 +494,7 @@ export function MacRiskBrowser({
             <button
               type="button"
               onClick={() => setIsDrawerOpen(true)}
-              className="mt-2 flex w-full items-center justify-center gap-1 text-[11px] font-medium text-brand-700 hover:text-brand-800 py-1 rounded-lg hover:bg-brand-50/70 transition-colors"
+              className="mt-2 flex w-full items-center justify-center gap-1 text-2xs font-medium text-brand-700 hover:text-brand-800 py-1 rounded-lg hover:bg-brand-50/70 transition-colors"
             >
               <ChevronUp className="h-3.5 w-3.5" />
               <span>Tampilkan Ringkasan Kecamatan ({selectedKecamatan})</span>
@@ -503,12 +503,12 @@ export function MacRiskBrowser({
         </div>
 
         {/* ── 5. macOS Status Bar Footer ──────────────────────────────────── */}
-        <div className="flex items-center justify-between border-t border-paper-200/70 bg-paper-100/60 px-4 py-1.5 text-[10.5px] text-paper-500">
+        <div className="flex items-center justify-between border-t border-paper-200/70 bg-paper-100/60 px-4 py-1.5 text-3xs text-paper-600">
           <div className="flex items-center gap-1.5 truncate">
             <Activity className="h-3 w-3 text-brand-600 shrink-0" />
             <span className="truncate">Data BMKG & Dinkes Kota Semarang</span>
           </div>
-          <span className="font-mono text-[10px] text-paper-400 shrink-0">16 Kecamatan Terpantau</span>
+          <span className="font-mono text-3xs text-paper-600 shrink-0">16 Kecamatan Terpantau</span>
         </div>
       </div>
     </div>

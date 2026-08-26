@@ -73,13 +73,13 @@ function DiseaseRow({ summary }: { summary: Summary }) {
           </span>
           <div className="min-w-0">
             <h3 className="text-h3 text-foreground">{config.name}</h3>
-            <p className="mt-1 text-caption text-paper-500">{config.vector}</p>
+            <p className="mt-1 text-caption text-paper-600">{config.vector}</p>
           </div>
         </div>
 
         <dl className="flex items-start gap-8">
           <div>
-            <dt className="font-mono text-[10px] uppercase tracking-[0.08em] text-paper-500">
+            <dt className="font-mono text-3xs uppercase tracking-[0.08em] text-paper-600">
               Kasus aktif
             </dt>
             <dd className="mt-1 text-metric-sm tabular text-foreground">
@@ -87,12 +87,12 @@ function DiseaseRow({ summary }: { summary: Summary }) {
             </dd>
           </div>
           <div>
-            <dt className="font-mono text-[10px] uppercase tracking-[0.08em] text-paper-500">
+            <dt className="font-mono text-3xs uppercase tracking-[0.08em] text-paper-600">
               Proyeksi 4 minggu
             </dt>
             <dd className="mt-1 text-metric-sm tabular text-foreground">
               {formatNumber(summary.prediksiLower)}
-              <span className="mx-1 text-paper-400">–</span>
+              <span className="mx-1 text-paper-600">–</span>
               {formatNumber(summary.prediksiUpper)}
             </dd>
           </div>
@@ -123,7 +123,7 @@ function DiseaseRow({ summary }: { summary: Summary }) {
               {RISK_CONFIG[level].label.toLowerCase()}
             </span>
           ))}
-          <span className="ml-auto font-mono text-[10px] uppercase tracking-[0.08em] text-paper-400">
+          <span className="ml-auto font-mono text-3xs uppercase tracking-[0.08em] text-paper-600">
             16 kecamatan · urut skor
           </span>
         </div>
@@ -154,10 +154,10 @@ function LookupPanel() {
   return (
     <div className="overflow-hidden rounded-2xl border border-sand-200 bg-white shadow-card">
       <div className="flex items-center justify-between gap-3 border-b border-sand-200 bg-sand-50 px-5 py-3">
-        <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-paper-500">
+        <span className="font-mono text-3xs uppercase tracking-[0.08em] text-paper-600">
           Layanan SL-01 · Cek status wilayah
         </span>
-        <span className="rounded border border-sand-200 bg-white px-1.5 py-0.5 font-mono text-[10px] uppercase text-paper-500">
+        <span className="rounded border border-sand-200 bg-white px-1.5 py-0.5 font-mono text-3xs uppercase text-paper-600">
           Tanpa login
         </span>
       </div>
@@ -171,7 +171,7 @@ function LookupPanel() {
         </label>
         <div className="relative mt-2">
           <MapPin
-            className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-paper-400"
+            className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-paper-600"
             aria-hidden
           />
           <select
@@ -188,19 +188,19 @@ function LookupPanel() {
             ))}
           </select>
           <ArrowRight
-            className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-paper-400"
+            className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-paper-600"
             aria-hidden
           />
         </div>
 
         {profile ? (
-          <p className="mt-2.5 font-mono text-[10px] uppercase tracking-[0.08em] text-paper-400">
+          <p className="mt-2.5 font-mono text-3xs uppercase tracking-[0.08em] text-paper-600">
             Kode BPS {profile.kode_bps} · {formatNumber(profile.pop)} jiwa · {profile.luas.toFixed(2)} km²
           </p>
         ) : null}
 
         {!kecamatan && (
-          <p className="mt-5 rounded-xl border border-dashed border-sand-300 bg-sand-50/60 px-4 py-6 text-center text-caption text-paper-500">
+          <p className="mt-5 rounded-xl border border-dashed border-sand-300 bg-sand-50/60 px-4 py-6 text-center text-caption text-paper-600">
             Skor DBD, ISPA, dan Diare muncul di sini setelah kecamatan dipilih.
           </p>
         )}
@@ -222,7 +222,7 @@ function LookupPanel() {
                       style={{ width: `${data.skor_risiko}%` }}
                     />
                   </div>
-                  <p className="mt-1.5 text-[11px] text-paper-500">
+                  <p className="mt-1.5 text-2xs text-paper-600">
                     Skor <span className="tabular font-medium text-foreground">{data.skor_risiko}</span>
                     <span className="mx-1.5 text-paper-300">·</span>
                     {data.kasus_aktif} kasus aktif
@@ -230,7 +230,7 @@ function LookupPanel() {
                 </div>
                 <span
                   className={cn(
-                    "shrink-0 rounded border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.06em]",
+                    "shrink-0 rounded border px-2 py-0.5 font-mono text-3xs uppercase tracking-[0.06em]",
                     TAG[level],
                   )}
                 >
@@ -242,7 +242,7 @@ function LookupPanel() {
         </div>
 
         {cuaca ? (
-          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-sand-200 pt-4 text-[11px] text-paper-500">
+          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-sand-200 pt-4 text-2xs text-paper-600">
             <span>
               Hujan <span className="tabular font-medium text-foreground">{cuaca.curah_hujan_mm}</span> mm
             </span>
@@ -252,7 +252,7 @@ function LookupPanel() {
             <span>
               Lembap <span className="tabular font-medium text-foreground">{cuaca.kelembaban_pct}</span> %
             </span>
-            <span className="text-paper-400">{cuaca.status_cuaca}</span>
+            <span className="text-paper-600">{cuaca.status_cuaca}</span>
           </div>
         ) : null}
 
@@ -280,7 +280,7 @@ export function CityStatus() {
         <Reveal className="border-b border-sand-200 pb-8">
           <div className="flex flex-wrap items-start justify-between gap-x-10 gap-y-6">
             <div className="max-w-2xl">
-              <p className="font-mono text-overline uppercase tracking-[0.1em] text-paper-500">
+              <p className="font-mono text-overline uppercase tracking-[0.1em] text-paper-600">
                 Buletin risiko mingguan · Edisi Minggu 34
               </p>
               <h1 className="mt-4 text-h1 text-balance text-foreground md:text-display">
@@ -302,7 +302,7 @@ export function CityStatus() {
             <dl className="w-full max-w-xs shrink-0 rounded-2xl border border-sand-200 bg-white/70 p-5 text-caption">
               <div className="flex items-center gap-2 border-b border-sand-200 pb-3">
                 <FileText className="h-3.5 w-3.5 text-brand-600" aria-hidden />
-                <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-paper-500">
+                <span className="font-mono text-3xs uppercase tracking-[0.08em] text-paper-600">
                   Dokumen terbitan
                 </span>
               </div>
@@ -313,7 +313,7 @@ export function CityStatus() {
                 ["Penanggung jawab", "Bidang P2P Dinkes Kota Semarang"],
               ].map(([label, value]) => (
                 <div key={label} className="flex justify-between gap-4 border-b border-sand-100 py-2.5 last:border-b-0 last:pb-0">
-                  <dt className="shrink-0 text-paper-500">{label}</dt>
+                  <dt className="shrink-0 text-paper-600">{label}</dt>
                   <dd className="text-right font-medium text-foreground">{value}</dd>
                 </div>
               ))}
@@ -324,7 +324,7 @@ export function CityStatus() {
         {/* Register + service */}
         <div className="mt-10 grid gap-10 lg:grid-cols-12 lg:gap-12">
           <Reveal className="min-w-0 lg:col-span-7">
-            <h2 className="font-mono text-overline uppercase tracking-[0.1em] text-paper-500">
+            <h2 className="font-mono text-overline uppercase tracking-[0.1em] text-paper-600">
               Rekapitulasi per penyakit
             </h2>
             <div className="mt-6">
@@ -332,7 +332,7 @@ export function CityStatus() {
                 <DiseaseRow key={s.disease} summary={s} />
               ))}
             </div>
-            <p className="mt-6 border-t border-sand-200 pt-4 text-caption text-paper-500">
+            <p className="mt-6 border-t border-sand-200 pt-4 text-caption text-paper-600">
               Proyeksi ditampilkan sebagai rentang, bukan angka tunggal. Rentang melebar
               ketika riwayat data kecamatan tidak lengkap.
             </p>

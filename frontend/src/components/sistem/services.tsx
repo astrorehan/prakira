@@ -96,7 +96,7 @@ function ServiceCard({ service }: { service: Service }) {
         <span className="flex h-11 w-11 items-center justify-center rounded-xl border border-sand-200 bg-sand-50 text-brand-700 transition-colors duration-base group-hover:border-brand-300 group-hover:bg-brand-50">
           <Icon className="h-5 w-5" aria-hidden />
         </span>
-        <span className="font-mono text-[10px] uppercase tracking-[0.08em] tabular text-paper-400">
+        <span className="font-mono text-3xs uppercase tracking-[0.08em] tabular text-paper-600">
           {service.code}
         </span>
       </div>
@@ -105,10 +105,10 @@ function ServiceCard({ service }: { service: Service }) {
       <p className="mt-2 text-caption text-paper-600">{service.description}</p>
 
       <div className="mt-5 flex items-center justify-between gap-3 border-t border-sand-200 pt-3.5">
-        <span className="font-mono text-[10px] uppercase tracking-[0.07em] text-paper-500">
+        <span className="font-mono text-3xs uppercase tracking-[0.07em] text-paper-600">
           {service.meta}
         </span>
-        <ArrowUpRight className="h-4 w-4 shrink-0 text-paper-400 transition-colors duration-base group-hover:text-brand-700" />
+        <ArrowUpRight className="h-4 w-4 shrink-0 text-paper-600 transition-colors duration-base group-hover:text-brand-700" />
       </div>
     </>
   );
@@ -133,7 +133,7 @@ export function Services() {
       <div className="container py-14 md:py-20">
         <Reveal>
           <div className="max-w-2xl border-t border-sand-200 pt-6">
-            <p className="font-mono text-overline uppercase tracking-[0.1em] text-paper-500">
+            <p className="font-mono text-overline uppercase tracking-[0.1em] text-paper-600">
               04 · Layanan publik
             </p>
             <h2 className="mt-4 text-h2 text-balance text-foreground md:text-h1">
@@ -160,7 +160,7 @@ export function Services() {
             <div className="flex items-start gap-3 bg-brand-900 p-6">
               <Phone className="mt-0.5 h-4 w-4 shrink-0 text-brand-300" aria-hidden />
               <div>
-                <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-white/50">
+                <p className="font-mono text-3xs uppercase tracking-[0.08em] text-white/50">
                   Panggilan darurat kesehatan
                 </p>
                 <p className="mt-1.5 text-metric-sm tabular text-white">119</p>
@@ -170,7 +170,7 @@ export function Services() {
             <div className="flex items-start gap-3 bg-brand-900 p-6">
               <BellRing className="mt-0.5 h-4 w-4 shrink-0 text-brand-300" aria-hidden />
               <div>
-                <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-white/50">
+                <p className="font-mono text-3xs uppercase tracking-[0.08em] text-white/50">
                   Aduan cepat WhatsApp
                 </p>
                 <p className="mt-1.5 text-metric-sm tabular text-white">0812 2849 0119</p>
@@ -180,7 +180,7 @@ export function Services() {
             <div className="flex items-start gap-3 bg-brand-900 p-6">
               <Clock className="mt-0.5 h-4 w-4 shrink-0 text-brand-300" aria-hidden />
               <div>
-                <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-white/50">
+                <p className="font-mono text-3xs uppercase tracking-[0.08em] text-white/50">
                   Loket Dinas Kesehatan
                 </p>
                 <p className="mt-1.5 text-body-lg font-medium text-white">Senin–Jumat</p>

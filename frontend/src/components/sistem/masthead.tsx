@@ -77,7 +77,7 @@ export function SistemMasthead() {
             whose it is: ink bar, small type, statutory links only. */}
         <div className="bg-brand-900 text-white">
           <div className="container flex h-9 items-center justify-between gap-4">
-            <p className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.08em] text-white/70">
+            <p className="flex items-center gap-2 font-mono text-3xs uppercase tracking-[0.08em] text-white/70">
               <Landmark className="h-3 w-3 shrink-0" aria-hidden />
               <span className="truncate">
                 Situs resmi Pemerintah Kota Semarang
@@ -89,7 +89,7 @@ export function SistemMasthead() {
                 <a
                   key={label}
                   href="#informasi"
-                  className="font-mono text-[10px] uppercase tracking-[0.08em] text-white/60 transition-colors duration-fast hover:text-white"
+                  className="font-mono text-3xs uppercase tracking-[0.08em] text-white/60 transition-colors duration-fast hover:text-white"
                 >
                   {label}
                 </a>
@@ -106,7 +106,7 @@ export function SistemMasthead() {
             <div className="flex items-center gap-3">
               <div className="hidden items-center gap-2 rounded-xl border border-sand-200 bg-white px-3 py-2 lg:flex">
                 <ShieldCheck className="h-4 w-4 text-brand-600" aria-hidden />
-                <span className="font-mono text-[10px] uppercase leading-tight tracking-[0.08em] text-paper-500">
+                <span className="font-mono text-3xs uppercase leading-tight tracking-[0.08em] text-paper-600">
                   Layanan gratis
                   <br />
                   tanpa pendaftaran
@@ -146,8 +146,8 @@ export function SistemMasthead() {
                   >
                     <span
                       className={cn(
-                        "font-mono text-[10px] tabular",
-                        isActive ? "text-brand-500" : "text-paper-400",
+                        "font-mono text-3xs tabular",
+                        isActive ? "text-brand-500" : "text-paper-600",
                       )}
                     >
                       {item.code}
@@ -161,7 +161,7 @@ export function SistemMasthead() {
         </nav>
 
         <nav aria-label="Navigasi layanan" className="container flex h-12 items-center justify-between md:hidden">
-          <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-paper-500">
+          <span className="font-mono text-3xs uppercase tracking-[0.08em] text-paper-600">
             Menu layanan
           </span>
           <button
@@ -169,7 +169,7 @@ export function SistemMasthead() {
             onClick={() => setMenuOpen((v) => !v)}
             aria-expanded={menuOpen}
             aria-label={menuOpen ? "Tutup menu layanan" : "Buka menu layanan"}
-            className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.08em] text-brand-700"
+            className="inline-flex items-center gap-2 font-mono text-3xs uppercase tracking-[0.08em] text-brand-700"
           >
             {menuOpen ? "Tutup" : "Buka"}
             {menuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
@@ -186,7 +186,7 @@ export function SistemMasthead() {
                     onClick={() => setMenuOpen(false)}
                     className="flex items-center gap-3 border-t border-sand-100 py-3 text-sm text-foreground"
                   >
-                    <span className="font-mono text-[10px] tabular text-paper-400">
+                    <span className="font-mono text-3xs tabular text-paper-600">
                       {item.code}
                     </span>
                     {item.label}
@@ -202,7 +202,7 @@ export function SistemMasthead() {
           a brochure: what the machine is doing, right now. */}
       <div className="border-b border-sand-200 bg-sand-100/70">
         <div className="container flex h-10 items-center gap-x-6 overflow-x-auto whitespace-nowrap">
-          <span className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.08em] text-risk-low">
+          <span className="flex items-center gap-2 font-mono text-3xs uppercase tracking-[0.08em] text-risk-low">
             <span className="relative flex h-1.5 w-1.5">
               <span className="absolute inline-flex h-full w-full animate-beacon rounded-full bg-risk-low-fill" />
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-risk-low" />
@@ -212,21 +212,21 @@ export function SistemMasthead() {
 
           <span className="hidden h-3 w-px bg-sand-300 sm:block" />
 
-          <span className="hidden items-center gap-2 font-mono text-[10px] uppercase tracking-[0.08em] text-paper-500 sm:flex">
+          <span className="hidden items-center gap-2 font-mono text-3xs uppercase tracking-[0.08em] text-paper-600 sm:flex">
             <Radio className="h-3 w-3" aria-hidden />
             Sinkron BMKG {BMKG_SYNC_STATUS.last_sync}
           </span>
 
           <span className="hidden h-3 w-px bg-sand-300 lg:block" />
 
-          <span className="hidden font-mono text-[10px] uppercase tracking-[0.08em] text-paper-500 lg:inline">
+          <span className="hidden font-mono text-3xs uppercase tracking-[0.08em] text-paper-600 lg:inline">
             {BMKG_SYNC_STATUS.stations_active} stasiun aktif · latensi{" "}
             <span className="tabular">{BMKG_SYNC_STATUS.latency_ms}</span> ms
           </span>
 
           <span className="hidden h-3 w-px bg-sand-300 lg:block" />
 
-          <span className="hidden font-mono text-[10px] uppercase tracking-[0.08em] text-paper-500 lg:inline">
+          <span className="hidden font-mono text-3xs uppercase tracking-[0.08em] text-paper-600 lg:inline">
             Pembaruan berikutnya {BMKG_SYNC_STATUS.next_sync_in}
           </span>
         </div>

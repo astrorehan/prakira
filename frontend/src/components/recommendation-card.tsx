@@ -87,7 +87,7 @@ export function RecommendationCard({
         {/* Top Bar: Disease, Category Icon, Priority & Status Badges */}
         <div className="flex items-start justify-between gap-2">
           <div className="flex flex-wrap items-center gap-1.5">
-            <div className="flex items-center gap-1 rounded-lg bg-paper-100/90 px-2 py-1 border border-paper-200/70 text-[11px] font-semibold text-paper-800 shadow-xs">
+            <div className="flex items-center gap-1 rounded-lg bg-paper-100/90 px-2 py-1 border border-paper-200/70 text-2xs font-semibold text-paper-800 shadow-xs">
               {getActionIcon()}
               <span>{getActionTypeLabel()}</span>
             </div>
@@ -115,7 +115,7 @@ export function RecommendationCard({
 
           <span
             className={cn(
-              "font-mono text-[10px] font-semibold uppercase tracking-wider rounded-full px-2.5 py-0.5 border shrink-0 transition-colors",
+              "font-mono text-3xs font-semibold uppercase tracking-wider rounded-full px-2.5 py-0.5 border shrink-0 transition-colors",
               isCompleted
                 ? "bg-risk-low-bg text-risk-low border-risk-low-br"
                 : isInProgress
@@ -132,7 +132,7 @@ export function RecommendationCard({
         </div>
 
         {/* Title */}
-        <h4 className="font-display font-semibold text-[15px] sm:text-base text-foreground leading-snug group-hover:text-brand-700 transition-colors">
+        <h4 className="font-display font-semibold text-body-sm sm:text-base text-foreground leading-snug group-hover:text-brand-700 transition-colors">
           {recommendation.title}
         </h4>
 
@@ -144,21 +144,21 @@ export function RecommendationCard({
         {/* AI Explainability & Lead Time Pills */}
         <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
           {recommendation.lead_time_days && (
-            <span className="inline-flex items-center gap-1 rounded-md bg-paper-100 px-2 py-0.5 font-mono text-[10px] font-medium text-paper-700 border border-paper-200">
+            <span className="inline-flex items-center gap-1 rounded-md bg-paper-100 px-2 py-0.5 font-mono text-3xs font-medium text-paper-700 border border-paper-200">
               <Clock className="h-3 w-3 text-brand-700" />
               <span>Lead: {recommendation.lead_time_days} Hari</span>
             </span>
           )}
 
           {recommendation.ai_confidence && (
-            <span className="inline-flex items-center gap-1 rounded-md bg-brand-50 px-2 py-0.5 font-mono text-[10px] font-medium text-brand-800 border border-brand-200/70">
+            <span className="inline-flex items-center gap-1 rounded-md bg-brand-50 px-2 py-0.5 font-mono text-3xs font-medium text-brand-800 border border-brand-200/70">
               <Sparkles className="h-3 w-3 text-brand-700" />
               <span>AI Conf: {recommendation.ai_confidence}%</span>
             </span>
           )}
 
           {recommendation.estimated_impact && (
-            <span className="inline-flex items-center gap-1 rounded-md bg-risk-low-bg/80 px-2 py-0.5 text-[10px] font-medium text-risk-low border border-risk-low-br/60 line-clamp-1 max-w-full">
+            <span className="inline-flex items-center gap-1 rounded-md bg-risk-low-bg/80 px-2 py-0.5 text-3xs font-medium text-risk-low border border-risk-low-br/60 line-clamp-1 max-w-full">
               <CheckCircle2 className="h-3 w-3 shrink-0" />
               <span className="truncate">{recommendation.estimated_impact}</span>
             </span>
@@ -167,14 +167,14 @@ export function RecommendationCard({
 
         {/* Target Districts */}
         <div className="flex flex-wrap items-center gap-1.5 pt-1">
-          <div className="flex items-center gap-1 text-[11px] font-semibold text-paper-600">
+          <div className="flex items-center gap-1 text-2xs font-semibold text-paper-600">
             <MapPin className="h-3.5 w-3.5 text-brand-700 shrink-0" />
             <span>Target Wilayah:</span>
           </div>
           {recommendation.target_kecamatan.map((kec, i) => (
             <span
               key={i}
-              className="inline-flex items-center gap-1 rounded-md bg-paper-50 border border-paper-200/90 px-2 py-0.5 text-[10px] font-semibold text-paper-800 shadow-xs hover:bg-paper-100 transition-colors"
+              className="inline-flex items-center gap-1 rounded-md bg-paper-50 border border-paper-200/90 px-2 py-0.5 text-3xs font-semibold text-paper-800 shadow-xs hover:bg-paper-100 transition-colors"
             >
               <span>{kec}</span>
             </span>
@@ -184,8 +184,8 @@ export function RecommendationCard({
 
       {/* Footer: Due date & Interactive Button */}
       <div className="flex items-center justify-between gap-3 pt-3.5 border-t border-paper-200/70 mt-1">
-        <div className="flex items-center gap-1.5 text-[11px] text-paper-500 font-mono">
-          <Clock className="h-3.5 w-3.5 text-paper-400" />
+        <div className="flex items-center gap-1.5 text-2xs text-paper-600 font-mono">
+          <Clock className="h-3.5 w-3.5 text-paper-600" />
           <span>Tenggat: {recommendation.due_date}</span>
         </div>
 

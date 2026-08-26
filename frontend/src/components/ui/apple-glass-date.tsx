@@ -72,7 +72,7 @@ export function AppleGlassDate({
       )}
 
       {/* Week Pill Tag (Inner mini capsule) */}
-      <div className="relative inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white/90 text-brand-900 border border-white/90 shadow-[0_1px_2px_rgba(14,34,37,0.05),inset_0_1px_0_rgba(255,255,255,1)] font-semibold text-[11.5px] tracking-tight shrink-0">
+      <div className="relative inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white/90 text-brand-900 border border-white/90 shadow-[0_1px_2px_rgba(14,34,37,0.05),inset_0_1px_0_rgba(255,255,255,1)] font-semibold text-2xs tracking-tight shrink-0">
         <span>{weekLabel}</span>
       </div>
 
@@ -88,7 +88,7 @@ export function AppleGlassDate({
       {dateRange && (
         <>
           <span className="text-paper-300 font-light select-none text-xs">·</span>
-          <span className="relative text-[11px] font-medium text-paper-500 font-mono whitespace-nowrap">
+          <span className="relative text-2xs font-medium text-paper-600 font-mono whitespace-nowrap">
             {dateRange}
           </span>
         </>
@@ -96,12 +96,12 @@ export function AppleGlassDate({
 
       {/* Apple Live Pulse Indicator (VisionOS / Dynamic Island style) */}
       {showLivePulse && (
-        <div className="relative hidden sm:inline-flex items-center gap-1.5 pl-2 pr-2.5 py-0.5 rounded-full bg-risk-low-bg border border-risk-low-br text-risk-low text-[10.5px] font-medium tracking-tight shrink-0 shadow-xs">
+        <div className="relative hidden sm:inline-flex items-center gap-1.5 pl-2 pr-2.5 py-0.5 rounded-full bg-risk-low-bg border border-risk-low-br text-risk-low text-3xs font-medium tracking-tight shrink-0 shadow-xs">
           <span className="relative flex h-1.5 w-1.5">
             <span className="animate-beacon absolute inline-flex h-full w-full rounded-full bg-risk-low" />
             <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-risk-low" />
           </span>
-          <span className="font-medium text-[10px]">{liveLabel}</span>
+          <span className="font-medium text-3xs">{liveLabel}</span>
         </div>
       )}
     </div>

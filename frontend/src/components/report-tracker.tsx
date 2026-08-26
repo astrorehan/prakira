@@ -82,7 +82,7 @@ const STEP_ICON = { done: Check, current: Clock, idle: Clock, rejected: X } as c
 const STEP_STYLE: Record<Step["state"], string> = {
   done: "border-risk-low-br bg-risk-low-bg text-risk-low",
   current: "border-risk-medium-br bg-risk-medium-bg text-risk-medium",
-  idle: "border-sand-200 bg-sand-50 text-paper-400",
+  idle: "border-sand-200 bg-sand-50 text-paper-600",
   rejected: "border-risk-none-br bg-risk-none-bg text-risk-none",
 };
 
@@ -95,7 +95,7 @@ function ReportDetail({ report }: { report: CitizenReport }) {
     <div className="rounded-3xl border border-sand-200 bg-white p-7 md:p-9">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
-          <p className="tabular font-mono text-overline uppercase tracking-[0.12em] text-paper-500">
+          <p className="tabular font-mono text-overline uppercase tracking-[0.12em] text-paper-600">
             {report.id}
           </p>
           <h2 className="mt-2 text-h1 text-foreground">{status.label}</h2>
@@ -108,13 +108,13 @@ function ReportDetail({ report }: { report: CitizenReport }) {
 
       <dl className="mt-8 grid gap-5 border-t border-sand-200 pt-6 sm:grid-cols-3">
         <div>
-          <dt className="text-overline uppercase tracking-[0.1em] text-paper-500">Jenis</dt>
+          <dt className="text-overline uppercase tracking-[0.1em] text-paper-600">Jenis</dt>
           <dd className="mt-1 text-body-sm font-medium text-foreground">{kind.label}</dd>
         </div>
         <div>
-          <dt className="text-overline uppercase tracking-[0.1em] text-paper-500">Lokasi</dt>
+          <dt className="text-overline uppercase tracking-[0.1em] text-paper-600">Lokasi</dt>
           <dd className="mt-1 flex items-start gap-1.5 text-body-sm font-medium text-foreground">
-            <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-paper-400" aria-hidden="true" />
+            <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-paper-600" aria-hidden="true" />
             <span>
               {report.kecamatan}
               {report.kelurahan ? ` · ${report.kelurahan}` : ""}
@@ -122,7 +122,7 @@ function ReportDetail({ report }: { report: CitizenReport }) {
           </dd>
         </div>
         <div>
-          <dt className="text-overline uppercase tracking-[0.1em] text-paper-500">
+          <dt className="text-overline uppercase tracking-[0.1em] text-paper-600">
             Tanggal kejadian
           </dt>
           <dd className="mt-1 text-body-sm font-medium text-foreground">
@@ -152,12 +152,12 @@ function ReportDetail({ report }: { report: CitizenReport }) {
                 <p
                   className={cn(
                     "text-body-sm font-semibold",
-                    step.state === "idle" ? "text-paper-500" : "text-foreground",
+                    step.state === "idle" ? "text-paper-600" : "text-foreground",
                   )}
                 >
                   {step.label}
                   {step.at && (
-                    <span className="ml-2 font-normal text-caption text-paper-500">
+                    <span className="ml-2 font-normal text-caption text-paper-600">
                       {formatDateTime(step.at)}
                     </span>
                   )}
@@ -243,7 +243,7 @@ export function ReportTracker() {
             Cek status
           </Button>
         </div>
-        <p className="mt-2 text-caption text-paper-500">
+        <p className="mt-2 text-caption text-paper-600">
           Huruf besar-kecil dan tanda hubung tidak masalah.
         </p>
       </form>

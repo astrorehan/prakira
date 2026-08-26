@@ -208,7 +208,7 @@ export default function DashboardPrediksiPage() {
                 />
               </div>
 
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-muted-foreground pt-2 border-t border-paper-200/60 shrink-0">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-2xs text-muted-foreground pt-2 border-t border-paper-200/60 shrink-0">
                 <span>Klik kecamatan untuk detail</span>
 
                 <div className="flex items-center gap-3">
@@ -282,7 +282,7 @@ export default function DashboardPrediksiPage() {
               </h4>
               <button
                 onClick={() => setExportModal(false)}
-                className="text-paper-400 hover:text-paper-600 text-xs"
+                className="text-paper-600 hover:text-paper-600 text-xs"
               >
                 ✕
               </button>
@@ -321,7 +321,7 @@ export default function DashboardPrediksiPage() {
           <p className="text-xs font-medium leading-snug">{toast}</p>
           <button
             onClick={() => setToast(null)}
-            className="text-paper-400 hover:text-white text-xs ml-auto shrink-0"
+            className="text-paper-600 hover:text-white text-xs ml-auto shrink-0"
           >
             ✕
           </button>

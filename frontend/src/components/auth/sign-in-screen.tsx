@@ -135,7 +135,7 @@ export function SignInScreen() {
             />
           </div>
 
-          <p className="mt-6 text-center text-caption text-paper-500">
+          <p className="mt-6 text-center text-caption text-paper-600">
             Prototipe DSDC ANFORCOM 2026 — rute konsol belum dijaga.
           </p>
         </div>

@@ -366,7 +366,7 @@ function AuditTrailCard({ logs }: { logs: AuditLog[] }) {
 
         <label className="relative flex items-center sm:w-64">
           <Search
-            className="pointer-events-none absolute left-3 h-3.5 w-3.5 text-paper-400"
+            className="pointer-events-none absolute left-3 h-3.5 w-3.5 text-paper-600"
             aria-hidden="true"
           />
           <span className="sr-only">Cari entri audit</span>
@@ -375,14 +375,14 @@ function AuditTrailCard({ logs }: { logs: AuditLog[] }) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Cari pengguna, aksi, rincian…"
-            className="h-10 w-full rounded-lg border border-border bg-surface pl-9 pr-3 text-body-sm text-foreground placeholder:text-paper-400 focus-visible:outline-none"
+            className="h-10 w-full rounded-lg border border-border bg-surface pl-9 pr-3 text-body-sm text-foreground placeholder:text-paper-600 focus-visible:outline-none"
           />
         </label>
       </div>
 
       {filtered.length === 0 ? (
         <div className="mt-4 rounded-xl border border-border bg-paper-50 p-8 text-center">
-          <Info className="mx-auto h-5 w-5 text-paper-400" aria-hidden="true" />
+          <Info className="mx-auto h-5 w-5 text-paper-600" aria-hidden="true" />
           <p className="mt-2 text-body-sm font-medium text-foreground">
             Tidak ada entri yang cocok
           </p>

@@ -174,7 +174,7 @@ export function DispatchActionModal({
             </div>
 
             <span className="flex items-center gap-1.5 pr-6 text-caption text-paper-600">
-              <Clock className="h-3.5 w-3.5 text-paper-400" aria-hidden="true" />
+              <Clock className="h-3.5 w-3.5 text-paper-600" aria-hidden="true" />
               <span className="tabular">
                 {deadline.label} · {deadline.date}
               </span>
@@ -231,7 +231,7 @@ export function DispatchActionModal({
                 "whitespace-nowrap border-b-2 px-3 py-2.5 text-caption font-semibold transition-colors duration-fast ease-out",
                 activeTab === tab.id
                   ? "border-brand-700 text-brand-700"
-                  : "border-transparent text-paper-500 hover:text-paper-800",
+                  : "border-transparent text-paper-600 hover:text-paper-800",
               )}
             >
               {tab.label}
@@ -378,7 +378,7 @@ export function DispatchActionModal({
                             </h4>
                             <p className="text-caption text-paper-600">Kepala: {pusk.head}</p>
                             <span className="mt-1 flex items-center gap-1.5">
-                              <Phone className="h-3 w-3 text-paper-400" aria-hidden="true" />
+                              <Phone className="h-3 w-3 text-paper-600" aria-hidden="true" />
                               <span className="tabular font-mono text-caption text-paper-600">
                                 {pusk.phone}
                               </span>
@@ -415,7 +415,7 @@ export function DispatchActionModal({
                     {recommendation.pic_unit ?? "Belum ditetapkan"}
                   </strong>
                 </span>
-                <span className="tabular font-mono text-paper-500">Hotline 119</span>
+                <span className="tabular font-mono text-paper-600">Hotline 119</span>
               </div>
             </div>
           )}

@@ -106,7 +106,7 @@ function KecamatanSearch({
             : "border-sand-200 shadow-card hover:border-sand-300",
         )}
       >
-        <Search className="h-5 w-5 shrink-0 text-paper-400" aria-hidden />
+        <Search className="h-5 w-5 shrink-0 text-paper-600" aria-hidden />
         <input
           ref={inputRef}
           type="text"
@@ -118,7 +118,7 @@ function KecamatanSearch({
           onFocus={() => setOpen(true)}
           onKeyDown={onKeyDown}
           placeholder="Cari kecamatan Anda…"
-          className="h-12 min-w-0 flex-1 bg-transparent px-3 text-base font-medium text-foreground placeholder:text-paper-400 focus:outline-none"
+          className="h-12 min-w-0 flex-1 bg-transparent px-3 text-base font-medium text-foreground placeholder:text-paper-600 focus:outline-none"
           aria-label="Cari kecamatan"
           aria-expanded={open}
           role="combobox"
@@ -146,17 +146,17 @@ function KecamatanSearch({
           className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-2xl border border-sand-200 bg-white shadow-pop"
         >
           <div className="flex items-center justify-between border-b border-sand-100 px-4 py-2">
-            <span className="font-mono text-overline uppercase text-paper-400">
+            <span className="font-mono text-overline uppercase text-paper-600">
               {filtered.length} kecamatan
             </span>
-            <span className="hidden items-center gap-1 font-mono text-[10px] uppercase text-paper-400 sm:flex">
+            <span className="hidden items-center gap-1 font-mono text-3xs uppercase text-paper-600 sm:flex">
               <CornerDownLeft className="h-3 w-3" /> pilih
             </span>
           </div>
 
           <div className="max-h-72 overflow-y-auto py-1">
             {filtered.length === 0 ? (
-              <p className="px-4 py-6 text-center text-sm text-paper-500">
+              <p className="px-4 py-6 text-center text-sm text-paper-600">
                 Kecamatan tidak ditemukan.
               </p>
             ) : (
@@ -175,13 +175,13 @@ function KecamatanSearch({
                       i === cursor ? "bg-sand-50" : "bg-transparent",
                     )}
                   >
-                    <MapPin className="h-4 w-4 shrink-0 text-paper-400" />
+                    <MapPin className="h-4 w-4 shrink-0 text-paper-600" />
                     <span className="flex-1 truncate text-sm font-medium text-foreground">
                       {kec.nama}
                     </span>
                     <span
                       className={cn(
-                        "rounded-md px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider",
+                        "rounded-md px-1.5 py-0.5 font-mono text-3xs uppercase tracking-wider",
                         RISK_TAG[level].className,
                       )}
                     >
@@ -256,7 +256,7 @@ export function Hero({ selectedKecamatan, onSelectKecamatan }: HeroProps) {
         <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-14">
           {/* ── Copy + search ── */}
           <div className="min-w-0 lg:col-span-7">
-            <p className="animate-fade-in text-overline uppercase leading-5 tracking-[0.1em] text-paper-500">
+            <p className="animate-fade-in text-overline uppercase leading-5 tracking-[0.1em] text-paper-600">
               Peringatan dini penyakit iklim
               <span className="mx-2 hidden text-paper-300 sm:inline">/</span>
               <span className="block sm:inline">Kota Semarang</span>
@@ -317,7 +317,7 @@ export function Hero({ selectedKecamatan, onSelectKecamatan }: HeroProps) {
                     : "Gunakan lokasi saya"}
                 </button>
 
-                <span className="ml-1 font-mono text-overline uppercase text-paper-400">
+                <span className="ml-1 font-mono text-overline uppercase text-paper-600">
                   Paling berisiko
                 </span>
                 {shortcuts.map((name) => (
@@ -344,7 +344,7 @@ export function Hero({ selectedKecamatan, onSelectKecamatan }: HeroProps) {
               )}
             </div>
 
-            <p className="animate-fade-in-up stagger-4 mt-6 text-caption text-paper-500">
+            <p className="animate-fade-in-up stagger-4 mt-6 text-caption text-paper-600">
               Gratis · tanpa login · bukan alat diagnosis medis
             </p>
           </div>
@@ -359,13 +359,13 @@ export function Hero({ selectedKecamatan, onSelectKecamatan }: HeroProps) {
       {/* Masthead rule: the seam between the hero and the answer below. */}
       <div className="container">
         <div className="flex items-center justify-between gap-6 border-t border-sand-200 py-5">
-          <p className="hidden font-mono text-overline uppercase text-paper-400 sm:block">
+          <p className="hidden font-mono text-overline uppercase text-paper-600 sm:block">
             Sumber · BMKG · Dinkes Kota Semarang · Laporan warga terverifikasi
           </p>
           <button
             type="button"
             onClick={scrollToResults}
-            className="group flex items-center gap-2 font-mono text-overline uppercase text-paper-500 transition-colors duration-base hover:text-brand-700"
+            className="group flex items-center gap-2 font-mono text-overline uppercase text-paper-600 transition-colors duration-base hover:text-brand-700"
           >
             Lihat hasilnya
             <ArrowDown className="h-3.5 w-3.5 animate-rise-fall" />

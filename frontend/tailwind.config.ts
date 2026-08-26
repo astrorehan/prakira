@@ -165,6 +165,22 @@ const config: Config = {
       },
 
       fontSize: {
+        /* Rungs below Tailwind's own `xs` (0.75rem). The micro-labels on the
+           data surface live here — before these existed the scale bottomed out
+           at `overline` (0.6875rem) and 160 call sites reached for arbitrary
+           px instead. Fixed px does not respond to the root font-size, so the
+           a11y text-size control moved the page around them; see globals.css
+           `html.a11y-large-text` and DESIGN-SYSTEM.md §7.
+
+           Deliberately size-only: no letterSpacing, no fontWeight. Unlike
+           `overline` these carry no role, so they must not impose tracking on
+           the third of their call sites that are not upper-case mono labels.
+           Values are the old px divided by 18 — the 112.5% root — so the swap
+           is visually identical. */
+        "5xs": ["0.4444rem", { lineHeight: "1.4" }],
+        "4xs": ["0.5rem", { lineHeight: "1.4" }],
+        "3xs": ["0.5556rem", { lineHeight: "1.4" }],
+        "2xs": ["0.6111rem", { lineHeight: "1.45" }],
         overline: ["0.6875rem", { lineHeight: "1.4", letterSpacing: "0.08em", fontWeight: "500" }],
         caption: ["0.8125rem", { lineHeight: "1.45" }],
         "body-sm": ["0.875rem", { lineHeight: "1.55" }],

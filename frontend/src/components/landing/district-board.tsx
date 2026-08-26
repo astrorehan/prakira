@@ -100,7 +100,7 @@ export function DistrictBoard({
                         active ? "bg-sand-50" : "hover:bg-sand-50",
                       )}
                     >
-                      <span className="tabular pl-3 font-mono text-caption text-paper-400">
+                      <span className="tabular pl-3 font-mono text-caption text-paper-600">
                         {String(rank).padStart(2, "0")}
                       </span>
 
@@ -124,7 +124,7 @@ export function DistrictBoard({
                       <span className="flex items-center gap-3 pr-3">
                         <span
                           className={cn(
-                            "hidden rounded-md px-2 py-1 font-mono text-[10px] uppercase tracking-wider sm:inline-block",
+                            "hidden rounded-md px-2 py-1 font-mono text-3xs uppercase tracking-wider sm:inline-block",
                             risk.tint,
                             risk.ink,
                           )}
@@ -145,7 +145,7 @@ export function DistrictBoard({
           ))}
         </Reveal>
 
-        <p className="mt-6 border-t border-sand-200 pt-4 font-mono text-[10px] uppercase tracking-wider text-paper-400">
+        <p className="mt-6 border-t border-sand-200 pt-4 font-mono text-3xs uppercase tracking-wider text-paper-600">
           Skor 0–100 · gabungan riwayat kasus, kepadatan penduduk, dan pemicu iklim
           per kecamatan
         </p>

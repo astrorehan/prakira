@@ -28,17 +28,18 @@ import { cn } from "@/lib/utils";
 
 type LockupSize = "sm" | "md" | "lg";
 
-/* Subline sits at ~62% of the title. `text-overline` (0.6875rem = 12.4px at the
-   112.5% root) is too loud next to a 16px wordmark — it competes instead of
-   labelling. Sized in rem, not the fixed px the old hand-rolled lockups used, so
-   the a11y text-size classes still move it. */
+/* Subline sits at ~56% of the title. `text-overline` (0.6875rem = 12.4px at the
+   112.5% root) is too loud next to an 18px wordmark — it competes instead of
+   labelling, so this reaches for the micro rungs below it. Those are scale
+   rungs in rem, not the fixed px the old hand-rolled lockups used, so the a11y
+   text-size control still moves them. */
 const SIZES: Record<
   LockupSize,
   { mark: string; stroke: number; title: string; sub: string; gap: string }
 > = {
-  sm: { mark: "h-6 w-6", stroke: 2, title: "text-base", sub: "text-[0.5625rem]", gap: "gap-2" },
-  md: { mark: "h-7 w-7", stroke: 1.75, title: "text-base", sub: "text-[0.5625rem]", gap: "gap-2" },
-  lg: { mark: "h-9 w-9", stroke: 1.35, title: "text-xl", sub: "text-[0.625rem]", gap: "gap-2.5" },
+  sm: { mark: "h-6 w-6", stroke: 2, title: "text-base", sub: "text-3xs", gap: "gap-2" },
+  md: { mark: "h-7 w-7", stroke: 1.75, title: "text-base", sub: "text-3xs", gap: "gap-2" },
+  lg: { mark: "h-9 w-9", stroke: 1.35, title: "text-xl", sub: "text-2xs", gap: "gap-2.5" },
 };
 
 export function BrandLockup({
@@ -63,6 +64,12 @@ export function BrandLockup({
   const s = SIZES[size];
 
   return (
+    /* `sublineClassName` is allowed to hide the subline responsively
+       ("hidden sm:block"), and `hidden` drops a node from the accessibility
+       tree — so without aria-hidden below, this same link would announce as
+       "Prakira" on a phone and "Prakira Sistem Peringatan Dini…" on a desktop.
+       Hiding it fixes the name at "Prakira", which is also the visible text,
+       satisfying WCAG 2.5.3. The subline repeats the page heading anyway. */
     <Link href={href} className={cn("flex items-center", s.gap, className)}>
       <BrandMark
         strokeWidth={s.stroke}
@@ -80,10 +87,11 @@ export function BrandLockup({
         </span>
         {subline ? (
           <span
+            aria-hidden
             className={cn(
               s.sub,
               "mt-1 font-medium uppercase tracking-[0.08em]",
-              inverted ? "text-white/55" : "text-paper-500",
+              inverted ? "text-white/55" : "text-paper-600",
               sublineClassName,
             )}
           >

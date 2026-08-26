@@ -54,7 +54,7 @@ export function DistrictRankingTable({
       {/* Table Surface */}
       <div className="overflow-x-auto rounded-2xl border border-paper-200/90 bg-white/90 shadow-card">
         <table className="w-full text-left text-xs">
-          <thead className="bg-paper-50/90 border-b border-paper-200 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+          <thead className="bg-paper-50/90 border-b border-paper-200 text-2xs font-semibold text-muted-foreground uppercase tracking-wider">
             <tr>
               <th className="py-3.5 px-4">Peringkat & Kecamatan</th>
               <th
@@ -110,7 +110,7 @@ export function DistrictRankingTable({
                     <div className="flex items-center gap-2.5">
                       <span
                         className={cn(
-                          "flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-semibold",
+                          "flex h-6 w-6 items-center justify-center rounded-full text-2xs font-semibold",
                           index < 3
                             ? "bg-risk-high-bg text-risk-high border border-risk-high-br/60"
                             : "bg-paper-100 text-paper-700",
@@ -125,7 +125,7 @@ export function DistrictRankingTable({
                             <span className="h-1.5 w-1.5 rounded-full bg-primary" />
                           )}
                         </div>
-                        <div className="text-[10px] text-muted-foreground">
+                        <div className="text-3xs text-muted-foreground">
                           BPS: <span className="font-mono">{kec.kode_bps}</span> ·{" "}
                           {(kec.populasi / 1000).toFixed(0)}k jiwa · {kec.luas_km2} km²
                         </div>
@@ -160,7 +160,7 @@ export function DistrictRankingTable({
                     <div className="font-semibold text-foreground">
                       {formatNumber(kec.kasus_aktif)} kasus
                     </div>
-                    <div className="text-[10px] text-muted-foreground font-mono">
+                    <div className="text-3xs text-muted-foreground font-mono">
                       3 mgg: {kec.historical_cases_3w.join(" → ")}
                     </div>
                   </td>
@@ -171,7 +171,7 @@ export function DistrictRankingTable({
                     </div>
                     <div
                       className={cn(
-                        "text-[10px] font-semibold",
+                        "text-3xs font-semibold",
                         kec.delta_mingguan >= 0 ? "text-risk-high" : "text-risk-low",
                       )}
                     >
@@ -191,7 +191,7 @@ export function DistrictRankingTable({
                       <CloudRain className="h-3 w-3" />
                       <span>{kec.cuaca.curah_hujan_mm} mm</span>
                     </div>
-                    <div className="text-[10px] text-muted-foreground">
+                    <div className="text-3xs text-muted-foreground">
                       {kec.cuaca.suhu_c}°C · {kec.cuaca.kelembaban_pct}% RH
                     </div>
                   </td>

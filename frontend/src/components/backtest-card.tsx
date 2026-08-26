@@ -80,7 +80,7 @@ function BacktestPanel({
         <MetricRow label="Jumlah data uji" value={`${formatNumber(metric.sample_size)} record`} />
       </dl>
 
-      <p className="mt-3 border-t border-border pt-2 text-caption text-paper-500">
+      <p className="mt-3 border-t border-border pt-2 text-caption text-paper-600">
         {metric.backtest_period}
       </p>
     </Card>

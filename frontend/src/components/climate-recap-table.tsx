@@ -142,7 +142,7 @@ export function ClimateRecapTable({
                       {col.unit ? ` (${col.unit})` : ""}
                     </span>
                     <SortIcon
-                      className={cn("h-3 w-3 shrink-0", sorted ? "text-brand-700" : "text-paper-400")}
+                      className={cn("h-3 w-3 shrink-0", sorted ? "text-brand-700" : "text-paper-600")}
                       aria-hidden="true"
                     />
                   </button>

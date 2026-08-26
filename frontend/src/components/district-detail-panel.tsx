@@ -66,7 +66,7 @@ export function DistrictDetailPanel({
       {/* 1. Header: District Info + Risk Gauge (Vertically Centered) */}
       <div className="flex items-center justify-between gap-3 border-b border-white/70 pb-3 shrink-0">
         <div>
-          <span className="text-[10px] font-semibold text-paper-500 uppercase tracking-wider block">
+          <span className="text-3xs font-semibold text-paper-600 uppercase tracking-wider block">
             Detail Wilayah
           </span>
           <h3 className="font-display text-xl sm:text-2xl font-semibold text-foreground">
@@ -85,7 +85,7 @@ export function DistrictDetailPanel({
       {/* 2. Key Metrics Comparison Grid */}
       <div className="grid grid-cols-2 gap-3 shrink-0">
         <div className="rounded-xl bg-white/75 backdrop-blur-md p-3 border border-white/90 shadow-[0_2px_8px_-2px_rgba(14,34,37,0.04),inset_0_1px_0_rgba(255,255,255,0.9)]">
-          <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider block">
+          <span className="text-3xs font-medium text-muted-foreground uppercase tracking-wider block">
             Kasus Aktif
           </span>
           <div className="mt-1 flex items-baseline gap-1">
@@ -94,7 +94,7 @@ export function DistrictDetailPanel({
             </span>
             <span className="text-xs text-muted-foreground">kasus</span>
           </div>
-          <div className="mt-1 flex items-center justify-between text-[10px] text-muted-foreground pt-1 border-t border-paper-100/80">
+          <div className="mt-1 flex items-center justify-between text-3xs text-muted-foreground pt-1 border-t border-paper-100/80">
             <span>Insiden:</span>
             <span className="font-semibold text-foreground">
               {formatIncidence(district.incidence_rate)}
@@ -103,7 +103,7 @@ export function DistrictDetailPanel({
         </div>
 
         <div className="rounded-xl bg-white/75 backdrop-blur-md p-3 border border-white/90 shadow-[0_2px_8px_-2px_rgba(14,34,37,0.04),inset_0_1px_0_rgba(255,255,255,0.9)]">
-          <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider block">
+          <span className="text-3xs font-medium text-muted-foreground uppercase tracking-wider block">
             Proyeksi 2–4 Minggu
           </span>
           <div className="mt-1 flex items-baseline gap-1">
@@ -112,7 +112,7 @@ export function DistrictDetailPanel({
             </span>
             <span className="text-xs font-semibold text-risk-high">kasus</span>
           </div>
-          <div className="mt-1 flex items-center justify-between text-[10px] text-risk-high pt-1 border-t border-paper-100/80 font-medium">
+          <div className="mt-1 flex items-center justify-between text-3xs text-risk-high pt-1 border-t border-paper-100/80 font-medium">
             <span>Potensi Lonjakan:</span>
             <span className="font-semibold">
               {district.delta_mingguan >= 0 ? "+" : ""}
@@ -127,7 +127,7 @@ export function DistrictDetailPanel({
         <div className="flex items-center gap-1.5">
           <CloudRain className="h-3.5 w-3.5 text-brand-600 shrink-0" />
           <div className="leading-none">
-            <span className="text-[9px] text-muted-foreground block uppercase">Hujan</span>
+            <span className="text-4xs text-muted-foreground block uppercase">Hujan</span>
             <span className="font-semibold text-foreground">{district.cuaca.curah_hujan_mm} mm</span>
           </div>
         </div>
@@ -135,7 +135,7 @@ export function DistrictDetailPanel({
         <div className="flex items-center gap-1.5">
           <Thermometer className="h-3.5 w-3.5 text-risk-medium shrink-0" />
           <div className="leading-none">
-            <span className="text-[9px] text-muted-foreground block uppercase">Suhu</span>
+            <span className="text-4xs text-muted-foreground block uppercase">Suhu</span>
             <span className="font-semibold text-foreground">{district.cuaca.suhu_c} °C</span>
           </div>
         </div>
@@ -143,7 +143,7 @@ export function DistrictDetailPanel({
         <div className="flex items-center gap-1.5">
           <Wind className="h-3.5 w-3.5 text-paper-600 shrink-0" />
           <div className="leading-none truncate">
-            <span className="text-[9px] text-muted-foreground block uppercase">Cuaca</span>
+            <span className="text-4xs text-muted-foreground block uppercase">Cuaca</span>
             <span className="font-semibold text-foreground truncate">{district.cuaca.status_cuaca}</span>
           </div>
         </div>
@@ -158,7 +158,7 @@ export function DistrictDetailPanel({
               Proyeksi Tren Kasus ({disease})
             </span>
           </div>
-          <span className="text-[10px] text-brand-800 bg-brand-50 px-2 py-0.5 rounded-full font-medium border border-brand-200/60 flex items-center gap-1">
+          <span className="text-3xs text-brand-800 bg-brand-50 px-2 py-0.5 rounded-full font-medium border border-brand-200/60 flex items-center gap-1">
             <Sparkles className="h-3 w-3 text-primary" />
             <span>Keyakinan model {Math.round(district.confidence * 100)}%</span>
           </span>

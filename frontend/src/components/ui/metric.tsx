@@ -66,7 +66,7 @@ export function Metric({
       <span className="overline">{label}</span>
 
       {insufficient ? (
-        <p className="text-body-sm text-paper-500">
+        <p className="text-body-sm text-paper-600">
           Data historis tidak memadai untuk wilayah ini.
         </p>
       ) : (
@@ -79,7 +79,7 @@ export function Metric({
           </div>
 
           {range && (
-            <span className="font-mono text-caption tabular text-paper-500">
+            <span className="font-mono text-caption tabular text-paper-600">
               {formatNumber(range.lower)} – {formatNumber(range.upper)}
               <span className="sr-only"> rentang prediksi</span>
             </span>
@@ -94,7 +94,7 @@ export function Metric({
               className={cn(
                 "inline-flex items-center gap-1 text-caption font-medium tabular",
                 trend === "flat"
-                  ? "text-paper-500"
+                  ? "text-paper-600"
                   : bad
                     ? "text-risk-high"
                     : "text-risk-low",
@@ -104,7 +104,7 @@ export function Metric({
               {delta.value > 0 ? "+" : ""}
               {delta.value.toFixed(1)}%
               {delta.label && (
-                <span className="font-normal text-paper-500">{delta.label}</span>
+                <span className="font-normal text-paper-600">{delta.label}</span>
               )}
             </span>
           )}
@@ -146,7 +146,7 @@ function Sparkline({ values, className }: { values: number[]; className?: string
       role="img"
       aria-label={`Tren ${values.length} periode terakhir`}
     >
-      <path d={d} fill="none" stroke="currentColor" strokeWidth={1.5} className="text-paper-400" />
+      <path d={d} fill="none" stroke="currentColor" strokeWidth={1.5} className="text-paper-600" />
     </svg>
   );
 }

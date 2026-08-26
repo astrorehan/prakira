@@ -42,7 +42,7 @@ export function SectionHeading({
           centered && "justify-center",
         )}
       >
-        <span className="font-mono text-overline uppercase text-paper-500">
+        <span className="font-mono text-overline uppercase text-paper-600">
           {kicker}
         </span>
       </div>

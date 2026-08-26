@@ -23,9 +23,9 @@ export function DemoAccount({ busy, disabled, onFill, onSignIn }: DemoAccountPro
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
         <div className="min-w-0">
           <div className="overline">Akun demo</div>
-          <p className="mt-1.5 font-mono text-[11px] tabular text-paper-700">
+          <p className="mt-1.5 font-mono text-2xs tabular text-paper-700">
             {DEMO_ACCOUNT.email}
-            <span className="px-1.5 text-paper-400">·</span>
+            <span className="px-1.5 text-paper-600">·</span>
             {DEMO_ACCOUNT.password}
           </p>
         </div>

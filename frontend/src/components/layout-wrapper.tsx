@@ -9,6 +9,25 @@ import { SistemMasthead } from "./sistem/masthead";
 import { SistemFooter } from "./sistem/sistem-footer";
 import { BARE_ROUTES, CONSOLE_ROUTES, SISTEM_ROUTES } from "@/lib/routes";
 
+/* WCAG 2.4.1. The /sistem masthead alone puts a government strip, six service
+   links and a status line ahead of the content — a keyboard or screen-reader
+   reader should not walk all of it on every page. Invisible until focused,
+   then it is the first stop of the tab order.
+
+   The target carries tabIndex={-1} because a browser moves the viewport to a
+   fragment but not always the focus; without it the next Tab would resume
+   inside the nav the reader just skipped. */
+function SkipLink() {
+  return (
+    <a
+      href="#konten"
+      className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-xl focus:border focus:border-brand-700 focus:bg-surface focus:px-4 focus:py-2.5 focus:text-body-sm focus:font-medium focus:text-brand-700 focus:shadow-pop"
+    >
+      Lewati ke konten utama
+    </a>
+  );
+}
+
 export function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isConsole = CONSOLE_ROUTES.some((r) => pathname?.startsWith(r));
@@ -27,14 +46,25 @@ export function LayoutWrapper({ children }: { children: React.ReactNode }) {
   /* The sign-in screen is its own composition — a navbar offering "Masuk"
      above a page that is the sign-in would be noise. */
   if (isBare) {
-    return <main className="min-h-screen">{children}</main>;
+    return (
+      <main id="konten" tabIndex={-1} className="min-h-screen">
+        {children}
+      </main>
+    );
   }
 
   if (isConsole) {
     return (
       <div className="flex min-h-screen flex-col md:flex-row">
+        <SkipLink />
         <Sidebar />
-        <main className="min-h-screen min-w-0 flex-1 overflow-y-auto">{children}</main>
+        <main
+          id="konten"
+          tabIndex={-1}
+          className="min-h-screen min-w-0 flex-1 overflow-y-auto"
+        >
+          {children}
+        </main>
       </div>
     );
   }
@@ -44,8 +74,11 @@ export function LayoutWrapper({ children }: { children: React.ReactNode }) {
   if (isSistem) {
     return (
       <div className="flex min-h-screen flex-col">
+        <SkipLink />
         <SistemMasthead />
-        <main className="min-w-0 flex-1">{children}</main>
+        <main id="konten" tabIndex={-1} className="min-w-0 flex-1">
+          {children}
+        </main>
         <SistemFooter />
       </div>
     );
@@ -53,8 +86,15 @@ export function LayoutWrapper({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen flex-col">
+      <SkipLink />
       <Navbar />
-      <main className="min-h-[calc(100vh-140px)] flex-1">{children}</main>
+      <main
+        id="konten"
+        tabIndex={-1}
+        className="min-h-[calc(100vh-140px)] flex-1"
+      >
+        {children}
+      </main>
       <Footer />
     </div>
   );

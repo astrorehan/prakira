@@ -96,12 +96,12 @@ export function CityPulse({ onSelectKecamatan }: CityPulseProps) {
           mono standfirst rather than a coloured header block. */}
       <figcaption className="flex items-start justify-between gap-4 border-b border-sand-200 px-6 py-5">
         <div>
-          <p className="font-mono text-overline uppercase text-paper-400">
+          <p className="font-mono text-overline uppercase text-paper-600">
             Ringkasan kota · DBD
           </p>
           <h2 className="mt-1.5 text-h3 text-foreground">Semarang minggu ini</h2>
         </div>
-        <span className="shrink-0 rounded-md bg-sand-100 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-paper-500">
+        <span className="shrink-0 rounded-md bg-sand-100 px-2 py-1 font-mono text-3xs uppercase tracking-wider text-paper-600">
           Mg 34 · 2026
         </span>
       </figcaption>
@@ -127,7 +127,7 @@ export function CityPulse({ onSelectKecamatan }: CityPulseProps) {
               <p className="tabular text-metric-sm text-foreground">
                 {value}
               </p>
-              <p className="font-mono text-[10px] uppercase tracking-wider text-paper-500">
+              <p className="font-mono text-3xs uppercase tracking-wider text-paper-600">
                 {RISK_META[key].label}
               </p>
             </div>
@@ -137,7 +137,7 @@ export function CityPulse({ onSelectKecamatan }: CityPulseProps) {
 
       {/* Hotspots */}
       <div className="border-t border-sand-200 px-3 pb-2 pt-4">
-        <p className="px-3 font-mono text-overline uppercase text-paper-400">
+        <p className="px-3 font-mono text-overline uppercase text-paper-600">
           Perlu perhatian
         </p>
 
@@ -151,7 +151,7 @@ export function CityPulse({ onSelectKecamatan }: CityPulseProps) {
                   onClick={() => onSelectKecamatan(kec.nama)}
                   className="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors duration-fast hover:bg-sand-50"
                 >
-                  <span className="tabular w-3 shrink-0 font-mono text-xs text-paper-400">
+                  <span className="tabular w-3 shrink-0 font-mono text-xs text-paper-600">
                     {i + 1}
                   </span>
 
@@ -159,7 +159,7 @@ export function CityPulse({ onSelectKecamatan }: CityPulseProps) {
                     <span className="block truncate text-sm font-medium text-foreground">
                       {kec.nama}
                     </span>
-                    <span className="tabular block text-[11px] text-paper-500">
+                    <span className="tabular block text-2xs text-paper-600">
                       {kec.kasus_aktif} kasus aktif · prediksi{" "}
                       {kec.kasus_prediksi_lower}–{kec.kasus_prediksi_upper}
                     </span>
@@ -192,11 +192,11 @@ export function CityPulse({ onSelectKecamatan }: CityPulseProps) {
           { icon: Droplet, label: "Kelembaban", value: `${climate.lembab}%` },
         ].map(({ icon: Icon, label, value }) => (
           <div key={label} className="min-w-0">
-            <Icon className="h-3.5 w-3.5 text-paper-400" aria-hidden />
+            <Icon className="h-3.5 w-3.5 text-paper-600" aria-hidden />
             <p className="tabular mt-1.5 text-sm font-semibold text-foreground">
               {value}
             </p>
-            <p className="truncate text-[11px] text-paper-500">{label}</p>
+            <p className="truncate text-2xs text-paper-600">{label}</p>
           </div>
         ))}
       </div>

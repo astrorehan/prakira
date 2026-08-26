@@ -89,7 +89,7 @@ function DetailRow({ data }: { data: KecamatanData }) {
       <td colSpan={8} className="px-4 py-5 sm:px-5">
         <div className="grid gap-6 md:grid-cols-3">
           <div>
-            <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-paper-500">
+            <p className="font-mono text-3xs uppercase tracking-[0.08em] text-paper-600">
               Kondisi iklim pekan ini
             </p>
             <dl className="mt-2.5 space-y-1.5 text-caption">
@@ -100,7 +100,7 @@ function DetailRow({ data }: { data: KecamatanData }) {
                 ["Kondisi", data.cuaca.status_cuaca],
               ].map(([k, v]) => (
                 <div key={k} className="flex justify-between gap-4 border-b border-sand-200 pb-1.5 last:border-b-0">
-                  <dt className="text-paper-500">{k}</dt>
+                  <dt className="text-paper-600">{k}</dt>
                   <dd className="tabular font-medium text-foreground">{v}</dd>
                 </div>
               ))}
@@ -108,7 +108,7 @@ function DetailRow({ data }: { data: KecamatanData }) {
           </div>
 
           <div className="md:col-span-2">
-            <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-paper-500">
+            <p className="font-mono text-3xs uppercase tracking-[0.08em] text-paper-600">
               Langkah pencegahan yang dianjurkan
             </p>
             <ul className="mt-2.5 space-y-1.5">
@@ -119,7 +119,7 @@ function DetailRow({ data }: { data: KecamatanData }) {
                 </li>
               ))}
             </ul>
-            <p className="mt-3 text-[11px] text-paper-500">
+            <p className="mt-3 text-2xs text-paper-600">
               Kelengkapan data historis:{" "}
               <span className={cn("font-medium", COVERAGE_CONFIG[data.coverage].className)}>
                 {COVERAGE_CONFIG[data.coverage].label}
@@ -161,7 +161,7 @@ export function DistrictRegister() {
         <Reveal>
           <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-6 border-t border-sand-200 pt-6">
             <div className="max-w-2xl">
-              <p className="font-mono text-overline uppercase tracking-[0.1em] text-paper-500">
+              <p className="font-mono text-overline uppercase tracking-[0.1em] text-paper-600">
                 03 · Data kecamatan
               </p>
               <h2 className="mt-4 text-h2 text-balance text-foreground md:text-h1">
@@ -214,11 +214,11 @@ export function DistrictRegister() {
 
         <Reveal delay={90} className="mt-8 overflow-hidden rounded-2xl border border-sand-200 bg-white shadow-card">
           <div className="flex items-center justify-between gap-4 border-b border-sand-200 bg-sand-50 px-5 py-3">
-            <span className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.08em] text-paper-500">
+            <span className="flex items-center gap-2 font-mono text-3xs uppercase tracking-[0.08em] text-paper-600">
               <Table2 className="h-3.5 w-3.5" aria-hidden />
               Tabel {disease} · Minggu 34 · 18–24 Agustus 2026
             </span>
-            <span className="hidden font-mono text-[10px] uppercase tracking-[0.08em] text-paper-400 sm:inline">
+            <span className="hidden font-mono text-3xs uppercase tracking-[0.08em] text-paper-600 sm:inline">
               Klik baris untuk rincian
             </span>
           </div>
@@ -227,7 +227,7 @@ export function DistrictRegister() {
             <table className="w-full min-w-[720px] text-left">
               <thead>
                 <tr className="border-b border-sand-200">
-                  <th scope="col" className="w-12 px-4 py-3 font-mono text-[10px] uppercase tracking-[0.08em] text-paper-500 sm:px-5">
+                  <th scope="col" className="w-12 px-4 py-3 font-mono text-3xs uppercase tracking-[0.08em] text-paper-600 sm:px-5">
                     No
                   </th>
                   {COLUMNS.map((col) => (
@@ -235,7 +235,7 @@ export function DistrictRegister() {
                       key={col.label}
                       scope="col"
                       className={cn(
-                        "px-3 py-3 font-mono text-[10px] uppercase tracking-[0.08em] text-paper-500",
+                        "px-3 py-3 font-mono text-3xs uppercase tracking-[0.08em] text-paper-600",
                         col.align === "right" && "text-right",
                         col.className,
                       )}
@@ -272,12 +272,12 @@ export function DistrictRegister() {
                           open ? "bg-sand-50" : "hover:bg-sand-50/60",
                         )}
                       >
-                        <td className="px-4 py-3 font-mono text-caption tabular text-paper-400 sm:px-5">
+                        <td className="px-4 py-3 font-mono text-caption tabular text-paper-600 sm:px-5">
                           {String(i + 1).padStart(2, "0")}
                         </td>
                         <td className="px-3 py-3">
                           <span className="block text-sm font-medium text-foreground">{row.nama}</span>
-                          <span className="mt-0.5 block font-mono text-[10px] tabular text-paper-400">
+                          <span className="mt-0.5 block font-mono text-3xs tabular text-paper-600">
                             BPS {row.kode_bps} · {formatNumber(row.populasi)} jiwa
                           </span>
                         </td>
@@ -317,7 +317,7 @@ export function DistrictRegister() {
                           <span className="flex items-center justify-between gap-2">
                             <span
                               className={cn(
-                                "rounded border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.06em]",
+                                "rounded border px-2 py-0.5 font-mono text-3xs uppercase tracking-[0.06em]",
                                 TAG[row.tingkat_risiko],
                               )}
                             >
@@ -325,7 +325,7 @@ export function DistrictRegister() {
                             </span>
                             <ChevronDown
                               className={cn(
-                                "h-3.5 w-3.5 shrink-0 text-paper-400 transition-transform duration-base",
+                                "h-3.5 w-3.5 shrink-0 text-paper-600 transition-transform duration-base",
                                 open && "rotate-180",
                               )}
                               aria-hidden
@@ -342,8 +342,8 @@ export function DistrictRegister() {
           </div>
 
           <div className="flex flex-wrap items-start gap-2.5 border-t border-sand-200 bg-sand-50 px-5 py-4">
-            <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-paper-400" aria-hidden />
-            <p className="max-w-4xl text-[11px] text-paper-500">
+            <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-paper-600" aria-hidden />
+            <p className="max-w-4xl text-2xs text-paper-600">
               Sumber: observasi iklim BMKG (4 stasiun Kota Semarang) dan laporan kasus mingguan
               Dinas Kesehatan Kota Semarang. Proyeksi adalah rentang interval prediksi model,
               bukan kepastian kejadian, dan tidak dapat digunakan sebagai dasar diagnosis medis

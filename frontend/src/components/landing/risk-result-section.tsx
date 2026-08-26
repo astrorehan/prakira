@@ -117,7 +117,7 @@ function DiseaseCard({
           </span>
           <div>
             <p className="text-h3 text-foreground">{type}</p>
-            <p className="text-caption text-paper-500">{meta.blurb}</p>
+            <p className="text-caption text-paper-600">{meta.blurb}</p>
           </div>
         </div>
         <span
@@ -132,12 +132,12 @@ function DiseaseCard({
 
       <div className="mt-7">
         <div className="flex items-end justify-between">
-          <span className="text-overline uppercase tracking-[0.1em] text-paper-500">
+          <span className="text-overline uppercase tracking-[0.1em] text-paper-600">
             Skor risiko
           </span>
           <span className="tabular text-metric leading-none text-foreground">
             {Math.round(data.skor_risiko)}
-            <span className="text-caption text-paper-400"> /100</span>
+            <span className="text-caption text-paper-600"> /100</span>
           </span>
         </div>
         <div className="mt-3">
@@ -147,13 +147,13 @@ function DiseaseCard({
 
       <dl className="mt-6 flex divide-x divide-white/80 rounded-2xl border border-white/70 bg-white/60">
         <div className="flex-1 px-4 py-3">
-          <dt className="text-overline uppercase tracking-[0.1em] text-paper-500">
+          <dt className="text-overline uppercase tracking-[0.1em] text-paper-600">
             Kasus aktif
           </dt>
           <dd className="tabular mt-1 text-h3 text-foreground">{data.kasus_aktif}</dd>
         </div>
         <div className="flex-1 px-4 py-3">
-          <dt className="text-overline uppercase tracking-[0.1em] text-paper-500">
+          <dt className="text-overline uppercase tracking-[0.1em] text-paper-600">
             Prakiraan
           </dt>
           <dd className="tabular mt-1 text-h3 text-foreground">
@@ -163,7 +163,7 @@ function DiseaseCard({
       </dl>
 
       <div className="mt-6 border-t border-white/80 pt-5">
-        <p className="text-overline uppercase tracking-[0.1em] text-paper-500">
+        <p className="text-overline uppercase tracking-[0.1em] text-paper-600">
           Yang bisa Anda lakukan
         </p>
         <ul className="mt-3 space-y-2.5">
@@ -216,7 +216,7 @@ function CitySummary({
     <>
       <Reveal>
         <div className="border-t border-sand-200 pt-4">
-          <span className="text-overline uppercase tracking-[0.1em] text-paper-500">
+          <span className="text-overline uppercase tracking-[0.1em] text-paper-600">
             Ringkasan · 16 kecamatan Kota Semarang
           </span>
         </div>
@@ -230,7 +230,7 @@ function CitySummary({
         >
           <div className="grid gap-10 p-8 md:grid-cols-12 md:items-stretch md:p-12">
             <div className="md:col-span-7">
-              <p className="text-overline uppercase tracking-[0.1em] text-paper-500">
+              <p className="text-overline uppercase tracking-[0.1em] text-paper-600">
                 Status kota minggu ini
               </p>
               <p
@@ -257,7 +257,7 @@ function CitySummary({
 
             <div className="md:col-span-5">
               <div className="flex h-full flex-col rounded-3xl border border-white/70 bg-white/70 p-6">
-                <p className="text-overline uppercase tracking-[0.1em] text-paper-500">
+                <p className="text-overline uppercase tracking-[0.1em] text-paper-600">
                   Sebaran status
                 </p>
 
@@ -278,7 +278,7 @@ function CitySummary({
                           </dt>
                           <dd className="tabular text-h3 text-foreground">
                             {count}
-                            <span className="text-caption text-paper-400">
+                            <span className="text-caption text-paper-600">
                               {" "}
                               /{total}
                             </span>
@@ -290,7 +290,7 @@ function CitySummary({
                             bar={levelStatus.bar}
                           />
                         </div>
-                        <p className="mt-1.5 text-caption text-paper-500">{blurb}</p>
+                        <p className="mt-1.5 text-caption text-paper-600">{blurb}</p>
                       </div>
                     );
                   })}
@@ -303,7 +303,7 @@ function CitySummary({
 
       {watchlist.length > 0 && (
         <Reveal delay={90} className="mt-6 rounded-3xl border border-sand-200 bg-white/70 p-7">
-          <p className="text-overline uppercase tracking-[0.1em] text-paper-500">
+          <p className="text-overline uppercase tracking-[0.1em] text-paper-600">
             Kecamatan berstatus {status.word}
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
@@ -316,13 +316,13 @@ function CitySummary({
                   onClick={() => onSelectKecamatan(nama)}
                   className="group inline-flex items-center gap-2 rounded-full border border-sand-200 bg-white px-3.5 py-2 text-left transition-colors duration-fast hover:border-brand-300"
                 >
-                  <MapPin className="h-3.5 w-3.5 shrink-0 text-paper-400" aria-hidden />
+                  <MapPin className="h-3.5 w-3.5 shrink-0 text-paper-600" aria-hidden />
                   <span className="text-body-sm font-medium text-foreground">
                     {nama}
                   </span>
                   <span
                     className={cn(
-                      "font-mono text-[10px] uppercase tracking-wider",
+                      "font-mono text-3xs uppercase tracking-wider",
                       levelStatus.ink,
                     )}
                   >
@@ -332,7 +332,7 @@ function CitySummary({
               );
             })}
           </div>
-          <p className="mt-4 border-t border-sand-100 pt-4 text-caption text-paper-500">
+          <p className="mt-4 border-t border-sand-100 pt-4 text-caption text-paper-600">
             Status kota memakai penyakit terburuk tiap kecamatan, bukan rata-ratanya.
           </p>
         </Reveal>
@@ -367,7 +367,7 @@ function DistrictResult({ selectedKecamatan }: { selectedKecamatan: string }) {
       {/* ── The answer ── */}
       <Reveal>
         <div className="border-t border-sand-200 pt-4">
-          <span className="text-overline uppercase tracking-[0.1em] text-paper-500">
+          <span className="text-overline uppercase tracking-[0.1em] text-paper-600">
             Hasil · Kecamatan {selectedKecamatan}
           </span>
         </div>
@@ -381,7 +381,7 @@ function DistrictResult({ selectedKecamatan }: { selectedKecamatan: string }) {
         >
           <div className="grid gap-10 p-8 md:grid-cols-12 md:items-stretch md:p-12">
             <div className="md:col-span-7">
-              <p className="text-overline uppercase tracking-[0.1em] text-paper-500">
+              <p className="text-overline uppercase tracking-[0.1em] text-paper-600">
                 Status wilayah Anda
               </p>
               <p
@@ -406,7 +406,7 @@ function DistrictResult({ selectedKecamatan }: { selectedKecamatan: string }) {
 
             <div className="md:col-span-5">
               <div className="flex h-full flex-col rounded-3xl border border-white/70 bg-white/70 p-6">
-                <p className="text-overline uppercase tracking-[0.1em] text-paper-500">
+                <p className="text-overline uppercase tracking-[0.1em] text-paper-600">
                   Penyumbang risiko tertinggi
                 </p>
                 <p className="mt-2 text-h2 text-foreground">
@@ -422,7 +422,7 @@ function DistrictResult({ selectedKecamatan }: { selectedKecamatan: string }) {
 
                 <dl className="mt-auto flex divide-x divide-sand-200 border-t border-sand-200 pt-4">
                   <div className="flex-1 pr-4">
-                    <dt className="text-overline uppercase tracking-[0.1em] text-paper-500">
+                    <dt className="text-overline uppercase tracking-[0.1em] text-paper-600">
                       Kasus kini
                     </dt>
                     <dd className="tabular mt-1 text-h2 text-foreground">
@@ -430,7 +430,7 @@ function DistrictResult({ selectedKecamatan }: { selectedKecamatan: string }) {
                     </dd>
                   </div>
                   <div className="flex-1 pl-4">
-                    <dt className="text-overline uppercase tracking-[0.1em] text-paper-500">
+                    <dt className="text-overline uppercase tracking-[0.1em] text-paper-600">
                       Prakiraan 4 minggu
                     </dt>
                     <dd className="tabular mt-1 text-h2 text-foreground">

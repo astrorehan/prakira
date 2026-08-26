@@ -59,7 +59,7 @@ export function WargaShell({
         <div className="mt-10 md:mt-12">{children}</div>
 
         <aside className="mt-14 flex items-start gap-3 rounded-2xl border border-sand-200 bg-sand-50 p-5">
-          <Stethoscope className="mt-0.5 h-5 w-5 shrink-0 text-paper-500" aria-hidden="true" />
+          <Stethoscope className="mt-0.5 h-5 w-5 shrink-0 text-paper-600" aria-hidden="true" />
           <p className="text-body-sm leading-relaxed text-paper-700">
             <strong className="font-semibold text-foreground">
               Ini perkiraan risiko wilayah, bukan diagnosis.

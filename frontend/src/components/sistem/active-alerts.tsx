@@ -93,21 +93,21 @@ function NoticeCard({ rec, index }: { rec: ActionRecommendation; index: number }
 
       <div className="pl-6 pr-5 py-5 sm:pl-7 sm:pr-6">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-          <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-paper-500">
+          <span className="font-mono text-3xs uppercase tracking-[0.08em] text-paper-600">
             {noticeCode(rec, index)}
           </span>
           <span
             className={cn(
-              "rounded border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.06em]",
-              done ? "border-sand-200 bg-sand-50 text-paper-500" : style.tag,
+              "rounded border px-2 py-0.5 font-mono text-3xs uppercase tracking-[0.06em]",
+              done ? "border-sand-200 bg-sand-50 text-paper-600" : style.tag,
             )}
           >
             {done ? "Arsip" : style.word}
           </span>
-          <span className="rounded border border-sand-200 bg-sand-50 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.06em] text-paper-600">
+          <span className="rounded border border-sand-200 bg-sand-50 px-2 py-0.5 font-mono text-3xs uppercase tracking-[0.06em] text-paper-600">
             {rec.disease}
           </span>
-          <span className="ml-auto text-caption text-paper-500">{STATUS_LABEL[rec.status]}</span>
+          <span className="ml-auto text-caption text-paper-600">{STATUS_LABEL[rec.status]}</span>
         </div>
 
         <h3 className="mt-3 text-h3 text-balance text-foreground">{rec.title}</h3>
@@ -115,9 +115,9 @@ function NoticeCard({ rec, index }: { rec: ActionRecommendation; index: number }
 
         <dl className="mt-5 grid grid-cols-1 gap-x-8 gap-y-3 border-t border-sand-200 pt-4 sm:grid-cols-3">
           <div className="flex items-start gap-2.5">
-            <Siren className="mt-0.5 h-3.5 w-3.5 shrink-0 text-paper-400" aria-hidden />
+            <Siren className="mt-0.5 h-3.5 w-3.5 shrink-0 text-paper-600" aria-hidden />
             <div className="min-w-0">
-              <dt className="font-mono text-[10px] uppercase tracking-[0.08em] text-paper-500">
+              <dt className="font-mono text-3xs uppercase tracking-[0.08em] text-paper-600">
                 Wilayah terdampak
               </dt>
               <dd className="mt-0.5 text-caption font-medium text-foreground">
@@ -126,18 +126,18 @@ function NoticeCard({ rec, index }: { rec: ActionRecommendation; index: number }
             </div>
           </div>
           <div className="flex items-start gap-2.5">
-            <CalendarClock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-paper-400" aria-hidden />
+            <CalendarClock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-paper-600" aria-hidden />
             <div className="min-w-0">
-              <dt className="font-mono text-[10px] uppercase tracking-[0.08em] text-paper-500">
+              <dt className="font-mono text-3xs uppercase tracking-[0.08em] text-paper-600">
                 Batas pelaksanaan
               </dt>
               <dd className="mt-0.5 text-caption font-medium text-foreground">{rec.due_date}</dd>
             </div>
           </div>
           <div className="flex items-start gap-2.5">
-            <Users className="mt-0.5 h-3.5 w-3.5 shrink-0 text-paper-400" aria-hidden />
+            <Users className="mt-0.5 h-3.5 w-3.5 shrink-0 text-paper-600" aria-hidden />
             <div className="min-w-0">
-              <dt className="font-mono text-[10px] uppercase tracking-[0.08em] text-paper-500">
+              <dt className="font-mono text-3xs uppercase tracking-[0.08em] text-paper-600">
                 Populasi terlindungi
               </dt>
               <dd className="mt-0.5 text-caption font-medium text-foreground">
@@ -148,7 +148,7 @@ function NoticeCard({ rec, index }: { rec: ActionRecommendation; index: number }
         </dl>
 
         <div className="mt-5 rounded-xl border border-sand-200 bg-sand-50/70 p-4">
-          <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-paper-500">
+          <p className="font-mono text-3xs uppercase tracking-[0.08em] text-paper-600">
             Yang perlu dilakukan warga
           </p>
           <ul className="mt-2.5 space-y-1.5">
@@ -162,7 +162,7 @@ function NoticeCard({ rec, index }: { rec: ActionRecommendation; index: number }
         </div>
 
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-          <p className="max-w-xl text-[11px] text-paper-500">
+          <p className="max-w-xl text-2xs text-paper-600">
             Pemicu iklim: {rec.climate_trigger}
           </p>
           <button
@@ -197,7 +197,7 @@ export function ActiveAlerts() {
         <Reveal>
           <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-6 border-t border-sand-200 pt-6">
             <div className="max-w-2xl">
-              <p className="font-mono text-overline uppercase tracking-[0.1em] text-paper-500">
+              <p className="font-mono text-overline uppercase tracking-[0.1em] text-paper-600">
                 02 · Peringatan resmi
               </p>
               <h2 className="mt-4 text-h2 text-balance text-foreground md:text-h1">
