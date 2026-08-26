@@ -611,7 +611,7 @@ export default function DesignSystemPage() {
               <h3 className="font-display text-xl font-semibold text-foreground">
                 Evaluasi Akurasi & Backtesting Model Machine Learning
               </h3>
-              <BacktestCard metrics={BACKTEST_METRICS} />
+              <BacktestCard metrics={BACKTEST_METRICS} disease={selectedDisease} />
             </div>
           </div>
         )}

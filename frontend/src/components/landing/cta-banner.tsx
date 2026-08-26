@@ -5,10 +5,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { withKecamatan } from "@/lib/kecamatan-selection";
 
 import { Reveal } from "./reveal";
 
-export function CtaBanner() {
+export function CtaBanner({ selectedKecamatan }: { selectedKecamatan: string | null }) {
   const [phone, setPhone] = useState("");
   const [subscribed, setSubscribed] = useState(false);
 
@@ -87,7 +88,7 @@ export function CtaBanner() {
               </p>
 
               <Button asChild size="lg" className="group mt-8">
-                <Link href="/warga">
+                <Link href={withKecamatan("/warga/lapor", selectedKecamatan)}>
                   Laporkan sekarang
                   <ArrowRight className="transition-transform duration-fast group-hover:translate-x-0.5" />
                 </Link>

@@ -43,3 +43,6 @@ next-env.d.ts.bak
 # agent tooling
 .claude/
 .agents/
+
+# councils
+.council/

@@ -4,16 +4,18 @@ import * as React from "react";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, Menu, LogIn } from "lucide-react";
+import { Menu, LogIn } from "lucide-react";
+import { BrandMark } from "@/components/brand-mark";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "./ui/sheet";
 
+/* "Lapor" adalah satu-satunya hal yang bisa warga berikan kembali ke sistem
+   ini, dan sebelumnya hanya bisa dicapai dari halaman depan atau kaki halaman.
+   Pembaca yang sedang berada di /tentang atau /warga/status tidak punya jalan
+   ke sana sama sekali. */
 const MARKETING_ITEMS = [
-  { href: "/#risk-check", label: "Cek Risiko" },
-  { href: "/#cara-kerja", label: "Cara Kerja" },
-  { href: "/#edukasi", label: "Edukasi" },
-  { href: "/#bukti", label: "Akurasi" },
+  { href: "/warga", label: "Lapor" },
   { href: "/tentang", label: "Tentang" },
 ];
 
@@ -26,7 +28,7 @@ function Wordmark({ inverted }: { inverted: boolean }) {
           "bg-brand-700 text-white",
         )}
       >
-        <Activity className="h-5 w-5" />
+        <BrandMark className="h-5 w-5" />
       </span>
       <span className="flex flex-col leading-none">
         <span

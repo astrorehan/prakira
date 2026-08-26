@@ -1,7 +1,7 @@
 # PRAKIRA Design System — "Buletin"
 
 **Sistem visual untuk platform peringatan dini kesehatan-iklim.**
-Pendamping [`PRD.md`](./PRD.md) · Versi 2.0 · 26 Agustus 2026
+Pendamping [`PRD.md`](./PRD.md) · Versi 2.2 · 26 Agustus 2026
 
 > **Status dokumen.** Versi 1.0 ditulis sebagai rencana, lalu kode bergerak lebih jauh
 > dari rencananya. Versi 2.0 membalik arahnya: **yang tertulis di sini adalah yang
@@ -26,7 +26,7 @@ Pendamping [`PRD.md`](./PRD.md) · Versi 2.0 · 26 Agustus 2026
 | 5 | Satu animasi tak terbatas | Lapisan gerak *landing*: aurora, marquee, beacon, sheen, rise-fall, grow-x, reveal | Halaman depan adalah permukaan pemasaran, bukan konsol. Konsol tetap tenang |
 | 6 | Kanvas konsol `paper-50`, publik `sand-50`, dasar 15/17px | `data-surface` di `<html>`; dasar 17px (konsol) / 18px (publik), root 112.5% | Diuji di proyektor: 15px terlalu kecil dari jarak 3 meter |
 | 7 | Tombol radius 10px, tinggi 32/38/44, bobot 500 | Pil penuh, tinggi 40/48/56/64, bobot 600 | Keputusan sadar setelah uji tampil. Dicatat sebagai **penyimpangan yang diterima**, bukan kelalaian — §7.1 |
-| 8 | `liquid-glass*` dimigrasi lalu dihapus | Masih hidup: 27 pemakaian di 12 berkas, didefinisikan ulang sebagai permukaan datar | Tidak ada `backdrop-filter` tersisa, jadi utangnya kosmetik: nama kelas, bukan efek |
+| 8 | `liquid-glass*` dimigrasi lalu dihapus | Masih hidup: 23 pemakaian di 5 berkas (dari 60 di 12), didefinisikan ulang sebagai permukaan datar | Kelasnya sendiri sudah datar, jadi utangnya kosmetik: nama kelas, bukan efek. **Tapi `backdrop-filter` belum benar-benar hilang** — 14 pemakaian bertahan di luar keluarga ini, §12 no. 7 |
 | 9 | `<Metric>` wajib untuk semua KPI | `KpiCard` yang dipakai konsol, dengan kontrak `range` + `coverage` yang sama | Kejujuran datanya sudah tampil; yang tersisa duplikasi primitif. Lihat §7.3 dan §12 |
 
 ---
@@ -272,9 +272,12 @@ Angka metrik: `font-variant-numeric: tabular-nums slashed-zero`, diterapkan otom
 
 Kelas bantu di `@layer components`: `.overline`, `.eyebrow`, `.chip`, `.h-section`, `.h-display`.
 
-**Kenyataan pemakaian:** 196 pemakaian skala sistem berbanding 320 kelas ukuran bawaan
-Tailwind (`text-sm`, `text-2xl`, …) dan 198 ukuran *arbitrary* `text-[…]`.
-Skala ini belum menang di kodenya sendiri. Lihat §12.
+**Kenyataan pemakaian:** 308 pemakaian skala sistem berbanding 229 kelas ukuran bawaan
+Tailwind (`text-sm`, `text-2xl`, …) dan 165 ukuran *arbitrary* `text-[…]`.
+Skala sistem **sudah unggul** sejak sapuan halaman nakes: seluruh `/tindakan`,
+`/analitik`, `/admin`, dan `Sidebar` kini nol kelas bawaan dan nol `text-[…]`.
+Yang tersisa terkonsentrasi di `/dashboard`, `/warga`, `/dev`, dan komponen
+*landing*. Lihat §12.
 
 ### 4.3 Aturan bobot
 
@@ -492,6 +495,88 @@ Empat keadaan ini wajib ada di setiap tampilan data, dan tampilannya berbeda sat
 `Data tidak memadai` bukan error dan bukan kosong — ia menyampaikan bahwa sistem tahu
 batas pengetahuannya. Salinan teksnya ada di `COVERAGE_CONFIG` (`src/lib/utils.ts`).
 
+### 7.11 Chrome konsol — `components/console/`
+
+Tiga bagian bersama seluruh rute nakes, dipisahkan supaya tidak disalin ulang tiap halaman.
+
+| Berkas | Isi | Kenapa dipisah |
+|---|---|---|
+| `console/page-header.tsx` | `ConsolePageHeader` + `PeriodChip` | Judul halaman **wajib** sama persis dengan label `Sidebar`. Tiga halaman sebelumnya memakai judul berupa kalimat ("Manajemen Dataset, BMKG Sync & Audit Trail") yang tidak cocok dengan navigasinya |
+| `console/toast.tsx` | `ConsoleToast` + `useConsoleToast` | Tiga salinan blok `fixed bottom-6 right-6`, satu di antaranya masih `alert()`. Semua salinan lupa `aria-live` |
+| `lib/period.ts` | `REPORTING_PERIOD`, `describeDeadline()` | Empat berkas menulis sendiri `"Minggu 34"` / `"Agustus 2026"` |
+
+`PeriodChip` menggantikan `AppleGlassDate` di ketiga halaman ini. `AppleGlassDate`
+masih dipakai `/dashboard` dan `/dev`, dan masih membawa `backdrop-blur-xl
+backdrop-saturate-[180%]` — satu-satunya alasan §11 tidak bisa mencentang
+"tidak ada `backdrop-filter`". Lihat §12.
+
+### 7.12 Antrean aksi — `components/action-queue.tsx`
+
+Daftar triase vertikal untuk `/tindakan`. Menggantikan `early-action-deck.tsx`
+(akordeon horizontal, dihapus): akordeon itu memberi satu kartu penuh dan empat
+keping selebar 90px, padahal pekerjaan halaman ini justru **membandingkan**
+prioritas. Tinggi baris tumbuh mengikuti isi, bukan dipatok `h-[370px]`.
+
+Urutan antrean hidup di `lib/action-queue.ts`, bukan di komponennya:
+status belum-selesai dulu → tenggat terdekat → prioritas. Tenggat sengaja
+mendahului prioritas — tindakan "prioritas sedang" yang sudah terlambat lebih
+mendesak daripada "prioritas tinggi" yang tenggatnya dua minggu lagi.
+
+**Aturan yang mengikat di sini:** bidang opsional (`ai_confidence`,
+`lead_time_days`, `target_population`, `target_puskesmas`) hanya dirender bila
+datanya ada. Nilai cadangan yang dikarang (`|| 94.2`, `|| "120k"`, daftar
+puskesmas Pedurungan untuk tindakan Semarang Barat) melanggar §10.9 dan sudah
+dihapus. Kotak kosong lebih jujur daripada angka yang tidak pernah dihitung.
+
+### 7.13 Statistik yang ditampilkan — `lib/stats.ts`
+
+Setiap nilai statistik di layar dihitung dari deret yang sedang tergambar.
+`/analitik` dulu mencetak `r = +0.84` dan `P-value < 0.001` sebagai teks mati,
+sehingga memilih ISPA menampilkan grafik ISPA di bawah klaim korelasi DBD.
+
+Signifikansi dilaporkan sebagai **ambang yang terlewati** (`signifikan (p<0,01)`),
+bukan p-value desimal: dengan `n = 12`, p-value hasil aproksimasi hanya akan
+terlihat lebih pasti daripada yang sebenarnya. Tabel nilai kritis memakai df
+tertabel terbesar yang ≤ df sebenarnya, jadi kesimpulannya konservatif.
+
+### 7.14 Portal warga — `components/warga/`, `lib/reports.ts`
+
+Permukaan hangat, tanpa akun, satu pekerjaan: menerima laporan dan
+memperlihatkan apa yang terjadi padanya. Cek risiko **tidak** hidup di sini —
+halaman depan sudah melakukannya lebih baik, dan dua pengecek risiko dalam satu
+produk berarti salah satunya akan ketinggalan zaman lebih dulu.
+
+**`WargaShell`** membawa banner "bukan diagnosis" (PRD §5.3, diuji §11-H3 di
+tiga rute). Bannernya diletakkan di kerangka, bukan di masing-masing halaman,
+supaya rute baru tidak bisa lupa membawanya — dan di **bawah** isi, bukan di
+atas: pembaca yang membuka `/warga` datang untuk melapor, dan menyambutnya
+dengan penyangkalan sebelum ia melihat apa pun mengubah peringatan jadi
+penghalang.
+
+**`lib/reports.ts`** adalah satu-satunya sumber untuk kedua sisi loop. Kode yang
+terbit di `/warga/lapor` adalah kode yang muncul di antrean `/verifikasi` dan
+yang dilacak di `/warga/status`. Kalau dua sisi loop punya sumber berbeda,
+loop-nya palsu — dan kode lacak adalah undangan untuk diperiksa.
+
+Tiga aturan yang berlaku di sini dan tidak berlaku di konsol:
+
+1. **Kode lacak memakai alfabet tanpa karakter ambigu** (tanpa `0`/`O`,
+   `1`/`I`/`L`). Kode ini diketik ulang oleh orang dari layar ponsel, dan satu
+   karakter ambigu mengubah "laporan saya hilang" jadi keluhan.
+2. **Kendali formulir 16px di ponsel** (`text-base sm:text-sm`). Safari iOS
+   memperbesar viewport pada bidang di bawah 16px; di konsol itu tertahankan, di
+   formulir publik itu gangguan tiap bidang. Utang no. 12.
+3. **Foto digambar ulang ke `<canvas>` sebelum disimpan** (`lib/photo.ts`).
+   Kanvas hanya memegang piksel, jadi EXIF — termasuk titik GPS rumah pelapor —
+   tidak punya jalan untuk ikut. Ini bukan penyaringan tag per tag yang bisa
+   kelewatan satu, melainkan penyalinan yang secara bentuk tidak bisa membawa
+   metadata.
+
+**Terima satu klik, tolak butuh alasan.** Asimetri di `/verifikasi` disengaja:
+§5.4 mewajibkan penolakan disertai alasan yang terlihat pelapor, dan menyetujui
+laporan yang benar harus lebih murah daripada menolaknya — kalau tidak, antrean
+akan diselesaikan dengan tombol yang paling sedikit gesekannya.
+
 ---
 
 ## 8. Aksesibilitas
@@ -542,7 +627,7 @@ dari komponen yang sama.
 
 ## 11. Daftar Periksa Sebelum Submit
 
-- [x] Tidak ada `backdrop-filter` yang tersisa di kode
+- [ ] Tidak ada `backdrop-filter` yang tersisa di kode — **klaim v2.0 ini salah.** 14 pemakaian di 5 berkas: `ui/apple-glass-date.tsx`, `district-detail-panel.tsx`, `landing/mac-risk-browser.tsx`, `navbar.tsx`, `sistem/masthead.tsx`. Nol di halaman nakes
 - [x] `prefers-reduced-motion` mematikan animasi
 - [x] Fokus keyboard terlihat di seluruh kontrol
 - [x] Setiap kelas risiko membawa ikon + label; `none` tidak jatuh ke "Rendah"
@@ -551,9 +636,18 @@ dari komponen yang sama.
 - [x] Tidak ada `active:scale-*`, `animate-ping`, atau `animate-bounce`
 - [x] Setiap KPI membawa rentang prediksi dan cakupan data
 - [x] Permukaan konsol tidak berkedip saat dimuat, termasuk `/tindakan`
+- [x] Judul halaman konsol sama dengan label `Sidebar`-nya
+- [x] Setiap angka statistik di layar dihitung dari data yang sedang ditampilkan
+- [x] Tidak ada nilai cadangan yang dikarang untuk mengisi slot kosong
+- [x] Setiap modal memakai `<Dialog>` (jebakan fokus + Esc), bukan `div.fixed` buatan tangan
+- [x] Setiap permukaan publik membawa banner "bukan diagnosis" (PRD §11-H3)
+- [x] Tidak ada tautan yang menjanjikan fitur yang belum dibangun
+- [x] Kendali formulir publik ≥ 16px di ponsel — tidak memicu zoom Safari iOS
+- [x] Setiap kode lacak yang diterbitkan punya tempat untuk memeriksanya
+- [x] Batas versi demo dicetak di layar, bukan disembunyikan (penyimpanan peramban, saringan wilayah bukan kontrol akses)
 - [ ] Satu primitif KPI, bukan dua (`<Metric>` vs `KpiCard`)
-- [ ] Skala tipografi sistem dipakai di seluruh halaman
-- [ ] `liquid-glass*` dihapus dari kode
+- [~] Skala tipografi sistem dipakai di seluruh halaman — halaman nakes dan portal warga bersih; `/dashboard`, `/dev`, dan *landing* belum
+- [~] `liquid-glass*` dihapus dari kode — 5 berkas tersisa, nol di halaman nakes dan nol di `/warga`
 - [ ] Peta diuji dalam `filter: grayscale(1)`
 - [ ] Portal warga lolos LCP < 2,5 detik pada simulasi 3G cepat
 - [ ] Figma Variables selaras dengan `tailwind.config.ts`
@@ -576,17 +670,64 @@ Diukur dari `frontend/src/`. Kolom terakhir menandai apa yang sudah ditutup 26 A
 | `active:scale-*` | 3 pemakaian | Diganti pergeseran warna latar (§6.3) |
 | Komentar `ui/button.tsx` menyalin aturan v1.0 | 1 blok | Diselaraskan dengan §7.1 |
 
+### Ditutup di sapuan halaman nakes (`/tindakan`, `/analitik`, `/admin`)
+
+| Utang | Ukuran semula | Yang dikerjakan |
+|---|---:|---|
+| Nilai cadangan yang dikarang saat data kosong | 8 tempat | `\|\| 94.2`, `\|\| 14`, `\|\| "120k"`, `\|\| "~45 Kasus"`, dan daftar puskesmas Pedurungan yang muncul untuk tindakan Semarang Barat — semuanya dihapus. Bidang opsional kini tampil hanya bila datanya ada (§7.12) |
+| Nilai statistik hardcode | 3 klaim | `r = +0.84`, `P-value < 0.001`, `156 Minggu Evaluasi` diganti perhitungan dari deret aktif (`lib/stats.ts`) dan `REPORTING_PERIOD`. Pemilih penyakit kini juga mengendalikan lencana signifikansi dan grid backtesting, bukan grafik saja |
+| Lencana status audit selalu hijau | 1 tabel | Digerakkan `log.status`; entri `info`/`warning` tidak lagi tampil sebagai keberhasilan, dan labelnya berbahasa Indonesia, bukan kata mentah `success` |
+| Panel BMKG mengabaikan datanya sendiri | 3 bidang | `status`, `next_sync_in`, `synced_features` dibaca dari `BMKG_SYNC_STATUS`; "API Connected" yang ditulis tetap dan `animate-pulse` (§6.3 melarangnya di luar *skeleton*) diganti `<Badge pulse>` |
+| Checklist SOP mencentang dirinya sendiri | 2 butir | Pra-centang "supaya terasa realistis" dihapus. Konsol pengiriman instruksi tidak boleh melaporkan verifikasi yang tidak pernah terjadi |
+| Modal buatan tangan | 3 modal | Batch dispatch dan dua modal ekspor pindah ke `<Dialog>`: jebakan fokus, Esc, dan peran dialog yang sebelumnya tidak ada |
+| Kontrol yang tidak bisa dijangkau keyboard | 2 pola | `div onClick` pada kartu aksi dan butir checklist diganti `<button>` / `<label><input type="checkbox">`; tab modal mendapat `role="tab"` + `aria-controls` |
+| `alert()` bawaan peramban | 1 | Diganti `ConsoleToast` dengan `aria-live` |
+| Akordeon horizontal `/tindakan` | 1 komponen, 337 baris | Dihapus, diganti antrean triase terurut (§7.12). `/tindakan` turun dari 9,1 kB ke 3,6 kB *first load* |
+| Judul halaman ≠ label sidebar | 2 halaman | "Analisis Korelasi Iklim & Evaluasi Backtesting Model" → "Analitik & Riwayat"; "Manajemen Dataset, BMKG Sync & Audit Trail" → "Manajemen Data BMKG" |
+| Hex di luar palet pada grafik | 4 nilai | `#17808F`, `#EA580C`, `#DFE6E6`, `#5A6C6E` di `climate-correlation-chart.tsx` diganti `CLIMATE_COLORS` + token. `#EA580C` bahkan bukan warna palet; §2.5 menetapkan suhu `#B4552A` |
+| Kelembaban tidak pernah tergambar | 1 deret | Tiga variabel iklim dulu berbagi satu sumbu kanan, sehingga suhu jadi garis datar dan kelembaban hanya hidup di tooltip. Sekarang satu variabel per sumbu, dipilih lewat kendali yang sekaligus menampilkan `r` masing-masing |
+| Tabel rekap tanpa fungsi | 1 tabel | Menjadi *drill-down*: kolom dapat diurutkan, kolom penyakit aktif ditandai (`climate-recap-table.tsx`) |
+| Tombol keluar berwarna risiko | 1 kontrol | "Kembali ke Beranda" bergaya `risk-high` + ikon `LogOut` — merah di produk ini berarti tingkat risiko (§1.1), bukan "tombol berbahaya". Kini netral, dan memisahkan "keluar sesi" dari "beranda" |
+| Portal warga di dalam nav konsol | 1 tautan | Dipisah ke grup "Permukaan publik" bertanda panah keluar; sebelumnya satu-satunya jalan pulang adalah tombol yang menghapus sesi |
+| `readSession()` tidak pernah dipanggil | 1 fungsi | `Sidebar` menampilkan sesi yang benar-benar tersimpan, bukan label statis |
+
+### Ditutup di sapuan portal warga (`/warga`, `/warga/lapor`, `/warga/status`, `/verifikasi`)
+
+Keputusan pembukanya dicatat di [`.council/fungsi-dan-nasib-rute-warga.md`](../.council/fungsi-dan-nasib-rute-warga.md).
+
+| Utang | Ukuran semula | Yang dikerjakan |
+|---|---:|---|
+| Enam tautan menjanjikan pelaporan yang tidak ada | 6 tautan, 4 berbohong | `risk-result-section.tsx:464` "Laporkan gejala", `cta-banner.tsx:90` "Laporkan sekarang", `services.tsx` SL-02, dan `sistem-footer.tsx` semuanya mendarat di pengecek risiko. Sekarang mengarah ke `/warga/lapor`, dan formulirnya ada |
+| `/warga` adalah salinan halaman depan yang lebih miskin | 1 rute, 266 baris | `<select>` 16 kecamatan, tiga kartu penyakit, dan tiga blok edukasi statis dihapus bersama `public-risk-checker.tsx`. Halaman depan sudah melakukan ketiganya dengan pencarian berpapan ketik, deteksi lokasi, selang prakiraan, dan panduan bertab |
+| Edukasi yang tidak berubah mengikuti risiko | 3 kartu | PRD §5.3 menuntut "tindakan pencegahan yang **berubah mengikuti level risiko**"; teks lama identik untuk 16 kecamatan dan tiga tingkat. Dihapus — `EducationSection` di halaman depan sudah bertab per penyakit dengan empat langkah dan satu baris "kapan ke puskesmas" |
+| Banner "bukan diagnosis" tidak ada di mana pun | 3 rute | PRD §11-H3 mengujinya di `/warga`, `/warga/lapor`, `/warga/status`. Dipasang di `WargaShell`, bukan di tiap halaman, supaya rute baru tidak bisa lupa membawanya |
+| Formulir langganan WhatsApp di permukaan warga | 1 blok | PRD §4 menaruh "notifikasi broadcast" di daftar WON'T. Ikut terhapus bersama `PublicRiskChecker`; kembarannya di *landing* tersisa sebagai utang no. 10 |
+| `/verifikasi` rute mati | 1 rute | Terdaftar di `CONSOLE_ROUTES` sejak chrome konsol dibuat, tanpa berkas halaman. Kini M7: antrean Terima/Tolak, saringan status + wilayah, dan lencana tiket lingkungan (§5.6b) |
+| Kecamatan ditanya dua kali | 1 alur | Hero, papan kecamatan, dan deteksi lokasi sudah menanyakan tempat tinggal pembaca; formulir menanyakannya lagi. `lib/kecamatan-selection.ts` membawa jawabannya lewat `?kecamatan=` dan `localStorage` |
+| `liquid-glass*` di `/warga` | 6 pemakaian | Nol. Sisa 23 pemakaian di 5 berkas, semuanya di luar konsol dan portal warga |
+| `bg-mesh-blue` di permukaan hangat | 1 rute | PRD §5.3 menetapkan `/warga` memakai *surface* hangat, bukan tampilan konsol. Diganti `bg-grad-paper` |
+| "Lapor" tak terjangkau dari halaman mana pun selain depan | 1 nav | Ditambahkan ke `MARKETING_ITEMS` di `navbar.tsx`. Sebelumnya pembaca di `/tentang` tidak punya jalan ke sana sama sekali |
+
 ### Masih terbuka
 
 | # | Utang | Ukuran | Dampak | Perbaikan |
 |---|---|---:|---|---|
 | 1 | Dua primitif KPI dengan kontrak sama: `<Metric>` (0 pemakaian) dan `KpiCard` (7) | 2 komponen | Kontributor berikutnya harus menebak yang mana | Jadikan `KpiCard` pembungkus tipis `<Card>` + `<Metric>`, lalu hapus duplikasi angkanya |
-| 2 | Skala tipografi sistem kalah dari kelas bawaan & *arbitrary* | 196 sistem vs 320 bawaan + 198 `text-[…]` | Hierarki tidak konsisten antar halaman | Sapu per halaman: `text-sm` → `text-body-sm`, `text-2xl` → `text-h2`, dst. |
-| 3 | `liquid-glass*` masih hidup | 27 pemakaian, 12 berkas | Kosmetik — efeknya sudah datar, tinggal namanya | Migrasi ke `<Card>`, lalu hapus blok `globals.css` + `ui/liquid-glass-card.tsx` |
+| 2 | Skala tipografi sistem belum menyeluruh | 389 sistem vs 216 bawaan + 164 `text-[…]` | Hierarki tidak konsisten antar halaman | Sapuan halaman nakes dan portal warga selesai. Sisanya terkonsentrasi di `/dashboard`, `/dev`, dan *landing* |
+| 3 | `liquid-glass*` masih hidup | 23 pemakaian, 5 berkas (dari 60 di 12) | Kosmetik — efeknya sudah datar, tinggal namanya | Migrasi ke `<Card>`, lalu hapus blok `globals.css` + `ui/liquid-glass-card.tsx` |
 | 4 | `--radius` / `--radius-control` tak dirujuk siapa pun | 2 variabel | Dua skala radius hidup berdampingan | Hapus, atau jadikan sumber tunggal skala Tailwind |
 | 5 | `destructive: #DC2626` (red-600 bawaan) | 1 token | Satu-satunya hex luar palet di konfigurasi | Arahkan ke `#A8442C` atau hapus slotnya |
 | 6 | `shadow-glass*` dan alias bayangan warisan | 5 pemakaian | Nama menyesatkan; nilainya sudah rata | Ganti ke `shadow-card` / `shadow-lift`, lalu hapus aliasnya |
+| 7 | `backdrop-filter` masih ada, dan §11 mengaku sebaliknya | 14 pemakaian, 6 berkas | Melanggar prinsip §1.3, dan daftar periksa yang berbohong lebih berbahaya daripada utang yang tercatat | Terberat di `ui/apple-glass-date.tsx` dan `district-detail-panel.tsx`; sisanya `globals.css`, `navbar.tsx`, `landing/mac-risk-browser.tsx`, `sistem/masthead.tsx`. `PeriodChip` (§7.11) sudah menjadi penggantinya — tinggal memakainya di `/dashboard`. *Hitungan berkas dikoreksi dari 5 ke 6: v2.1 lupa menghitung `globals.css`* |
+| 8 | `formatPercent()` memakai `toFixed(1)` → titik desimal | 1 fungsi | `91.4%` terbaca sebagai ribuan dalam kaidah Indonesia | Arahkan ke `formatNumber()` yang sudah memakai `id-ID` |
+| 9 | `<Metric>` tetap 0 pemakaian setelah `KpiCard` menutup kontraknya | 1 komponen | Sama dengan no. 1 | Digabung bersama no. 1 |
+| 10 | `CtaBanner` masih memuat formulir langganan WhatsApp | 1 blok | PRD §4 menaruh "notifikasi broadcast" di daftar **WON'T** untuk babak ini, jadi ini janji layanan yang tidak akan ada | Formulir kembarannya di `/warga` sudah ikut terhapus bersama `PublicRiskChecker`. Yang di *landing* tinggal satu — ganti jadi tautan ke `/hubungi-kami`, atau beri label "belum aktif" |
+| 11 | `lib/reports.ts` menyimpan di `localStorage` saja | 1 modul | Loop warga→verifikasi hanya bergerak dalam satu peramban. Demo lintas perangkat (warga di ponsel, petugas di laptop) tidak akan jalan | Batasnya sudah tercetak di `/verifikasi` dan `/warga/status`, bukan disembunyikan. Tukar `loadReports`/`saveReports` dengan panggilan gateway saat backend-nya ada — tidak ada tempat lain yang perlu berubah |
+| 12 | `ui/input.tsx` memakai `text-sm` (14px) | 1 primitif | Safari iOS memperbesar viewport pada bidang di bawah 16px, dan halaman melompat tiap kali bidang difokuskan | Formulir warga menyiasatinya per-instans dengan `text-base sm:text-sm`. Perbaikan sebenarnya ada di primitifnya, tapi itu menyentuh seluruh konsol |
 
-Urutan kerja bila waktunya terbatas: **2 → 3 → 1**.
-Nomor 2 paling terlihat di layar dan paling mekanis; 3 menghapus satu lapis komponen
-sekaligus; 1 baru sepadan setelah keduanya beres, karena menyentuh setiap halaman konsol.
+Urutan kerja bila waktunya terbatas: **7 → 3 → 10**.
+Nomor 2 sudah lewat titik baliknya — skala sistem kini unggul 389 lawan 216, dan sisanya
+mekanis. Nomor 7 bertahan di puncak karena satu-satunya utang yang **salah dicatat**:
+daftar periksa mengaku bersih padahal tidak, dan hitungan berkasnya sendiri juga meleset.
+3 menghapus satu lapis komponen sekaligus. 10 naik menggantikan 1 karena murah dan
+menyangkut janji ke publik, bukan kerapian internal.
