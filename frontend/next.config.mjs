@@ -9,13 +9,41 @@ const nextConfig = {
     optimizePackageImports: ["lucide-react", "recharts"],
   },
   async rewrites() {
-    // Default to the Express gateway (:4200) to match NEXT_PUBLIC_API_URL and
-    // src/lib/api.ts — not the FastAPI service (:8000) directly.
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4200";
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL;
+    if (!backendUrl) return [];
     return [
       {
         source: "/api/:path*",
         destination: `${backendUrl}/api/:path*`,
+      },
+    ];
+  },
+  async headers() {
+    return [
+      {
+        source: "/(.*)",
+        headers: [
+          {
+            key: "X-Content-Type-Options",
+            value: "nosniff",
+          },
+          {
+            key: "X-Frame-Options",
+            value: "DENY",
+          },
+          {
+            key: "X-XSS-Protection",
+            value: "1; mode=block",
+          },
+          {
+            key: "Referrer-Policy",
+            value: "strict-origin-when-cross-origin",
+          },
+          {
+            key: "Permissions-Policy",
+            value: "camera=(), microphone=(), geolocation=(self)",
+          },
+        ],
       },
     ];
   },

@@ -59,6 +59,7 @@ export function sessionFromAccount(account: DemoAccount): Session {
 }
 
 export function saveSession(session: Session): void {
+  if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
   } catch {
@@ -67,6 +68,7 @@ export function saveSession(session: Session): void {
 }
 
 export function readSession(): Session | null {
+  if (typeof window === "undefined") return null;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     return raw ? (JSON.parse(raw) as Session) : null;
@@ -76,6 +78,7 @@ export function readSession(): Session | null {
 }
 
 export function clearSession(): void {
+  if (typeof window === "undefined") return;
   try {
     window.localStorage.removeItem(STORAGE_KEY);
   } catch {

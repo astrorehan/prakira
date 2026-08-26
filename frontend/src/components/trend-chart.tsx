@@ -59,6 +59,9 @@ export function TrendChart({
   const primaryColor = cfg.color; // e.g. #0B4A57
   const forecastColor = "#A8442C"; // Alert Terracotta for high forecast
   const rainColor = "#17808F";
+  const uniqueId = React.useId().replace(/[^a-zA-Z0-9]/g, "");
+  const actualGradId = `actualAreaGrad_${uniqueId}`;
+  const forecastGradId = `forecastAreaGrad_${uniqueId}`;
 
   return (
     <div className={cn("w-full flex flex-col flex-1 min-h-0", className)}>
@@ -73,11 +76,11 @@ export function TrendChart({
             }
           >
             <defs>
-              <linearGradient id="actualAreaGrad" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id={actualGradId} x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor={primaryColor} stopOpacity={0.25} />
                 <stop offset="100%" stopColor={primaryColor} stopOpacity={0.0} />
               </linearGradient>
-              <linearGradient id="forecastAreaGrad" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id={forecastGradId} x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor={forecastColor} stopOpacity={0.2} />
                 <stop offset="100%" stopColor={forecastColor} stopOpacity={0.02} />
               </linearGradient>
@@ -100,16 +103,16 @@ export function TrendChart({
               tickMargin={2}
               axisLine={false}
               tickLine={false}
-              width={compact ? 30 : 40}
+              width={36}
             />
 
-            {/* Right Axis: Curah Hujan (mm) */}
+            {/* Right Axis: Curah Hujan (Optional) */}
             {showClimateOverlay && (
               <YAxis
                 yAxisId="right"
                 orientation="right"
-                tick={{ fill: "#17808F", fontSize: 10 }}
-                tickMargin={4}
+                tick={{ fill: rainColor, fontSize: compact ? 9.5 : 11 }}
+                tickMargin={2}
                 axisLine={false}
                 tickLine={false}
                 width={36}
@@ -143,27 +146,29 @@ export function TrendChart({
 
                       {point.kasus_prediksi !== null && (
                         <div className="flex items-center justify-between">
-                          <span className="text-risk-high font-medium flex items-center gap-1.5">
-                            <span className="h-2 w-2 rounded-full bg-risk-high" />
+                          <span className="text-paper-600 flex items-center gap-1.5">
+                            <span className="h-2 w-2 rounded-full" style={{ background: forecastColor }} />
                             Prediksi AI:
                           </span>
-                          <span className="font-semibold text-risk-high">{point.kasus_prediksi} kasus</span>
+                          <span className="font-semibold text-foreground">{point.kasus_prediksi} kasus</span>
                         </div>
                       )}
 
                       {point.lower_bound && point.upper_bound && (
-                        <div className="flex items-center justify-between text-3xs text-muted-foreground pt-1 border-t border-paper-100">
-                          <span>Confidence Interval:</span>
-                          <span className="font-medium text-paper-700">
-                            {point.lower_bound} - {point.upper_bound}
+                        <div className="flex items-center justify-between text-3xs text-muted-foreground pt-1 border-t border-paper-200/40">
+                          <span>Interval 95%:</span>
+                          <span className="font-mono">
+                            {point.lower_bound} – {point.upper_bound}
                           </span>
                         </div>
                       )}
 
-                      {showClimateOverlay && (
-                        <div className="flex items-center justify-between text-2xs text-brand-700 pt-1">
-                          <span>Curah Hujan:</span>
-                          <span className="font-semibold">{point.curah_hujan_mm} mm</span>
+                      {showClimateOverlay && point.curah_hujan_mm !== undefined && (
+                        <div className="flex items-center justify-between text-3xs pt-1 text-paper-600">
+                          <span>Hujan BMKG:</span>
+                          <span className="font-semibold" style={{ color: rainColor }}>
+                            {point.curah_hujan_mm} mm
+                          </span>
                         </div>
                       )}
                     </div>
@@ -196,7 +201,7 @@ export function TrendChart({
               type="monotone"
               dataKey="actualDisplay"
               stroke="transparent"
-              fill="url(#actualAreaGrad)"
+              fill={`url(#${actualGradId})`}
               isAnimationActive={false}
             />
             <Line
@@ -217,7 +222,7 @@ export function TrendChart({
               type="monotone"
               dataKey="predictionDisplay"
               stroke="transparent"
-              fill="url(#forecastAreaGrad)"
+              fill={`url(#${forecastGradId})`}
               isAnimationActive={false}
             />
             <Line

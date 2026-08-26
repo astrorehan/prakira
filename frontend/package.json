@@ -2,6 +2,7 @@
   "name": "prakira-frontend",
   "version": "0.1.0",
   "private": true,
+  "description": "Prakira — Sistem Prediksi Risiko Penyakit Berbasis Iklim (DBD, ISPA, Diare)",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -20,7 +21,7 @@
     "clsx": "^2.1.1",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.460.0",
-    "next": "14.2.18",
+    "next": "^14.2.35",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-leaflet": "^4.2.1",
@@ -37,10 +38,12 @@
     "@types/react-dom": "^18.3.1",
     "autoprefixer": "^10.4.20",
     "eslint": "^8.57.1",
-    "eslint-config-next": "14.2.18",
+    "eslint-config-next": "^14.2.35",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.14",
     "typescript": "^5.6.3"
   },
-  "description": "Prakira — Sistem Prediksi Risiko Penyakit Berbasis Iklim (DBD, ISPA, Diare)"
+  "engines": {
+    "node": ">=18.18.0"
+  }
 }
