@@ -29,6 +29,9 @@ export const metadata: Metadata = {
     "Semarang",
     "ANFORCOM 2026",
   ],
+  /* Icons resolve from the App Router file conventions next to this file:
+     favicon.ico, icon.svg, apple-icon.png. Only the manifest needs naming. */
+  manifest: "/manifest.webmanifest",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
