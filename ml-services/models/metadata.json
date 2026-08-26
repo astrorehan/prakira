@@ -1,0 +1,74 @@
+{
+  "dbd": {
+    "algorithm": "ensemble_ridge_trees_xgboost",
+    "version": "ensemble-monthly-dbd-2026.08.26",
+    "granularity": "monthly",
+    "is_log_transformed": true,
+    "trained_at": "2026-08-26T18:56:47.673683",
+    "metrics": {
+      "mae": 1.2483,
+      "rmse": 1.5767,
+      "r2": 0.4463
+    },
+    "top_features": [
+      {
+        "feature": "cases_ma_3m",
+        "importance": 0.14653966398181978
+      },
+      {
+        "feature": "cases_lag1",
+        "importance": 0.07789851069552661
+      },
+      {
+        "feature": "population",
+        "importance": 0.039067240760284984
+      },
+      {
+        "feature": "cases_lag2",
+        "importance": 0.03205440281456606
+      },
+      {
+        "feature": "rainfall_cumul_2m",
+        "importance": 0.02567816342596456
+      }
+    ]
+  },
+  "ispa": {
+    "algorithm": "ensemble_rf_xgboost_elasticnet",
+    "version": "ensemble-monthly-ispa-2026.08.26",
+    "granularity": "monthly",
+    "is_log_transformed": false,
+    "trained_at": "2026-08-26T18:56:50.119253",
+    "train_period": "2025-04-01 to 2025-09-01",
+    "test_period": "2025-10-01 to 2025-12-01",
+    "n_train_samples": 96,
+    "n_test_samples": 48,
+    "metrics": {
+      "mae": 407.7571,
+      "rmse": 661.2239,
+      "r2": 0.768
+    },
+    "top_features": [
+      {
+        "feature": "cases_ma_3m",
+        "importance": 0.3262342953464965
+      },
+      {
+        "feature": "cases_lag1",
+        "importance": 0.2574810752940493
+      },
+      {
+        "feature": "population",
+        "importance": 0.1839836202651257
+      },
+      {
+        "feature": "cases_lag2",
+        "importance": 0.047225244059852116
+      },
+      {
+        "feature": "cases_lag3",
+        "importance": 0.03423737547414278
+      }
+    ]
+  }
+}

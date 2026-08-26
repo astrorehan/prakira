@@ -1,0 +1,4161 @@
+kecamatan_id,kecamatan_nama,week_start,disease,cases
+33.74.01,Semarang Tengah,2021-01-04,DBD,0
+33.74.01,Semarang Tengah,2021-01-11,DBD,0
+33.74.01,Semarang Tengah,2021-01-18,DBD,0
+33.74.01,Semarang Tengah,2021-01-25,DBD,0
+33.74.01,Semarang Tengah,2021-02-01,DBD,0
+33.74.01,Semarang Tengah,2021-02-08,DBD,0
+33.74.01,Semarang Tengah,2021-02-15,DBD,0
+33.74.01,Semarang Tengah,2021-02-22,DBD,0
+33.74.01,Semarang Tengah,2021-03-01,DBD,0
+33.74.01,Semarang Tengah,2021-03-08,DBD,0
+33.74.01,Semarang Tengah,2021-03-15,DBD,0
+33.74.01,Semarang Tengah,2021-03-22,DBD,1
+33.74.01,Semarang Tengah,2021-03-29,DBD,0
+33.74.01,Semarang Tengah,2021-04-05,DBD,0
+33.74.01,Semarang Tengah,2021-04-12,DBD,0
+33.74.01,Semarang Tengah,2021-04-19,DBD,0
+33.74.01,Semarang Tengah,2021-04-26,DBD,0
+33.74.01,Semarang Tengah,2021-05-03,DBD,0
+33.74.01,Semarang Tengah,2021-05-10,DBD,0
+33.74.01,Semarang Tengah,2021-05-17,DBD,0
+33.74.01,Semarang Tengah,2021-05-24,DBD,0
+33.74.01,Semarang Tengah,2021-05-31,DBD,0
+33.74.01,Semarang Tengah,2021-06-07,DBD,0
+33.74.01,Semarang Tengah,2021-06-14,DBD,0
+33.74.01,Semarang Tengah,2021-06-21,DBD,0
+33.74.01,Semarang Tengah,2021-06-28,DBD,0
+33.74.01,Semarang Tengah,2021-07-05,DBD,0
+33.74.01,Semarang Tengah,2021-07-12,DBD,0
+33.74.01,Semarang Tengah,2021-07-19,DBD,0
+33.74.01,Semarang Tengah,2021-07-26,DBD,0
+33.74.01,Semarang Tengah,2021-08-02,DBD,0
+33.74.01,Semarang Tengah,2021-08-09,DBD,0
+33.74.01,Semarang Tengah,2021-08-16,DBD,0
+33.74.01,Semarang Tengah,2021-08-23,DBD,0
+33.74.01,Semarang Tengah,2021-08-30,DBD,1
+33.74.01,Semarang Tengah,2021-09-06,DBD,1
+33.74.01,Semarang Tengah,2021-09-13,DBD,0
+33.74.01,Semarang Tengah,2021-09-20,DBD,0
+33.74.01,Semarang Tengah,2021-09-27,DBD,0
+33.74.01,Semarang Tengah,2021-10-04,DBD,0
+33.74.01,Semarang Tengah,2021-10-11,DBD,0
+33.74.01,Semarang Tengah,2021-10-18,DBD,0
+33.74.01,Semarang Tengah,2021-10-25,DBD,0
+33.74.01,Semarang Tengah,2021-11-01,DBD,0
+33.74.01,Semarang Tengah,2021-11-08,DBD,1
+33.74.01,Semarang Tengah,2021-11-15,DBD,0
+33.74.01,Semarang Tengah,2021-11-22,DBD,0
+33.74.01,Semarang Tengah,2021-11-29,DBD,0
+33.74.01,Semarang Tengah,2021-12-06,DBD,0
+33.74.01,Semarang Tengah,2021-12-13,DBD,0
+33.74.01,Semarang Tengah,2021-12-20,DBD,1
+33.74.01,Semarang Tengah,2021-12-27,DBD,0
+33.74.02,Semarang Utara,2021-01-04,DBD,1
+33.74.02,Semarang Utara,2021-01-11,DBD,0
+33.74.02,Semarang Utara,2021-01-18,DBD,0
+33.74.02,Semarang Utara,2021-01-25,DBD,0
+33.74.02,Semarang Utara,2021-02-01,DBD,0
+33.74.02,Semarang Utara,2021-02-08,DBD,0
+33.74.02,Semarang Utara,2021-02-15,DBD,0
+33.74.02,Semarang Utara,2021-02-22,DBD,0
+33.74.02,Semarang Utara,2021-03-01,DBD,0
+33.74.02,Semarang Utara,2021-03-08,DBD,0
+33.74.02,Semarang Utara,2021-03-15,DBD,0
+33.74.02,Semarang Utara,2021-03-22,DBD,0
+33.74.02,Semarang Utara,2021-03-29,DBD,0
+33.74.02,Semarang Utara,2021-04-05,DBD,0
+33.74.02,Semarang Utara,2021-04-12,DBD,0
+33.74.02,Semarang Utara,2021-04-19,DBD,0
+33.74.02,Semarang Utara,2021-04-26,DBD,0
+33.74.02,Semarang Utara,2021-05-03,DBD,0
+33.74.02,Semarang Utara,2021-05-10,DBD,0
+33.74.02,Semarang Utara,2021-05-17,DBD,1
+33.74.02,Semarang Utara,2021-05-24,DBD,0
+33.74.02,Semarang Utara,2021-05-31,DBD,0
+33.74.02,Semarang Utara,2021-06-07,DBD,0
+33.74.02,Semarang Utara,2021-06-14,DBD,0
+33.74.02,Semarang Utara,2021-06-21,DBD,0
+33.74.02,Semarang Utara,2021-06-28,DBD,0
+33.74.02,Semarang Utara,2021-07-05,DBD,0
+33.74.02,Semarang Utara,2021-07-12,DBD,0
+33.74.02,Semarang Utara,2021-07-19,DBD,0
+33.74.02,Semarang Utara,2021-07-26,DBD,0
+33.74.02,Semarang Utara,2021-08-02,DBD,0
+33.74.02,Semarang Utara,2021-08-09,DBD,0
+33.74.02,Semarang Utara,2021-08-16,DBD,0
+33.74.02,Semarang Utara,2021-08-23,DBD,0
+33.74.02,Semarang Utara,2021-08-30,DBD,0
+33.74.02,Semarang Utara,2021-09-06,DBD,0
+33.74.02,Semarang Utara,2021-09-13,DBD,0
+33.74.02,Semarang Utara,2021-09-20,DBD,0
+33.74.02,Semarang Utara,2021-09-27,DBD,0
+33.74.02,Semarang Utara,2021-10-04,DBD,0
+33.74.02,Semarang Utara,2021-10-11,DBD,0
+33.74.02,Semarang Utara,2021-10-18,DBD,0
+33.74.02,Semarang Utara,2021-10-25,DBD,0
+33.74.02,Semarang Utara,2021-11-01,DBD,0
+33.74.02,Semarang Utara,2021-11-08,DBD,0
+33.74.02,Semarang Utara,2021-11-15,DBD,0
+33.74.02,Semarang Utara,2021-11-22,DBD,0
+33.74.02,Semarang Utara,2021-11-29,DBD,0
+33.74.02,Semarang Utara,2021-12-06,DBD,0
+33.74.02,Semarang Utara,2021-12-13,DBD,0
+33.74.02,Semarang Utara,2021-12-20,DBD,1
+33.74.02,Semarang Utara,2021-12-27,DBD,0
+33.74.03,Semarang Timur,2021-01-04,DBD,0
+33.74.03,Semarang Timur,2021-01-11,DBD,0
+33.74.03,Semarang Timur,2021-01-18,DBD,0
+33.74.03,Semarang Timur,2021-01-25,DBD,0
+33.74.03,Semarang Timur,2021-02-01,DBD,1
+33.74.03,Semarang Timur,2021-02-08,DBD,0
+33.74.03,Semarang Timur,2021-02-15,DBD,0
+33.74.03,Semarang Timur,2021-02-22,DBD,0
+33.74.03,Semarang Timur,2021-03-01,DBD,0
+33.74.03,Semarang Timur,2021-03-08,DBD,0
+33.74.03,Semarang Timur,2021-03-15,DBD,0
+33.74.03,Semarang Timur,2021-03-22,DBD,0
+33.74.03,Semarang Timur,2021-03-29,DBD,1
+33.74.03,Semarang Timur,2021-04-05,DBD,0
+33.74.03,Semarang Timur,2021-04-12,DBD,0
+33.74.03,Semarang Timur,2021-04-19,DBD,1
+33.74.03,Semarang Timur,2021-04-26,DBD,0
+33.74.03,Semarang Timur,2021-05-03,DBD,0
+33.74.03,Semarang Timur,2021-05-10,DBD,1
+33.74.03,Semarang Timur,2021-05-17,DBD,0
+33.74.03,Semarang Timur,2021-05-24,DBD,0
+33.74.03,Semarang Timur,2021-05-31,DBD,0
+33.74.03,Semarang Timur,2021-06-07,DBD,0
+33.74.03,Semarang Timur,2021-06-14,DBD,0
+33.74.03,Semarang Timur,2021-06-21,DBD,0
+33.74.03,Semarang Timur,2021-06-28,DBD,0
+33.74.03,Semarang Timur,2021-07-05,DBD,0
+33.74.03,Semarang Timur,2021-07-12,DBD,0
+33.74.03,Semarang Timur,2021-07-19,DBD,0
+33.74.03,Semarang Timur,2021-07-26,DBD,0
+33.74.03,Semarang Timur,2021-08-02,DBD,0
+33.74.03,Semarang Timur,2021-08-09,DBD,0
+33.74.03,Semarang Timur,2021-08-16,DBD,0
+33.74.03,Semarang Timur,2021-08-23,DBD,0
+33.74.03,Semarang Timur,2021-08-30,DBD,0
+33.74.03,Semarang Timur,2021-09-06,DBD,1
+33.74.03,Semarang Timur,2021-09-13,DBD,0
+33.74.03,Semarang Timur,2021-09-20,DBD,0
+33.74.03,Semarang Timur,2021-09-27,DBD,0
+33.74.03,Semarang Timur,2021-10-04,DBD,0
+33.74.03,Semarang Timur,2021-10-11,DBD,1
+33.74.03,Semarang Timur,2021-10-18,DBD,1
+33.74.03,Semarang Timur,2021-10-25,DBD,0
+33.74.03,Semarang Timur,2021-11-01,DBD,0
+33.74.03,Semarang Timur,2021-11-08,DBD,0
+33.74.03,Semarang Timur,2021-11-15,DBD,0
+33.74.03,Semarang Timur,2021-11-22,DBD,0
+33.74.03,Semarang Timur,2021-11-29,DBD,0
+33.74.03,Semarang Timur,2021-12-06,DBD,0
+33.74.03,Semarang Timur,2021-12-13,DBD,0
+33.74.03,Semarang Timur,2021-12-20,DBD,1
+33.74.03,Semarang Timur,2021-12-27,DBD,0
+33.74.04,Semarang Selatan,2021-01-04,DBD,1
+33.74.04,Semarang Selatan,2021-01-11,DBD,0
+33.74.04,Semarang Selatan,2021-01-18,DBD,0
+33.74.04,Semarang Selatan,2021-01-25,DBD,0
+33.74.04,Semarang Selatan,2021-02-01,DBD,1
+33.74.04,Semarang Selatan,2021-02-08,DBD,0
+33.74.04,Semarang Selatan,2021-02-15,DBD,0
+33.74.04,Semarang Selatan,2021-02-22,DBD,0
+33.74.04,Semarang Selatan,2021-03-01,DBD,0
+33.74.04,Semarang Selatan,2021-03-08,DBD,0
+33.74.04,Semarang Selatan,2021-03-15,DBD,0
+33.74.04,Semarang Selatan,2021-03-22,DBD,0
+33.74.04,Semarang Selatan,2021-03-29,DBD,0
+33.74.04,Semarang Selatan,2021-04-05,DBD,0
+33.74.04,Semarang Selatan,2021-04-12,DBD,0
+33.74.04,Semarang Selatan,2021-04-19,DBD,0
+33.74.04,Semarang Selatan,2021-04-26,DBD,0
+33.74.04,Semarang Selatan,2021-05-03,DBD,0
+33.74.04,Semarang Selatan,2021-05-10,DBD,0
+33.74.04,Semarang Selatan,2021-05-17,DBD,0
+33.74.04,Semarang Selatan,2021-05-24,DBD,0
+33.74.04,Semarang Selatan,2021-05-31,DBD,0
+33.74.04,Semarang Selatan,2021-06-07,DBD,0
+33.74.04,Semarang Selatan,2021-06-14,DBD,0
+33.74.04,Semarang Selatan,2021-06-21,DBD,0
+33.74.04,Semarang Selatan,2021-06-28,DBD,0
+33.74.04,Semarang Selatan,2021-07-05,DBD,0
+33.74.04,Semarang Selatan,2021-07-12,DBD,0
+33.74.04,Semarang Selatan,2021-07-19,DBD,0
+33.74.04,Semarang Selatan,2021-07-26,DBD,1
+33.74.04,Semarang Selatan,2021-08-02,DBD,0
+33.74.04,Semarang Selatan,2021-08-09,DBD,0
+33.74.04,Semarang Selatan,2021-08-16,DBD,0
+33.74.04,Semarang Selatan,2021-08-23,DBD,0
+33.74.04,Semarang Selatan,2021-08-30,DBD,1
+33.74.04,Semarang Selatan,2021-09-06,DBD,0
+33.74.04,Semarang Selatan,2021-09-13,DBD,0
+33.74.04,Semarang Selatan,2021-09-20,DBD,1
+33.74.04,Semarang Selatan,2021-09-27,DBD,0
+33.74.04,Semarang Selatan,2021-10-04,DBD,0
+33.74.04,Semarang Selatan,2021-10-11,DBD,0
+33.74.04,Semarang Selatan,2021-10-18,DBD,0
+33.74.04,Semarang Selatan,2021-10-25,DBD,1
+33.74.04,Semarang Selatan,2021-11-01,DBD,1
+33.74.04,Semarang Selatan,2021-11-08,DBD,0
+33.74.04,Semarang Selatan,2021-11-15,DBD,0
+33.74.04,Semarang Selatan,2021-11-22,DBD,0
+33.74.04,Semarang Selatan,2021-11-29,DBD,1
+33.74.04,Semarang Selatan,2021-12-06,DBD,1
+33.74.04,Semarang Selatan,2021-12-13,DBD,0
+33.74.04,Semarang Selatan,2021-12-20,DBD,0
+33.74.04,Semarang Selatan,2021-12-27,DBD,0
+33.74.05,Semarang Barat,2021-01-04,DBD,1
+33.74.05,Semarang Barat,2021-01-11,DBD,0
+33.74.05,Semarang Barat,2021-01-18,DBD,0
+33.74.05,Semarang Barat,2021-01-25,DBD,0
+33.74.05,Semarang Barat,2021-02-01,DBD,0
+33.74.05,Semarang Barat,2021-02-08,DBD,1
+33.74.05,Semarang Barat,2021-02-15,DBD,0
+33.74.05,Semarang Barat,2021-02-22,DBD,0
+33.74.05,Semarang Barat,2021-03-01,DBD,0
+33.74.05,Semarang Barat,2021-03-08,DBD,0
+33.74.05,Semarang Barat,2021-03-15,DBD,0
+33.74.05,Semarang Barat,2021-03-22,DBD,0
+33.74.05,Semarang Barat,2021-03-29,DBD,0
+33.74.05,Semarang Barat,2021-04-05,DBD,0
+33.74.05,Semarang Barat,2021-04-12,DBD,0
+33.74.05,Semarang Barat,2021-04-19,DBD,0
+33.74.05,Semarang Barat,2021-04-26,DBD,1
+33.74.05,Semarang Barat,2021-05-03,DBD,0
+33.74.05,Semarang Barat,2021-05-10,DBD,0
+33.74.05,Semarang Barat,2021-05-17,DBD,1
+33.74.05,Semarang Barat,2021-05-24,DBD,0
+33.74.05,Semarang Barat,2021-05-31,DBD,1
+33.74.05,Semarang Barat,2021-06-07,DBD,0
+33.74.05,Semarang Barat,2021-06-14,DBD,0
+33.74.05,Semarang Barat,2021-06-21,DBD,0
+33.74.05,Semarang Barat,2021-06-28,DBD,0
+33.74.05,Semarang Barat,2021-07-05,DBD,0
+33.74.05,Semarang Barat,2021-07-12,DBD,0
+33.74.05,Semarang Barat,2021-07-19,DBD,0
+33.74.05,Semarang Barat,2021-07-26,DBD,1
+33.74.05,Semarang Barat,2021-08-02,DBD,0
+33.74.05,Semarang Barat,2021-08-09,DBD,1
+33.74.05,Semarang Barat,2021-08-16,DBD,0
+33.74.05,Semarang Barat,2021-08-23,DBD,0
+33.74.05,Semarang Barat,2021-08-30,DBD,0
+33.74.05,Semarang Barat,2021-09-06,DBD,0
+33.74.05,Semarang Barat,2021-09-13,DBD,0
+33.74.05,Semarang Barat,2021-09-20,DBD,0
+33.74.05,Semarang Barat,2021-09-27,DBD,1
+33.74.05,Semarang Barat,2021-10-04,DBD,0
+33.74.05,Semarang Barat,2021-10-11,DBD,0
+33.74.05,Semarang Barat,2021-10-18,DBD,1
+33.74.05,Semarang Barat,2021-10-25,DBD,0
+33.74.05,Semarang Barat,2021-11-01,DBD,3
+33.74.05,Semarang Barat,2021-11-08,DBD,2
+33.74.05,Semarang Barat,2021-11-15,DBD,2
+33.74.05,Semarang Barat,2021-11-22,DBD,0
+33.74.05,Semarang Barat,2021-11-29,DBD,0
+33.74.05,Semarang Barat,2021-12-06,DBD,2
+33.74.05,Semarang Barat,2021-12-13,DBD,0
+33.74.05,Semarang Barat,2021-12-20,DBD,0
+33.74.05,Semarang Barat,2021-12-27,DBD,2
+33.74.06,Gayamsari,2021-01-04,DBD,1
+33.74.06,Gayamsari,2021-01-11,DBD,0
+33.74.06,Gayamsari,2021-01-18,DBD,0
+33.74.06,Gayamsari,2021-01-25,DBD,0
+33.74.06,Gayamsari,2021-02-01,DBD,0
+33.74.06,Gayamsari,2021-02-08,DBD,0
+33.74.06,Gayamsari,2021-02-15,DBD,0
+33.74.06,Gayamsari,2021-02-22,DBD,0
+33.74.06,Gayamsari,2021-03-01,DBD,1
+33.74.06,Gayamsari,2021-03-08,DBD,0
+33.74.06,Gayamsari,2021-03-15,DBD,0
+33.74.06,Gayamsari,2021-03-22,DBD,0
+33.74.06,Gayamsari,2021-03-29,DBD,0
+33.74.06,Gayamsari,2021-04-05,DBD,1
+33.74.06,Gayamsari,2021-04-12,DBD,0
+33.74.06,Gayamsari,2021-04-19,DBD,0
+33.74.06,Gayamsari,2021-04-26,DBD,0
+33.74.06,Gayamsari,2021-05-03,DBD,0
+33.74.06,Gayamsari,2021-05-10,DBD,0
+33.74.06,Gayamsari,2021-05-17,DBD,0
+33.74.06,Gayamsari,2021-05-24,DBD,0
+33.74.06,Gayamsari,2021-05-31,DBD,0
+33.74.06,Gayamsari,2021-06-07,DBD,0
+33.74.06,Gayamsari,2021-06-14,DBD,0
+33.74.06,Gayamsari,2021-06-21,DBD,0
+33.74.06,Gayamsari,2021-06-28,DBD,0
+33.74.06,Gayamsari,2021-07-05,DBD,0
+33.74.06,Gayamsari,2021-07-12,DBD,0
+33.74.06,Gayamsari,2021-07-19,DBD,0
+33.74.06,Gayamsari,2021-07-26,DBD,0
+33.74.06,Gayamsari,2021-08-02,DBD,0
+33.74.06,Gayamsari,2021-08-09,DBD,0
+33.74.06,Gayamsari,2021-08-16,DBD,0
+33.74.06,Gayamsari,2021-08-23,DBD,0
+33.74.06,Gayamsari,2021-08-30,DBD,0
+33.74.06,Gayamsari,2021-09-06,DBD,0
+33.74.06,Gayamsari,2021-09-13,DBD,0
+33.74.06,Gayamsari,2021-09-20,DBD,0
+33.74.06,Gayamsari,2021-09-27,DBD,0
+33.74.06,Gayamsari,2021-10-04,DBD,0
+33.74.06,Gayamsari,2021-10-11,DBD,0
+33.74.06,Gayamsari,2021-10-18,DBD,0
+33.74.06,Gayamsari,2021-10-25,DBD,0
+33.74.06,Gayamsari,2021-11-01,DBD,0
+33.74.06,Gayamsari,2021-11-08,DBD,0
+33.74.06,Gayamsari,2021-11-15,DBD,1
+33.74.06,Gayamsari,2021-11-22,DBD,0
+33.74.06,Gayamsari,2021-11-29,DBD,0
+33.74.06,Gayamsari,2021-12-06,DBD,1
+33.74.06,Gayamsari,2021-12-13,DBD,1
+33.74.06,Gayamsari,2021-12-20,DBD,2
+33.74.06,Gayamsari,2021-12-27,DBD,0
+33.74.07,Candisari,2021-01-04,DBD,0
+33.74.07,Candisari,2021-01-11,DBD,0
+33.74.07,Candisari,2021-01-18,DBD,0
+33.74.07,Candisari,2021-01-25,DBD,0
+33.74.07,Candisari,2021-02-01,DBD,0
+33.74.07,Candisari,2021-02-08,DBD,0
+33.74.07,Candisari,2021-02-15,DBD,0
+33.74.07,Candisari,2021-02-22,DBD,1
+33.74.07,Candisari,2021-03-01,DBD,0
+33.74.07,Candisari,2021-03-08,DBD,0
+33.74.07,Candisari,2021-03-15,DBD,0
+33.74.07,Candisari,2021-03-22,DBD,0
+33.74.07,Candisari,2021-03-29,DBD,0
+33.74.07,Candisari,2021-04-05,DBD,0
+33.74.07,Candisari,2021-04-12,DBD,0
+33.74.07,Candisari,2021-04-19,DBD,1
+33.74.07,Candisari,2021-04-26,DBD,1
+33.74.07,Candisari,2021-05-03,DBD,0
+33.74.07,Candisari,2021-05-10,DBD,0
+33.74.07,Candisari,2021-05-17,DBD,0
+33.74.07,Candisari,2021-05-24,DBD,0
+33.74.07,Candisari,2021-05-31,DBD,0
+33.74.07,Candisari,2021-06-07,DBD,0
+33.74.07,Candisari,2021-06-14,DBD,0
+33.74.07,Candisari,2021-06-21,DBD,0
+33.74.07,Candisari,2021-06-28,DBD,0
+33.74.07,Candisari,2021-07-05,DBD,0
+33.74.07,Candisari,2021-07-12,DBD,1
+33.74.07,Candisari,2021-07-19,DBD,0
+33.74.07,Candisari,2021-07-26,DBD,0
+33.74.07,Candisari,2021-08-02,DBD,0
+33.74.07,Candisari,2021-08-09,DBD,0
+33.74.07,Candisari,2021-08-16,DBD,0
+33.74.07,Candisari,2021-08-23,DBD,0
+33.74.07,Candisari,2021-08-30,DBD,0
+33.74.07,Candisari,2021-09-06,DBD,0
+33.74.07,Candisari,2021-09-13,DBD,0
+33.74.07,Candisari,2021-09-20,DBD,0
+33.74.07,Candisari,2021-09-27,DBD,0
+33.74.07,Candisari,2021-10-04,DBD,0
+33.74.07,Candisari,2021-10-11,DBD,0
+33.74.07,Candisari,2021-10-18,DBD,0
+33.74.07,Candisari,2021-10-25,DBD,0
+33.74.07,Candisari,2021-11-01,DBD,0
+33.74.07,Candisari,2021-11-08,DBD,0
+33.74.07,Candisari,2021-11-15,DBD,0
+33.74.07,Candisari,2021-11-22,DBD,1
+33.74.07,Candisari,2021-11-29,DBD,1
+33.74.07,Candisari,2021-12-06,DBD,1
+33.74.07,Candisari,2021-12-13,DBD,1
+33.74.07,Candisari,2021-12-20,DBD,2
+33.74.07,Candisari,2021-12-27,DBD,0
+33.74.08,Gajahmungkur,2021-01-04,DBD,0
+33.74.08,Gajahmungkur,2021-01-11,DBD,0
+33.74.08,Gajahmungkur,2021-01-18,DBD,0
+33.74.08,Gajahmungkur,2021-01-25,DBD,0
+33.74.08,Gajahmungkur,2021-02-01,DBD,0
+33.74.08,Gajahmungkur,2021-02-08,DBD,0
+33.74.08,Gajahmungkur,2021-02-15,DBD,0
+33.74.08,Gajahmungkur,2021-02-22,DBD,0
+33.74.08,Gajahmungkur,2021-03-01,DBD,0
+33.74.08,Gajahmungkur,2021-03-08,DBD,0
+33.74.08,Gajahmungkur,2021-03-15,DBD,1
+33.74.08,Gajahmungkur,2021-03-22,DBD,0
+33.74.08,Gajahmungkur,2021-03-29,DBD,0
+33.74.08,Gajahmungkur,2021-04-05,DBD,0
+33.74.08,Gajahmungkur,2021-04-12,DBD,0
+33.74.08,Gajahmungkur,2021-04-19,DBD,0
+33.74.08,Gajahmungkur,2021-04-26,DBD,1
+33.74.08,Gajahmungkur,2021-05-03,DBD,0
+33.74.08,Gajahmungkur,2021-05-10,DBD,1
+33.74.08,Gajahmungkur,2021-05-17,DBD,1
+33.74.08,Gajahmungkur,2021-05-24,DBD,0
+33.74.08,Gajahmungkur,2021-05-31,DBD,0
+33.74.08,Gajahmungkur,2021-06-07,DBD,0
+33.74.08,Gajahmungkur,2021-06-14,DBD,0
+33.74.08,Gajahmungkur,2021-06-21,DBD,0
+33.74.08,Gajahmungkur,2021-06-28,DBD,0
+33.74.08,Gajahmungkur,2021-07-05,DBD,0
+33.74.08,Gajahmungkur,2021-07-12,DBD,0
+33.74.08,Gajahmungkur,2021-07-19,DBD,0
+33.74.08,Gajahmungkur,2021-07-26,DBD,0
+33.74.08,Gajahmungkur,2021-08-02,DBD,0
+33.74.08,Gajahmungkur,2021-08-09,DBD,0
+33.74.08,Gajahmungkur,2021-08-16,DBD,0
+33.74.08,Gajahmungkur,2021-08-23,DBD,0
+33.74.08,Gajahmungkur,2021-08-30,DBD,0
+33.74.08,Gajahmungkur,2021-09-06,DBD,0
+33.74.08,Gajahmungkur,2021-09-13,DBD,1
+33.74.08,Gajahmungkur,2021-09-20,DBD,1
+33.74.08,Gajahmungkur,2021-09-27,DBD,0
+33.74.08,Gajahmungkur,2021-10-04,DBD,0
+33.74.08,Gajahmungkur,2021-10-11,DBD,0
+33.74.08,Gajahmungkur,2021-10-18,DBD,0
+33.74.08,Gajahmungkur,2021-10-25,DBD,0
+33.74.08,Gajahmungkur,2021-11-01,DBD,2
+33.74.08,Gajahmungkur,2021-11-08,DBD,0
+33.74.08,Gajahmungkur,2021-11-15,DBD,0
+33.74.08,Gajahmungkur,2021-11-22,DBD,1
+33.74.08,Gajahmungkur,2021-11-29,DBD,0
+33.74.08,Gajahmungkur,2021-12-06,DBD,1
+33.74.08,Gajahmungkur,2021-12-13,DBD,0
+33.74.08,Gajahmungkur,2021-12-20,DBD,0
+33.74.08,Gajahmungkur,2021-12-27,DBD,0
+33.74.09,Genuk,2021-01-04,DBD,1
+33.74.09,Genuk,2021-01-11,DBD,0
+33.74.09,Genuk,2021-01-18,DBD,0
+33.74.09,Genuk,2021-01-25,DBD,0
+33.74.09,Genuk,2021-02-01,DBD,0
+33.74.09,Genuk,2021-02-08,DBD,1
+33.74.09,Genuk,2021-02-15,DBD,0
+33.74.09,Genuk,2021-02-22,DBD,1
+33.74.09,Genuk,2021-03-01,DBD,0
+33.74.09,Genuk,2021-03-08,DBD,0
+33.74.09,Genuk,2021-03-15,DBD,0
+33.74.09,Genuk,2021-03-22,DBD,0
+33.74.09,Genuk,2021-03-29,DBD,1
+33.74.09,Genuk,2021-04-05,DBD,0
+33.74.09,Genuk,2021-04-12,DBD,0
+33.74.09,Genuk,2021-04-19,DBD,1
+33.74.09,Genuk,2021-04-26,DBD,1
+33.74.09,Genuk,2021-05-03,DBD,0
+33.74.09,Genuk,2021-05-10,DBD,0
+33.74.09,Genuk,2021-05-17,DBD,0
+33.74.09,Genuk,2021-05-24,DBD,0
+33.74.09,Genuk,2021-05-31,DBD,0
+33.74.09,Genuk,2021-06-07,DBD,0
+33.74.09,Genuk,2021-06-14,DBD,0
+33.74.09,Genuk,2021-06-21,DBD,0
+33.74.09,Genuk,2021-06-28,DBD,0
+33.74.09,Genuk,2021-07-05,DBD,0
+33.74.09,Genuk,2021-07-12,DBD,0
+33.74.09,Genuk,2021-07-19,DBD,0
+33.74.09,Genuk,2021-07-26,DBD,0
+33.74.09,Genuk,2021-08-02,DBD,0
+33.74.09,Genuk,2021-08-09,DBD,0
+33.74.09,Genuk,2021-08-16,DBD,1
+33.74.09,Genuk,2021-08-23,DBD,0
+33.74.09,Genuk,2021-08-30,DBD,0
+33.74.09,Genuk,2021-09-06,DBD,0
+33.74.09,Genuk,2021-09-13,DBD,0
+33.74.09,Genuk,2021-09-20,DBD,0
+33.74.09,Genuk,2021-09-27,DBD,0
+33.74.09,Genuk,2021-10-04,DBD,0
+33.74.09,Genuk,2021-10-11,DBD,0
+33.74.09,Genuk,2021-10-18,DBD,0
+33.74.09,Genuk,2021-10-25,DBD,1
+33.74.09,Genuk,2021-11-01,DBD,1
+33.74.09,Genuk,2021-11-08,DBD,0
+33.74.09,Genuk,2021-11-15,DBD,0
+33.74.09,Genuk,2021-11-22,DBD,3
+33.74.09,Genuk,2021-11-29,DBD,0
+33.74.09,Genuk,2021-12-06,DBD,0
+33.74.09,Genuk,2021-12-13,DBD,1
+33.74.09,Genuk,2021-12-20,DBD,0
+33.74.09,Genuk,2021-12-27,DBD,0
+33.74.10,Pedurungan,2021-01-04,DBD,2
+33.74.10,Pedurungan,2021-01-11,DBD,2
+33.74.10,Pedurungan,2021-01-18,DBD,0
+33.74.10,Pedurungan,2021-01-25,DBD,0
+33.74.10,Pedurungan,2021-02-01,DBD,0
+33.74.10,Pedurungan,2021-02-08,DBD,1
+33.74.10,Pedurungan,2021-02-15,DBD,0
+33.74.10,Pedurungan,2021-02-22,DBD,0
+33.74.10,Pedurungan,2021-03-01,DBD,1
+33.74.10,Pedurungan,2021-03-08,DBD,0
+33.74.10,Pedurungan,2021-03-15,DBD,0
+33.74.10,Pedurungan,2021-03-22,DBD,0
+33.74.10,Pedurungan,2021-03-29,DBD,0
+33.74.10,Pedurungan,2021-04-05,DBD,0
+33.74.10,Pedurungan,2021-04-12,DBD,0
+33.74.10,Pedurungan,2021-04-19,DBD,0
+33.74.10,Pedurungan,2021-04-26,DBD,1
+33.74.10,Pedurungan,2021-05-03,DBD,0
+33.74.10,Pedurungan,2021-05-10,DBD,1
+33.74.10,Pedurungan,2021-05-17,DBD,2
+33.74.10,Pedurungan,2021-05-24,DBD,0
+33.74.10,Pedurungan,2021-05-31,DBD,0
+33.74.10,Pedurungan,2021-06-07,DBD,1
+33.74.10,Pedurungan,2021-06-14,DBD,0
+33.74.10,Pedurungan,2021-06-21,DBD,1
+33.74.10,Pedurungan,2021-06-28,DBD,0
+33.74.10,Pedurungan,2021-07-05,DBD,0
+33.74.10,Pedurungan,2021-07-12,DBD,1
+33.74.10,Pedurungan,2021-07-19,DBD,0
+33.74.10,Pedurungan,2021-07-26,DBD,1
+33.74.10,Pedurungan,2021-08-02,DBD,0
+33.74.10,Pedurungan,2021-08-09,DBD,2
+33.74.10,Pedurungan,2021-08-16,DBD,0
+33.74.10,Pedurungan,2021-08-23,DBD,0
+33.74.10,Pedurungan,2021-08-30,DBD,2
+33.74.10,Pedurungan,2021-09-06,DBD,0
+33.74.10,Pedurungan,2021-09-13,DBD,0
+33.74.10,Pedurungan,2021-09-20,DBD,1
+33.74.10,Pedurungan,2021-09-27,DBD,0
+33.74.10,Pedurungan,2021-10-04,DBD,0
+33.74.10,Pedurungan,2021-10-11,DBD,0
+33.74.10,Pedurungan,2021-10-18,DBD,1
+33.74.10,Pedurungan,2021-10-25,DBD,0
+33.74.10,Pedurungan,2021-11-01,DBD,0
+33.74.10,Pedurungan,2021-11-08,DBD,2
+33.74.10,Pedurungan,2021-11-15,DBD,2
+33.74.10,Pedurungan,2021-11-22,DBD,0
+33.74.10,Pedurungan,2021-11-29,DBD,1
+33.74.10,Pedurungan,2021-12-06,DBD,0
+33.74.10,Pedurungan,2021-12-13,DBD,0
+33.74.10,Pedurungan,2021-12-20,DBD,1
+33.74.10,Pedurungan,2021-12-27,DBD,1
+33.74.11,Tembalang,2021-01-04,DBD,1
+33.74.11,Tembalang,2021-01-11,DBD,0
+33.74.11,Tembalang,2021-01-18,DBD,0
+33.74.11,Tembalang,2021-01-25,DBD,2
+33.74.11,Tembalang,2021-02-01,DBD,3
+33.74.11,Tembalang,2021-02-08,DBD,1
+33.74.11,Tembalang,2021-02-15,DBD,0
+33.74.11,Tembalang,2021-02-22,DBD,0
+33.74.11,Tembalang,2021-03-01,DBD,2
+33.74.11,Tembalang,2021-03-08,DBD,1
+33.74.11,Tembalang,2021-03-15,DBD,0
+33.74.11,Tembalang,2021-03-22,DBD,3
+33.74.11,Tembalang,2021-03-29,DBD,2
+33.74.11,Tembalang,2021-04-05,DBD,2
+33.74.11,Tembalang,2021-04-12,DBD,1
+33.74.11,Tembalang,2021-04-19,DBD,1
+33.74.11,Tembalang,2021-04-26,DBD,0
+33.74.11,Tembalang,2021-05-03,DBD,1
+33.74.11,Tembalang,2021-05-10,DBD,2
+33.74.11,Tembalang,2021-05-17,DBD,0
+33.74.11,Tembalang,2021-05-24,DBD,0
+33.74.11,Tembalang,2021-05-31,DBD,0
+33.74.11,Tembalang,2021-06-07,DBD,1
+33.74.11,Tembalang,2021-06-14,DBD,3
+33.74.11,Tembalang,2021-06-21,DBD,0
+33.74.11,Tembalang,2021-06-28,DBD,0
+33.74.11,Tembalang,2021-07-05,DBD,0
+33.74.11,Tembalang,2021-07-12,DBD,0
+33.74.11,Tembalang,2021-07-19,DBD,2
+33.74.11,Tembalang,2021-07-26,DBD,1
+33.74.11,Tembalang,2021-08-02,DBD,1
+33.74.11,Tembalang,2021-08-09,DBD,0
+33.74.11,Tembalang,2021-08-16,DBD,0
+33.74.11,Tembalang,2021-08-23,DBD,0
+33.74.11,Tembalang,2021-08-30,DBD,0
+33.74.11,Tembalang,2021-09-06,DBD,1
+33.74.11,Tembalang,2021-09-13,DBD,2
+33.74.11,Tembalang,2021-09-20,DBD,7
+33.74.11,Tembalang,2021-09-27,DBD,3
+33.74.11,Tembalang,2021-10-04,DBD,0
+33.74.11,Tembalang,2021-10-11,DBD,1
+33.74.11,Tembalang,2021-10-18,DBD,2
+33.74.11,Tembalang,2021-10-25,DBD,1
+33.74.11,Tembalang,2021-11-01,DBD,0
+33.74.11,Tembalang,2021-11-08,DBD,0
+33.74.11,Tembalang,2021-11-15,DBD,0
+33.74.11,Tembalang,2021-11-22,DBD,3
+33.74.11,Tembalang,2021-11-29,DBD,1
+33.74.11,Tembalang,2021-12-06,DBD,0
+33.74.11,Tembalang,2021-12-13,DBD,1
+33.74.11,Tembalang,2021-12-20,DBD,1
+33.74.11,Tembalang,2021-12-27,DBD,1
+33.74.12,Banyumanik,2021-01-04,DBD,1
+33.74.12,Banyumanik,2021-01-11,DBD,0
+33.74.12,Banyumanik,2021-01-18,DBD,0
+33.74.12,Banyumanik,2021-01-25,DBD,0
+33.74.12,Banyumanik,2021-02-01,DBD,2
+33.74.12,Banyumanik,2021-02-08,DBD,1
+33.74.12,Banyumanik,2021-02-15,DBD,1
+33.74.12,Banyumanik,2021-02-22,DBD,1
+33.74.12,Banyumanik,2021-03-01,DBD,1
+33.74.12,Banyumanik,2021-03-08,DBD,1
+33.74.12,Banyumanik,2021-03-15,DBD,1
+33.74.12,Banyumanik,2021-03-22,DBD,0
+33.74.12,Banyumanik,2021-03-29,DBD,0
+33.74.12,Banyumanik,2021-04-05,DBD,2
+33.74.12,Banyumanik,2021-04-12,DBD,1
+33.74.12,Banyumanik,2021-04-19,DBD,2
+33.74.12,Banyumanik,2021-04-26,DBD,0
+33.74.12,Banyumanik,2021-05-03,DBD,0
+33.74.12,Banyumanik,2021-05-10,DBD,0
+33.74.12,Banyumanik,2021-05-17,DBD,1
+33.74.12,Banyumanik,2021-05-24,DBD,1
+33.74.12,Banyumanik,2021-05-31,DBD,0
+33.74.12,Banyumanik,2021-06-07,DBD,1
+33.74.12,Banyumanik,2021-06-14,DBD,3
+33.74.12,Banyumanik,2021-06-21,DBD,0
+33.74.12,Banyumanik,2021-06-28,DBD,0
+33.74.12,Banyumanik,2021-07-05,DBD,0
+33.74.12,Banyumanik,2021-07-12,DBD,1
+33.74.12,Banyumanik,2021-07-19,DBD,0
+33.74.12,Banyumanik,2021-07-26,DBD,0
+33.74.12,Banyumanik,2021-08-02,DBD,2
+33.74.12,Banyumanik,2021-08-09,DBD,2
+33.74.12,Banyumanik,2021-08-16,DBD,0
+33.74.12,Banyumanik,2021-08-23,DBD,1
+33.74.12,Banyumanik,2021-08-30,DBD,1
+33.74.12,Banyumanik,2021-09-06,DBD,0
+33.74.12,Banyumanik,2021-09-13,DBD,1
+33.74.12,Banyumanik,2021-09-20,DBD,6
+33.74.12,Banyumanik,2021-09-27,DBD,1
+33.74.12,Banyumanik,2021-10-04,DBD,0
+33.74.12,Banyumanik,2021-10-11,DBD,1
+33.74.12,Banyumanik,2021-10-18,DBD,0
+33.74.12,Banyumanik,2021-10-25,DBD,0
+33.74.12,Banyumanik,2021-11-01,DBD,1
+33.74.12,Banyumanik,2021-11-08,DBD,0
+33.74.12,Banyumanik,2021-11-15,DBD,2
+33.74.12,Banyumanik,2021-11-22,DBD,2
+33.74.12,Banyumanik,2021-11-29,DBD,6
+33.74.12,Banyumanik,2021-12-06,DBD,2
+33.74.12,Banyumanik,2021-12-13,DBD,3
+33.74.12,Banyumanik,2021-12-20,DBD,3
+33.74.12,Banyumanik,2021-12-27,DBD,7
+33.74.13,Gunungpati,2021-01-04,DBD,0
+33.74.13,Gunungpati,2021-01-11,DBD,0
+33.74.13,Gunungpati,2021-01-18,DBD,0
+33.74.13,Gunungpati,2021-01-25,DBD,0
+33.74.13,Gunungpati,2021-02-01,DBD,0
+33.74.13,Gunungpati,2021-02-08,DBD,0
+33.74.13,Gunungpati,2021-02-15,DBD,0
+33.74.13,Gunungpati,2021-02-22,DBD,0
+33.74.13,Gunungpati,2021-03-01,DBD,0
+33.74.13,Gunungpati,2021-03-08,DBD,0
+33.74.13,Gunungpati,2021-03-15,DBD,0
+33.74.13,Gunungpati,2021-03-22,DBD,0
+33.74.13,Gunungpati,2021-03-29,DBD,0
+33.74.13,Gunungpati,2021-04-05,DBD,0
+33.74.13,Gunungpati,2021-04-12,DBD,1
+33.74.13,Gunungpati,2021-04-19,DBD,0
+33.74.13,Gunungpati,2021-04-26,DBD,1
+33.74.13,Gunungpati,2021-05-03,DBD,0
+33.74.13,Gunungpati,2021-05-10,DBD,0
+33.74.13,Gunungpati,2021-05-17,DBD,2
+33.74.13,Gunungpati,2021-05-24,DBD,1
+33.74.13,Gunungpati,2021-05-31,DBD,0
+33.74.13,Gunungpati,2021-06-07,DBD,0
+33.74.13,Gunungpati,2021-06-14,DBD,1
+33.74.13,Gunungpati,2021-06-21,DBD,1
+33.74.13,Gunungpati,2021-06-28,DBD,0
+33.74.13,Gunungpati,2021-07-05,DBD,0
+33.74.13,Gunungpati,2021-07-12,DBD,0
+33.74.13,Gunungpati,2021-07-19,DBD,0
+33.74.13,Gunungpati,2021-07-26,DBD,0
+33.74.13,Gunungpati,2021-08-02,DBD,1
+33.74.13,Gunungpati,2021-08-09,DBD,0
+33.74.13,Gunungpati,2021-08-16,DBD,0
+33.74.13,Gunungpati,2021-08-23,DBD,0
+33.74.13,Gunungpati,2021-08-30,DBD,0
+33.74.13,Gunungpati,2021-09-06,DBD,0
+33.74.13,Gunungpati,2021-09-13,DBD,1
+33.74.13,Gunungpati,2021-09-20,DBD,3
+33.74.13,Gunungpati,2021-09-27,DBD,0
+33.74.13,Gunungpati,2021-10-04,DBD,0
+33.74.13,Gunungpati,2021-10-11,DBD,0
+33.74.13,Gunungpati,2021-10-18,DBD,0
+33.74.13,Gunungpati,2021-10-25,DBD,1
+33.74.13,Gunungpati,2021-11-01,DBD,0
+33.74.13,Gunungpati,2021-11-08,DBD,0
+33.74.13,Gunungpati,2021-11-15,DBD,1
+33.74.13,Gunungpati,2021-11-22,DBD,0
+33.74.13,Gunungpati,2021-11-29,DBD,2
+33.74.13,Gunungpati,2021-12-06,DBD,1
+33.74.13,Gunungpati,2021-12-13,DBD,2
+33.74.13,Gunungpati,2021-12-20,DBD,6
+33.74.13,Gunungpati,2021-12-27,DBD,2
+33.74.14,Mijen,2021-01-04,DBD,1
+33.74.14,Mijen,2021-01-11,DBD,0
+33.74.14,Mijen,2021-01-18,DBD,0
+33.74.14,Mijen,2021-01-25,DBD,0
+33.74.14,Mijen,2021-02-01,DBD,0
+33.74.14,Mijen,2021-02-08,DBD,0
+33.74.14,Mijen,2021-02-15,DBD,0
+33.74.14,Mijen,2021-02-22,DBD,0
+33.74.14,Mijen,2021-03-01,DBD,1
+33.74.14,Mijen,2021-03-08,DBD,0
+33.74.14,Mijen,2021-03-15,DBD,0
+33.74.14,Mijen,2021-03-22,DBD,0
+33.74.14,Mijen,2021-03-29,DBD,0
+33.74.14,Mijen,2021-04-05,DBD,0
+33.74.14,Mijen,2021-04-12,DBD,0
+33.74.14,Mijen,2021-04-19,DBD,0
+33.74.14,Mijen,2021-04-26,DBD,2
+33.74.14,Mijen,2021-05-03,DBD,0
+33.74.14,Mijen,2021-05-10,DBD,0
+33.74.14,Mijen,2021-05-17,DBD,0
+33.74.14,Mijen,2021-05-24,DBD,0
+33.74.14,Mijen,2021-05-31,DBD,0
+33.74.14,Mijen,2021-06-07,DBD,0
+33.74.14,Mijen,2021-06-14,DBD,0
+33.74.14,Mijen,2021-06-21,DBD,0
+33.74.14,Mijen,2021-06-28,DBD,0
+33.74.14,Mijen,2021-07-05,DBD,0
+33.74.14,Mijen,2021-07-12,DBD,1
+33.74.14,Mijen,2021-07-19,DBD,0
+33.74.14,Mijen,2021-07-26,DBD,0
+33.74.14,Mijen,2021-08-02,DBD,0
+33.74.14,Mijen,2021-08-09,DBD,1
+33.74.14,Mijen,2021-08-16,DBD,0
+33.74.14,Mijen,2021-08-23,DBD,0
+33.74.14,Mijen,2021-08-30,DBD,1
+33.74.14,Mijen,2021-09-06,DBD,1
+33.74.14,Mijen,2021-09-13,DBD,1
+33.74.14,Mijen,2021-09-20,DBD,0
+33.74.14,Mijen,2021-09-27,DBD,0
+33.74.14,Mijen,2021-10-04,DBD,0
+33.74.14,Mijen,2021-10-11,DBD,1
+33.74.14,Mijen,2021-10-18,DBD,0
+33.74.14,Mijen,2021-10-25,DBD,0
+33.74.14,Mijen,2021-11-01,DBD,0
+33.74.14,Mijen,2021-11-08,DBD,1
+33.74.14,Mijen,2021-11-15,DBD,0
+33.74.14,Mijen,2021-11-22,DBD,0
+33.74.14,Mijen,2021-11-29,DBD,1
+33.74.14,Mijen,2021-12-06,DBD,1
+33.74.14,Mijen,2021-12-13,DBD,0
+33.74.14,Mijen,2021-12-20,DBD,3
+33.74.14,Mijen,2021-12-27,DBD,0
+33.74.15,Ngaliyan,2021-01-04,DBD,2
+33.74.15,Ngaliyan,2021-01-11,DBD,0
+33.74.15,Ngaliyan,2021-01-18,DBD,0
+33.74.15,Ngaliyan,2021-01-25,DBD,0
+33.74.15,Ngaliyan,2021-02-01,DBD,1
+33.74.15,Ngaliyan,2021-02-08,DBD,1
+33.74.15,Ngaliyan,2021-02-15,DBD,0
+33.74.15,Ngaliyan,2021-02-22,DBD,1
+33.74.15,Ngaliyan,2021-03-01,DBD,0
+33.74.15,Ngaliyan,2021-03-08,DBD,0
+33.74.15,Ngaliyan,2021-03-15,DBD,4
+33.74.15,Ngaliyan,2021-03-22,DBD,1
+33.74.15,Ngaliyan,2021-03-29,DBD,2
+33.74.15,Ngaliyan,2021-04-05,DBD,0
+33.74.15,Ngaliyan,2021-04-12,DBD,1
+33.74.15,Ngaliyan,2021-04-19,DBD,2
+33.74.15,Ngaliyan,2021-04-26,DBD,1
+33.74.15,Ngaliyan,2021-05-03,DBD,0
+33.74.15,Ngaliyan,2021-05-10,DBD,1
+33.74.15,Ngaliyan,2021-05-17,DBD,1
+33.74.15,Ngaliyan,2021-05-24,DBD,2
+33.74.15,Ngaliyan,2021-05-31,DBD,1
+33.74.15,Ngaliyan,2021-06-07,DBD,3
+33.74.15,Ngaliyan,2021-06-14,DBD,0
+33.74.15,Ngaliyan,2021-06-21,DBD,1
+33.74.15,Ngaliyan,2021-06-28,DBD,2
+33.74.15,Ngaliyan,2021-07-05,DBD,0
+33.74.15,Ngaliyan,2021-07-12,DBD,0
+33.74.15,Ngaliyan,2021-07-19,DBD,0
+33.74.15,Ngaliyan,2021-07-26,DBD,0
+33.74.15,Ngaliyan,2021-08-02,DBD,1
+33.74.15,Ngaliyan,2021-08-09,DBD,1
+33.74.15,Ngaliyan,2021-08-16,DBD,0
+33.74.15,Ngaliyan,2021-08-23,DBD,0
+33.74.15,Ngaliyan,2021-08-30,DBD,0
+33.74.15,Ngaliyan,2021-09-06,DBD,0
+33.74.15,Ngaliyan,2021-09-13,DBD,0
+33.74.15,Ngaliyan,2021-09-20,DBD,3
+33.74.15,Ngaliyan,2021-09-27,DBD,1
+33.74.15,Ngaliyan,2021-10-04,DBD,0
+33.74.15,Ngaliyan,2021-10-11,DBD,0
+33.74.15,Ngaliyan,2021-10-18,DBD,2
+33.74.15,Ngaliyan,2021-10-25,DBD,1
+33.74.15,Ngaliyan,2021-11-01,DBD,3
+33.74.15,Ngaliyan,2021-11-08,DBD,1
+33.74.15,Ngaliyan,2021-11-15,DBD,2
+33.74.15,Ngaliyan,2021-11-22,DBD,2
+33.74.15,Ngaliyan,2021-11-29,DBD,2
+33.74.15,Ngaliyan,2021-12-06,DBD,3
+33.74.15,Ngaliyan,2021-12-13,DBD,2
+33.74.15,Ngaliyan,2021-12-20,DBD,3
+33.74.15,Ngaliyan,2021-12-27,DBD,1
+33.74.16,Tugu,2021-01-04,DBD,1
+33.74.16,Tugu,2021-01-11,DBD,0
+33.74.16,Tugu,2021-01-18,DBD,0
+33.74.16,Tugu,2021-01-25,DBD,0
+33.74.16,Tugu,2021-02-01,DBD,0
+33.74.16,Tugu,2021-02-08,DBD,0
+33.74.16,Tugu,2021-02-15,DBD,0
+33.74.16,Tugu,2021-02-22,DBD,0
+33.74.16,Tugu,2021-03-01,DBD,0
+33.74.16,Tugu,2021-03-08,DBD,0
+33.74.16,Tugu,2021-03-15,DBD,0
+33.74.16,Tugu,2021-03-22,DBD,0
+33.74.16,Tugu,2021-03-29,DBD,0
+33.74.16,Tugu,2021-04-05,DBD,0
+33.74.16,Tugu,2021-04-12,DBD,0
+33.74.16,Tugu,2021-04-19,DBD,0
+33.74.16,Tugu,2021-04-26,DBD,0
+33.74.16,Tugu,2021-05-03,DBD,0
+33.74.16,Tugu,2021-05-10,DBD,0
+33.74.16,Tugu,2021-05-17,DBD,0
+33.74.16,Tugu,2021-05-24,DBD,0
+33.74.16,Tugu,2021-05-31,DBD,0
+33.74.16,Tugu,2021-06-07,DBD,0
+33.74.16,Tugu,2021-06-14,DBD,0
+33.74.16,Tugu,2021-06-21,DBD,0
+33.74.16,Tugu,2021-06-28,DBD,0
+33.74.16,Tugu,2021-07-05,DBD,0
+33.74.16,Tugu,2021-07-12,DBD,0
+33.74.16,Tugu,2021-07-19,DBD,0
+33.74.16,Tugu,2021-07-26,DBD,0
+33.74.16,Tugu,2021-08-02,DBD,0
+33.74.16,Tugu,2021-08-09,DBD,0
+33.74.16,Tugu,2021-08-16,DBD,0
+33.74.16,Tugu,2021-08-23,DBD,0
+33.74.16,Tugu,2021-08-30,DBD,0
+33.74.16,Tugu,2021-09-06,DBD,0
+33.74.16,Tugu,2021-09-13,DBD,0
+33.74.16,Tugu,2021-09-20,DBD,0
+33.74.16,Tugu,2021-09-27,DBD,0
+33.74.16,Tugu,2021-10-04,DBD,0
+33.74.16,Tugu,2021-10-11,DBD,0
+33.74.16,Tugu,2021-10-18,DBD,1
+33.74.16,Tugu,2021-10-25,DBD,0
+33.74.16,Tugu,2021-11-01,DBD,0
+33.74.16,Tugu,2021-11-08,DBD,0
+33.74.16,Tugu,2021-11-15,DBD,2
+33.74.16,Tugu,2021-11-22,DBD,0
+33.74.16,Tugu,2021-11-29,DBD,0
+33.74.16,Tugu,2021-12-06,DBD,0
+33.74.16,Tugu,2021-12-13,DBD,0
+33.74.16,Tugu,2021-12-20,DBD,1
+33.74.16,Tugu,2021-12-27,DBD,0
+33.74.01,Semarang Tengah,2022-01-03,DBD,1
+33.74.01,Semarang Tengah,2022-01-10,DBD,2
+33.74.01,Semarang Tengah,2022-01-17,DBD,0
+33.74.01,Semarang Tengah,2022-01-24,DBD,0
+33.74.01,Semarang Tengah,2022-01-31,DBD,2
+33.74.01,Semarang Tengah,2022-02-07,DBD,1
+33.74.01,Semarang Tengah,2022-02-14,DBD,0
+33.74.01,Semarang Tengah,2022-02-21,DBD,0
+33.74.01,Semarang Tengah,2022-02-28,DBD,0
+33.74.01,Semarang Tengah,2022-03-07,DBD,0
+33.74.01,Semarang Tengah,2022-03-14,DBD,0
+33.74.01,Semarang Tengah,2022-03-21,DBD,1
+33.74.01,Semarang Tengah,2022-03-28,DBD,1
+33.74.01,Semarang Tengah,2022-04-04,DBD,0
+33.74.01,Semarang Tengah,2022-04-11,DBD,0
+33.74.01,Semarang Tengah,2022-04-18,DBD,2
+33.74.01,Semarang Tengah,2022-04-25,DBD,1
+33.74.01,Semarang Tengah,2022-05-02,DBD,0
+33.74.01,Semarang Tengah,2022-05-09,DBD,1
+33.74.01,Semarang Tengah,2022-05-16,DBD,1
+33.74.01,Semarang Tengah,2022-05-23,DBD,0
+33.74.01,Semarang Tengah,2022-05-30,DBD,0
+33.74.01,Semarang Tengah,2022-06-06,DBD,0
+33.74.01,Semarang Tengah,2022-06-13,DBD,0
+33.74.01,Semarang Tengah,2022-06-20,DBD,0
+33.74.01,Semarang Tengah,2022-06-27,DBD,0
+33.74.01,Semarang Tengah,2022-07-04,DBD,0
+33.74.01,Semarang Tengah,2022-07-11,DBD,0
+33.74.01,Semarang Tengah,2022-07-18,DBD,0
+33.74.01,Semarang Tengah,2022-07-25,DBD,0
+33.74.01,Semarang Tengah,2022-08-01,DBD,1
+33.74.01,Semarang Tengah,2022-08-08,DBD,0
+33.74.01,Semarang Tengah,2022-08-15,DBD,0
+33.74.01,Semarang Tengah,2022-08-22,DBD,0
+33.74.01,Semarang Tengah,2022-08-29,DBD,0
+33.74.01,Semarang Tengah,2022-09-05,DBD,0
+33.74.01,Semarang Tengah,2022-09-12,DBD,0
+33.74.01,Semarang Tengah,2022-09-19,DBD,0
+33.74.01,Semarang Tengah,2022-09-26,DBD,0
+33.74.01,Semarang Tengah,2022-10-03,DBD,0
+33.74.01,Semarang Tengah,2022-10-10,DBD,0
+33.74.01,Semarang Tengah,2022-10-17,DBD,1
+33.74.01,Semarang Tengah,2022-10-24,DBD,0
+33.74.01,Semarang Tengah,2022-10-31,DBD,0
+33.74.01,Semarang Tengah,2022-11-07,DBD,0
+33.74.01,Semarang Tengah,2022-11-14,DBD,0
+33.74.01,Semarang Tengah,2022-11-21,DBD,0
+33.74.01,Semarang Tengah,2022-11-28,DBD,0
+33.74.01,Semarang Tengah,2022-12-05,DBD,1
+33.74.01,Semarang Tengah,2022-12-12,DBD,0
+33.74.01,Semarang Tengah,2022-12-19,DBD,0
+33.74.01,Semarang Tengah,2022-12-26,DBD,1
+33.74.02,Semarang Utara,2022-01-03,DBD,0
+33.74.02,Semarang Utara,2022-01-10,DBD,7
+33.74.02,Semarang Utara,2022-01-17,DBD,1
+33.74.02,Semarang Utara,2022-01-24,DBD,1
+33.74.02,Semarang Utara,2022-01-31,DBD,0
+33.74.02,Semarang Utara,2022-02-07,DBD,4
+33.74.02,Semarang Utara,2022-02-14,DBD,0
+33.74.02,Semarang Utara,2022-02-21,DBD,3
+33.74.02,Semarang Utara,2022-02-28,DBD,0
+33.74.02,Semarang Utara,2022-03-07,DBD,0
+33.74.02,Semarang Utara,2022-03-14,DBD,0
+33.74.02,Semarang Utara,2022-03-21,DBD,1
+33.74.02,Semarang Utara,2022-03-28,DBD,2
+33.74.02,Semarang Utara,2022-04-04,DBD,0
+33.74.02,Semarang Utara,2022-04-11,DBD,2
+33.74.02,Semarang Utara,2022-04-18,DBD,1
+33.74.02,Semarang Utara,2022-04-25,DBD,2
+33.74.02,Semarang Utara,2022-05-02,DBD,1
+33.74.02,Semarang Utara,2022-05-09,DBD,2
+33.74.02,Semarang Utara,2022-05-16,DBD,2
+33.74.02,Semarang Utara,2022-05-23,DBD,0
+33.74.02,Semarang Utara,2022-05-30,DBD,0
+33.74.02,Semarang Utara,2022-06-06,DBD,3
+33.74.02,Semarang Utara,2022-06-13,DBD,4
+33.74.02,Semarang Utara,2022-06-20,DBD,1
+33.74.02,Semarang Utara,2022-06-27,DBD,0
+33.74.02,Semarang Utara,2022-07-04,DBD,1
+33.74.02,Semarang Utara,2022-07-11,DBD,1
+33.74.02,Semarang Utara,2022-07-18,DBD,0
+33.74.02,Semarang Utara,2022-07-25,DBD,0
+33.74.02,Semarang Utara,2022-08-01,DBD,3
+33.74.02,Semarang Utara,2022-08-08,DBD,2
+33.74.02,Semarang Utara,2022-08-15,DBD,0
+33.74.02,Semarang Utara,2022-08-22,DBD,1
+33.74.02,Semarang Utara,2022-08-29,DBD,1
+33.74.02,Semarang Utara,2022-09-05,DBD,1
+33.74.02,Semarang Utara,2022-09-12,DBD,0
+33.74.02,Semarang Utara,2022-09-19,DBD,0
+33.74.02,Semarang Utara,2022-09-26,DBD,2
+33.74.02,Semarang Utara,2022-10-03,DBD,0
+33.74.02,Semarang Utara,2022-10-10,DBD,2
+33.74.02,Semarang Utara,2022-10-17,DBD,0
+33.74.02,Semarang Utara,2022-10-24,DBD,0
+33.74.02,Semarang Utara,2022-10-31,DBD,0
+33.74.02,Semarang Utara,2022-11-07,DBD,2
+33.74.02,Semarang Utara,2022-11-14,DBD,3
+33.74.02,Semarang Utara,2022-11-21,DBD,2
+33.74.02,Semarang Utara,2022-11-28,DBD,2
+33.74.02,Semarang Utara,2022-12-05,DBD,1
+33.74.02,Semarang Utara,2022-12-12,DBD,0
+33.74.02,Semarang Utara,2022-12-19,DBD,2
+33.74.02,Semarang Utara,2022-12-26,DBD,3
+33.74.03,Semarang Timur,2022-01-03,DBD,1
+33.74.03,Semarang Timur,2022-01-10,DBD,0
+33.74.03,Semarang Timur,2022-01-17,DBD,0
+33.74.03,Semarang Timur,2022-01-24,DBD,0
+33.74.03,Semarang Timur,2022-01-31,DBD,0
+33.74.03,Semarang Timur,2022-02-07,DBD,0
+33.74.03,Semarang Timur,2022-02-14,DBD,0
+33.74.03,Semarang Timur,2022-02-21,DBD,0
+33.74.03,Semarang Timur,2022-02-28,DBD,1
+33.74.03,Semarang Timur,2022-03-07,DBD,1
+33.74.03,Semarang Timur,2022-03-14,DBD,0
+33.74.03,Semarang Timur,2022-03-21,DBD,0
+33.74.03,Semarang Timur,2022-03-28,DBD,0
+33.74.03,Semarang Timur,2022-04-04,DBD,1
+33.74.03,Semarang Timur,2022-04-11,DBD,0
+33.74.03,Semarang Timur,2022-04-18,DBD,1
+33.74.03,Semarang Timur,2022-04-25,DBD,0
+33.74.03,Semarang Timur,2022-05-02,DBD,0
+33.74.03,Semarang Timur,2022-05-09,DBD,1
+33.74.03,Semarang Timur,2022-05-16,DBD,0
+33.74.03,Semarang Timur,2022-05-23,DBD,2
+33.74.03,Semarang Timur,2022-05-30,DBD,1
+33.74.03,Semarang Timur,2022-06-06,DBD,0
+33.74.03,Semarang Timur,2022-06-13,DBD,1
+33.74.03,Semarang Timur,2022-06-20,DBD,0
+33.74.03,Semarang Timur,2022-06-27,DBD,1
+33.74.03,Semarang Timur,2022-07-04,DBD,1
+33.74.03,Semarang Timur,2022-07-11,DBD,0
+33.74.03,Semarang Timur,2022-07-18,DBD,0
+33.74.03,Semarang Timur,2022-07-25,DBD,0
+33.74.03,Semarang Timur,2022-08-01,DBD,1
+33.74.03,Semarang Timur,2022-08-08,DBD,1
+33.74.03,Semarang Timur,2022-08-15,DBD,0
+33.74.03,Semarang Timur,2022-08-22,DBD,0
+33.74.03,Semarang Timur,2022-08-29,DBD,1
+33.74.03,Semarang Timur,2022-09-05,DBD,2
+33.74.03,Semarang Timur,2022-09-12,DBD,0
+33.74.03,Semarang Timur,2022-09-19,DBD,0
+33.74.03,Semarang Timur,2022-09-26,DBD,0
+33.74.03,Semarang Timur,2022-10-03,DBD,0
+33.74.03,Semarang Timur,2022-10-10,DBD,1
+33.74.03,Semarang Timur,2022-10-17,DBD,0
+33.74.03,Semarang Timur,2022-10-24,DBD,0
+33.74.03,Semarang Timur,2022-10-31,DBD,0
+33.74.03,Semarang Timur,2022-11-07,DBD,0
+33.74.03,Semarang Timur,2022-11-14,DBD,1
+33.74.03,Semarang Timur,2022-11-21,DBD,1
+33.74.03,Semarang Timur,2022-11-28,DBD,0
+33.74.03,Semarang Timur,2022-12-05,DBD,0
+33.74.03,Semarang Timur,2022-12-12,DBD,0
+33.74.03,Semarang Timur,2022-12-19,DBD,1
+33.74.03,Semarang Timur,2022-12-26,DBD,0
+33.74.04,Semarang Selatan,2022-01-03,DBD,1
+33.74.04,Semarang Selatan,2022-01-10,DBD,1
+33.74.04,Semarang Selatan,2022-01-17,DBD,1
+33.74.04,Semarang Selatan,2022-01-24,DBD,1
+33.74.04,Semarang Selatan,2022-01-31,DBD,0
+33.74.04,Semarang Selatan,2022-02-07,DBD,3
+33.74.04,Semarang Selatan,2022-02-14,DBD,0
+33.74.04,Semarang Selatan,2022-02-21,DBD,0
+33.74.04,Semarang Selatan,2022-02-28,DBD,0
+33.74.04,Semarang Selatan,2022-03-07,DBD,0
+33.74.04,Semarang Selatan,2022-03-14,DBD,0
+33.74.04,Semarang Selatan,2022-03-21,DBD,1
+33.74.04,Semarang Selatan,2022-03-28,DBD,0
+33.74.04,Semarang Selatan,2022-04-04,DBD,1
+33.74.04,Semarang Selatan,2022-04-11,DBD,0
+33.74.04,Semarang Selatan,2022-04-18,DBD,0
+33.74.04,Semarang Selatan,2022-04-25,DBD,0
+33.74.04,Semarang Selatan,2022-05-02,DBD,0
+33.74.04,Semarang Selatan,2022-05-09,DBD,2
+33.74.04,Semarang Selatan,2022-05-16,DBD,0
+33.74.04,Semarang Selatan,2022-05-23,DBD,1
+33.74.04,Semarang Selatan,2022-05-30,DBD,0
+33.74.04,Semarang Selatan,2022-06-06,DBD,1
+33.74.04,Semarang Selatan,2022-06-13,DBD,2
+33.74.04,Semarang Selatan,2022-06-20,DBD,1
+33.74.04,Semarang Selatan,2022-06-27,DBD,0
+33.74.04,Semarang Selatan,2022-07-04,DBD,0
+33.74.04,Semarang Selatan,2022-07-11,DBD,0
+33.74.04,Semarang Selatan,2022-07-18,DBD,1
+33.74.04,Semarang Selatan,2022-07-25,DBD,0
+33.74.04,Semarang Selatan,2022-08-01,DBD,1
+33.74.04,Semarang Selatan,2022-08-08,DBD,1
+33.74.04,Semarang Selatan,2022-08-15,DBD,0
+33.74.04,Semarang Selatan,2022-08-22,DBD,1
+33.74.04,Semarang Selatan,2022-08-29,DBD,0
+33.74.04,Semarang Selatan,2022-09-05,DBD,0
+33.74.04,Semarang Selatan,2022-09-12,DBD,1
+33.74.04,Semarang Selatan,2022-09-19,DBD,0
+33.74.04,Semarang Selatan,2022-09-26,DBD,0
+33.74.04,Semarang Selatan,2022-10-03,DBD,0
+33.74.04,Semarang Selatan,2022-10-10,DBD,0
+33.74.04,Semarang Selatan,2022-10-17,DBD,1
+33.74.04,Semarang Selatan,2022-10-24,DBD,1
+33.74.04,Semarang Selatan,2022-10-31,DBD,1
+33.74.04,Semarang Selatan,2022-11-07,DBD,0
+33.74.04,Semarang Selatan,2022-11-14,DBD,1
+33.74.04,Semarang Selatan,2022-11-21,DBD,0
+33.74.04,Semarang Selatan,2022-11-28,DBD,0
+33.74.04,Semarang Selatan,2022-12-05,DBD,1
+33.74.04,Semarang Selatan,2022-12-12,DBD,0
+33.74.04,Semarang Selatan,2022-12-19,DBD,2
+33.74.04,Semarang Selatan,2022-12-26,DBD,0
+33.74.05,Semarang Barat,2022-01-03,DBD,1
+33.74.05,Semarang Barat,2022-01-10,DBD,1
+33.74.05,Semarang Barat,2022-01-17,DBD,2
+33.74.05,Semarang Barat,2022-01-24,DBD,3
+33.74.05,Semarang Barat,2022-01-31,DBD,4
+33.74.05,Semarang Barat,2022-02-07,DBD,4
+33.74.05,Semarang Barat,2022-02-14,DBD,2
+33.74.05,Semarang Barat,2022-02-21,DBD,2
+33.74.05,Semarang Barat,2022-02-28,DBD,2
+33.74.05,Semarang Barat,2022-03-07,DBD,1
+33.74.05,Semarang Barat,2022-03-14,DBD,1
+33.74.05,Semarang Barat,2022-03-21,DBD,0
+33.74.05,Semarang Barat,2022-03-28,DBD,6
+33.74.05,Semarang Barat,2022-04-04,DBD,5
+33.74.05,Semarang Barat,2022-04-11,DBD,0
+33.74.05,Semarang Barat,2022-04-18,DBD,2
+33.74.05,Semarang Barat,2022-04-25,DBD,4
+33.74.05,Semarang Barat,2022-05-02,DBD,0
+33.74.05,Semarang Barat,2022-05-09,DBD,2
+33.74.05,Semarang Barat,2022-05-16,DBD,3
+33.74.05,Semarang Barat,2022-05-23,DBD,0
+33.74.05,Semarang Barat,2022-05-30,DBD,1
+33.74.05,Semarang Barat,2022-06-06,DBD,1
+33.74.05,Semarang Barat,2022-06-13,DBD,3
+33.74.05,Semarang Barat,2022-06-20,DBD,3
+33.74.05,Semarang Barat,2022-06-27,DBD,2
+33.74.05,Semarang Barat,2022-07-04,DBD,1
+33.74.05,Semarang Barat,2022-07-11,DBD,2
+33.74.05,Semarang Barat,2022-07-18,DBD,2
+33.74.05,Semarang Barat,2022-07-25,DBD,0
+33.74.05,Semarang Barat,2022-08-01,DBD,2
+33.74.05,Semarang Barat,2022-08-08,DBD,0
+33.74.05,Semarang Barat,2022-08-15,DBD,0
+33.74.05,Semarang Barat,2022-08-22,DBD,0
+33.74.05,Semarang Barat,2022-08-29,DBD,0
+33.74.05,Semarang Barat,2022-09-05,DBD,0
+33.74.05,Semarang Barat,2022-09-12,DBD,1
+33.74.05,Semarang Barat,2022-09-19,DBD,0
+33.74.05,Semarang Barat,2022-09-26,DBD,1
+33.74.05,Semarang Barat,2022-10-03,DBD,0
+33.74.05,Semarang Barat,2022-10-10,DBD,1
+33.74.05,Semarang Barat,2022-10-17,DBD,0
+33.74.05,Semarang Barat,2022-10-24,DBD,1
+33.74.05,Semarang Barat,2022-10-31,DBD,0
+33.74.05,Semarang Barat,2022-11-07,DBD,1
+33.74.05,Semarang Barat,2022-11-14,DBD,2
+33.74.05,Semarang Barat,2022-11-21,DBD,1
+33.74.05,Semarang Barat,2022-11-28,DBD,1
+33.74.05,Semarang Barat,2022-12-05,DBD,0
+33.74.05,Semarang Barat,2022-12-12,DBD,2
+33.74.05,Semarang Barat,2022-12-19,DBD,0
+33.74.05,Semarang Barat,2022-12-26,DBD,2
+33.74.06,Gayamsari,2022-01-03,DBD,1
+33.74.06,Gayamsari,2022-01-10,DBD,0
+33.74.06,Gayamsari,2022-01-17,DBD,1
+33.74.06,Gayamsari,2022-01-24,DBD,0
+33.74.06,Gayamsari,2022-01-31,DBD,2
+33.74.06,Gayamsari,2022-02-07,DBD,0
+33.74.06,Gayamsari,2022-02-14,DBD,0
+33.74.06,Gayamsari,2022-02-21,DBD,0
+33.74.06,Gayamsari,2022-02-28,DBD,0
+33.74.06,Gayamsari,2022-03-07,DBD,0
+33.74.06,Gayamsari,2022-03-14,DBD,0
+33.74.06,Gayamsari,2022-03-21,DBD,1
+33.74.06,Gayamsari,2022-03-28,DBD,0
+33.74.06,Gayamsari,2022-04-04,DBD,0
+33.74.06,Gayamsari,2022-04-11,DBD,0
+33.74.06,Gayamsari,2022-04-18,DBD,0
+33.74.06,Gayamsari,2022-04-25,DBD,0
+33.74.06,Gayamsari,2022-05-02,DBD,0
+33.74.06,Gayamsari,2022-05-09,DBD,0
+33.74.06,Gayamsari,2022-05-16,DBD,0
+33.74.06,Gayamsari,2022-05-23,DBD,0
+33.74.06,Gayamsari,2022-05-30,DBD,0
+33.74.06,Gayamsari,2022-06-06,DBD,0
+33.74.06,Gayamsari,2022-06-13,DBD,0
+33.74.06,Gayamsari,2022-06-20,DBD,1
+33.74.06,Gayamsari,2022-06-27,DBD,0
+33.74.06,Gayamsari,2022-07-04,DBD,0
+33.74.06,Gayamsari,2022-07-11,DBD,0
+33.74.06,Gayamsari,2022-07-18,DBD,0
+33.74.06,Gayamsari,2022-07-25,DBD,1
+33.74.06,Gayamsari,2022-08-01,DBD,0
+33.74.06,Gayamsari,2022-08-08,DBD,0
+33.74.06,Gayamsari,2022-08-15,DBD,0
+33.74.06,Gayamsari,2022-08-22,DBD,1
+33.74.06,Gayamsari,2022-08-29,DBD,1
+33.74.06,Gayamsari,2022-09-05,DBD,0
+33.74.06,Gayamsari,2022-09-12,DBD,0
+33.74.06,Gayamsari,2022-09-19,DBD,0
+33.74.06,Gayamsari,2022-09-26,DBD,0
+33.74.06,Gayamsari,2022-10-03,DBD,0
+33.74.06,Gayamsari,2022-10-10,DBD,0
+33.74.06,Gayamsari,2022-10-17,DBD,0
+33.74.06,Gayamsari,2022-10-24,DBD,0
+33.74.06,Gayamsari,2022-10-31,DBD,0
+33.74.06,Gayamsari,2022-11-07,DBD,0
+33.74.06,Gayamsari,2022-11-14,DBD,0
+33.74.06,Gayamsari,2022-11-21,DBD,0
+33.74.06,Gayamsari,2022-11-28,DBD,0
+33.74.06,Gayamsari,2022-12-05,DBD,0
+33.74.06,Gayamsari,2022-12-12,DBD,0
+33.74.06,Gayamsari,2022-12-19,DBD,0
+33.74.06,Gayamsari,2022-12-26,DBD,0
+33.74.07,Candisari,2022-01-03,DBD,1
+33.74.07,Candisari,2022-01-10,DBD,2
+33.74.07,Candisari,2022-01-17,DBD,0
+33.74.07,Candisari,2022-01-24,DBD,4
+33.74.07,Candisari,2022-01-31,DBD,1
+33.74.07,Candisari,2022-02-07,DBD,4
+33.74.07,Candisari,2022-02-14,DBD,1
+33.74.07,Candisari,2022-02-21,DBD,1
+33.74.07,Candisari,2022-02-28,DBD,1
+33.74.07,Candisari,2022-03-07,DBD,0
+33.74.07,Candisari,2022-03-14,DBD,0
+33.74.07,Candisari,2022-03-21,DBD,0
+33.74.07,Candisari,2022-03-28,DBD,0
+33.74.07,Candisari,2022-04-04,DBD,2
+33.74.07,Candisari,2022-04-11,DBD,1
+33.74.07,Candisari,2022-04-18,DBD,0
+33.74.07,Candisari,2022-04-25,DBD,4
+33.74.07,Candisari,2022-05-02,DBD,2
+33.74.07,Candisari,2022-05-09,DBD,3
+33.74.07,Candisari,2022-05-16,DBD,4
+33.74.07,Candisari,2022-05-23,DBD,0
+33.74.07,Candisari,2022-05-30,DBD,0
+33.74.07,Candisari,2022-06-06,DBD,1
+33.74.07,Candisari,2022-06-13,DBD,1
+33.74.07,Candisari,2022-06-20,DBD,0
+33.74.07,Candisari,2022-06-27,DBD,1
+33.74.07,Candisari,2022-07-04,DBD,0
+33.74.07,Candisari,2022-07-11,DBD,0
+33.74.07,Candisari,2022-07-18,DBD,1
+33.74.07,Candisari,2022-07-25,DBD,1
+33.74.07,Candisari,2022-08-01,DBD,1
+33.74.07,Candisari,2022-08-08,DBD,0
+33.74.07,Candisari,2022-08-15,DBD,1
+33.74.07,Candisari,2022-08-22,DBD,0
+33.74.07,Candisari,2022-08-29,DBD,0
+33.74.07,Candisari,2022-09-05,DBD,1
+33.74.07,Candisari,2022-09-12,DBD,2
+33.74.07,Candisari,2022-09-19,DBD,1
+33.74.07,Candisari,2022-09-26,DBD,1
+33.74.07,Candisari,2022-10-03,DBD,0
+33.74.07,Candisari,2022-10-10,DBD,1
+33.74.07,Candisari,2022-10-17,DBD,0
+33.74.07,Candisari,2022-10-24,DBD,0
+33.74.07,Candisari,2022-10-31,DBD,0
+33.74.07,Candisari,2022-11-07,DBD,0
+33.74.07,Candisari,2022-11-14,DBD,1
+33.74.07,Candisari,2022-11-21,DBD,0
+33.74.07,Candisari,2022-11-28,DBD,0
+33.74.07,Candisari,2022-12-05,DBD,0
+33.74.07,Candisari,2022-12-12,DBD,1
+33.74.07,Candisari,2022-12-19,DBD,0
+33.74.07,Candisari,2022-12-26,DBD,3
+33.74.08,Gajahmungkur,2022-01-03,DBD,1
+33.74.08,Gajahmungkur,2022-01-10,DBD,1
+33.74.08,Gajahmungkur,2022-01-17,DBD,0
+33.74.08,Gajahmungkur,2022-01-24,DBD,0
+33.74.08,Gajahmungkur,2022-01-31,DBD,2
+33.74.08,Gajahmungkur,2022-02-07,DBD,0
+33.74.08,Gajahmungkur,2022-02-14,DBD,1
+33.74.08,Gajahmungkur,2022-02-21,DBD,0
+33.74.08,Gajahmungkur,2022-02-28,DBD,0
+33.74.08,Gajahmungkur,2022-03-07,DBD,1
+33.74.08,Gajahmungkur,2022-03-14,DBD,1
+33.74.08,Gajahmungkur,2022-03-21,DBD,0
+33.74.08,Gajahmungkur,2022-03-28,DBD,1
+33.74.08,Gajahmungkur,2022-04-04,DBD,2
+33.74.08,Gajahmungkur,2022-04-11,DBD,1
+33.74.08,Gajahmungkur,2022-04-18,DBD,1
+33.74.08,Gajahmungkur,2022-04-25,DBD,1
+33.74.08,Gajahmungkur,2022-05-02,DBD,0
+33.74.08,Gajahmungkur,2022-05-09,DBD,1
+33.74.08,Gajahmungkur,2022-05-16,DBD,1
+33.74.08,Gajahmungkur,2022-05-23,DBD,0
+33.74.08,Gajahmungkur,2022-05-30,DBD,1
+33.74.08,Gajahmungkur,2022-06-06,DBD,1
+33.74.08,Gajahmungkur,2022-06-13,DBD,0
+33.74.08,Gajahmungkur,2022-06-20,DBD,1
+33.74.08,Gajahmungkur,2022-06-27,DBD,0
+33.74.08,Gajahmungkur,2022-07-04,DBD,0
+33.74.08,Gajahmungkur,2022-07-11,DBD,1
+33.74.08,Gajahmungkur,2022-07-18,DBD,0
+33.74.08,Gajahmungkur,2022-07-25,DBD,0
+33.74.08,Gajahmungkur,2022-08-01,DBD,1
+33.74.08,Gajahmungkur,2022-08-08,DBD,0
+33.74.08,Gajahmungkur,2022-08-15,DBD,0
+33.74.08,Gajahmungkur,2022-08-22,DBD,0
+33.74.08,Gajahmungkur,2022-08-29,DBD,0
+33.74.08,Gajahmungkur,2022-09-05,DBD,1
+33.74.08,Gajahmungkur,2022-09-12,DBD,0
+33.74.08,Gajahmungkur,2022-09-19,DBD,0
+33.74.08,Gajahmungkur,2022-09-26,DBD,0
+33.74.08,Gajahmungkur,2022-10-03,DBD,0
+33.74.08,Gajahmungkur,2022-10-10,DBD,0
+33.74.08,Gajahmungkur,2022-10-17,DBD,0
+33.74.08,Gajahmungkur,2022-10-24,DBD,0
+33.74.08,Gajahmungkur,2022-10-31,DBD,0
+33.74.08,Gajahmungkur,2022-11-07,DBD,1
+33.74.08,Gajahmungkur,2022-11-14,DBD,0
+33.74.08,Gajahmungkur,2022-11-21,DBD,0
+33.74.08,Gajahmungkur,2022-11-28,DBD,1
+33.74.08,Gajahmungkur,2022-12-05,DBD,0
+33.74.08,Gajahmungkur,2022-12-12,DBD,0
+33.74.08,Gajahmungkur,2022-12-19,DBD,0
+33.74.08,Gajahmungkur,2022-12-26,DBD,0
+33.74.09,Genuk,2022-01-03,DBD,0
+33.74.09,Genuk,2022-01-10,DBD,4
+33.74.09,Genuk,2022-01-17,DBD,2
+33.74.09,Genuk,2022-01-24,DBD,0
+33.74.09,Genuk,2022-01-31,DBD,1
+33.74.09,Genuk,2022-02-07,DBD,3
+33.74.09,Genuk,2022-02-14,DBD,0
+33.74.09,Genuk,2022-02-21,DBD,1
+33.74.09,Genuk,2022-02-28,DBD,0
+33.74.09,Genuk,2022-03-07,DBD,1
+33.74.09,Genuk,2022-03-14,DBD,0
+33.74.09,Genuk,2022-03-21,DBD,2
+33.74.09,Genuk,2022-03-28,DBD,4
+33.74.09,Genuk,2022-04-04,DBD,4
+33.74.09,Genuk,2022-04-11,DBD,2
+33.74.09,Genuk,2022-04-18,DBD,0
+33.74.09,Genuk,2022-04-25,DBD,2
+33.74.09,Genuk,2022-05-02,DBD,0
+33.74.09,Genuk,2022-05-09,DBD,0
+33.74.09,Genuk,2022-05-16,DBD,0
+33.74.09,Genuk,2022-05-23,DBD,1
+33.74.09,Genuk,2022-05-30,DBD,1
+33.74.09,Genuk,2022-06-06,DBD,1
+33.74.09,Genuk,2022-06-13,DBD,1
+33.74.09,Genuk,2022-06-20,DBD,0
+33.74.09,Genuk,2022-06-27,DBD,4
+33.74.09,Genuk,2022-07-04,DBD,0
+33.74.09,Genuk,2022-07-11,DBD,1
+33.74.09,Genuk,2022-07-18,DBD,0
+33.74.09,Genuk,2022-07-25,DBD,1
+33.74.09,Genuk,2022-08-01,DBD,2
+33.74.09,Genuk,2022-08-08,DBD,0
+33.74.09,Genuk,2022-08-15,DBD,0
+33.74.09,Genuk,2022-08-22,DBD,1
+33.74.09,Genuk,2022-08-29,DBD,1
+33.74.09,Genuk,2022-09-05,DBD,0
+33.74.09,Genuk,2022-09-12,DBD,2
+33.74.09,Genuk,2022-09-19,DBD,0
+33.74.09,Genuk,2022-09-26,DBD,0
+33.74.09,Genuk,2022-10-03,DBD,1
+33.74.09,Genuk,2022-10-10,DBD,1
+33.74.09,Genuk,2022-10-17,DBD,0
+33.74.09,Genuk,2022-10-24,DBD,0
+33.74.09,Genuk,2022-10-31,DBD,0
+33.74.09,Genuk,2022-11-07,DBD,3
+33.74.09,Genuk,2022-11-14,DBD,0
+33.74.09,Genuk,2022-11-21,DBD,2
+33.74.09,Genuk,2022-11-28,DBD,0
+33.74.09,Genuk,2022-12-05,DBD,0
+33.74.09,Genuk,2022-12-12,DBD,0
+33.74.09,Genuk,2022-12-19,DBD,2
+33.74.09,Genuk,2022-12-26,DBD,1
+33.74.10,Pedurungan,2022-01-03,DBD,1
+33.74.10,Pedurungan,2022-01-10,DBD,4
+33.74.10,Pedurungan,2022-01-17,DBD,2
+33.74.10,Pedurungan,2022-01-24,DBD,4
+33.74.10,Pedurungan,2022-01-31,DBD,1
+33.74.10,Pedurungan,2022-02-07,DBD,5
+33.74.10,Pedurungan,2022-02-14,DBD,2
+33.74.10,Pedurungan,2022-02-21,DBD,2
+33.74.10,Pedurungan,2022-02-28,DBD,2
+33.74.10,Pedurungan,2022-03-07,DBD,2
+33.74.10,Pedurungan,2022-03-14,DBD,2
+33.74.10,Pedurungan,2022-03-21,DBD,0
+33.74.10,Pedurungan,2022-03-28,DBD,0
+33.74.10,Pedurungan,2022-04-04,DBD,5
+33.74.10,Pedurungan,2022-04-11,DBD,2
+33.74.10,Pedurungan,2022-04-18,DBD,2
+33.74.10,Pedurungan,2022-04-25,DBD,2
+33.74.10,Pedurungan,2022-05-02,DBD,0
+33.74.10,Pedurungan,2022-05-09,DBD,1
+33.74.10,Pedurungan,2022-05-16,DBD,2
+33.74.10,Pedurungan,2022-05-23,DBD,1
+33.74.10,Pedurungan,2022-05-30,DBD,0
+33.74.10,Pedurungan,2022-06-06,DBD,1
+33.74.10,Pedurungan,2022-06-13,DBD,0
+33.74.10,Pedurungan,2022-06-20,DBD,2
+33.74.10,Pedurungan,2022-06-27,DBD,0
+33.74.10,Pedurungan,2022-07-04,DBD,2
+33.74.10,Pedurungan,2022-07-11,DBD,1
+33.74.10,Pedurungan,2022-07-18,DBD,2
+33.74.10,Pedurungan,2022-07-25,DBD,0
+33.74.10,Pedurungan,2022-08-01,DBD,0
+33.74.10,Pedurungan,2022-08-08,DBD,2
+33.74.10,Pedurungan,2022-08-15,DBD,1
+33.74.10,Pedurungan,2022-08-22,DBD,2
+33.74.10,Pedurungan,2022-08-29,DBD,1
+33.74.10,Pedurungan,2022-09-05,DBD,1
+33.74.10,Pedurungan,2022-09-12,DBD,2
+33.74.10,Pedurungan,2022-09-19,DBD,2
+33.74.10,Pedurungan,2022-09-26,DBD,0
+33.74.10,Pedurungan,2022-10-03,DBD,1
+33.74.10,Pedurungan,2022-10-10,DBD,0
+33.74.10,Pedurungan,2022-10-17,DBD,0
+33.74.10,Pedurungan,2022-10-24,DBD,4
+33.74.10,Pedurungan,2022-10-31,DBD,0
+33.74.10,Pedurungan,2022-11-07,DBD,1
+33.74.10,Pedurungan,2022-11-14,DBD,2
+33.74.10,Pedurungan,2022-11-21,DBD,2
+33.74.10,Pedurungan,2022-11-28,DBD,3
+33.74.10,Pedurungan,2022-12-05,DBD,0
+33.74.10,Pedurungan,2022-12-12,DBD,1
+33.74.10,Pedurungan,2022-12-19,DBD,2
+33.74.10,Pedurungan,2022-12-26,DBD,3
+33.74.11,Tembalang,2022-01-03,DBD,0
+33.74.11,Tembalang,2022-01-10,DBD,3
+33.74.11,Tembalang,2022-01-17,DBD,0
+33.74.11,Tembalang,2022-01-24,DBD,1
+33.74.11,Tembalang,2022-01-31,DBD,4
+33.74.11,Tembalang,2022-02-07,DBD,3
+33.74.11,Tembalang,2022-02-14,DBD,3
+33.74.11,Tembalang,2022-02-21,DBD,3
+33.74.11,Tembalang,2022-02-28,DBD,3
+33.74.11,Tembalang,2022-03-07,DBD,1
+33.74.11,Tembalang,2022-03-14,DBD,1
+33.74.11,Tembalang,2022-03-21,DBD,1
+33.74.11,Tembalang,2022-03-28,DBD,4
+33.74.11,Tembalang,2022-04-04,DBD,5
+33.74.11,Tembalang,2022-04-11,DBD,0
+33.74.11,Tembalang,2022-04-18,DBD,6
+33.74.11,Tembalang,2022-04-25,DBD,1
+33.74.11,Tembalang,2022-05-02,DBD,2
+33.74.11,Tembalang,2022-05-09,DBD,5
+33.74.11,Tembalang,2022-05-16,DBD,5
+33.74.11,Tembalang,2022-05-23,DBD,4
+33.74.11,Tembalang,2022-05-30,DBD,3
+33.74.11,Tembalang,2022-06-06,DBD,2
+33.74.11,Tembalang,2022-06-13,DBD,4
+33.74.11,Tembalang,2022-06-20,DBD,1
+33.74.11,Tembalang,2022-06-27,DBD,4
+33.74.11,Tembalang,2022-07-04,DBD,2
+33.74.11,Tembalang,2022-07-11,DBD,4
+33.74.11,Tembalang,2022-07-18,DBD,3
+33.74.11,Tembalang,2022-07-25,DBD,2
+33.74.11,Tembalang,2022-08-01,DBD,3
+33.74.11,Tembalang,2022-08-08,DBD,4
+33.74.11,Tembalang,2022-08-15,DBD,0
+33.74.11,Tembalang,2022-08-22,DBD,0
+33.74.11,Tembalang,2022-08-29,DBD,2
+33.74.11,Tembalang,2022-09-05,DBD,0
+33.74.11,Tembalang,2022-09-12,DBD,3
+33.74.11,Tembalang,2022-09-19,DBD,1
+33.74.11,Tembalang,2022-09-26,DBD,4
+33.74.11,Tembalang,2022-10-03,DBD,0
+33.74.11,Tembalang,2022-10-10,DBD,1
+33.74.11,Tembalang,2022-10-17,DBD,2
+33.74.11,Tembalang,2022-10-24,DBD,2
+33.74.11,Tembalang,2022-10-31,DBD,1
+33.74.11,Tembalang,2022-11-07,DBD,1
+33.74.11,Tembalang,2022-11-14,DBD,3
+33.74.11,Tembalang,2022-11-21,DBD,1
+33.74.11,Tembalang,2022-11-28,DBD,8
+33.74.11,Tembalang,2022-12-05,DBD,3
+33.74.11,Tembalang,2022-12-12,DBD,1
+33.74.11,Tembalang,2022-12-19,DBD,0
+33.74.11,Tembalang,2022-12-26,DBD,1
+33.74.12,Banyumanik,2022-01-03,DBD,2
+33.74.12,Banyumanik,2022-01-10,DBD,1
+33.74.12,Banyumanik,2022-01-17,DBD,0
+33.74.12,Banyumanik,2022-01-24,DBD,1
+33.74.12,Banyumanik,2022-01-31,DBD,3
+33.74.12,Banyumanik,2022-02-07,DBD,7
+33.74.12,Banyumanik,2022-02-14,DBD,3
+33.74.12,Banyumanik,2022-02-21,DBD,3
+33.74.12,Banyumanik,2022-02-28,DBD,1
+33.74.12,Banyumanik,2022-03-07,DBD,1
+33.74.12,Banyumanik,2022-03-14,DBD,1
+33.74.12,Banyumanik,2022-03-21,DBD,6
+33.74.12,Banyumanik,2022-03-28,DBD,0
+33.74.12,Banyumanik,2022-04-04,DBD,5
+33.74.12,Banyumanik,2022-04-11,DBD,2
+33.74.12,Banyumanik,2022-04-18,DBD,2
+33.74.12,Banyumanik,2022-04-25,DBD,3
+33.74.12,Banyumanik,2022-05-02,DBD,1
+33.74.12,Banyumanik,2022-05-09,DBD,5
+33.74.12,Banyumanik,2022-05-16,DBD,4
+33.74.12,Banyumanik,2022-05-23,DBD,1
+33.74.12,Banyumanik,2022-05-30,DBD,0
+33.74.12,Banyumanik,2022-06-06,DBD,2
+33.74.12,Banyumanik,2022-06-13,DBD,4
+33.74.12,Banyumanik,2022-06-20,DBD,1
+33.74.12,Banyumanik,2022-06-27,DBD,2
+33.74.12,Banyumanik,2022-07-04,DBD,2
+33.74.12,Banyumanik,2022-07-11,DBD,3
+33.74.12,Banyumanik,2022-07-18,DBD,1
+33.74.12,Banyumanik,2022-07-25,DBD,2
+33.74.12,Banyumanik,2022-08-01,DBD,4
+33.74.12,Banyumanik,2022-08-08,DBD,1
+33.74.12,Banyumanik,2022-08-15,DBD,0
+33.74.12,Banyumanik,2022-08-22,DBD,4
+33.74.12,Banyumanik,2022-08-29,DBD,1
+33.74.12,Banyumanik,2022-09-05,DBD,2
+33.74.12,Banyumanik,2022-09-12,DBD,1
+33.74.12,Banyumanik,2022-09-19,DBD,0
+33.74.12,Banyumanik,2022-09-26,DBD,2
+33.74.12,Banyumanik,2022-10-03,DBD,0
+33.74.12,Banyumanik,2022-10-10,DBD,1
+33.74.12,Banyumanik,2022-10-17,DBD,0
+33.74.12,Banyumanik,2022-10-24,DBD,1
+33.74.12,Banyumanik,2022-10-31,DBD,0
+33.74.12,Banyumanik,2022-11-07,DBD,1
+33.74.12,Banyumanik,2022-11-14,DBD,4
+33.74.12,Banyumanik,2022-11-21,DBD,0
+33.74.12,Banyumanik,2022-11-28,DBD,2
+33.74.12,Banyumanik,2022-12-05,DBD,0
+33.74.12,Banyumanik,2022-12-12,DBD,2
+33.74.12,Banyumanik,2022-12-19,DBD,0
+33.74.12,Banyumanik,2022-12-26,DBD,3
+33.74.13,Gunungpati,2022-01-03,DBD,3
+33.74.13,Gunungpati,2022-01-10,DBD,1
+33.74.13,Gunungpati,2022-01-17,DBD,0
+33.74.13,Gunungpati,2022-01-24,DBD,0
+33.74.13,Gunungpati,2022-01-31,DBD,0
+33.74.13,Gunungpati,2022-02-07,DBD,2
+33.74.13,Gunungpati,2022-02-14,DBD,0
+33.74.13,Gunungpati,2022-02-21,DBD,2
+33.74.13,Gunungpati,2022-02-28,DBD,0
+33.74.13,Gunungpati,2022-03-07,DBD,0
+33.74.13,Gunungpati,2022-03-14,DBD,1
+33.74.13,Gunungpati,2022-03-21,DBD,1
+33.74.13,Gunungpati,2022-03-28,DBD,0
+33.74.13,Gunungpati,2022-04-04,DBD,0
+33.74.13,Gunungpati,2022-04-11,DBD,0
+33.74.13,Gunungpati,2022-04-18,DBD,2
+33.74.13,Gunungpati,2022-04-25,DBD,2
+33.74.13,Gunungpati,2022-05-02,DBD,1
+33.74.13,Gunungpati,2022-05-09,DBD,3
+33.74.13,Gunungpati,2022-05-16,DBD,2
+33.74.13,Gunungpati,2022-05-23,DBD,1
+33.74.13,Gunungpati,2022-05-30,DBD,1
+33.74.13,Gunungpati,2022-06-06,DBD,0
+33.74.13,Gunungpati,2022-06-13,DBD,0
+33.74.13,Gunungpati,2022-06-20,DBD,0
+33.74.13,Gunungpati,2022-06-27,DBD,0
+33.74.13,Gunungpati,2022-07-04,DBD,1
+33.74.13,Gunungpati,2022-07-11,DBD,3
+33.74.13,Gunungpati,2022-07-18,DBD,0
+33.74.13,Gunungpati,2022-07-25,DBD,0
+33.74.13,Gunungpati,2022-08-01,DBD,1
+33.74.13,Gunungpati,2022-08-08,DBD,3
+33.74.13,Gunungpati,2022-08-15,DBD,0
+33.74.13,Gunungpati,2022-08-22,DBD,1
+33.74.13,Gunungpati,2022-08-29,DBD,0
+33.74.13,Gunungpati,2022-09-05,DBD,0
+33.74.13,Gunungpati,2022-09-12,DBD,3
+33.74.13,Gunungpati,2022-09-19,DBD,3
+33.74.13,Gunungpati,2022-09-26,DBD,0
+33.74.13,Gunungpati,2022-10-03,DBD,1
+33.74.13,Gunungpati,2022-10-10,DBD,1
+33.74.13,Gunungpati,2022-10-17,DBD,1
+33.74.13,Gunungpati,2022-10-24,DBD,0
+33.74.13,Gunungpati,2022-10-31,DBD,0
+33.74.13,Gunungpati,2022-11-07,DBD,0
+33.74.13,Gunungpati,2022-11-14,DBD,1
+33.74.13,Gunungpati,2022-11-21,DBD,0
+33.74.13,Gunungpati,2022-11-28,DBD,0
+33.74.13,Gunungpati,2022-12-05,DBD,0
+33.74.13,Gunungpati,2022-12-12,DBD,1
+33.74.13,Gunungpati,2022-12-19,DBD,1
+33.74.13,Gunungpati,2022-12-26,DBD,2
+33.74.14,Mijen,2022-01-03,DBD,1
+33.74.14,Mijen,2022-01-10,DBD,5
+33.74.14,Mijen,2022-01-17,DBD,0
+33.74.14,Mijen,2022-01-24,DBD,1
+33.74.14,Mijen,2022-01-31,DBD,2
+33.74.14,Mijen,2022-02-07,DBD,4
+33.74.14,Mijen,2022-02-14,DBD,0
+33.74.14,Mijen,2022-02-21,DBD,1
+33.74.14,Mijen,2022-02-28,DBD,2
+33.74.14,Mijen,2022-03-07,DBD,3
+33.74.14,Mijen,2022-03-14,DBD,1
+33.74.14,Mijen,2022-03-21,DBD,1
+33.74.14,Mijen,2022-03-28,DBD,2
+33.74.14,Mijen,2022-04-04,DBD,3
+33.74.14,Mijen,2022-04-11,DBD,1
+33.74.14,Mijen,2022-04-18,DBD,0
+33.74.14,Mijen,2022-04-25,DBD,3
+33.74.14,Mijen,2022-05-02,DBD,1
+33.74.14,Mijen,2022-05-09,DBD,2
+33.74.14,Mijen,2022-05-16,DBD,0
+33.74.14,Mijen,2022-05-23,DBD,1
+33.74.14,Mijen,2022-05-30,DBD,0
+33.74.14,Mijen,2022-06-06,DBD,1
+33.74.14,Mijen,2022-06-13,DBD,0
+33.74.14,Mijen,2022-06-20,DBD,1
+33.74.14,Mijen,2022-06-27,DBD,4
+33.74.14,Mijen,2022-07-04,DBD,0
+33.74.14,Mijen,2022-07-11,DBD,3
+33.74.14,Mijen,2022-07-18,DBD,1
+33.74.14,Mijen,2022-07-25,DBD,1
+33.74.14,Mijen,2022-08-01,DBD,1
+33.74.14,Mijen,2022-08-08,DBD,1
+33.74.14,Mijen,2022-08-15,DBD,1
+33.74.14,Mijen,2022-08-22,DBD,1
+33.74.14,Mijen,2022-08-29,DBD,0
+33.74.14,Mijen,2022-09-05,DBD,0
+33.74.14,Mijen,2022-09-12,DBD,0
+33.74.14,Mijen,2022-09-19,DBD,1
+33.74.14,Mijen,2022-09-26,DBD,0
+33.74.14,Mijen,2022-10-03,DBD,0
+33.74.14,Mijen,2022-10-10,DBD,0
+33.74.14,Mijen,2022-10-17,DBD,0
+33.74.14,Mijen,2022-10-24,DBD,0
+33.74.14,Mijen,2022-10-31,DBD,0
+33.74.14,Mijen,2022-11-07,DBD,0
+33.74.14,Mijen,2022-11-14,DBD,0
+33.74.14,Mijen,2022-11-21,DBD,0
+33.74.14,Mijen,2022-11-28,DBD,1
+33.74.14,Mijen,2022-12-05,DBD,1
+33.74.14,Mijen,2022-12-12,DBD,0
+33.74.14,Mijen,2022-12-19,DBD,1
+33.74.14,Mijen,2022-12-26,DBD,2
+33.74.15,Ngaliyan,2022-01-03,DBD,1
+33.74.15,Ngaliyan,2022-01-10,DBD,2
+33.74.15,Ngaliyan,2022-01-17,DBD,1
+33.74.15,Ngaliyan,2022-01-24,DBD,0
+33.74.15,Ngaliyan,2022-01-31,DBD,4
+33.74.15,Ngaliyan,2022-02-07,DBD,5
+33.74.15,Ngaliyan,2022-02-14,DBD,2
+33.74.15,Ngaliyan,2022-02-21,DBD,1
+33.74.15,Ngaliyan,2022-02-28,DBD,1
+33.74.15,Ngaliyan,2022-03-07,DBD,4
+33.74.15,Ngaliyan,2022-03-14,DBD,2
+33.74.15,Ngaliyan,2022-03-21,DBD,1
+33.74.15,Ngaliyan,2022-03-28,DBD,0
+33.74.15,Ngaliyan,2022-04-04,DBD,2
+33.74.15,Ngaliyan,2022-04-11,DBD,2
+33.74.15,Ngaliyan,2022-04-18,DBD,2
+33.74.15,Ngaliyan,2022-04-25,DBD,3
+33.74.15,Ngaliyan,2022-05-02,DBD,1
+33.74.15,Ngaliyan,2022-05-09,DBD,3
+33.74.15,Ngaliyan,2022-05-16,DBD,3
+33.74.15,Ngaliyan,2022-05-23,DBD,3
+33.74.15,Ngaliyan,2022-05-30,DBD,2
+33.74.15,Ngaliyan,2022-06-06,DBD,4
+33.74.15,Ngaliyan,2022-06-13,DBD,0
+33.74.15,Ngaliyan,2022-06-20,DBD,1
+33.74.15,Ngaliyan,2022-06-27,DBD,0
+33.74.15,Ngaliyan,2022-07-04,DBD,2
+33.74.15,Ngaliyan,2022-07-11,DBD,4
+33.74.15,Ngaliyan,2022-07-18,DBD,1
+33.74.15,Ngaliyan,2022-07-25,DBD,3
+33.74.15,Ngaliyan,2022-08-01,DBD,0
+33.74.15,Ngaliyan,2022-08-08,DBD,5
+33.74.15,Ngaliyan,2022-08-15,DBD,0
+33.74.15,Ngaliyan,2022-08-22,DBD,0
+33.74.15,Ngaliyan,2022-08-29,DBD,2
+33.74.15,Ngaliyan,2022-09-05,DBD,0
+33.74.15,Ngaliyan,2022-09-12,DBD,1
+33.74.15,Ngaliyan,2022-09-19,DBD,1
+33.74.15,Ngaliyan,2022-09-26,DBD,2
+33.74.15,Ngaliyan,2022-10-03,DBD,1
+33.74.15,Ngaliyan,2022-10-10,DBD,1
+33.74.15,Ngaliyan,2022-10-17,DBD,1
+33.74.15,Ngaliyan,2022-10-24,DBD,2
+33.74.15,Ngaliyan,2022-10-31,DBD,0
+33.74.15,Ngaliyan,2022-11-07,DBD,1
+33.74.15,Ngaliyan,2022-11-14,DBD,0
+33.74.15,Ngaliyan,2022-11-21,DBD,1
+33.74.15,Ngaliyan,2022-11-28,DBD,4
+33.74.15,Ngaliyan,2022-12-05,DBD,0
+33.74.15,Ngaliyan,2022-12-12,DBD,2
+33.74.15,Ngaliyan,2022-12-19,DBD,3
+33.74.15,Ngaliyan,2022-12-26,DBD,3
+33.74.16,Tugu,2022-01-03,DBD,0
+33.74.16,Tugu,2022-01-10,DBD,1
+33.74.16,Tugu,2022-01-17,DBD,0
+33.74.16,Tugu,2022-01-24,DBD,2
+33.74.16,Tugu,2022-01-31,DBD,1
+33.74.16,Tugu,2022-02-07,DBD,2
+33.74.16,Tugu,2022-02-14,DBD,0
+33.74.16,Tugu,2022-02-21,DBD,0
+33.74.16,Tugu,2022-02-28,DBD,1
+33.74.16,Tugu,2022-03-07,DBD,2
+33.74.16,Tugu,2022-03-14,DBD,1
+33.74.16,Tugu,2022-03-21,DBD,1
+33.74.16,Tugu,2022-03-28,DBD,2
+33.74.16,Tugu,2022-04-04,DBD,0
+33.74.16,Tugu,2022-04-11,DBD,0
+33.74.16,Tugu,2022-04-18,DBD,1
+33.74.16,Tugu,2022-04-25,DBD,0
+33.74.16,Tugu,2022-05-02,DBD,1
+33.74.16,Tugu,2022-05-09,DBD,2
+33.74.16,Tugu,2022-05-16,DBD,0
+33.74.16,Tugu,2022-05-23,DBD,0
+33.74.16,Tugu,2022-05-30,DBD,1
+33.74.16,Tugu,2022-06-06,DBD,0
+33.74.16,Tugu,2022-06-13,DBD,1
+33.74.16,Tugu,2022-06-20,DBD,0
+33.74.16,Tugu,2022-06-27,DBD,0
+33.74.16,Tugu,2022-07-04,DBD,0
+33.74.16,Tugu,2022-07-11,DBD,1
+33.74.16,Tugu,2022-07-18,DBD,0
+33.74.16,Tugu,2022-07-25,DBD,0
+33.74.16,Tugu,2022-08-01,DBD,0
+33.74.16,Tugu,2022-08-08,DBD,1
+33.74.16,Tugu,2022-08-15,DBD,1
+33.74.16,Tugu,2022-08-22,DBD,0
+33.74.16,Tugu,2022-08-29,DBD,0
+33.74.16,Tugu,2022-09-05,DBD,0
+33.74.16,Tugu,2022-09-12,DBD,0
+33.74.16,Tugu,2022-09-19,DBD,0
+33.74.16,Tugu,2022-09-26,DBD,0
+33.74.16,Tugu,2022-10-03,DBD,0
+33.74.16,Tugu,2022-10-10,DBD,0
+33.74.16,Tugu,2022-10-17,DBD,0
+33.74.16,Tugu,2022-10-24,DBD,0
+33.74.16,Tugu,2022-10-31,DBD,2
+33.74.16,Tugu,2022-11-07,DBD,0
+33.74.16,Tugu,2022-11-14,DBD,1
+33.74.16,Tugu,2022-11-21,DBD,0
+33.74.16,Tugu,2022-11-28,DBD,1
+33.74.16,Tugu,2022-12-05,DBD,1
+33.74.16,Tugu,2022-12-12,DBD,0
+33.74.16,Tugu,2022-12-19,DBD,1
+33.74.16,Tugu,2022-12-26,DBD,0
+33.74.01,Semarang Tengah,2023-01-02,DBD,0
+33.74.01,Semarang Tengah,2023-01-09,DBD,0
+33.74.01,Semarang Tengah,2023-01-16,DBD,0
+33.74.01,Semarang Tengah,2023-01-23,DBD,0
+33.74.01,Semarang Tengah,2023-01-30,DBD,0
+33.74.01,Semarang Tengah,2023-02-06,DBD,0
+33.74.01,Semarang Tengah,2023-02-13,DBD,0
+33.74.01,Semarang Tengah,2023-02-20,DBD,1
+33.74.01,Semarang Tengah,2023-02-27,DBD,0
+33.74.01,Semarang Tengah,2023-03-06,DBD,0
+33.74.01,Semarang Tengah,2023-03-13,DBD,0
+33.74.01,Semarang Tengah,2023-03-20,DBD,0
+33.74.01,Semarang Tengah,2023-03-27,DBD,0
+33.74.01,Semarang Tengah,2023-04-03,DBD,0
+33.74.01,Semarang Tengah,2023-04-10,DBD,0
+33.74.01,Semarang Tengah,2023-04-17,DBD,1
+33.74.01,Semarang Tengah,2023-04-24,DBD,0
+33.74.01,Semarang Tengah,2023-05-01,DBD,0
+33.74.01,Semarang Tengah,2023-05-08,DBD,1
+33.74.01,Semarang Tengah,2023-05-15,DBD,0
+33.74.01,Semarang Tengah,2023-05-22,DBD,0
+33.74.01,Semarang Tengah,2023-05-29,DBD,0
+33.74.01,Semarang Tengah,2023-06-05,DBD,0
+33.74.01,Semarang Tengah,2023-06-12,DBD,0
+33.74.01,Semarang Tengah,2023-06-19,DBD,1
+33.74.01,Semarang Tengah,2023-06-26,DBD,0
+33.74.01,Semarang Tengah,2023-07-03,DBD,0
+33.74.01,Semarang Tengah,2023-07-10,DBD,0
+33.74.01,Semarang Tengah,2023-07-17,DBD,0
+33.74.01,Semarang Tengah,2023-07-24,DBD,0
+33.74.01,Semarang Tengah,2023-07-31,DBD,0
+33.74.01,Semarang Tengah,2023-08-07,DBD,0
+33.74.01,Semarang Tengah,2023-08-14,DBD,1
+33.74.01,Semarang Tengah,2023-08-21,DBD,0
+33.74.01,Semarang Tengah,2023-08-28,DBD,0
+33.74.01,Semarang Tengah,2023-09-04,DBD,0
+33.74.01,Semarang Tengah,2023-09-11,DBD,0
+33.74.01,Semarang Tengah,2023-09-18,DBD,0
+33.74.01,Semarang Tengah,2023-09-25,DBD,0
+33.74.01,Semarang Tengah,2023-10-02,DBD,0
+33.74.01,Semarang Tengah,2023-10-09,DBD,0
+33.74.01,Semarang Tengah,2023-10-16,DBD,0
+33.74.01,Semarang Tengah,2023-10-23,DBD,0
+33.74.01,Semarang Tengah,2023-10-30,DBD,0
+33.74.01,Semarang Tengah,2023-11-06,DBD,0
+33.74.01,Semarang Tengah,2023-11-13,DBD,0
+33.74.01,Semarang Tengah,2023-11-20,DBD,0
+33.74.01,Semarang Tengah,2023-11-27,DBD,0
+33.74.01,Semarang Tengah,2023-12-04,DBD,0
+33.74.01,Semarang Tengah,2023-12-11,DBD,0
+33.74.01,Semarang Tengah,2023-12-18,DBD,0
+33.74.01,Semarang Tengah,2023-12-25,DBD,0
+33.74.02,Semarang Utara,2023-01-02,DBD,0
+33.74.02,Semarang Utara,2023-01-09,DBD,2
+33.74.02,Semarang Utara,2023-01-16,DBD,1
+33.74.02,Semarang Utara,2023-01-23,DBD,2
+33.74.02,Semarang Utara,2023-01-30,DBD,0
+33.74.02,Semarang Utara,2023-02-06,DBD,1
+33.74.02,Semarang Utara,2023-02-13,DBD,2
+33.74.02,Semarang Utara,2023-02-20,DBD,1
+33.74.02,Semarang Utara,2023-02-27,DBD,1
+33.74.02,Semarang Utara,2023-03-06,DBD,1
+33.74.02,Semarang Utara,2023-03-13,DBD,3
+33.74.02,Semarang Utara,2023-03-20,DBD,0
+33.74.02,Semarang Utara,2023-03-27,DBD,1
+33.74.02,Semarang Utara,2023-04-03,DBD,0
+33.74.02,Semarang Utara,2023-04-10,DBD,7
+33.74.02,Semarang Utara,2023-04-17,DBD,3
+33.74.02,Semarang Utara,2023-04-24,DBD,1
+33.74.02,Semarang Utara,2023-05-01,DBD,1
+33.74.02,Semarang Utara,2023-05-08,DBD,1
+33.74.02,Semarang Utara,2023-05-15,DBD,0
+33.74.02,Semarang Utara,2023-05-22,DBD,0
+33.74.02,Semarang Utara,2023-05-29,DBD,1
+33.74.02,Semarang Utara,2023-06-05,DBD,0
+33.74.02,Semarang Utara,2023-06-12,DBD,1
+33.74.02,Semarang Utara,2023-06-19,DBD,0
+33.74.02,Semarang Utara,2023-06-26,DBD,1
+33.74.02,Semarang Utara,2023-07-03,DBD,0
+33.74.02,Semarang Utara,2023-07-10,DBD,0
+33.74.02,Semarang Utara,2023-07-17,DBD,0
+33.74.02,Semarang Utara,2023-07-24,DBD,0
+33.74.02,Semarang Utara,2023-07-31,DBD,0
+33.74.02,Semarang Utara,2023-08-07,DBD,0
+33.74.02,Semarang Utara,2023-08-14,DBD,1
+33.74.02,Semarang Utara,2023-08-21,DBD,0
+33.74.02,Semarang Utara,2023-08-28,DBD,0
+33.74.02,Semarang Utara,2023-09-04,DBD,0
+33.74.02,Semarang Utara,2023-09-11,DBD,0
+33.74.02,Semarang Utara,2023-09-18,DBD,0
+33.74.02,Semarang Utara,2023-09-25,DBD,0
+33.74.02,Semarang Utara,2023-10-02,DBD,0
+33.74.02,Semarang Utara,2023-10-09,DBD,0
+33.74.02,Semarang Utara,2023-10-16,DBD,0
+33.74.02,Semarang Utara,2023-10-23,DBD,0
+33.74.02,Semarang Utara,2023-10-30,DBD,1
+33.74.02,Semarang Utara,2023-11-06,DBD,0
+33.74.02,Semarang Utara,2023-11-13,DBD,0
+33.74.02,Semarang Utara,2023-11-20,DBD,0
+33.74.02,Semarang Utara,2023-11-27,DBD,0
+33.74.02,Semarang Utara,2023-12-04,DBD,0
+33.74.02,Semarang Utara,2023-12-11,DBD,0
+33.74.02,Semarang Utara,2023-12-18,DBD,0
+33.74.02,Semarang Utara,2023-12-25,DBD,0
+33.74.03,Semarang Timur,2023-01-02,DBD,2
+33.74.03,Semarang Timur,2023-01-09,DBD,0
+33.74.03,Semarang Timur,2023-01-16,DBD,4
+33.74.03,Semarang Timur,2023-01-23,DBD,0
+33.74.03,Semarang Timur,2023-01-30,DBD,2
+33.74.03,Semarang Timur,2023-02-06,DBD,1
+33.74.03,Semarang Timur,2023-02-13,DBD,2
+33.74.03,Semarang Timur,2023-02-20,DBD,2
+33.74.03,Semarang Timur,2023-02-27,DBD,1
+33.74.03,Semarang Timur,2023-03-06,DBD,1
+33.74.03,Semarang Timur,2023-03-13,DBD,0
+33.74.03,Semarang Timur,2023-03-20,DBD,0
+33.74.03,Semarang Timur,2023-03-27,DBD,1
+33.74.03,Semarang Timur,2023-04-03,DBD,0
+33.74.03,Semarang Timur,2023-04-10,DBD,3
+33.74.03,Semarang Timur,2023-04-17,DBD,1
+33.74.03,Semarang Timur,2023-04-24,DBD,3
+33.74.03,Semarang Timur,2023-05-01,DBD,1
+33.74.03,Semarang Timur,2023-05-08,DBD,2
+33.74.03,Semarang Timur,2023-05-15,DBD,0
+33.74.03,Semarang Timur,2023-05-22,DBD,1
+33.74.03,Semarang Timur,2023-05-29,DBD,1
+33.74.03,Semarang Timur,2023-06-05,DBD,0
+33.74.03,Semarang Timur,2023-06-12,DBD,0
+33.74.03,Semarang Timur,2023-06-19,DBD,0
+33.74.03,Semarang Timur,2023-06-26,DBD,0
+33.74.03,Semarang Timur,2023-07-03,DBD,0
+33.74.03,Semarang Timur,2023-07-10,DBD,0
+33.74.03,Semarang Timur,2023-07-17,DBD,0
+33.74.03,Semarang Timur,2023-07-24,DBD,0
+33.74.03,Semarang Timur,2023-07-31,DBD,0
+33.74.03,Semarang Timur,2023-08-07,DBD,0
+33.74.03,Semarang Timur,2023-08-14,DBD,0
+33.74.03,Semarang Timur,2023-08-21,DBD,0
+33.74.03,Semarang Timur,2023-08-28,DBD,1
+33.74.03,Semarang Timur,2023-09-04,DBD,0
+33.74.03,Semarang Timur,2023-09-11,DBD,1
+33.74.03,Semarang Timur,2023-09-18,DBD,0
+33.74.03,Semarang Timur,2023-09-25,DBD,0
+33.74.03,Semarang Timur,2023-10-02,DBD,0
+33.74.03,Semarang Timur,2023-10-09,DBD,0
+33.74.03,Semarang Timur,2023-10-16,DBD,0
+33.74.03,Semarang Timur,2023-10-23,DBD,0
+33.74.03,Semarang Timur,2023-10-30,DBD,0
+33.74.03,Semarang Timur,2023-11-06,DBD,0
+33.74.03,Semarang Timur,2023-11-13,DBD,0
+33.74.03,Semarang Timur,2023-11-20,DBD,0
+33.74.03,Semarang Timur,2023-11-27,DBD,0
+33.74.03,Semarang Timur,2023-12-04,DBD,0
+33.74.03,Semarang Timur,2023-12-11,DBD,0
+33.74.03,Semarang Timur,2023-12-18,DBD,0
+33.74.03,Semarang Timur,2023-12-25,DBD,1
+33.74.04,Semarang Selatan,2023-01-02,DBD,0
+33.74.04,Semarang Selatan,2023-01-09,DBD,0
+33.74.04,Semarang Selatan,2023-01-16,DBD,1
+33.74.04,Semarang Selatan,2023-01-23,DBD,0
+33.74.04,Semarang Selatan,2023-01-30,DBD,0
+33.74.04,Semarang Selatan,2023-02-06,DBD,3
+33.74.04,Semarang Selatan,2023-02-13,DBD,0
+33.74.04,Semarang Selatan,2023-02-20,DBD,0
+33.74.04,Semarang Selatan,2023-02-27,DBD,1
+33.74.04,Semarang Selatan,2023-03-06,DBD,0
+33.74.04,Semarang Selatan,2023-03-13,DBD,0
+33.74.04,Semarang Selatan,2023-03-20,DBD,0
+33.74.04,Semarang Selatan,2023-03-27,DBD,0
+33.74.04,Semarang Selatan,2023-04-03,DBD,0
+33.74.04,Semarang Selatan,2023-04-10,DBD,1
+33.74.04,Semarang Selatan,2023-04-17,DBD,0
+33.74.04,Semarang Selatan,2023-04-24,DBD,0
+33.74.04,Semarang Selatan,2023-05-01,DBD,2
+33.74.04,Semarang Selatan,2023-05-08,DBD,0
+33.74.04,Semarang Selatan,2023-05-15,DBD,0
+33.74.04,Semarang Selatan,2023-05-22,DBD,0
+33.74.04,Semarang Selatan,2023-05-29,DBD,0
+33.74.04,Semarang Selatan,2023-06-05,DBD,0
+33.74.04,Semarang Selatan,2023-06-12,DBD,0
+33.74.04,Semarang Selatan,2023-06-19,DBD,0
+33.74.04,Semarang Selatan,2023-06-26,DBD,1
+33.74.04,Semarang Selatan,2023-07-03,DBD,0
+33.74.04,Semarang Selatan,2023-07-10,DBD,0
+33.74.04,Semarang Selatan,2023-07-17,DBD,0
+33.74.04,Semarang Selatan,2023-07-24,DBD,0
+33.74.04,Semarang Selatan,2023-07-31,DBD,0
+33.74.04,Semarang Selatan,2023-08-07,DBD,0
+33.74.04,Semarang Selatan,2023-08-14,DBD,0
+33.74.04,Semarang Selatan,2023-08-21,DBD,0
+33.74.04,Semarang Selatan,2023-08-28,DBD,0
+33.74.04,Semarang Selatan,2023-09-04,DBD,0
+33.74.04,Semarang Selatan,2023-09-11,DBD,0
+33.74.04,Semarang Selatan,2023-09-18,DBD,0
+33.74.04,Semarang Selatan,2023-09-25,DBD,0
+33.74.04,Semarang Selatan,2023-10-02,DBD,0
+33.74.04,Semarang Selatan,2023-10-09,DBD,0
+33.74.04,Semarang Selatan,2023-10-16,DBD,0
+33.74.04,Semarang Selatan,2023-10-23,DBD,0
+33.74.04,Semarang Selatan,2023-10-30,DBD,0
+33.74.04,Semarang Selatan,2023-11-06,DBD,0
+33.74.04,Semarang Selatan,2023-11-13,DBD,0
+33.74.04,Semarang Selatan,2023-11-20,DBD,0
+33.74.04,Semarang Selatan,2023-11-27,DBD,0
+33.74.04,Semarang Selatan,2023-12-04,DBD,0
+33.74.04,Semarang Selatan,2023-12-11,DBD,0
+33.74.04,Semarang Selatan,2023-12-18,DBD,0
+33.74.04,Semarang Selatan,2023-12-25,DBD,0
+33.74.05,Semarang Barat,2023-01-02,DBD,1
+33.74.05,Semarang Barat,2023-01-09,DBD,0
+33.74.05,Semarang Barat,2023-01-16,DBD,1
+33.74.05,Semarang Barat,2023-01-23,DBD,1
+33.74.05,Semarang Barat,2023-01-30,DBD,2
+33.74.05,Semarang Barat,2023-02-06,DBD,2
+33.74.05,Semarang Barat,2023-02-13,DBD,1
+33.74.05,Semarang Barat,2023-02-20,DBD,0
+33.74.05,Semarang Barat,2023-02-27,DBD,0
+33.74.05,Semarang Barat,2023-03-06,DBD,0
+33.74.05,Semarang Barat,2023-03-13,DBD,0
+33.74.05,Semarang Barat,2023-03-20,DBD,0
+33.74.05,Semarang Barat,2023-03-27,DBD,2
+33.74.05,Semarang Barat,2023-04-03,DBD,0
+33.74.05,Semarang Barat,2023-04-10,DBD,3
+33.74.05,Semarang Barat,2023-04-17,DBD,1
+33.74.05,Semarang Barat,2023-04-24,DBD,0
+33.74.05,Semarang Barat,2023-05-01,DBD,0
+33.74.05,Semarang Barat,2023-05-08,DBD,4
+33.74.05,Semarang Barat,2023-05-15,DBD,1
+33.74.05,Semarang Barat,2023-05-22,DBD,2
+33.74.05,Semarang Barat,2023-05-29,DBD,1
+33.74.05,Semarang Barat,2023-06-05,DBD,0
+33.74.05,Semarang Barat,2023-06-12,DBD,1
+33.74.05,Semarang Barat,2023-06-19,DBD,0
+33.74.05,Semarang Barat,2023-06-26,DBD,1
+33.74.05,Semarang Barat,2023-07-03,DBD,0
+33.74.05,Semarang Barat,2023-07-10,DBD,0
+33.74.05,Semarang Barat,2023-07-17,DBD,0
+33.74.05,Semarang Barat,2023-07-24,DBD,0
+33.74.05,Semarang Barat,2023-07-31,DBD,0
+33.74.05,Semarang Barat,2023-08-07,DBD,0
+33.74.05,Semarang Barat,2023-08-14,DBD,0
+33.74.05,Semarang Barat,2023-08-21,DBD,0
+33.74.05,Semarang Barat,2023-08-28,DBD,0
+33.74.05,Semarang Barat,2023-09-04,DBD,0
+33.74.05,Semarang Barat,2023-09-11,DBD,1
+33.74.05,Semarang Barat,2023-09-18,DBD,1
+33.74.05,Semarang Barat,2023-09-25,DBD,1
+33.74.05,Semarang Barat,2023-10-02,DBD,0
+33.74.05,Semarang Barat,2023-10-09,DBD,0
+33.74.05,Semarang Barat,2023-10-16,DBD,0
+33.74.05,Semarang Barat,2023-10-23,DBD,0
+33.74.05,Semarang Barat,2023-10-30,DBD,0
+33.74.05,Semarang Barat,2023-11-06,DBD,0
+33.74.05,Semarang Barat,2023-11-13,DBD,0
+33.74.05,Semarang Barat,2023-11-20,DBD,0
+33.74.05,Semarang Barat,2023-11-27,DBD,0
+33.74.05,Semarang Barat,2023-12-04,DBD,0
+33.74.05,Semarang Barat,2023-12-11,DBD,0
+33.74.05,Semarang Barat,2023-12-18,DBD,0
+33.74.05,Semarang Barat,2023-12-25,DBD,0
+33.74.06,Gayamsari,2023-01-02,DBD,1
+33.74.06,Gayamsari,2023-01-09,DBD,0
+33.74.06,Gayamsari,2023-01-16,DBD,2
+33.74.06,Gayamsari,2023-01-23,DBD,1
+33.74.06,Gayamsari,2023-01-30,DBD,0
+33.74.06,Gayamsari,2023-02-06,DBD,2
+33.74.06,Gayamsari,2023-02-13,DBD,0
+33.74.06,Gayamsari,2023-02-20,DBD,2
+33.74.06,Gayamsari,2023-02-27,DBD,0
+33.74.06,Gayamsari,2023-03-06,DBD,0
+33.74.06,Gayamsari,2023-03-13,DBD,1
+33.74.06,Gayamsari,2023-03-20,DBD,2
+33.74.06,Gayamsari,2023-03-27,DBD,1
+33.74.06,Gayamsari,2023-04-03,DBD,1
+33.74.06,Gayamsari,2023-04-10,DBD,0
+33.74.06,Gayamsari,2023-04-17,DBD,1
+33.74.06,Gayamsari,2023-04-24,DBD,0
+33.74.06,Gayamsari,2023-05-01,DBD,1
+33.74.06,Gayamsari,2023-05-08,DBD,1
+33.74.06,Gayamsari,2023-05-15,DBD,0
+33.74.06,Gayamsari,2023-05-22,DBD,0
+33.74.06,Gayamsari,2023-05-29,DBD,0
+33.74.06,Gayamsari,2023-06-05,DBD,1
+33.74.06,Gayamsari,2023-06-12,DBD,0
+33.74.06,Gayamsari,2023-06-19,DBD,0
+33.74.06,Gayamsari,2023-06-26,DBD,0
+33.74.06,Gayamsari,2023-07-03,DBD,1
+33.74.06,Gayamsari,2023-07-10,DBD,0
+33.74.06,Gayamsari,2023-07-17,DBD,0
+33.74.06,Gayamsari,2023-07-24,DBD,0
+33.74.06,Gayamsari,2023-07-31,DBD,0
+33.74.06,Gayamsari,2023-08-07,DBD,0
+33.74.06,Gayamsari,2023-08-14,DBD,0
+33.74.06,Gayamsari,2023-08-21,DBD,0
+33.74.06,Gayamsari,2023-08-28,DBD,0
+33.74.06,Gayamsari,2023-09-04,DBD,0
+33.74.06,Gayamsari,2023-09-11,DBD,0
+33.74.06,Gayamsari,2023-09-18,DBD,0
+33.74.06,Gayamsari,2023-09-25,DBD,0
+33.74.06,Gayamsari,2023-10-02,DBD,0
+33.74.06,Gayamsari,2023-10-09,DBD,0
+33.74.06,Gayamsari,2023-10-16,DBD,0
+33.74.06,Gayamsari,2023-10-23,DBD,0
+33.74.06,Gayamsari,2023-10-30,DBD,0
+33.74.06,Gayamsari,2023-11-06,DBD,0
+33.74.06,Gayamsari,2023-11-13,DBD,0
+33.74.06,Gayamsari,2023-11-20,DBD,2
+33.74.06,Gayamsari,2023-11-27,DBD,0
+33.74.06,Gayamsari,2023-12-04,DBD,0
+33.74.06,Gayamsari,2023-12-11,DBD,0
+33.74.06,Gayamsari,2023-12-18,DBD,0
+33.74.06,Gayamsari,2023-12-25,DBD,0
+33.74.07,Candisari,2023-01-02,DBD,0
+33.74.07,Candisari,2023-01-09,DBD,1
+33.74.07,Candisari,2023-01-16,DBD,1
+33.74.07,Candisari,2023-01-23,DBD,0
+33.74.07,Candisari,2023-01-30,DBD,0
+33.74.07,Candisari,2023-02-06,DBD,0
+33.74.07,Candisari,2023-02-13,DBD,0
+33.74.07,Candisari,2023-02-20,DBD,1
+33.74.07,Candisari,2023-02-27,DBD,0
+33.74.07,Candisari,2023-03-06,DBD,0
+33.74.07,Candisari,2023-03-13,DBD,0
+33.74.07,Candisari,2023-03-20,DBD,2
+33.74.07,Candisari,2023-03-27,DBD,1
+33.74.07,Candisari,2023-04-03,DBD,0
+33.74.07,Candisari,2023-04-10,DBD,3
+33.74.07,Candisari,2023-04-17,DBD,0
+33.74.07,Candisari,2023-04-24,DBD,0
+33.74.07,Candisari,2023-05-01,DBD,1
+33.74.07,Candisari,2023-05-08,DBD,1
+33.74.07,Candisari,2023-05-15,DBD,0
+33.74.07,Candisari,2023-05-22,DBD,0
+33.74.07,Candisari,2023-05-29,DBD,0
+33.74.07,Candisari,2023-06-05,DBD,1
+33.74.07,Candisari,2023-06-12,DBD,0
+33.74.07,Candisari,2023-06-19,DBD,0
+33.74.07,Candisari,2023-06-26,DBD,0
+33.74.07,Candisari,2023-07-03,DBD,0
+33.74.07,Candisari,2023-07-10,DBD,0
+33.74.07,Candisari,2023-07-17,DBD,0
+33.74.07,Candisari,2023-07-24,DBD,0
+33.74.07,Candisari,2023-07-31,DBD,0
+33.74.07,Candisari,2023-08-07,DBD,0
+33.74.07,Candisari,2023-08-14,DBD,0
+33.74.07,Candisari,2023-08-21,DBD,0
+33.74.07,Candisari,2023-08-28,DBD,0
+33.74.07,Candisari,2023-09-04,DBD,0
+33.74.07,Candisari,2023-09-11,DBD,0
+33.74.07,Candisari,2023-09-18,DBD,0
+33.74.07,Candisari,2023-09-25,DBD,0
+33.74.07,Candisari,2023-10-02,DBD,0
+33.74.07,Candisari,2023-10-09,DBD,0
+33.74.07,Candisari,2023-10-16,DBD,0
+33.74.07,Candisari,2023-10-23,DBD,0
+33.74.07,Candisari,2023-10-30,DBD,0
+33.74.07,Candisari,2023-11-06,DBD,0
+33.74.07,Candisari,2023-11-13,DBD,0
+33.74.07,Candisari,2023-11-20,DBD,0
+33.74.07,Candisari,2023-11-27,DBD,1
+33.74.07,Candisari,2023-12-04,DBD,0
+33.74.07,Candisari,2023-12-11,DBD,0
+33.74.07,Candisari,2023-12-18,DBD,0
+33.74.07,Candisari,2023-12-25,DBD,0
+33.74.08,Gajahmungkur,2023-01-02,DBD,0
+33.74.08,Gajahmungkur,2023-01-09,DBD,0
+33.74.08,Gajahmungkur,2023-01-16,DBD,0
+33.74.08,Gajahmungkur,2023-01-23,DBD,0
+33.74.08,Gajahmungkur,2023-01-30,DBD,0
+33.74.08,Gajahmungkur,2023-02-06,DBD,2
+33.74.08,Gajahmungkur,2023-02-13,DBD,1
+33.74.08,Gajahmungkur,2023-02-20,DBD,0
+33.74.08,Gajahmungkur,2023-02-27,DBD,0
+33.74.08,Gajahmungkur,2023-03-06,DBD,0
+33.74.08,Gajahmungkur,2023-03-13,DBD,0
+33.74.08,Gajahmungkur,2023-03-20,DBD,0
+33.74.08,Gajahmungkur,2023-03-27,DBD,0
+33.74.08,Gajahmungkur,2023-04-03,DBD,0
+33.74.08,Gajahmungkur,2023-04-10,DBD,0
+33.74.08,Gajahmungkur,2023-04-17,DBD,0
+33.74.08,Gajahmungkur,2023-04-24,DBD,0
+33.74.08,Gajahmungkur,2023-05-01,DBD,0
+33.74.08,Gajahmungkur,2023-05-08,DBD,0
+33.74.08,Gajahmungkur,2023-05-15,DBD,0
+33.74.08,Gajahmungkur,2023-05-22,DBD,0
+33.74.08,Gajahmungkur,2023-05-29,DBD,0
+33.74.08,Gajahmungkur,2023-06-05,DBD,1
+33.74.08,Gajahmungkur,2023-06-12,DBD,0
+33.74.08,Gajahmungkur,2023-06-19,DBD,0
+33.74.08,Gajahmungkur,2023-06-26,DBD,0
+33.74.08,Gajahmungkur,2023-07-03,DBD,0
+33.74.08,Gajahmungkur,2023-07-10,DBD,0
+33.74.08,Gajahmungkur,2023-07-17,DBD,0
+33.74.08,Gajahmungkur,2023-07-24,DBD,0
+33.74.08,Gajahmungkur,2023-07-31,DBD,0
+33.74.08,Gajahmungkur,2023-08-07,DBD,0
+33.74.08,Gajahmungkur,2023-08-14,DBD,0
+33.74.08,Gajahmungkur,2023-08-21,DBD,0
+33.74.08,Gajahmungkur,2023-08-28,DBD,0
+33.74.08,Gajahmungkur,2023-09-04,DBD,0
+33.74.08,Gajahmungkur,2023-09-11,DBD,0
+33.74.08,Gajahmungkur,2023-09-18,DBD,0
+33.74.08,Gajahmungkur,2023-09-25,DBD,0
+33.74.08,Gajahmungkur,2023-10-02,DBD,0
+33.74.08,Gajahmungkur,2023-10-09,DBD,0
+33.74.08,Gajahmungkur,2023-10-16,DBD,0
+33.74.08,Gajahmungkur,2023-10-23,DBD,0
+33.74.08,Gajahmungkur,2023-10-30,DBD,0
+33.74.08,Gajahmungkur,2023-11-06,DBD,0
+33.74.08,Gajahmungkur,2023-11-13,DBD,0
+33.74.08,Gajahmungkur,2023-11-20,DBD,0
+33.74.08,Gajahmungkur,2023-11-27,DBD,0
+33.74.08,Gajahmungkur,2023-12-04,DBD,0
+33.74.08,Gajahmungkur,2023-12-11,DBD,0
+33.74.08,Gajahmungkur,2023-12-18,DBD,0
+33.74.08,Gajahmungkur,2023-12-25,DBD,0
+33.74.09,Genuk,2023-01-02,DBD,1
+33.74.09,Genuk,2023-01-09,DBD,3
+33.74.09,Genuk,2023-01-16,DBD,1
+33.74.09,Genuk,2023-01-23,DBD,2
+33.74.09,Genuk,2023-01-30,DBD,0
+33.74.09,Genuk,2023-02-06,DBD,1
+33.74.09,Genuk,2023-02-13,DBD,2
+33.74.09,Genuk,2023-02-20,DBD,5
+33.74.09,Genuk,2023-02-27,DBD,0
+33.74.09,Genuk,2023-03-06,DBD,0
+33.74.09,Genuk,2023-03-13,DBD,2
+33.74.09,Genuk,2023-03-20,DBD,0
+33.74.09,Genuk,2023-03-27,DBD,2
+33.74.09,Genuk,2023-04-03,DBD,3
+33.74.09,Genuk,2023-04-10,DBD,3
+33.74.09,Genuk,2023-04-17,DBD,1
+33.74.09,Genuk,2023-04-24,DBD,1
+33.74.09,Genuk,2023-05-01,DBD,2
+33.74.09,Genuk,2023-05-08,DBD,1
+33.74.09,Genuk,2023-05-15,DBD,0
+33.74.09,Genuk,2023-05-22,DBD,1
+33.74.09,Genuk,2023-05-29,DBD,0
+33.74.09,Genuk,2023-06-05,DBD,2
+33.74.09,Genuk,2023-06-12,DBD,0
+33.74.09,Genuk,2023-06-19,DBD,1
+33.74.09,Genuk,2023-06-26,DBD,0
+33.74.09,Genuk,2023-07-03,DBD,0
+33.74.09,Genuk,2023-07-10,DBD,0
+33.74.09,Genuk,2023-07-17,DBD,0
+33.74.09,Genuk,2023-07-24,DBD,0
+33.74.09,Genuk,2023-07-31,DBD,1
+33.74.09,Genuk,2023-08-07,DBD,2
+33.74.09,Genuk,2023-08-14,DBD,0
+33.74.09,Genuk,2023-08-21,DBD,0
+33.74.09,Genuk,2023-08-28,DBD,0
+33.74.09,Genuk,2023-09-04,DBD,1
+33.74.09,Genuk,2023-09-11,DBD,0
+33.74.09,Genuk,2023-09-18,DBD,0
+33.74.09,Genuk,2023-09-25,DBD,0
+33.74.09,Genuk,2023-10-02,DBD,0
+33.74.09,Genuk,2023-10-09,DBD,0
+33.74.09,Genuk,2023-10-16,DBD,0
+33.74.09,Genuk,2023-10-23,DBD,0
+33.74.09,Genuk,2023-10-30,DBD,0
+33.74.09,Genuk,2023-11-06,DBD,0
+33.74.09,Genuk,2023-11-13,DBD,0
+33.74.09,Genuk,2023-11-20,DBD,0
+33.74.09,Genuk,2023-11-27,DBD,0
+33.74.09,Genuk,2023-12-04,DBD,0
+33.74.09,Genuk,2023-12-11,DBD,0
+33.74.09,Genuk,2023-12-18,DBD,0
+33.74.09,Genuk,2023-12-25,DBD,1
+33.74.10,Pedurungan,2023-01-02,DBD,2
+33.74.10,Pedurungan,2023-01-09,DBD,3
+33.74.10,Pedurungan,2023-01-16,DBD,1
+33.74.10,Pedurungan,2023-01-23,DBD,4
+33.74.10,Pedurungan,2023-01-30,DBD,3
+33.74.10,Pedurungan,2023-02-06,DBD,3
+33.74.10,Pedurungan,2023-02-13,DBD,2
+33.74.10,Pedurungan,2023-02-20,DBD,3
+33.74.10,Pedurungan,2023-02-27,DBD,2
+33.74.10,Pedurungan,2023-03-06,DBD,1
+33.74.10,Pedurungan,2023-03-13,DBD,3
+33.74.10,Pedurungan,2023-03-20,DBD,2
+33.74.10,Pedurungan,2023-03-27,DBD,0
+33.74.10,Pedurungan,2023-04-03,DBD,1
+33.74.10,Pedurungan,2023-04-10,DBD,4
+33.74.10,Pedurungan,2023-04-17,DBD,4
+33.74.10,Pedurungan,2023-04-24,DBD,2
+33.74.10,Pedurungan,2023-05-01,DBD,3
+33.74.10,Pedurungan,2023-05-08,DBD,2
+33.74.10,Pedurungan,2023-05-15,DBD,1
+33.74.10,Pedurungan,2023-05-22,DBD,0
+33.74.10,Pedurungan,2023-05-29,DBD,1
+33.74.10,Pedurungan,2023-06-05,DBD,2
+33.74.10,Pedurungan,2023-06-12,DBD,0
+33.74.10,Pedurungan,2023-06-19,DBD,0
+33.74.10,Pedurungan,2023-06-26,DBD,2
+33.74.10,Pedurungan,2023-07-03,DBD,1
+33.74.10,Pedurungan,2023-07-10,DBD,4
+33.74.10,Pedurungan,2023-07-17,DBD,1
+33.74.10,Pedurungan,2023-07-24,DBD,0
+33.74.10,Pedurungan,2023-07-31,DBD,0
+33.74.10,Pedurungan,2023-08-07,DBD,0
+33.74.10,Pedurungan,2023-08-14,DBD,0
+33.74.10,Pedurungan,2023-08-21,DBD,1
+33.74.10,Pedurungan,2023-08-28,DBD,0
+33.74.10,Pedurungan,2023-09-04,DBD,0
+33.74.10,Pedurungan,2023-09-11,DBD,1
+33.74.10,Pedurungan,2023-09-18,DBD,0
+33.74.10,Pedurungan,2023-09-25,DBD,0
+33.74.10,Pedurungan,2023-10-02,DBD,0
+33.74.10,Pedurungan,2023-10-09,DBD,0
+33.74.10,Pedurungan,2023-10-16,DBD,0
+33.74.10,Pedurungan,2023-10-23,DBD,0
+33.74.10,Pedurungan,2023-10-30,DBD,0
+33.74.10,Pedurungan,2023-11-06,DBD,0
+33.74.10,Pedurungan,2023-11-13,DBD,0
+33.74.10,Pedurungan,2023-11-20,DBD,0
+33.74.10,Pedurungan,2023-11-27,DBD,0
+33.74.10,Pedurungan,2023-12-04,DBD,0
+33.74.10,Pedurungan,2023-12-11,DBD,0
+33.74.10,Pedurungan,2023-12-18,DBD,0
+33.74.10,Pedurungan,2023-12-25,DBD,1
+33.74.11,Tembalang,2023-01-02,DBD,1
+33.74.11,Tembalang,2023-01-09,DBD,2
+33.74.11,Tembalang,2023-01-16,DBD,2
+33.74.11,Tembalang,2023-01-23,DBD,6
+33.74.11,Tembalang,2023-01-30,DBD,1
+33.74.11,Tembalang,2023-02-06,DBD,2
+33.74.11,Tembalang,2023-02-13,DBD,3
+33.74.11,Tembalang,2023-02-20,DBD,3
+33.74.11,Tembalang,2023-02-27,DBD,0
+33.74.11,Tembalang,2023-03-06,DBD,2
+33.74.11,Tembalang,2023-03-13,DBD,1
+33.74.11,Tembalang,2023-03-20,DBD,2
+33.74.11,Tembalang,2023-03-27,DBD,1
+33.74.11,Tembalang,2023-04-03,DBD,1
+33.74.11,Tembalang,2023-04-10,DBD,5
+33.74.11,Tembalang,2023-04-17,DBD,2
+33.74.11,Tembalang,2023-04-24,DBD,1
+33.74.11,Tembalang,2023-05-01,DBD,2
+33.74.11,Tembalang,2023-05-08,DBD,3
+33.74.11,Tembalang,2023-05-15,DBD,0
+33.74.11,Tembalang,2023-05-22,DBD,1
+33.74.11,Tembalang,2023-05-29,DBD,0
+33.74.11,Tembalang,2023-06-05,DBD,3
+33.74.11,Tembalang,2023-06-12,DBD,2
+33.74.11,Tembalang,2023-06-19,DBD,2
+33.74.11,Tembalang,2023-06-26,DBD,0
+33.74.11,Tembalang,2023-07-03,DBD,0
+33.74.11,Tembalang,2023-07-10,DBD,0
+33.74.11,Tembalang,2023-07-17,DBD,0
+33.74.11,Tembalang,2023-07-24,DBD,0
+33.74.11,Tembalang,2023-07-31,DBD,0
+33.74.11,Tembalang,2023-08-07,DBD,1
+33.74.11,Tembalang,2023-08-14,DBD,0
+33.74.11,Tembalang,2023-08-21,DBD,0
+33.74.11,Tembalang,2023-08-28,DBD,0
+33.74.11,Tembalang,2023-09-04,DBD,0
+33.74.11,Tembalang,2023-09-11,DBD,1
+33.74.11,Tembalang,2023-09-18,DBD,0
+33.74.11,Tembalang,2023-09-25,DBD,0
+33.74.11,Tembalang,2023-10-02,DBD,0
+33.74.11,Tembalang,2023-10-09,DBD,0
+33.74.11,Tembalang,2023-10-16,DBD,0
+33.74.11,Tembalang,2023-10-23,DBD,0
+33.74.11,Tembalang,2023-10-30,DBD,1
+33.74.11,Tembalang,2023-11-06,DBD,0
+33.74.11,Tembalang,2023-11-13,DBD,0
+33.74.11,Tembalang,2023-11-20,DBD,0
+33.74.11,Tembalang,2023-11-27,DBD,0
+33.74.11,Tembalang,2023-12-04,DBD,0
+33.74.11,Tembalang,2023-12-11,DBD,0
+33.74.11,Tembalang,2023-12-18,DBD,0
+33.74.11,Tembalang,2023-12-25,DBD,2
+33.74.12,Banyumanik,2023-01-02,DBD,2
+33.74.12,Banyumanik,2023-01-09,DBD,0
+33.74.12,Banyumanik,2023-01-16,DBD,2
+33.74.12,Banyumanik,2023-01-23,DBD,5
+33.74.12,Banyumanik,2023-01-30,DBD,1
+33.74.12,Banyumanik,2023-02-06,DBD,4
+33.74.12,Banyumanik,2023-02-13,DBD,0
+33.74.12,Banyumanik,2023-02-20,DBD,1
+33.74.12,Banyumanik,2023-02-27,DBD,0
+33.74.12,Banyumanik,2023-03-06,DBD,1
+33.74.12,Banyumanik,2023-03-13,DBD,3
+33.74.12,Banyumanik,2023-03-20,DBD,0
+33.74.12,Banyumanik,2023-03-27,DBD,1
+33.74.12,Banyumanik,2023-04-03,DBD,0
+33.74.12,Banyumanik,2023-04-10,DBD,2
+33.74.12,Banyumanik,2023-04-17,DBD,1
+33.74.12,Banyumanik,2023-04-24,DBD,3
+33.74.12,Banyumanik,2023-05-01,DBD,1
+33.74.12,Banyumanik,2023-05-08,DBD,0
+33.74.12,Banyumanik,2023-05-15,DBD,0
+33.74.12,Banyumanik,2023-05-22,DBD,0
+33.74.12,Banyumanik,2023-05-29,DBD,0
+33.74.12,Banyumanik,2023-06-05,DBD,1
+33.74.12,Banyumanik,2023-06-12,DBD,2
+33.74.12,Banyumanik,2023-06-19,DBD,0
+33.74.12,Banyumanik,2023-06-26,DBD,1
+33.74.12,Banyumanik,2023-07-03,DBD,0
+33.74.12,Banyumanik,2023-07-10,DBD,1
+33.74.12,Banyumanik,2023-07-17,DBD,0
+33.74.12,Banyumanik,2023-07-24,DBD,0
+33.74.12,Banyumanik,2023-07-31,DBD,0
+33.74.12,Banyumanik,2023-08-07,DBD,0
+33.74.12,Banyumanik,2023-08-14,DBD,0
+33.74.12,Banyumanik,2023-08-21,DBD,0
+33.74.12,Banyumanik,2023-08-28,DBD,0
+33.74.12,Banyumanik,2023-09-04,DBD,0
+33.74.12,Banyumanik,2023-09-11,DBD,0
+33.74.12,Banyumanik,2023-09-18,DBD,1
+33.74.12,Banyumanik,2023-09-25,DBD,0
+33.74.12,Banyumanik,2023-10-02,DBD,0
+33.74.12,Banyumanik,2023-10-09,DBD,0
+33.74.12,Banyumanik,2023-10-16,DBD,0
+33.74.12,Banyumanik,2023-10-23,DBD,0
+33.74.12,Banyumanik,2023-10-30,DBD,0
+33.74.12,Banyumanik,2023-11-06,DBD,0
+33.74.12,Banyumanik,2023-11-13,DBD,0
+33.74.12,Banyumanik,2023-11-20,DBD,0
+33.74.12,Banyumanik,2023-11-27,DBD,0
+33.74.12,Banyumanik,2023-12-04,DBD,0
+33.74.12,Banyumanik,2023-12-11,DBD,0
+33.74.12,Banyumanik,2023-12-18,DBD,0
+33.74.12,Banyumanik,2023-12-25,DBD,1
+33.74.13,Gunungpati,2023-01-02,DBD,1
+33.74.13,Gunungpati,2023-01-09,DBD,0
+33.74.13,Gunungpati,2023-01-16,DBD,0
+33.74.13,Gunungpati,2023-01-23,DBD,1
+33.74.13,Gunungpati,2023-01-30,DBD,0
+33.74.13,Gunungpati,2023-02-06,DBD,0
+33.74.13,Gunungpati,2023-02-13,DBD,0
+33.74.13,Gunungpati,2023-02-20,DBD,0
+33.74.13,Gunungpati,2023-02-27,DBD,0
+33.74.13,Gunungpati,2023-03-06,DBD,0
+33.74.13,Gunungpati,2023-03-13,DBD,0
+33.74.13,Gunungpati,2023-03-20,DBD,1
+33.74.13,Gunungpati,2023-03-27,DBD,2
+33.74.13,Gunungpati,2023-04-03,DBD,2
+33.74.13,Gunungpati,2023-04-10,DBD,0
+33.74.13,Gunungpati,2023-04-17,DBD,0
+33.74.13,Gunungpati,2023-04-24,DBD,2
+33.74.13,Gunungpati,2023-05-01,DBD,1
+33.74.13,Gunungpati,2023-05-08,DBD,0
+33.74.13,Gunungpati,2023-05-15,DBD,0
+33.74.13,Gunungpati,2023-05-22,DBD,0
+33.74.13,Gunungpati,2023-05-29,DBD,1
+33.74.13,Gunungpati,2023-06-05,DBD,0
+33.74.13,Gunungpati,2023-06-12,DBD,0
+33.74.13,Gunungpati,2023-06-19,DBD,0
+33.74.13,Gunungpati,2023-06-26,DBD,0
+33.74.13,Gunungpati,2023-07-03,DBD,0
+33.74.13,Gunungpati,2023-07-10,DBD,0
+33.74.13,Gunungpati,2023-07-17,DBD,0
+33.74.13,Gunungpati,2023-07-24,DBD,0
+33.74.13,Gunungpati,2023-07-31,DBD,0
+33.74.13,Gunungpati,2023-08-07,DBD,0
+33.74.13,Gunungpati,2023-08-14,DBD,0
+33.74.13,Gunungpati,2023-08-21,DBD,0
+33.74.13,Gunungpati,2023-08-28,DBD,0
+33.74.13,Gunungpati,2023-09-04,DBD,0
+33.74.13,Gunungpati,2023-09-11,DBD,0
+33.74.13,Gunungpati,2023-09-18,DBD,0
+33.74.13,Gunungpati,2023-09-25,DBD,0
+33.74.13,Gunungpati,2023-10-02,DBD,0
+33.74.13,Gunungpati,2023-10-09,DBD,0
+33.74.13,Gunungpati,2023-10-16,DBD,0
+33.74.13,Gunungpati,2023-10-23,DBD,0
+33.74.13,Gunungpati,2023-10-30,DBD,0
+33.74.13,Gunungpati,2023-11-06,DBD,0
+33.74.13,Gunungpati,2023-11-13,DBD,0
+33.74.13,Gunungpati,2023-11-20,DBD,0
+33.74.13,Gunungpati,2023-11-27,DBD,0
+33.74.13,Gunungpati,2023-12-04,DBD,0
+33.74.13,Gunungpati,2023-12-11,DBD,1
+33.74.13,Gunungpati,2023-12-18,DBD,0
+33.74.13,Gunungpati,2023-12-25,DBD,0
+33.74.14,Mijen,2023-01-02,DBD,2
+33.74.14,Mijen,2023-01-09,DBD,0
+33.74.14,Mijen,2023-01-16,DBD,4
+33.74.14,Mijen,2023-01-23,DBD,0
+33.74.14,Mijen,2023-01-30,DBD,0
+33.74.14,Mijen,2023-02-06,DBD,0
+33.74.14,Mijen,2023-02-13,DBD,2
+33.74.14,Mijen,2023-02-20,DBD,1
+33.74.14,Mijen,2023-02-27,DBD,0
+33.74.14,Mijen,2023-03-06,DBD,0
+33.74.14,Mijen,2023-03-13,DBD,1
+33.74.14,Mijen,2023-03-20,DBD,0
+33.74.14,Mijen,2023-03-27,DBD,2
+33.74.14,Mijen,2023-04-03,DBD,2
+33.74.14,Mijen,2023-04-10,DBD,1
+33.74.14,Mijen,2023-04-17,DBD,2
+33.74.14,Mijen,2023-04-24,DBD,0
+33.74.14,Mijen,2023-05-01,DBD,2
+33.74.14,Mijen,2023-05-08,DBD,0
+33.74.14,Mijen,2023-05-15,DBD,0
+33.74.14,Mijen,2023-05-22,DBD,0
+33.74.14,Mijen,2023-05-29,DBD,1
+33.74.14,Mijen,2023-06-05,DBD,0
+33.74.14,Mijen,2023-06-12,DBD,0
+33.74.14,Mijen,2023-06-19,DBD,0
+33.74.14,Mijen,2023-06-26,DBD,0
+33.74.14,Mijen,2023-07-03,DBD,0
+33.74.14,Mijen,2023-07-10,DBD,0
+33.74.14,Mijen,2023-07-17,DBD,0
+33.74.14,Mijen,2023-07-24,DBD,0
+33.74.14,Mijen,2023-07-31,DBD,0
+33.74.14,Mijen,2023-08-07,DBD,0
+33.74.14,Mijen,2023-08-14,DBD,0
+33.74.14,Mijen,2023-08-21,DBD,0
+33.74.14,Mijen,2023-08-28,DBD,0
+33.74.14,Mijen,2023-09-04,DBD,0
+33.74.14,Mijen,2023-09-11,DBD,0
+33.74.14,Mijen,2023-09-18,DBD,0
+33.74.14,Mijen,2023-09-25,DBD,0
+33.74.14,Mijen,2023-10-02,DBD,0
+33.74.14,Mijen,2023-10-09,DBD,0
+33.74.14,Mijen,2023-10-16,DBD,0
+33.74.14,Mijen,2023-10-23,DBD,0
+33.74.14,Mijen,2023-10-30,DBD,0
+33.74.14,Mijen,2023-11-06,DBD,0
+33.74.14,Mijen,2023-11-13,DBD,0
+33.74.14,Mijen,2023-11-20,DBD,0
+33.74.14,Mijen,2023-11-27,DBD,1
+33.74.14,Mijen,2023-12-04,DBD,0
+33.74.14,Mijen,2023-12-11,DBD,0
+33.74.14,Mijen,2023-12-18,DBD,0
+33.74.14,Mijen,2023-12-25,DBD,0
+33.74.15,Ngaliyan,2023-01-02,DBD,1
+33.74.15,Ngaliyan,2023-01-09,DBD,1
+33.74.15,Ngaliyan,2023-01-16,DBD,3
+33.74.15,Ngaliyan,2023-01-23,DBD,3
+33.74.15,Ngaliyan,2023-01-30,DBD,0
+33.74.15,Ngaliyan,2023-02-06,DBD,1
+33.74.15,Ngaliyan,2023-02-13,DBD,0
+33.74.15,Ngaliyan,2023-02-20,DBD,1
+33.74.15,Ngaliyan,2023-02-27,DBD,0
+33.74.15,Ngaliyan,2023-03-06,DBD,2
+33.74.15,Ngaliyan,2023-03-13,DBD,2
+33.74.15,Ngaliyan,2023-03-20,DBD,2
+33.74.15,Ngaliyan,2023-03-27,DBD,1
+33.74.15,Ngaliyan,2023-04-03,DBD,3
+33.74.15,Ngaliyan,2023-04-10,DBD,2
+33.74.15,Ngaliyan,2023-04-17,DBD,5
+33.74.15,Ngaliyan,2023-04-24,DBD,1
+33.74.15,Ngaliyan,2023-05-01,DBD,0
+33.74.15,Ngaliyan,2023-05-08,DBD,2
+33.74.15,Ngaliyan,2023-05-15,DBD,0
+33.74.15,Ngaliyan,2023-05-22,DBD,1
+33.74.15,Ngaliyan,2023-05-29,DBD,0
+33.74.15,Ngaliyan,2023-06-05,DBD,0
+33.74.15,Ngaliyan,2023-06-12,DBD,2
+33.74.15,Ngaliyan,2023-06-19,DBD,0
+33.74.15,Ngaliyan,2023-06-26,DBD,2
+33.74.15,Ngaliyan,2023-07-03,DBD,0
+33.74.15,Ngaliyan,2023-07-10,DBD,0
+33.74.15,Ngaliyan,2023-07-17,DBD,0
+33.74.15,Ngaliyan,2023-07-24,DBD,0
+33.74.15,Ngaliyan,2023-07-31,DBD,0
+33.74.15,Ngaliyan,2023-08-07,DBD,0
+33.74.15,Ngaliyan,2023-08-14,DBD,0
+33.74.15,Ngaliyan,2023-08-21,DBD,0
+33.74.15,Ngaliyan,2023-08-28,DBD,0
+33.74.15,Ngaliyan,2023-09-04,DBD,0
+33.74.15,Ngaliyan,2023-09-11,DBD,1
+33.74.15,Ngaliyan,2023-09-18,DBD,1
+33.74.15,Ngaliyan,2023-09-25,DBD,0
+33.74.15,Ngaliyan,2023-10-02,DBD,0
+33.74.15,Ngaliyan,2023-10-09,DBD,0
+33.74.15,Ngaliyan,2023-10-16,DBD,0
+33.74.15,Ngaliyan,2023-10-23,DBD,0
+33.74.15,Ngaliyan,2023-10-30,DBD,0
+33.74.15,Ngaliyan,2023-11-06,DBD,0
+33.74.15,Ngaliyan,2023-11-13,DBD,0
+33.74.15,Ngaliyan,2023-11-20,DBD,1
+33.74.15,Ngaliyan,2023-11-27,DBD,0
+33.74.15,Ngaliyan,2023-12-04,DBD,0
+33.74.15,Ngaliyan,2023-12-11,DBD,0
+33.74.15,Ngaliyan,2023-12-18,DBD,0
+33.74.15,Ngaliyan,2023-12-25,DBD,0
+33.74.16,Tugu,2023-01-02,DBD,0
+33.74.16,Tugu,2023-01-09,DBD,0
+33.74.16,Tugu,2023-01-16,DBD,0
+33.74.16,Tugu,2023-01-23,DBD,0
+33.74.16,Tugu,2023-01-30,DBD,0
+33.74.16,Tugu,2023-02-06,DBD,1
+33.74.16,Tugu,2023-02-13,DBD,0
+33.74.16,Tugu,2023-02-20,DBD,0
+33.74.16,Tugu,2023-02-27,DBD,1
+33.74.16,Tugu,2023-03-06,DBD,0
+33.74.16,Tugu,2023-03-13,DBD,0
+33.74.16,Tugu,2023-03-20,DBD,0
+33.74.16,Tugu,2023-03-27,DBD,0
+33.74.16,Tugu,2023-04-03,DBD,1
+33.74.16,Tugu,2023-04-10,DBD,0
+33.74.16,Tugu,2023-04-17,DBD,1
+33.74.16,Tugu,2023-04-24,DBD,0
+33.74.16,Tugu,2023-05-01,DBD,1
+33.74.16,Tugu,2023-05-08,DBD,0
+33.74.16,Tugu,2023-05-15,DBD,0
+33.74.16,Tugu,2023-05-22,DBD,0
+33.74.16,Tugu,2023-05-29,DBD,0
+33.74.16,Tugu,2023-06-05,DBD,0
+33.74.16,Tugu,2023-06-12,DBD,0
+33.74.16,Tugu,2023-06-19,DBD,0
+33.74.16,Tugu,2023-06-26,DBD,0
+33.74.16,Tugu,2023-07-03,DBD,0
+33.74.16,Tugu,2023-07-10,DBD,0
+33.74.16,Tugu,2023-07-17,DBD,0
+33.74.16,Tugu,2023-07-24,DBD,0
+33.74.16,Tugu,2023-07-31,DBD,0
+33.74.16,Tugu,2023-08-07,DBD,0
+33.74.16,Tugu,2023-08-14,DBD,0
+33.74.16,Tugu,2023-08-21,DBD,0
+33.74.16,Tugu,2023-08-28,DBD,0
+33.74.16,Tugu,2023-09-04,DBD,0
+33.74.16,Tugu,2023-09-11,DBD,0
+33.74.16,Tugu,2023-09-18,DBD,0
+33.74.16,Tugu,2023-09-25,DBD,0
+33.74.16,Tugu,2023-10-02,DBD,0
+33.74.16,Tugu,2023-10-09,DBD,0
+33.74.16,Tugu,2023-10-16,DBD,0
+33.74.16,Tugu,2023-10-23,DBD,0
+33.74.16,Tugu,2023-10-30,DBD,0
+33.74.16,Tugu,2023-11-06,DBD,0
+33.74.16,Tugu,2023-11-13,DBD,0
+33.74.16,Tugu,2023-11-20,DBD,0
+33.74.16,Tugu,2023-11-27,DBD,0
+33.74.16,Tugu,2023-12-04,DBD,0
+33.74.16,Tugu,2023-12-11,DBD,0
+33.74.16,Tugu,2023-12-18,DBD,0
+33.74.16,Tugu,2023-12-25,DBD,0
+33.74.01,Semarang Tengah,2024-01-01,DBD,0
+33.74.01,Semarang Tengah,2024-01-08,DBD,0
+33.74.01,Semarang Tengah,2024-01-15,DBD,0
+33.74.01,Semarang Tengah,2024-01-22,DBD,1
+33.74.01,Semarang Tengah,2024-01-29,DBD,0
+33.74.01,Semarang Tengah,2024-02-05,DBD,0
+33.74.01,Semarang Tengah,2024-02-12,DBD,1
+33.74.01,Semarang Tengah,2024-02-19,DBD,0
+33.74.01,Semarang Tengah,2024-02-26,DBD,1
+33.74.01,Semarang Tengah,2024-03-04,DBD,0
+33.74.01,Semarang Tengah,2024-03-11,DBD,0
+33.74.01,Semarang Tengah,2024-03-18,DBD,0
+33.74.01,Semarang Tengah,2024-03-25,DBD,0
+33.74.01,Semarang Tengah,2024-04-01,DBD,0
+33.74.01,Semarang Tengah,2024-04-08,DBD,0
+33.74.01,Semarang Tengah,2024-04-15,DBD,0
+33.74.01,Semarang Tengah,2024-04-22,DBD,0
+33.74.01,Semarang Tengah,2024-04-29,DBD,0
+33.74.01,Semarang Tengah,2024-05-06,DBD,0
+33.74.01,Semarang Tengah,2024-05-13,DBD,0
+33.74.01,Semarang Tengah,2024-05-20,DBD,1
+33.74.01,Semarang Tengah,2024-05-27,DBD,0
+33.74.01,Semarang Tengah,2024-06-03,DBD,1
+33.74.01,Semarang Tengah,2024-06-10,DBD,1
+33.74.01,Semarang Tengah,2024-06-17,DBD,0
+33.74.01,Semarang Tengah,2024-06-24,DBD,0
+33.74.01,Semarang Tengah,2024-07-01,DBD,0
+33.74.01,Semarang Tengah,2024-07-08,DBD,0
+33.74.01,Semarang Tengah,2024-07-15,DBD,0
+33.74.01,Semarang Tengah,2024-07-22,DBD,0
+33.74.01,Semarang Tengah,2024-07-29,DBD,0
+33.74.01,Semarang Tengah,2024-08-05,DBD,0
+33.74.01,Semarang Tengah,2024-08-12,DBD,0
+33.74.01,Semarang Tengah,2024-08-19,DBD,1
+33.74.01,Semarang Tengah,2024-08-26,DBD,0
+33.74.01,Semarang Tengah,2024-09-02,DBD,0
+33.74.01,Semarang Tengah,2024-09-09,DBD,0
+33.74.01,Semarang Tengah,2024-09-16,DBD,0
+33.74.01,Semarang Tengah,2024-09-23,DBD,0
+33.74.01,Semarang Tengah,2024-09-30,DBD,0
+33.74.01,Semarang Tengah,2024-10-07,DBD,0
+33.74.01,Semarang Tengah,2024-10-14,DBD,0
+33.74.01,Semarang Tengah,2024-10-21,DBD,0
+33.74.01,Semarang Tengah,2024-10-28,DBD,0
+33.74.01,Semarang Tengah,2024-11-04,DBD,0
+33.74.01,Semarang Tengah,2024-11-11,DBD,0
+33.74.01,Semarang Tengah,2024-11-18,DBD,0
+33.74.01,Semarang Tengah,2024-11-25,DBD,0
+33.74.01,Semarang Tengah,2024-12-02,DBD,0
+33.74.01,Semarang Tengah,2024-12-09,DBD,0
+33.74.01,Semarang Tengah,2024-12-16,DBD,0
+33.74.01,Semarang Tengah,2024-12-23,DBD,0
+33.74.02,Semarang Utara,2024-01-01,DBD,1
+33.74.02,Semarang Utara,2024-01-08,DBD,0
+33.74.02,Semarang Utara,2024-01-15,DBD,0
+33.74.02,Semarang Utara,2024-01-22,DBD,1
+33.74.02,Semarang Utara,2024-01-29,DBD,0
+33.74.02,Semarang Utara,2024-02-05,DBD,0
+33.74.02,Semarang Utara,2024-02-12,DBD,0
+33.74.02,Semarang Utara,2024-02-19,DBD,2
+33.74.02,Semarang Utara,2024-02-26,DBD,1
+33.74.02,Semarang Utara,2024-03-04,DBD,1
+33.74.02,Semarang Utara,2024-03-11,DBD,1
+33.74.02,Semarang Utara,2024-03-18,DBD,0
+33.74.02,Semarang Utara,2024-03-25,DBD,0
+33.74.02,Semarang Utara,2024-04-01,DBD,0
+33.74.02,Semarang Utara,2024-04-08,DBD,0
+33.74.02,Semarang Utara,2024-04-15,DBD,0
+33.74.02,Semarang Utara,2024-04-22,DBD,1
+33.74.02,Semarang Utara,2024-04-29,DBD,1
+33.74.02,Semarang Utara,2024-05-06,DBD,1
+33.74.02,Semarang Utara,2024-05-13,DBD,0
+33.74.02,Semarang Utara,2024-05-20,DBD,1
+33.74.02,Semarang Utara,2024-05-27,DBD,1
+33.74.02,Semarang Utara,2024-06-03,DBD,1
+33.74.02,Semarang Utara,2024-06-10,DBD,1
+33.74.02,Semarang Utara,2024-06-17,DBD,0
+33.74.02,Semarang Utara,2024-06-24,DBD,0
+33.74.02,Semarang Utara,2024-07-01,DBD,0
+33.74.02,Semarang Utara,2024-07-08,DBD,0
+33.74.02,Semarang Utara,2024-07-15,DBD,0
+33.74.02,Semarang Utara,2024-07-22,DBD,0
+33.74.02,Semarang Utara,2024-07-29,DBD,1
+33.74.02,Semarang Utara,2024-08-05,DBD,0
+33.74.02,Semarang Utara,2024-08-12,DBD,0
+33.74.02,Semarang Utara,2024-08-19,DBD,0
+33.74.02,Semarang Utara,2024-08-26,DBD,0
+33.74.02,Semarang Utara,2024-09-02,DBD,0
+33.74.02,Semarang Utara,2024-09-09,DBD,0
+33.74.02,Semarang Utara,2024-09-16,DBD,0
+33.74.02,Semarang Utara,2024-09-23,DBD,0
+33.74.02,Semarang Utara,2024-09-30,DBD,0
+33.74.02,Semarang Utara,2024-10-07,DBD,0
+33.74.02,Semarang Utara,2024-10-14,DBD,0
+33.74.02,Semarang Utara,2024-10-21,DBD,1
+33.74.02,Semarang Utara,2024-10-28,DBD,0
+33.74.02,Semarang Utara,2024-11-04,DBD,0
+33.74.02,Semarang Utara,2024-11-11,DBD,0
+33.74.02,Semarang Utara,2024-11-18,DBD,0
+33.74.02,Semarang Utara,2024-11-25,DBD,0
+33.74.02,Semarang Utara,2024-12-02,DBD,0
+33.74.02,Semarang Utara,2024-12-09,DBD,0
+33.74.02,Semarang Utara,2024-12-16,DBD,0
+33.74.02,Semarang Utara,2024-12-23,DBD,1
+33.74.03,Semarang Timur,2024-01-01,DBD,0
+33.74.03,Semarang Timur,2024-01-08,DBD,0
+33.74.03,Semarang Timur,2024-01-15,DBD,0
+33.74.03,Semarang Timur,2024-01-22,DBD,0
+33.74.03,Semarang Timur,2024-01-29,DBD,0
+33.74.03,Semarang Timur,2024-02-05,DBD,1
+33.74.03,Semarang Timur,2024-02-12,DBD,0
+33.74.03,Semarang Timur,2024-02-19,DBD,0
+33.74.03,Semarang Timur,2024-02-26,DBD,0
+33.74.03,Semarang Timur,2024-03-04,DBD,1
+33.74.03,Semarang Timur,2024-03-11,DBD,0
+33.74.03,Semarang Timur,2024-03-18,DBD,0
+33.74.03,Semarang Timur,2024-03-25,DBD,0
+33.74.03,Semarang Timur,2024-04-01,DBD,0
+33.74.03,Semarang Timur,2024-04-08,DBD,0
+33.74.03,Semarang Timur,2024-04-15,DBD,0
+33.74.03,Semarang Timur,2024-04-22,DBD,1
+33.74.03,Semarang Timur,2024-04-29,DBD,0
+33.74.03,Semarang Timur,2024-05-06,DBD,0
+33.74.03,Semarang Timur,2024-05-13,DBD,3
+33.74.03,Semarang Timur,2024-05-20,DBD,0
+33.74.03,Semarang Timur,2024-05-27,DBD,0
+33.74.03,Semarang Timur,2024-06-03,DBD,0
+33.74.03,Semarang Timur,2024-06-10,DBD,0
+33.74.03,Semarang Timur,2024-06-17,DBD,0
+33.74.03,Semarang Timur,2024-06-24,DBD,1
+33.74.03,Semarang Timur,2024-07-01,DBD,0
+33.74.03,Semarang Timur,2024-07-08,DBD,0
+33.74.03,Semarang Timur,2024-07-15,DBD,0
+33.74.03,Semarang Timur,2024-07-22,DBD,1
+33.74.03,Semarang Timur,2024-07-29,DBD,1
+33.74.03,Semarang Timur,2024-08-05,DBD,0
+33.74.03,Semarang Timur,2024-08-12,DBD,0
+33.74.03,Semarang Timur,2024-08-19,DBD,0
+33.74.03,Semarang Timur,2024-08-26,DBD,0
+33.74.03,Semarang Timur,2024-09-02,DBD,0
+33.74.03,Semarang Timur,2024-09-09,DBD,0
+33.74.03,Semarang Timur,2024-09-16,DBD,0
+33.74.03,Semarang Timur,2024-09-23,DBD,0
+33.74.03,Semarang Timur,2024-09-30,DBD,0
+33.74.03,Semarang Timur,2024-10-07,DBD,0
+33.74.03,Semarang Timur,2024-10-14,DBD,0
+33.74.03,Semarang Timur,2024-10-21,DBD,0
+33.74.03,Semarang Timur,2024-10-28,DBD,0
+33.74.03,Semarang Timur,2024-11-04,DBD,0
+33.74.03,Semarang Timur,2024-11-11,DBD,1
+33.74.03,Semarang Timur,2024-11-18,DBD,0
+33.74.03,Semarang Timur,2024-11-25,DBD,0
+33.74.03,Semarang Timur,2024-12-02,DBD,0
+33.74.03,Semarang Timur,2024-12-09,DBD,1
+33.74.03,Semarang Timur,2024-12-16,DBD,0
+33.74.03,Semarang Timur,2024-12-23,DBD,0
+33.74.04,Semarang Selatan,2024-01-01,DBD,0
+33.74.04,Semarang Selatan,2024-01-08,DBD,0
+33.74.04,Semarang Selatan,2024-01-15,DBD,0
+33.74.04,Semarang Selatan,2024-01-22,DBD,0
+33.74.04,Semarang Selatan,2024-01-29,DBD,0
+33.74.04,Semarang Selatan,2024-02-05,DBD,0
+33.74.04,Semarang Selatan,2024-02-12,DBD,1
+33.74.04,Semarang Selatan,2024-02-19,DBD,0
+33.74.04,Semarang Selatan,2024-02-26,DBD,1
+33.74.04,Semarang Selatan,2024-03-04,DBD,0
+33.74.04,Semarang Selatan,2024-03-11,DBD,0
+33.74.04,Semarang Selatan,2024-03-18,DBD,1
+33.74.04,Semarang Selatan,2024-03-25,DBD,0
+33.74.04,Semarang Selatan,2024-04-01,DBD,0
+33.74.04,Semarang Selatan,2024-04-08,DBD,0
+33.74.04,Semarang Selatan,2024-04-15,DBD,0
+33.74.04,Semarang Selatan,2024-04-22,DBD,0
+33.74.04,Semarang Selatan,2024-04-29,DBD,0
+33.74.04,Semarang Selatan,2024-05-06,DBD,0
+33.74.04,Semarang Selatan,2024-05-13,DBD,1
+33.74.04,Semarang Selatan,2024-05-20,DBD,0
+33.74.04,Semarang Selatan,2024-05-27,DBD,0
+33.74.04,Semarang Selatan,2024-06-03,DBD,1
+33.74.04,Semarang Selatan,2024-06-10,DBD,0
+33.74.04,Semarang Selatan,2024-06-17,DBD,1
+33.74.04,Semarang Selatan,2024-06-24,DBD,0
+33.74.04,Semarang Selatan,2024-07-01,DBD,0
+33.74.04,Semarang Selatan,2024-07-08,DBD,0
+33.74.04,Semarang Selatan,2024-07-15,DBD,0
+33.74.04,Semarang Selatan,2024-07-22,DBD,0
+33.74.04,Semarang Selatan,2024-07-29,DBD,0
+33.74.04,Semarang Selatan,2024-08-05,DBD,0
+33.74.04,Semarang Selatan,2024-08-12,DBD,1
+33.74.04,Semarang Selatan,2024-08-19,DBD,0
+33.74.04,Semarang Selatan,2024-08-26,DBD,0
+33.74.04,Semarang Selatan,2024-09-02,DBD,1
+33.74.04,Semarang Selatan,2024-09-09,DBD,0
+33.74.04,Semarang Selatan,2024-09-16,DBD,0
+33.74.04,Semarang Selatan,2024-09-23,DBD,0
+33.74.04,Semarang Selatan,2024-09-30,DBD,0
+33.74.04,Semarang Selatan,2024-10-07,DBD,0
+33.74.04,Semarang Selatan,2024-10-14,DBD,0
+33.74.04,Semarang Selatan,2024-10-21,DBD,0
+33.74.04,Semarang Selatan,2024-10-28,DBD,0
+33.74.04,Semarang Selatan,2024-11-04,DBD,0
+33.74.04,Semarang Selatan,2024-11-11,DBD,0
+33.74.04,Semarang Selatan,2024-11-18,DBD,0
+33.74.04,Semarang Selatan,2024-11-25,DBD,0
+33.74.04,Semarang Selatan,2024-12-02,DBD,0
+33.74.04,Semarang Selatan,2024-12-09,DBD,1
+33.74.04,Semarang Selatan,2024-12-16,DBD,0
+33.74.04,Semarang Selatan,2024-12-23,DBD,1
+33.74.05,Semarang Barat,2024-01-01,DBD,0
+33.74.05,Semarang Barat,2024-01-08,DBD,0
+33.74.05,Semarang Barat,2024-01-15,DBD,0
+33.74.05,Semarang Barat,2024-01-22,DBD,0
+33.74.05,Semarang Barat,2024-01-29,DBD,0
+33.74.05,Semarang Barat,2024-02-05,DBD,0
+33.74.05,Semarang Barat,2024-02-12,DBD,1
+33.74.05,Semarang Barat,2024-02-19,DBD,0
+33.74.05,Semarang Barat,2024-02-26,DBD,1
+33.74.05,Semarang Barat,2024-03-04,DBD,0
+33.74.05,Semarang Barat,2024-03-11,DBD,1
+33.74.05,Semarang Barat,2024-03-18,DBD,0
+33.74.05,Semarang Barat,2024-03-25,DBD,3
+33.74.05,Semarang Barat,2024-04-01,DBD,0
+33.74.05,Semarang Barat,2024-04-08,DBD,1
+33.74.05,Semarang Barat,2024-04-15,DBD,0
+33.74.05,Semarang Barat,2024-04-22,DBD,1
+33.74.05,Semarang Barat,2024-04-29,DBD,0
+33.74.05,Semarang Barat,2024-05-06,DBD,0
+33.74.05,Semarang Barat,2024-05-13,DBD,4
+33.74.05,Semarang Barat,2024-05-20,DBD,0
+33.74.05,Semarang Barat,2024-05-27,DBD,0
+33.74.05,Semarang Barat,2024-06-03,DBD,0
+33.74.05,Semarang Barat,2024-06-10,DBD,1
+33.74.05,Semarang Barat,2024-06-17,DBD,0
+33.74.05,Semarang Barat,2024-06-24,DBD,0
+33.74.05,Semarang Barat,2024-07-01,DBD,1
+33.74.05,Semarang Barat,2024-07-08,DBD,0
+33.74.05,Semarang Barat,2024-07-15,DBD,0
+33.74.05,Semarang Barat,2024-07-22,DBD,2
+33.74.05,Semarang Barat,2024-07-29,DBD,0
+33.74.05,Semarang Barat,2024-08-05,DBD,1
+33.74.05,Semarang Barat,2024-08-12,DBD,0
+33.74.05,Semarang Barat,2024-08-19,DBD,1
+33.74.05,Semarang Barat,2024-08-26,DBD,0
+33.74.05,Semarang Barat,2024-09-02,DBD,1
+33.74.05,Semarang Barat,2024-09-09,DBD,1
+33.74.05,Semarang Barat,2024-09-16,DBD,0
+33.74.05,Semarang Barat,2024-09-23,DBD,1
+33.74.05,Semarang Barat,2024-09-30,DBD,0
+33.74.05,Semarang Barat,2024-10-07,DBD,0
+33.74.05,Semarang Barat,2024-10-14,DBD,0
+33.74.05,Semarang Barat,2024-10-21,DBD,0
+33.74.05,Semarang Barat,2024-10-28,DBD,0
+33.74.05,Semarang Barat,2024-11-04,DBD,0
+33.74.05,Semarang Barat,2024-11-11,DBD,0
+33.74.05,Semarang Barat,2024-11-18,DBD,0
+33.74.05,Semarang Barat,2024-11-25,DBD,0
+33.74.05,Semarang Barat,2024-12-02,DBD,0
+33.74.05,Semarang Barat,2024-12-09,DBD,0
+33.74.05,Semarang Barat,2024-12-16,DBD,0
+33.74.05,Semarang Barat,2024-12-23,DBD,1
+33.74.06,Gayamsari,2024-01-01,DBD,0
+33.74.06,Gayamsari,2024-01-08,DBD,0
+33.74.06,Gayamsari,2024-01-15,DBD,0
+33.74.06,Gayamsari,2024-01-22,DBD,0
+33.74.06,Gayamsari,2024-01-29,DBD,2
+33.74.06,Gayamsari,2024-02-05,DBD,0
+33.74.06,Gayamsari,2024-02-12,DBD,0
+33.74.06,Gayamsari,2024-02-19,DBD,1
+33.74.06,Gayamsari,2024-02-26,DBD,0
+33.74.06,Gayamsari,2024-03-04,DBD,0
+33.74.06,Gayamsari,2024-03-11,DBD,1
+33.74.06,Gayamsari,2024-03-18,DBD,0
+33.74.06,Gayamsari,2024-03-25,DBD,0
+33.74.06,Gayamsari,2024-04-01,DBD,2
+33.74.06,Gayamsari,2024-04-08,DBD,1
+33.74.06,Gayamsari,2024-04-15,DBD,0
+33.74.06,Gayamsari,2024-04-22,DBD,0
+33.74.06,Gayamsari,2024-04-29,DBD,1
+33.74.06,Gayamsari,2024-05-06,DBD,0
+33.74.06,Gayamsari,2024-05-13,DBD,0
+33.74.06,Gayamsari,2024-05-20,DBD,0
+33.74.06,Gayamsari,2024-05-27,DBD,0
+33.74.06,Gayamsari,2024-06-03,DBD,1
+33.74.06,Gayamsari,2024-06-10,DBD,0
+33.74.06,Gayamsari,2024-06-17,DBD,2
+33.74.06,Gayamsari,2024-06-24,DBD,0
+33.74.06,Gayamsari,2024-07-01,DBD,0
+33.74.06,Gayamsari,2024-07-08,DBD,0
+33.74.06,Gayamsari,2024-07-15,DBD,1
+33.74.06,Gayamsari,2024-07-22,DBD,0
+33.74.06,Gayamsari,2024-07-29,DBD,0
+33.74.06,Gayamsari,2024-08-05,DBD,0
+33.74.06,Gayamsari,2024-08-12,DBD,0
+33.74.06,Gayamsari,2024-08-19,DBD,0
+33.74.06,Gayamsari,2024-08-26,DBD,0
+33.74.06,Gayamsari,2024-09-02,DBD,1
+33.74.06,Gayamsari,2024-09-09,DBD,0
+33.74.06,Gayamsari,2024-09-16,DBD,0
+33.74.06,Gayamsari,2024-09-23,DBD,1
+33.74.06,Gayamsari,2024-09-30,DBD,0
+33.74.06,Gayamsari,2024-10-07,DBD,0
+33.74.06,Gayamsari,2024-10-14,DBD,0
+33.74.06,Gayamsari,2024-10-21,DBD,0
+33.74.06,Gayamsari,2024-10-28,DBD,0
+33.74.06,Gayamsari,2024-11-04,DBD,0
+33.74.06,Gayamsari,2024-11-11,DBD,0
+33.74.06,Gayamsari,2024-11-18,DBD,0
+33.74.06,Gayamsari,2024-11-25,DBD,0
+33.74.06,Gayamsari,2024-12-02,DBD,0
+33.74.06,Gayamsari,2024-12-09,DBD,0
+33.74.06,Gayamsari,2024-12-16,DBD,1
+33.74.06,Gayamsari,2024-12-23,DBD,0
+33.74.07,Candisari,2024-01-01,DBD,2
+33.74.07,Candisari,2024-01-08,DBD,0
+33.74.07,Candisari,2024-01-15,DBD,0
+33.74.07,Candisari,2024-01-22,DBD,1
+33.74.07,Candisari,2024-01-29,DBD,0
+33.74.07,Candisari,2024-02-05,DBD,2
+33.74.07,Candisari,2024-02-12,DBD,0
+33.74.07,Candisari,2024-02-19,DBD,0
+33.74.07,Candisari,2024-02-26,DBD,1
+33.74.07,Candisari,2024-03-04,DBD,0
+33.74.07,Candisari,2024-03-11,DBD,1
+33.74.07,Candisari,2024-03-18,DBD,1
+33.74.07,Candisari,2024-03-25,DBD,0
+33.74.07,Candisari,2024-04-01,DBD,1
+33.74.07,Candisari,2024-04-08,DBD,0
+33.74.07,Candisari,2024-04-15,DBD,0
+33.74.07,Candisari,2024-04-22,DBD,0
+33.74.07,Candisari,2024-04-29,DBD,2
+33.74.07,Candisari,2024-05-06,DBD,0
+33.74.07,Candisari,2024-05-13,DBD,0
+33.74.07,Candisari,2024-05-20,DBD,1
+33.74.07,Candisari,2024-05-27,DBD,1
+33.74.07,Candisari,2024-06-03,DBD,0
+33.74.07,Candisari,2024-06-10,DBD,0
+33.74.07,Candisari,2024-06-17,DBD,0
+33.74.07,Candisari,2024-06-24,DBD,0
+33.74.07,Candisari,2024-07-01,DBD,0
+33.74.07,Candisari,2024-07-08,DBD,0
+33.74.07,Candisari,2024-07-15,DBD,0
+33.74.07,Candisari,2024-07-22,DBD,1
+33.74.07,Candisari,2024-07-29,DBD,0
+33.74.07,Candisari,2024-08-05,DBD,1
+33.74.07,Candisari,2024-08-12,DBD,0
+33.74.07,Candisari,2024-08-19,DBD,0
+33.74.07,Candisari,2024-08-26,DBD,0
+33.74.07,Candisari,2024-09-02,DBD,0
+33.74.07,Candisari,2024-09-09,DBD,0
+33.74.07,Candisari,2024-09-16,DBD,0
+33.74.07,Candisari,2024-09-23,DBD,0
+33.74.07,Candisari,2024-09-30,DBD,0
+33.74.07,Candisari,2024-10-07,DBD,0
+33.74.07,Candisari,2024-10-14,DBD,0
+33.74.07,Candisari,2024-10-21,DBD,0
+33.74.07,Candisari,2024-10-28,DBD,0
+33.74.07,Candisari,2024-11-04,DBD,0
+33.74.07,Candisari,2024-11-11,DBD,0
+33.74.07,Candisari,2024-11-18,DBD,0
+33.74.07,Candisari,2024-11-25,DBD,0
+33.74.07,Candisari,2024-12-02,DBD,0
+33.74.07,Candisari,2024-12-09,DBD,0
+33.74.07,Candisari,2024-12-16,DBD,0
+33.74.07,Candisari,2024-12-23,DBD,1
+33.74.08,Gajahmungkur,2024-01-01,DBD,0
+33.74.08,Gajahmungkur,2024-01-08,DBD,0
+33.74.08,Gajahmungkur,2024-01-15,DBD,0
+33.74.08,Gajahmungkur,2024-01-22,DBD,1
+33.74.08,Gajahmungkur,2024-01-29,DBD,1
+33.74.08,Gajahmungkur,2024-02-05,DBD,0
+33.74.08,Gajahmungkur,2024-02-12,DBD,2
+33.74.08,Gajahmungkur,2024-02-19,DBD,0
+33.74.08,Gajahmungkur,2024-02-26,DBD,0
+33.74.08,Gajahmungkur,2024-03-04,DBD,0
+33.74.08,Gajahmungkur,2024-03-11,DBD,0
+33.74.08,Gajahmungkur,2024-03-18,DBD,1
+33.74.08,Gajahmungkur,2024-03-25,DBD,0
+33.74.08,Gajahmungkur,2024-04-01,DBD,0
+33.74.08,Gajahmungkur,2024-04-08,DBD,0
+33.74.08,Gajahmungkur,2024-04-15,DBD,0
+33.74.08,Gajahmungkur,2024-04-22,DBD,0
+33.74.08,Gajahmungkur,2024-04-29,DBD,0
+33.74.08,Gajahmungkur,2024-05-06,DBD,0
+33.74.08,Gajahmungkur,2024-05-13,DBD,1
+33.74.08,Gajahmungkur,2024-05-20,DBD,2
+33.74.08,Gajahmungkur,2024-05-27,DBD,0
+33.74.08,Gajahmungkur,2024-06-03,DBD,1
+33.74.08,Gajahmungkur,2024-06-10,DBD,0
+33.74.08,Gajahmungkur,2024-06-17,DBD,0
+33.74.08,Gajahmungkur,2024-06-24,DBD,0
+33.74.08,Gajahmungkur,2024-07-01,DBD,0
+33.74.08,Gajahmungkur,2024-07-08,DBD,1
+33.74.08,Gajahmungkur,2024-07-15,DBD,0
+33.74.08,Gajahmungkur,2024-07-22,DBD,0
+33.74.08,Gajahmungkur,2024-07-29,DBD,0
+33.74.08,Gajahmungkur,2024-08-05,DBD,0
+33.74.08,Gajahmungkur,2024-08-12,DBD,1
+33.74.08,Gajahmungkur,2024-08-19,DBD,0
+33.74.08,Gajahmungkur,2024-08-26,DBD,0
+33.74.08,Gajahmungkur,2024-09-02,DBD,0
+33.74.08,Gajahmungkur,2024-09-09,DBD,0
+33.74.08,Gajahmungkur,2024-09-16,DBD,0
+33.74.08,Gajahmungkur,2024-09-23,DBD,0
+33.74.08,Gajahmungkur,2024-09-30,DBD,0
+33.74.08,Gajahmungkur,2024-10-07,DBD,0
+33.74.08,Gajahmungkur,2024-10-14,DBD,0
+33.74.08,Gajahmungkur,2024-10-21,DBD,0
+33.74.08,Gajahmungkur,2024-10-28,DBD,0
+33.74.08,Gajahmungkur,2024-11-04,DBD,0
+33.74.08,Gajahmungkur,2024-11-11,DBD,0
+33.74.08,Gajahmungkur,2024-11-18,DBD,0
+33.74.08,Gajahmungkur,2024-11-25,DBD,0
+33.74.08,Gajahmungkur,2024-12-02,DBD,0
+33.74.08,Gajahmungkur,2024-12-09,DBD,0
+33.74.08,Gajahmungkur,2024-12-16,DBD,0
+33.74.08,Gajahmungkur,2024-12-23,DBD,1
+33.74.09,Genuk,2024-01-01,DBD,1
+33.74.09,Genuk,2024-01-08,DBD,0
+33.74.09,Genuk,2024-01-15,DBD,0
+33.74.09,Genuk,2024-01-22,DBD,0
+33.74.09,Genuk,2024-01-29,DBD,0
+33.74.09,Genuk,2024-02-05,DBD,1
+33.74.09,Genuk,2024-02-12,DBD,0
+33.74.09,Genuk,2024-02-19,DBD,1
+33.74.09,Genuk,2024-02-26,DBD,1
+33.74.09,Genuk,2024-03-04,DBD,0
+33.74.09,Genuk,2024-03-11,DBD,2
+33.74.09,Genuk,2024-03-18,DBD,0
+33.74.09,Genuk,2024-03-25,DBD,0
+33.74.09,Genuk,2024-04-01,DBD,1
+33.74.09,Genuk,2024-04-08,DBD,0
+33.74.09,Genuk,2024-04-15,DBD,0
+33.74.09,Genuk,2024-04-22,DBD,1
+33.74.09,Genuk,2024-04-29,DBD,1
+33.74.09,Genuk,2024-05-06,DBD,2
+33.74.09,Genuk,2024-05-13,DBD,1
+33.74.09,Genuk,2024-05-20,DBD,2
+33.74.09,Genuk,2024-05-27,DBD,2
+33.74.09,Genuk,2024-06-03,DBD,1
+33.74.09,Genuk,2024-06-10,DBD,2
+33.74.09,Genuk,2024-06-17,DBD,0
+33.74.09,Genuk,2024-06-24,DBD,1
+33.74.09,Genuk,2024-07-01,DBD,0
+33.74.09,Genuk,2024-07-08,DBD,0
+33.74.09,Genuk,2024-07-15,DBD,1
+33.74.09,Genuk,2024-07-22,DBD,0
+33.74.09,Genuk,2024-07-29,DBD,0
+33.74.09,Genuk,2024-08-05,DBD,0
+33.74.09,Genuk,2024-08-12,DBD,0
+33.74.09,Genuk,2024-08-19,DBD,0
+33.74.09,Genuk,2024-08-26,DBD,0
+33.74.09,Genuk,2024-09-02,DBD,1
+33.74.09,Genuk,2024-09-09,DBD,1
+33.74.09,Genuk,2024-09-16,DBD,0
+33.74.09,Genuk,2024-09-23,DBD,1
+33.74.09,Genuk,2024-09-30,DBD,1
+33.74.09,Genuk,2024-10-07,DBD,0
+33.74.09,Genuk,2024-10-14,DBD,0
+33.74.09,Genuk,2024-10-21,DBD,0
+33.74.09,Genuk,2024-10-28,DBD,0
+33.74.09,Genuk,2024-11-04,DBD,0
+33.74.09,Genuk,2024-11-11,DBD,0
+33.74.09,Genuk,2024-11-18,DBD,1
+33.74.09,Genuk,2024-11-25,DBD,0
+33.74.09,Genuk,2024-12-02,DBD,0
+33.74.09,Genuk,2024-12-09,DBD,0
+33.74.09,Genuk,2024-12-16,DBD,0
+33.74.09,Genuk,2024-12-23,DBD,1
+33.74.10,Pedurungan,2024-01-01,DBD,0
+33.74.10,Pedurungan,2024-01-08,DBD,0
+33.74.10,Pedurungan,2024-01-15,DBD,0
+33.74.10,Pedurungan,2024-01-22,DBD,1
+33.74.10,Pedurungan,2024-01-29,DBD,1
+33.74.10,Pedurungan,2024-02-05,DBD,2
+33.74.10,Pedurungan,2024-02-12,DBD,3
+33.74.10,Pedurungan,2024-02-19,DBD,1
+33.74.10,Pedurungan,2024-02-26,DBD,1
+33.74.10,Pedurungan,2024-03-04,DBD,0
+33.74.10,Pedurungan,2024-03-11,DBD,3
+33.74.10,Pedurungan,2024-03-18,DBD,0
+33.74.10,Pedurungan,2024-03-25,DBD,1
+33.74.10,Pedurungan,2024-04-01,DBD,1
+33.74.10,Pedurungan,2024-04-08,DBD,0
+33.74.10,Pedurungan,2024-04-15,DBD,0
+33.74.10,Pedurungan,2024-04-22,DBD,1
+33.74.10,Pedurungan,2024-04-29,DBD,2
+33.74.10,Pedurungan,2024-05-06,DBD,0
+33.74.10,Pedurungan,2024-05-13,DBD,2
+33.74.10,Pedurungan,2024-05-20,DBD,1
+33.74.10,Pedurungan,2024-05-27,DBD,2
+33.74.10,Pedurungan,2024-06-03,DBD,1
+33.74.10,Pedurungan,2024-06-10,DBD,3
+33.74.10,Pedurungan,2024-06-17,DBD,0
+33.74.10,Pedurungan,2024-06-24,DBD,0
+33.74.10,Pedurungan,2024-07-01,DBD,0
+33.74.10,Pedurungan,2024-07-08,DBD,0
+33.74.10,Pedurungan,2024-07-15,DBD,1
+33.74.10,Pedurungan,2024-07-22,DBD,0
+33.74.10,Pedurungan,2024-07-29,DBD,1
+33.74.10,Pedurungan,2024-08-05,DBD,0
+33.74.10,Pedurungan,2024-08-12,DBD,0
+33.74.10,Pedurungan,2024-08-19,DBD,0
+33.74.10,Pedurungan,2024-08-26,DBD,0
+33.74.10,Pedurungan,2024-09-02,DBD,0
+33.74.10,Pedurungan,2024-09-09,DBD,0
+33.74.10,Pedurungan,2024-09-16,DBD,0
+33.74.10,Pedurungan,2024-09-23,DBD,0
+33.74.10,Pedurungan,2024-09-30,DBD,1
+33.74.10,Pedurungan,2024-10-07,DBD,1
+33.74.10,Pedurungan,2024-10-14,DBD,0
+33.74.10,Pedurungan,2024-10-21,DBD,0
+33.74.10,Pedurungan,2024-10-28,DBD,2
+33.74.10,Pedurungan,2024-11-04,DBD,0
+33.74.10,Pedurungan,2024-11-11,DBD,1
+33.74.10,Pedurungan,2024-11-18,DBD,0
+33.74.10,Pedurungan,2024-11-25,DBD,1
+33.74.10,Pedurungan,2024-12-02,DBD,1
+33.74.10,Pedurungan,2024-12-09,DBD,0
+33.74.10,Pedurungan,2024-12-16,DBD,1
+33.74.10,Pedurungan,2024-12-23,DBD,0
+33.74.11,Tembalang,2024-01-01,DBD,0
+33.74.11,Tembalang,2024-01-08,DBD,0
+33.74.11,Tembalang,2024-01-15,DBD,1
+33.74.11,Tembalang,2024-01-22,DBD,2
+33.74.11,Tembalang,2024-01-29,DBD,0
+33.74.11,Tembalang,2024-02-05,DBD,1
+33.74.11,Tembalang,2024-02-12,DBD,0
+33.74.11,Tembalang,2024-02-19,DBD,1
+33.74.11,Tembalang,2024-02-26,DBD,2
+33.74.11,Tembalang,2024-03-04,DBD,1
+33.74.11,Tembalang,2024-03-11,DBD,1
+33.74.11,Tembalang,2024-03-18,DBD,1
+33.74.11,Tembalang,2024-03-25,DBD,0
+33.74.11,Tembalang,2024-04-01,DBD,0
+33.74.11,Tembalang,2024-04-08,DBD,2
+33.74.11,Tembalang,2024-04-15,DBD,3
+33.74.11,Tembalang,2024-04-22,DBD,3
+33.74.11,Tembalang,2024-04-29,DBD,0
+33.74.11,Tembalang,2024-05-06,DBD,2
+33.74.11,Tembalang,2024-05-13,DBD,3
+33.74.11,Tembalang,2024-05-20,DBD,3
+33.74.11,Tembalang,2024-05-27,DBD,1
+33.74.11,Tembalang,2024-06-03,DBD,1
+33.74.11,Tembalang,2024-06-10,DBD,1
+33.74.11,Tembalang,2024-06-17,DBD,0
+33.74.11,Tembalang,2024-06-24,DBD,0
+33.74.11,Tembalang,2024-07-01,DBD,0
+33.74.11,Tembalang,2024-07-08,DBD,0
+33.74.11,Tembalang,2024-07-15,DBD,2
+33.74.11,Tembalang,2024-07-22,DBD,1
+33.74.11,Tembalang,2024-07-29,DBD,0
+33.74.11,Tembalang,2024-08-05,DBD,2
+33.74.11,Tembalang,2024-08-12,DBD,2
+33.74.11,Tembalang,2024-08-19,DBD,1
+33.74.11,Tembalang,2024-08-26,DBD,1
+33.74.11,Tembalang,2024-09-02,DBD,1
+33.74.11,Tembalang,2024-09-09,DBD,1
+33.74.11,Tembalang,2024-09-16,DBD,0
+33.74.11,Tembalang,2024-09-23,DBD,0
+33.74.11,Tembalang,2024-09-30,DBD,0
+33.74.11,Tembalang,2024-10-07,DBD,0
+33.74.11,Tembalang,2024-10-14,DBD,0
+33.74.11,Tembalang,2024-10-21,DBD,0
+33.74.11,Tembalang,2024-10-28,DBD,1
+33.74.11,Tembalang,2024-11-04,DBD,0
+33.74.11,Tembalang,2024-11-11,DBD,0
+33.74.11,Tembalang,2024-11-18,DBD,1
+33.74.11,Tembalang,2024-11-25,DBD,0
+33.74.11,Tembalang,2024-12-02,DBD,0
+33.74.11,Tembalang,2024-12-09,DBD,0
+33.74.11,Tembalang,2024-12-16,DBD,0
+33.74.11,Tembalang,2024-12-23,DBD,1
+33.74.12,Banyumanik,2024-01-01,DBD,0
+33.74.12,Banyumanik,2024-01-08,DBD,1
+33.74.12,Banyumanik,2024-01-15,DBD,0
+33.74.12,Banyumanik,2024-01-22,DBD,0
+33.74.12,Banyumanik,2024-01-29,DBD,2
+33.74.12,Banyumanik,2024-02-05,DBD,1
+33.74.12,Banyumanik,2024-02-12,DBD,0
+33.74.12,Banyumanik,2024-02-19,DBD,0
+33.74.12,Banyumanik,2024-02-26,DBD,0
+33.74.12,Banyumanik,2024-03-04,DBD,1
+33.74.12,Banyumanik,2024-03-11,DBD,1
+33.74.12,Banyumanik,2024-03-18,DBD,0
+33.74.12,Banyumanik,2024-03-25,DBD,3
+33.74.12,Banyumanik,2024-04-01,DBD,1
+33.74.12,Banyumanik,2024-04-08,DBD,0
+33.74.12,Banyumanik,2024-04-15,DBD,1
+33.74.12,Banyumanik,2024-04-22,DBD,1
+33.74.12,Banyumanik,2024-04-29,DBD,0
+33.74.12,Banyumanik,2024-05-06,DBD,0
+33.74.12,Banyumanik,2024-05-13,DBD,3
+33.74.12,Banyumanik,2024-05-20,DBD,1
+33.74.12,Banyumanik,2024-05-27,DBD,1
+33.74.12,Banyumanik,2024-06-03,DBD,1
+33.74.12,Banyumanik,2024-06-10,DBD,0
+33.74.12,Banyumanik,2024-06-17,DBD,0
+33.74.12,Banyumanik,2024-06-24,DBD,0
+33.74.12,Banyumanik,2024-07-01,DBD,0
+33.74.12,Banyumanik,2024-07-08,DBD,0
+33.74.12,Banyumanik,2024-07-15,DBD,2
+33.74.12,Banyumanik,2024-07-22,DBD,3
+33.74.12,Banyumanik,2024-07-29,DBD,1
+33.74.12,Banyumanik,2024-08-05,DBD,1
+33.74.12,Banyumanik,2024-08-12,DBD,0
+33.74.12,Banyumanik,2024-08-19,DBD,2
+33.74.12,Banyumanik,2024-08-26,DBD,0
+33.74.12,Banyumanik,2024-09-02,DBD,1
+33.74.12,Banyumanik,2024-09-09,DBD,1
+33.74.12,Banyumanik,2024-09-16,DBD,0
+33.74.12,Banyumanik,2024-09-23,DBD,0
+33.74.12,Banyumanik,2024-09-30,DBD,0
+33.74.12,Banyumanik,2024-10-07,DBD,0
+33.74.12,Banyumanik,2024-10-14,DBD,0
+33.74.12,Banyumanik,2024-10-21,DBD,0
+33.74.12,Banyumanik,2024-10-28,DBD,0
+33.74.12,Banyumanik,2024-11-04,DBD,0
+33.74.12,Banyumanik,2024-11-11,DBD,0
+33.74.12,Banyumanik,2024-11-18,DBD,0
+33.74.12,Banyumanik,2024-11-25,DBD,0
+33.74.12,Banyumanik,2024-12-02,DBD,0
+33.74.12,Banyumanik,2024-12-09,DBD,0
+33.74.12,Banyumanik,2024-12-16,DBD,0
+33.74.12,Banyumanik,2024-12-23,DBD,0
+33.74.13,Gunungpati,2024-01-01,DBD,0
+33.74.13,Gunungpati,2024-01-08,DBD,1
+33.74.13,Gunungpati,2024-01-15,DBD,0
+33.74.13,Gunungpati,2024-01-22,DBD,0
+33.74.13,Gunungpati,2024-01-29,DBD,0
+33.74.13,Gunungpati,2024-02-05,DBD,0
+33.74.13,Gunungpati,2024-02-12,DBD,0
+33.74.13,Gunungpati,2024-02-19,DBD,1
+33.74.13,Gunungpati,2024-02-26,DBD,2
+33.74.13,Gunungpati,2024-03-04,DBD,0
+33.74.13,Gunungpati,2024-03-11,DBD,1
+33.74.13,Gunungpati,2024-03-18,DBD,1
+33.74.13,Gunungpati,2024-03-25,DBD,1
+33.74.13,Gunungpati,2024-04-01,DBD,1
+33.74.13,Gunungpati,2024-04-08,DBD,0
+33.74.13,Gunungpati,2024-04-15,DBD,1
+33.74.13,Gunungpati,2024-04-22,DBD,0
+33.74.13,Gunungpati,2024-04-29,DBD,0
+33.74.13,Gunungpati,2024-05-06,DBD,0
+33.74.13,Gunungpati,2024-05-13,DBD,0
+33.74.13,Gunungpati,2024-05-20,DBD,0
+33.74.13,Gunungpati,2024-05-27,DBD,0
+33.74.13,Gunungpati,2024-06-03,DBD,0
+33.74.13,Gunungpati,2024-06-10,DBD,0
+33.74.13,Gunungpati,2024-06-17,DBD,0
+33.74.13,Gunungpati,2024-06-24,DBD,0
+33.74.13,Gunungpati,2024-07-01,DBD,0
+33.74.13,Gunungpati,2024-07-08,DBD,0
+33.74.13,Gunungpati,2024-07-15,DBD,0
+33.74.13,Gunungpati,2024-07-22,DBD,0
+33.74.13,Gunungpati,2024-07-29,DBD,0
+33.74.13,Gunungpati,2024-08-05,DBD,0
+33.74.13,Gunungpati,2024-08-12,DBD,0
+33.74.13,Gunungpati,2024-08-19,DBD,0
+33.74.13,Gunungpati,2024-08-26,DBD,0
+33.74.13,Gunungpati,2024-09-02,DBD,0
+33.74.13,Gunungpati,2024-09-09,DBD,0
+33.74.13,Gunungpati,2024-09-16,DBD,0
+33.74.13,Gunungpati,2024-09-23,DBD,0
+33.74.13,Gunungpati,2024-09-30,DBD,0
+33.74.13,Gunungpati,2024-10-07,DBD,0
+33.74.13,Gunungpati,2024-10-14,DBD,0
+33.74.13,Gunungpati,2024-10-21,DBD,0
+33.74.13,Gunungpati,2024-10-28,DBD,0
+33.74.13,Gunungpati,2024-11-04,DBD,0
+33.74.13,Gunungpati,2024-11-11,DBD,1
+33.74.13,Gunungpati,2024-11-18,DBD,0
+33.74.13,Gunungpati,2024-11-25,DBD,0
+33.74.13,Gunungpati,2024-12-02,DBD,0
+33.74.13,Gunungpati,2024-12-09,DBD,0
+33.74.13,Gunungpati,2024-12-16,DBD,0
+33.74.13,Gunungpati,2024-12-23,DBD,0
+33.74.14,Mijen,2024-01-01,DBD,3
+33.74.14,Mijen,2024-01-08,DBD,0
+33.74.14,Mijen,2024-01-15,DBD,0
+33.74.14,Mijen,2024-01-22,DBD,0
+33.74.14,Mijen,2024-01-29,DBD,0
+33.74.14,Mijen,2024-02-05,DBD,1
+33.74.14,Mijen,2024-02-12,DBD,2
+33.74.14,Mijen,2024-02-19,DBD,3
+33.74.14,Mijen,2024-02-26,DBD,0
+33.74.14,Mijen,2024-03-04,DBD,0
+33.74.14,Mijen,2024-03-11,DBD,1
+33.74.14,Mijen,2024-03-18,DBD,0
+33.74.14,Mijen,2024-03-25,DBD,0
+33.74.14,Mijen,2024-04-01,DBD,0
+33.74.14,Mijen,2024-04-08,DBD,1
+33.74.14,Mijen,2024-04-15,DBD,0
+33.74.14,Mijen,2024-04-22,DBD,0
+33.74.14,Mijen,2024-04-29,DBD,2
+33.74.14,Mijen,2024-05-06,DBD,0
+33.74.14,Mijen,2024-05-13,DBD,1
+33.74.14,Mijen,2024-05-20,DBD,0
+33.74.14,Mijen,2024-05-27,DBD,0
+33.74.14,Mijen,2024-06-03,DBD,0
+33.74.14,Mijen,2024-06-10,DBD,0
+33.74.14,Mijen,2024-06-17,DBD,1
+33.74.14,Mijen,2024-06-24,DBD,0
+33.74.14,Mijen,2024-07-01,DBD,1
+33.74.14,Mijen,2024-07-08,DBD,0
+33.74.14,Mijen,2024-07-15,DBD,1
+33.74.14,Mijen,2024-07-22,DBD,0
+33.74.14,Mijen,2024-07-29,DBD,0
+33.74.14,Mijen,2024-08-05,DBD,0
+33.74.14,Mijen,2024-08-12,DBD,0
+33.74.14,Mijen,2024-08-19,DBD,0
+33.74.14,Mijen,2024-08-26,DBD,1
+33.74.14,Mijen,2024-09-02,DBD,2
+33.74.14,Mijen,2024-09-09,DBD,0
+33.74.14,Mijen,2024-09-16,DBD,0
+33.74.14,Mijen,2024-09-23,DBD,0
+33.74.14,Mijen,2024-09-30,DBD,0
+33.74.14,Mijen,2024-10-07,DBD,0
+33.74.14,Mijen,2024-10-14,DBD,0
+33.74.14,Mijen,2024-10-21,DBD,0
+33.74.14,Mijen,2024-10-28,DBD,0
+33.74.14,Mijen,2024-11-04,DBD,0
+33.74.14,Mijen,2024-11-11,DBD,1
+33.74.14,Mijen,2024-11-18,DBD,0
+33.74.14,Mijen,2024-11-25,DBD,0
+33.74.14,Mijen,2024-12-02,DBD,0
+33.74.14,Mijen,2024-12-09,DBD,1
+33.74.14,Mijen,2024-12-16,DBD,1
+33.74.14,Mijen,2024-12-23,DBD,0
+33.74.15,Ngaliyan,2024-01-01,DBD,0
+33.74.15,Ngaliyan,2024-01-08,DBD,1
+33.74.15,Ngaliyan,2024-01-15,DBD,1
+33.74.15,Ngaliyan,2024-01-22,DBD,0
+33.74.15,Ngaliyan,2024-01-29,DBD,1
+33.74.15,Ngaliyan,2024-02-05,DBD,2
+33.74.15,Ngaliyan,2024-02-12,DBD,2
+33.74.15,Ngaliyan,2024-02-19,DBD,0
+33.74.15,Ngaliyan,2024-02-26,DBD,2
+33.74.15,Ngaliyan,2024-03-04,DBD,0
+33.74.15,Ngaliyan,2024-03-11,DBD,1
+33.74.15,Ngaliyan,2024-03-18,DBD,1
+33.74.15,Ngaliyan,2024-03-25,DBD,0
+33.74.15,Ngaliyan,2024-04-01,DBD,0
+33.74.15,Ngaliyan,2024-04-08,DBD,2
+33.74.15,Ngaliyan,2024-04-15,DBD,0
+33.74.15,Ngaliyan,2024-04-22,DBD,1
+33.74.15,Ngaliyan,2024-04-29,DBD,2
+33.74.15,Ngaliyan,2024-05-06,DBD,0
+33.74.15,Ngaliyan,2024-05-13,DBD,5
+33.74.15,Ngaliyan,2024-05-20,DBD,0
+33.74.15,Ngaliyan,2024-05-27,DBD,1
+33.74.15,Ngaliyan,2024-06-03,DBD,1
+33.74.15,Ngaliyan,2024-06-10,DBD,0
+33.74.15,Ngaliyan,2024-06-17,DBD,0
+33.74.15,Ngaliyan,2024-06-24,DBD,0
+33.74.15,Ngaliyan,2024-07-01,DBD,2
+33.74.15,Ngaliyan,2024-07-08,DBD,0
+33.74.15,Ngaliyan,2024-07-15,DBD,2
+33.74.15,Ngaliyan,2024-07-22,DBD,1
+33.74.15,Ngaliyan,2024-07-29,DBD,1
+33.74.15,Ngaliyan,2024-08-05,DBD,0
+33.74.15,Ngaliyan,2024-08-12,DBD,0
+33.74.15,Ngaliyan,2024-08-19,DBD,0
+33.74.15,Ngaliyan,2024-08-26,DBD,0
+33.74.15,Ngaliyan,2024-09-02,DBD,2
+33.74.15,Ngaliyan,2024-09-09,DBD,0
+33.74.15,Ngaliyan,2024-09-16,DBD,0
+33.74.15,Ngaliyan,2024-09-23,DBD,1
+33.74.15,Ngaliyan,2024-09-30,DBD,1
+33.74.15,Ngaliyan,2024-10-07,DBD,2
+33.74.15,Ngaliyan,2024-10-14,DBD,0
+33.74.15,Ngaliyan,2024-10-21,DBD,0
+33.74.15,Ngaliyan,2024-10-28,DBD,0
+33.74.15,Ngaliyan,2024-11-04,DBD,0
+33.74.15,Ngaliyan,2024-11-11,DBD,0
+33.74.15,Ngaliyan,2024-11-18,DBD,0
+33.74.15,Ngaliyan,2024-11-25,DBD,0
+33.74.15,Ngaliyan,2024-12-02,DBD,0
+33.74.15,Ngaliyan,2024-12-09,DBD,0
+33.74.15,Ngaliyan,2024-12-16,DBD,1
+33.74.15,Ngaliyan,2024-12-23,DBD,0
+33.74.16,Tugu,2024-01-01,DBD,1
+33.74.16,Tugu,2024-01-08,DBD,0
+33.74.16,Tugu,2024-01-15,DBD,0
+33.74.16,Tugu,2024-01-22,DBD,0
+33.74.16,Tugu,2024-01-29,DBD,0
+33.74.16,Tugu,2024-02-05,DBD,0
+33.74.16,Tugu,2024-02-12,DBD,1
+33.74.16,Tugu,2024-02-19,DBD,0
+33.74.16,Tugu,2024-02-26,DBD,0
+33.74.16,Tugu,2024-03-04,DBD,0
+33.74.16,Tugu,2024-03-11,DBD,0
+33.74.16,Tugu,2024-03-18,DBD,1
+33.74.16,Tugu,2024-03-25,DBD,1
+33.74.16,Tugu,2024-04-01,DBD,0
+33.74.16,Tugu,2024-04-08,DBD,0
+33.74.16,Tugu,2024-04-15,DBD,0
+33.74.16,Tugu,2024-04-22,DBD,1
+33.74.16,Tugu,2024-04-29,DBD,0
+33.74.16,Tugu,2024-05-06,DBD,0
+33.74.16,Tugu,2024-05-13,DBD,1
+33.74.16,Tugu,2024-05-20,DBD,0
+33.74.16,Tugu,2024-05-27,DBD,0
+33.74.16,Tugu,2024-06-03,DBD,0
+33.74.16,Tugu,2024-06-10,DBD,0
+33.74.16,Tugu,2024-06-17,DBD,0
+33.74.16,Tugu,2024-06-24,DBD,1
+33.74.16,Tugu,2024-07-01,DBD,0
+33.74.16,Tugu,2024-07-08,DBD,0
+33.74.16,Tugu,2024-07-15,DBD,0
+33.74.16,Tugu,2024-07-22,DBD,0
+33.74.16,Tugu,2024-07-29,DBD,1
+33.74.16,Tugu,2024-08-05,DBD,0
+33.74.16,Tugu,2024-08-12,DBD,0
+33.74.16,Tugu,2024-08-19,DBD,0
+33.74.16,Tugu,2024-08-26,DBD,0
+33.74.16,Tugu,2024-09-02,DBD,0
+33.74.16,Tugu,2024-09-09,DBD,0
+33.74.16,Tugu,2024-09-16,DBD,0
+33.74.16,Tugu,2024-09-23,DBD,0
+33.74.16,Tugu,2024-09-30,DBD,0
+33.74.16,Tugu,2024-10-07,DBD,0
+33.74.16,Tugu,2024-10-14,DBD,0
+33.74.16,Tugu,2024-10-21,DBD,0
+33.74.16,Tugu,2024-10-28,DBD,0
+33.74.16,Tugu,2024-11-04,DBD,0
+33.74.16,Tugu,2024-11-11,DBD,0
+33.74.16,Tugu,2024-11-18,DBD,0
+33.74.16,Tugu,2024-11-25,DBD,0
+33.74.16,Tugu,2024-12-02,DBD,0
+33.74.16,Tugu,2024-12-09,DBD,0
+33.74.16,Tugu,2024-12-16,DBD,0
+33.74.16,Tugu,2024-12-23,DBD,0
+33.74.01,Semarang Tengah,2025-01-06,DBD,0
+33.74.01,Semarang Tengah,2025-01-13,DBD,0
+33.74.01,Semarang Tengah,2025-01-20,DBD,0
+33.74.01,Semarang Tengah,2025-01-27,DBD,1
+33.74.01,Semarang Tengah,2025-02-03,DBD,1
+33.74.01,Semarang Tengah,2025-02-10,DBD,0
+33.74.01,Semarang Tengah,2025-02-17,DBD,0
+33.74.01,Semarang Tengah,2025-02-24,DBD,1
+33.74.01,Semarang Tengah,2025-03-03,DBD,0
+33.74.01,Semarang Tengah,2025-03-10,DBD,0
+33.74.01,Semarang Tengah,2025-03-17,DBD,2
+33.74.01,Semarang Tengah,2025-03-24,DBD,0
+33.74.01,Semarang Tengah,2025-03-31,DBD,0
+33.74.01,Semarang Tengah,2025-04-07,DBD,0
+33.74.01,Semarang Tengah,2025-04-14,DBD,0
+33.74.01,Semarang Tengah,2025-04-21,DBD,0
+33.74.01,Semarang Tengah,2025-04-28,DBD,1
+33.74.01,Semarang Tengah,2025-05-05,DBD,0
+33.74.01,Semarang Tengah,2025-05-12,DBD,0
+33.74.01,Semarang Tengah,2025-05-19,DBD,0
+33.74.01,Semarang Tengah,2025-05-26,DBD,0
+33.74.01,Semarang Tengah,2025-06-02,DBD,0
+33.74.01,Semarang Tengah,2025-06-09,DBD,0
+33.74.01,Semarang Tengah,2025-06-16,DBD,0
+33.74.01,Semarang Tengah,2025-06-23,DBD,0
+33.74.01,Semarang Tengah,2025-06-30,DBD,0
+33.74.01,Semarang Tengah,2025-07-07,DBD,0
+33.74.01,Semarang Tengah,2025-07-14,DBD,0
+33.74.01,Semarang Tengah,2025-07-21,DBD,1
+33.74.01,Semarang Tengah,2025-07-28,DBD,0
+33.74.01,Semarang Tengah,2025-08-04,DBD,0
+33.74.01,Semarang Tengah,2025-08-11,DBD,0
+33.74.01,Semarang Tengah,2025-08-18,DBD,0
+33.74.01,Semarang Tengah,2025-08-25,DBD,0
+33.74.01,Semarang Tengah,2025-09-01,DBD,0
+33.74.01,Semarang Tengah,2025-09-08,DBD,0
+33.74.01,Semarang Tengah,2025-09-15,DBD,0
+33.74.01,Semarang Tengah,2025-09-22,DBD,0
+33.74.01,Semarang Tengah,2025-09-29,DBD,0
+33.74.01,Semarang Tengah,2025-10-06,DBD,0
+33.74.01,Semarang Tengah,2025-10-13,DBD,0
+33.74.01,Semarang Tengah,2025-10-20,DBD,0
+33.74.01,Semarang Tengah,2025-10-27,DBD,0
+33.74.01,Semarang Tengah,2025-11-03,DBD,0
+33.74.01,Semarang Tengah,2025-11-10,DBD,0
+33.74.01,Semarang Tengah,2025-11-17,DBD,0
+33.74.01,Semarang Tengah,2025-11-24,DBD,0
+33.74.01,Semarang Tengah,2025-12-01,DBD,0
+33.74.01,Semarang Tengah,2025-12-08,DBD,0
+33.74.01,Semarang Tengah,2025-12-15,DBD,0
+33.74.01,Semarang Tengah,2025-12-22,DBD,0
+33.74.01,Semarang Tengah,2025-12-29,DBD,0
+33.74.02,Semarang Utara,2025-01-06,DBD,0
+33.74.02,Semarang Utara,2025-01-13,DBD,0
+33.74.02,Semarang Utara,2025-01-20,DBD,0
+33.74.02,Semarang Utara,2025-01-27,DBD,2
+33.74.02,Semarang Utara,2025-02-03,DBD,1
+33.74.02,Semarang Utara,2025-02-10,DBD,2
+33.74.02,Semarang Utara,2025-02-17,DBD,0
+33.74.02,Semarang Utara,2025-02-24,DBD,1
+33.74.02,Semarang Utara,2025-03-03,DBD,1
+33.74.02,Semarang Utara,2025-03-10,DBD,1
+33.74.02,Semarang Utara,2025-03-17,DBD,2
+33.74.02,Semarang Utara,2025-03-24,DBD,0
+33.74.02,Semarang Utara,2025-03-31,DBD,0
+33.74.02,Semarang Utara,2025-04-07,DBD,0
+33.74.02,Semarang Utara,2025-04-14,DBD,1
+33.74.02,Semarang Utara,2025-04-21,DBD,0
+33.74.02,Semarang Utara,2025-04-28,DBD,0
+33.74.02,Semarang Utara,2025-05-05,DBD,0
+33.74.02,Semarang Utara,2025-05-12,DBD,1
+33.74.02,Semarang Utara,2025-05-19,DBD,0
+33.74.02,Semarang Utara,2025-05-26,DBD,1
+33.74.02,Semarang Utara,2025-06-02,DBD,0
+33.74.02,Semarang Utara,2025-06-09,DBD,0
+33.74.02,Semarang Utara,2025-06-16,DBD,0
+33.74.02,Semarang Utara,2025-06-23,DBD,0
+33.74.02,Semarang Utara,2025-06-30,DBD,0
+33.74.02,Semarang Utara,2025-07-07,DBD,0
+33.74.02,Semarang Utara,2025-07-14,DBD,0
+33.74.02,Semarang Utara,2025-07-21,DBD,1
+33.74.02,Semarang Utara,2025-07-28,DBD,0
+33.74.02,Semarang Utara,2025-08-04,DBD,0
+33.74.02,Semarang Utara,2025-08-11,DBD,0
+33.74.02,Semarang Utara,2025-08-18,DBD,0
+33.74.02,Semarang Utara,2025-08-25,DBD,0
+33.74.02,Semarang Utara,2025-09-01,DBD,1
+33.74.02,Semarang Utara,2025-09-08,DBD,0
+33.74.02,Semarang Utara,2025-09-15,DBD,0
+33.74.02,Semarang Utara,2025-09-22,DBD,1
+33.74.02,Semarang Utara,2025-09-29,DBD,0
+33.74.02,Semarang Utara,2025-10-06,DBD,1
+33.74.02,Semarang Utara,2025-10-13,DBD,0
+33.74.02,Semarang Utara,2025-10-20,DBD,0
+33.74.02,Semarang Utara,2025-10-27,DBD,0
+33.74.02,Semarang Utara,2025-11-03,DBD,0
+33.74.02,Semarang Utara,2025-11-10,DBD,0
+33.74.02,Semarang Utara,2025-11-17,DBD,0
+33.74.02,Semarang Utara,2025-11-24,DBD,0
+33.74.02,Semarang Utara,2025-12-01,DBD,0
+33.74.02,Semarang Utara,2025-12-08,DBD,0
+33.74.02,Semarang Utara,2025-12-15,DBD,0
+33.74.02,Semarang Utara,2025-12-22,DBD,0
+33.74.02,Semarang Utara,2025-12-29,DBD,0
+33.74.03,Semarang Timur,2025-01-06,DBD,1
+33.74.03,Semarang Timur,2025-01-13,DBD,0
+33.74.03,Semarang Timur,2025-01-20,DBD,0
+33.74.03,Semarang Timur,2025-01-27,DBD,1
+33.74.03,Semarang Timur,2025-02-03,DBD,0
+33.74.03,Semarang Timur,2025-02-10,DBD,0
+33.74.03,Semarang Timur,2025-02-17,DBD,0
+33.74.03,Semarang Timur,2025-02-24,DBD,0
+33.74.03,Semarang Timur,2025-03-03,DBD,3
+33.74.03,Semarang Timur,2025-03-10,DBD,0
+33.74.03,Semarang Timur,2025-03-17,DBD,0
+33.74.03,Semarang Timur,2025-03-24,DBD,0
+33.74.03,Semarang Timur,2025-03-31,DBD,1
+33.74.03,Semarang Timur,2025-04-07,DBD,0
+33.74.03,Semarang Timur,2025-04-14,DBD,0
+33.74.03,Semarang Timur,2025-04-21,DBD,1
+33.74.03,Semarang Timur,2025-04-28,DBD,0
+33.74.03,Semarang Timur,2025-05-05,DBD,0
+33.74.03,Semarang Timur,2025-05-12,DBD,0
+33.74.03,Semarang Timur,2025-05-19,DBD,0
+33.74.03,Semarang Timur,2025-05-26,DBD,0
+33.74.03,Semarang Timur,2025-06-02,DBD,0
+33.74.03,Semarang Timur,2025-06-09,DBD,1
+33.74.03,Semarang Timur,2025-06-16,DBD,0
+33.74.03,Semarang Timur,2025-06-23,DBD,0
+33.74.03,Semarang Timur,2025-06-30,DBD,0
+33.74.03,Semarang Timur,2025-07-07,DBD,0
+33.74.03,Semarang Timur,2025-07-14,DBD,0
+33.74.03,Semarang Timur,2025-07-21,DBD,2
+33.74.03,Semarang Timur,2025-07-28,DBD,0
+33.74.03,Semarang Timur,2025-08-04,DBD,0
+33.74.03,Semarang Timur,2025-08-11,DBD,0
+33.74.03,Semarang Timur,2025-08-18,DBD,0
+33.74.03,Semarang Timur,2025-08-25,DBD,0
+33.74.03,Semarang Timur,2025-09-01,DBD,1
+33.74.03,Semarang Timur,2025-09-08,DBD,0
+33.74.03,Semarang Timur,2025-09-15,DBD,0
+33.74.03,Semarang Timur,2025-09-22,DBD,0
+33.74.03,Semarang Timur,2025-09-29,DBD,0
+33.74.03,Semarang Timur,2025-10-06,DBD,0
+33.74.03,Semarang Timur,2025-10-13,DBD,0
+33.74.03,Semarang Timur,2025-10-20,DBD,0
+33.74.03,Semarang Timur,2025-10-27,DBD,0
+33.74.03,Semarang Timur,2025-11-03,DBD,0
+33.74.03,Semarang Timur,2025-11-10,DBD,0
+33.74.03,Semarang Timur,2025-11-17,DBD,0
+33.74.03,Semarang Timur,2025-11-24,DBD,0
+33.74.03,Semarang Timur,2025-12-01,DBD,0
+33.74.03,Semarang Timur,2025-12-08,DBD,0
+33.74.03,Semarang Timur,2025-12-15,DBD,0
+33.74.03,Semarang Timur,2025-12-22,DBD,0
+33.74.03,Semarang Timur,2025-12-29,DBD,0
+33.74.04,Semarang Selatan,2025-01-06,DBD,0
+33.74.04,Semarang Selatan,2025-01-13,DBD,0
+33.74.04,Semarang Selatan,2025-01-20,DBD,0
+33.74.04,Semarang Selatan,2025-01-27,DBD,0
+33.74.04,Semarang Selatan,2025-02-03,DBD,1
+33.74.04,Semarang Selatan,2025-02-10,DBD,0
+33.74.04,Semarang Selatan,2025-02-17,DBD,0
+33.74.04,Semarang Selatan,2025-02-24,DBD,2
+33.74.04,Semarang Selatan,2025-03-03,DBD,0
+33.74.04,Semarang Selatan,2025-03-10,DBD,1
+33.74.04,Semarang Selatan,2025-03-17,DBD,1
+33.74.04,Semarang Selatan,2025-03-24,DBD,0
+33.74.04,Semarang Selatan,2025-03-31,DBD,0
+33.74.04,Semarang Selatan,2025-04-07,DBD,0
+33.74.04,Semarang Selatan,2025-04-14,DBD,0
+33.74.04,Semarang Selatan,2025-04-21,DBD,2
+33.74.04,Semarang Selatan,2025-04-28,DBD,1
+33.74.04,Semarang Selatan,2025-05-05,DBD,0
+33.74.04,Semarang Selatan,2025-05-12,DBD,0
+33.74.04,Semarang Selatan,2025-05-19,DBD,1
+33.74.04,Semarang Selatan,2025-05-26,DBD,0
+33.74.04,Semarang Selatan,2025-06-02,DBD,0
+33.74.04,Semarang Selatan,2025-06-09,DBD,0
+33.74.04,Semarang Selatan,2025-06-16,DBD,0
+33.74.04,Semarang Selatan,2025-06-23,DBD,0
+33.74.04,Semarang Selatan,2025-06-30,DBD,0
+33.74.04,Semarang Selatan,2025-07-07,DBD,0
+33.74.04,Semarang Selatan,2025-07-14,DBD,0
+33.74.04,Semarang Selatan,2025-07-21,DBD,0
+33.74.04,Semarang Selatan,2025-07-28,DBD,0
+33.74.04,Semarang Selatan,2025-08-04,DBD,0
+33.74.04,Semarang Selatan,2025-08-11,DBD,0
+33.74.04,Semarang Selatan,2025-08-18,DBD,0
+33.74.04,Semarang Selatan,2025-08-25,DBD,0
+33.74.04,Semarang Selatan,2025-09-01,DBD,0
+33.74.04,Semarang Selatan,2025-09-08,DBD,0
+33.74.04,Semarang Selatan,2025-09-15,DBD,0
+33.74.04,Semarang Selatan,2025-09-22,DBD,1
+33.74.04,Semarang Selatan,2025-09-29,DBD,0
+33.74.04,Semarang Selatan,2025-10-06,DBD,0
+33.74.04,Semarang Selatan,2025-10-13,DBD,0
+33.74.04,Semarang Selatan,2025-10-20,DBD,0
+33.74.04,Semarang Selatan,2025-10-27,DBD,0
+33.74.04,Semarang Selatan,2025-11-03,DBD,0
+33.74.04,Semarang Selatan,2025-11-10,DBD,0
+33.74.04,Semarang Selatan,2025-11-17,DBD,0
+33.74.04,Semarang Selatan,2025-11-24,DBD,0
+33.74.04,Semarang Selatan,2025-12-01,DBD,0
+33.74.04,Semarang Selatan,2025-12-08,DBD,0
+33.74.04,Semarang Selatan,2025-12-15,DBD,0
+33.74.04,Semarang Selatan,2025-12-22,DBD,0
+33.74.04,Semarang Selatan,2025-12-29,DBD,0
+33.74.05,Semarang Barat,2025-01-06,DBD,1
+33.74.05,Semarang Barat,2025-01-13,DBD,1
+33.74.05,Semarang Barat,2025-01-20,DBD,0
+33.74.05,Semarang Barat,2025-01-27,DBD,1
+33.74.05,Semarang Barat,2025-02-03,DBD,3
+33.74.05,Semarang Barat,2025-02-10,DBD,0
+33.74.05,Semarang Barat,2025-02-17,DBD,0
+33.74.05,Semarang Barat,2025-02-24,DBD,1
+33.74.05,Semarang Barat,2025-03-03,DBD,0
+33.74.05,Semarang Barat,2025-03-10,DBD,1
+33.74.05,Semarang Barat,2025-03-17,DBD,3
+33.74.05,Semarang Barat,2025-03-24,DBD,1
+33.74.05,Semarang Barat,2025-03-31,DBD,0
+33.74.05,Semarang Barat,2025-04-07,DBD,1
+33.74.05,Semarang Barat,2025-04-14,DBD,1
+33.74.05,Semarang Barat,2025-04-21,DBD,0
+33.74.05,Semarang Barat,2025-04-28,DBD,0
+33.74.05,Semarang Barat,2025-05-05,DBD,1
+33.74.05,Semarang Barat,2025-05-12,DBD,1
+33.74.05,Semarang Barat,2025-05-19,DBD,0
+33.74.05,Semarang Barat,2025-05-26,DBD,1
+33.74.05,Semarang Barat,2025-06-02,DBD,0
+33.74.05,Semarang Barat,2025-06-09,DBD,0
+33.74.05,Semarang Barat,2025-06-16,DBD,0
+33.74.05,Semarang Barat,2025-06-23,DBD,0
+33.74.05,Semarang Barat,2025-06-30,DBD,1
+33.74.05,Semarang Barat,2025-07-07,DBD,1
+33.74.05,Semarang Barat,2025-07-14,DBD,0
+33.74.05,Semarang Barat,2025-07-21,DBD,0
+33.74.05,Semarang Barat,2025-07-28,DBD,0
+33.74.05,Semarang Barat,2025-08-04,DBD,0
+33.74.05,Semarang Barat,2025-08-11,DBD,0
+33.74.05,Semarang Barat,2025-08-18,DBD,0
+33.74.05,Semarang Barat,2025-08-25,DBD,0
+33.74.05,Semarang Barat,2025-09-01,DBD,0
+33.74.05,Semarang Barat,2025-09-08,DBD,0
+33.74.05,Semarang Barat,2025-09-15,DBD,0
+33.74.05,Semarang Barat,2025-09-22,DBD,1
+33.74.05,Semarang Barat,2025-09-29,DBD,0
+33.74.05,Semarang Barat,2025-10-06,DBD,1
+33.74.05,Semarang Barat,2025-10-13,DBD,0
+33.74.05,Semarang Barat,2025-10-20,DBD,0
+33.74.05,Semarang Barat,2025-10-27,DBD,0
+33.74.05,Semarang Barat,2025-11-03,DBD,0
+33.74.05,Semarang Barat,2025-11-10,DBD,0
+33.74.05,Semarang Barat,2025-11-17,DBD,0
+33.74.05,Semarang Barat,2025-11-24,DBD,0
+33.74.05,Semarang Barat,2025-12-01,DBD,0
+33.74.05,Semarang Barat,2025-12-08,DBD,0
+33.74.05,Semarang Barat,2025-12-15,DBD,1
+33.74.05,Semarang Barat,2025-12-22,DBD,0
+33.74.05,Semarang Barat,2025-12-29,DBD,0
+33.74.06,Gayamsari,2025-01-06,DBD,1
+33.74.06,Gayamsari,2025-01-13,DBD,0
+33.74.06,Gayamsari,2025-01-20,DBD,2
+33.74.06,Gayamsari,2025-01-27,DBD,1
+33.74.06,Gayamsari,2025-02-03,DBD,1
+33.74.06,Gayamsari,2025-02-10,DBD,2
+33.74.06,Gayamsari,2025-02-17,DBD,1
+33.74.06,Gayamsari,2025-02-24,DBD,0
+33.74.06,Gayamsari,2025-03-03,DBD,0
+33.74.06,Gayamsari,2025-03-10,DBD,0
+33.74.06,Gayamsari,2025-03-17,DBD,1
+33.74.06,Gayamsari,2025-03-24,DBD,1
+33.74.06,Gayamsari,2025-03-31,DBD,0
+33.74.06,Gayamsari,2025-04-07,DBD,0
+33.74.06,Gayamsari,2025-04-14,DBD,0
+33.74.06,Gayamsari,2025-04-21,DBD,2
+33.74.06,Gayamsari,2025-04-28,DBD,0
+33.74.06,Gayamsari,2025-05-05,DBD,0
+33.74.06,Gayamsari,2025-05-12,DBD,0
+33.74.06,Gayamsari,2025-05-19,DBD,0
+33.74.06,Gayamsari,2025-05-26,DBD,1
+33.74.06,Gayamsari,2025-06-02,DBD,0
+33.74.06,Gayamsari,2025-06-09,DBD,1
+33.74.06,Gayamsari,2025-06-16,DBD,0
+33.74.06,Gayamsari,2025-06-23,DBD,0
+33.74.06,Gayamsari,2025-06-30,DBD,0
+33.74.06,Gayamsari,2025-07-07,DBD,0
+33.74.06,Gayamsari,2025-07-14,DBD,0
+33.74.06,Gayamsari,2025-07-21,DBD,0
+33.74.06,Gayamsari,2025-07-28,DBD,0
+33.74.06,Gayamsari,2025-08-04,DBD,0
+33.74.06,Gayamsari,2025-08-11,DBD,0
+33.74.06,Gayamsari,2025-08-18,DBD,0
+33.74.06,Gayamsari,2025-08-25,DBD,0
+33.74.06,Gayamsari,2025-09-01,DBD,1
+33.74.06,Gayamsari,2025-09-08,DBD,0
+33.74.06,Gayamsari,2025-09-15,DBD,0
+33.74.06,Gayamsari,2025-09-22,DBD,0
+33.74.06,Gayamsari,2025-09-29,DBD,0
+33.74.06,Gayamsari,2025-10-06,DBD,0
+33.74.06,Gayamsari,2025-10-13,DBD,0
+33.74.06,Gayamsari,2025-10-20,DBD,0
+33.74.06,Gayamsari,2025-10-27,DBD,0
+33.74.06,Gayamsari,2025-11-03,DBD,0
+33.74.06,Gayamsari,2025-11-10,DBD,0
+33.74.06,Gayamsari,2025-11-17,DBD,0
+33.74.06,Gayamsari,2025-11-24,DBD,0
+33.74.06,Gayamsari,2025-12-01,DBD,0
+33.74.06,Gayamsari,2025-12-08,DBD,0
+33.74.06,Gayamsari,2025-12-15,DBD,0
+33.74.06,Gayamsari,2025-12-22,DBD,0
+33.74.06,Gayamsari,2025-12-29,DBD,0
+33.74.07,Candisari,2025-01-06,DBD,0
+33.74.07,Candisari,2025-01-13,DBD,1
+33.74.07,Candisari,2025-01-20,DBD,0
+33.74.07,Candisari,2025-01-27,DBD,0
+33.74.07,Candisari,2025-02-03,DBD,0
+33.74.07,Candisari,2025-02-10,DBD,1
+33.74.07,Candisari,2025-02-17,DBD,0
+33.74.07,Candisari,2025-02-24,DBD,0
+33.74.07,Candisari,2025-03-03,DBD,1
+33.74.07,Candisari,2025-03-10,DBD,2
+33.74.07,Candisari,2025-03-17,DBD,0
+33.74.07,Candisari,2025-03-24,DBD,2
+33.74.07,Candisari,2025-03-31,DBD,0
+33.74.07,Candisari,2025-04-07,DBD,1
+33.74.07,Candisari,2025-04-14,DBD,0
+33.74.07,Candisari,2025-04-21,DBD,0
+33.74.07,Candisari,2025-04-28,DBD,0
+33.74.07,Candisari,2025-05-05,DBD,0
+33.74.07,Candisari,2025-05-12,DBD,0
+33.74.07,Candisari,2025-05-19,DBD,1
+33.74.07,Candisari,2025-05-26,DBD,2
+33.74.07,Candisari,2025-06-02,DBD,1
+33.74.07,Candisari,2025-06-09,DBD,1
+33.74.07,Candisari,2025-06-16,DBD,0
+33.74.07,Candisari,2025-06-23,DBD,0
+33.74.07,Candisari,2025-06-30,DBD,0
+33.74.07,Candisari,2025-07-07,DBD,0
+33.74.07,Candisari,2025-07-14,DBD,0
+33.74.07,Candisari,2025-07-21,DBD,0
+33.74.07,Candisari,2025-07-28,DBD,0
+33.74.07,Candisari,2025-08-04,DBD,0
+33.74.07,Candisari,2025-08-11,DBD,1
+33.74.07,Candisari,2025-08-18,DBD,0
+33.74.07,Candisari,2025-08-25,DBD,0
+33.74.07,Candisari,2025-09-01,DBD,0
+33.74.07,Candisari,2025-09-08,DBD,0
+33.74.07,Candisari,2025-09-15,DBD,0
+33.74.07,Candisari,2025-09-22,DBD,2
+33.74.07,Candisari,2025-09-29,DBD,0
+33.74.07,Candisari,2025-10-06,DBD,0
+33.74.07,Candisari,2025-10-13,DBD,0
+33.74.07,Candisari,2025-10-20,DBD,0
+33.74.07,Candisari,2025-10-27,DBD,0
+33.74.07,Candisari,2025-11-03,DBD,0
+33.74.07,Candisari,2025-11-10,DBD,0
+33.74.07,Candisari,2025-11-17,DBD,0
+33.74.07,Candisari,2025-11-24,DBD,0
+33.74.07,Candisari,2025-12-01,DBD,0
+33.74.07,Candisari,2025-12-08,DBD,0
+33.74.07,Candisari,2025-12-15,DBD,0
+33.74.07,Candisari,2025-12-22,DBD,0
+33.74.07,Candisari,2025-12-29,DBD,0
+33.74.08,Gajahmungkur,2025-01-06,DBD,1
+33.74.08,Gajahmungkur,2025-01-13,DBD,0
+33.74.08,Gajahmungkur,2025-01-20,DBD,1
+33.74.08,Gajahmungkur,2025-01-27,DBD,2
+33.74.08,Gajahmungkur,2025-02-03,DBD,0
+33.74.08,Gajahmungkur,2025-02-10,DBD,0
+33.74.08,Gajahmungkur,2025-02-17,DBD,0
+33.74.08,Gajahmungkur,2025-02-24,DBD,2
+33.74.08,Gajahmungkur,2025-03-03,DBD,1
+33.74.08,Gajahmungkur,2025-03-10,DBD,0
+33.74.08,Gajahmungkur,2025-03-17,DBD,0
+33.74.08,Gajahmungkur,2025-03-24,DBD,0
+33.74.08,Gajahmungkur,2025-03-31,DBD,0
+33.74.08,Gajahmungkur,2025-04-07,DBD,0
+33.74.08,Gajahmungkur,2025-04-14,DBD,1
+33.74.08,Gajahmungkur,2025-04-21,DBD,1
+33.74.08,Gajahmungkur,2025-04-28,DBD,0
+33.74.08,Gajahmungkur,2025-05-05,DBD,1
+33.74.08,Gajahmungkur,2025-05-12,DBD,1
+33.74.08,Gajahmungkur,2025-05-19,DBD,0
+33.74.08,Gajahmungkur,2025-05-26,DBD,0
+33.74.08,Gajahmungkur,2025-06-02,DBD,0
+33.74.08,Gajahmungkur,2025-06-09,DBD,0
+33.74.08,Gajahmungkur,2025-06-16,DBD,0
+33.74.08,Gajahmungkur,2025-06-23,DBD,0
+33.74.08,Gajahmungkur,2025-06-30,DBD,0
+33.74.08,Gajahmungkur,2025-07-07,DBD,0
+33.74.08,Gajahmungkur,2025-07-14,DBD,0
+33.74.08,Gajahmungkur,2025-07-21,DBD,0
+33.74.08,Gajahmungkur,2025-07-28,DBD,0
+33.74.08,Gajahmungkur,2025-08-04,DBD,0
+33.74.08,Gajahmungkur,2025-08-11,DBD,0
+33.74.08,Gajahmungkur,2025-08-18,DBD,0
+33.74.08,Gajahmungkur,2025-08-25,DBD,0
+33.74.08,Gajahmungkur,2025-09-01,DBD,0
+33.74.08,Gajahmungkur,2025-09-08,DBD,0
+33.74.08,Gajahmungkur,2025-09-15,DBD,0
+33.74.08,Gajahmungkur,2025-09-22,DBD,1
+33.74.08,Gajahmungkur,2025-09-29,DBD,0
+33.74.08,Gajahmungkur,2025-10-06,DBD,0
+33.74.08,Gajahmungkur,2025-10-13,DBD,0
+33.74.08,Gajahmungkur,2025-10-20,DBD,0
+33.74.08,Gajahmungkur,2025-10-27,DBD,0
+33.74.08,Gajahmungkur,2025-11-03,DBD,0
+33.74.08,Gajahmungkur,2025-11-10,DBD,0
+33.74.08,Gajahmungkur,2025-11-17,DBD,0
+33.74.08,Gajahmungkur,2025-11-24,DBD,0
+33.74.08,Gajahmungkur,2025-12-01,DBD,0
+33.74.08,Gajahmungkur,2025-12-08,DBD,0
+33.74.08,Gajahmungkur,2025-12-15,DBD,0
+33.74.08,Gajahmungkur,2025-12-22,DBD,0
+33.74.08,Gajahmungkur,2025-12-29,DBD,0
+33.74.09,Genuk,2025-01-06,DBD,0
+33.74.09,Genuk,2025-01-13,DBD,0
+33.74.09,Genuk,2025-01-20,DBD,0
+33.74.09,Genuk,2025-01-27,DBD,0
+33.74.09,Genuk,2025-02-03,DBD,3
+33.74.09,Genuk,2025-02-10,DBD,1
+33.74.09,Genuk,2025-02-17,DBD,0
+33.74.09,Genuk,2025-02-24,DBD,0
+33.74.09,Genuk,2025-03-03,DBD,1
+33.74.09,Genuk,2025-03-10,DBD,1
+33.74.09,Genuk,2025-03-17,DBD,2
+33.74.09,Genuk,2025-03-24,DBD,1
+33.74.09,Genuk,2025-03-31,DBD,0
+33.74.09,Genuk,2025-04-07,DBD,1
+33.74.09,Genuk,2025-04-14,DBD,1
+33.74.09,Genuk,2025-04-21,DBD,2
+33.74.09,Genuk,2025-04-28,DBD,2
+33.74.09,Genuk,2025-05-05,DBD,1
+33.74.09,Genuk,2025-05-12,DBD,2
+33.74.09,Genuk,2025-05-19,DBD,0
+33.74.09,Genuk,2025-05-26,DBD,1
+33.74.09,Genuk,2025-06-02,DBD,1
+33.74.09,Genuk,2025-06-09,DBD,2
+33.74.09,Genuk,2025-06-16,DBD,0
+33.74.09,Genuk,2025-06-23,DBD,0
+33.74.09,Genuk,2025-06-30,DBD,0
+33.74.09,Genuk,2025-07-07,DBD,0
+33.74.09,Genuk,2025-07-14,DBD,0
+33.74.09,Genuk,2025-07-21,DBD,0
+33.74.09,Genuk,2025-07-28,DBD,0
+33.74.09,Genuk,2025-08-04,DBD,2
+33.74.09,Genuk,2025-08-11,DBD,1
+33.74.09,Genuk,2025-08-18,DBD,0
+33.74.09,Genuk,2025-08-25,DBD,0
+33.74.09,Genuk,2025-09-01,DBD,0
+33.74.09,Genuk,2025-09-08,DBD,0
+33.74.09,Genuk,2025-09-15,DBD,0
+33.74.09,Genuk,2025-09-22,DBD,1
+33.74.09,Genuk,2025-09-29,DBD,0
+33.74.09,Genuk,2025-10-06,DBD,0
+33.74.09,Genuk,2025-10-13,DBD,0
+33.74.09,Genuk,2025-10-20,DBD,0
+33.74.09,Genuk,2025-10-27,DBD,0
+33.74.09,Genuk,2025-11-03,DBD,0
+33.74.09,Genuk,2025-11-10,DBD,0
+33.74.09,Genuk,2025-11-17,DBD,0
+33.74.09,Genuk,2025-11-24,DBD,0
+33.74.09,Genuk,2025-12-01,DBD,0
+33.74.09,Genuk,2025-12-08,DBD,0
+33.74.09,Genuk,2025-12-15,DBD,0
+33.74.09,Genuk,2025-12-22,DBD,1
+33.74.09,Genuk,2025-12-29,DBD,0
+33.74.10,Pedurungan,2025-01-06,DBD,2
+33.74.10,Pedurungan,2025-01-13,DBD,0
+33.74.10,Pedurungan,2025-01-20,DBD,1
+33.74.10,Pedurungan,2025-01-27,DBD,3
+33.74.10,Pedurungan,2025-02-03,DBD,1
+33.74.10,Pedurungan,2025-02-10,DBD,3
+33.74.10,Pedurungan,2025-02-17,DBD,0
+33.74.10,Pedurungan,2025-02-24,DBD,0
+33.74.10,Pedurungan,2025-03-03,DBD,3
+33.74.10,Pedurungan,2025-03-10,DBD,0
+33.74.10,Pedurungan,2025-03-17,DBD,2
+33.74.10,Pedurungan,2025-03-24,DBD,2
+33.74.10,Pedurungan,2025-03-31,DBD,0
+33.74.10,Pedurungan,2025-04-07,DBD,2
+33.74.10,Pedurungan,2025-04-14,DBD,1
+33.74.10,Pedurungan,2025-04-21,DBD,0
+33.74.10,Pedurungan,2025-04-28,DBD,1
+33.74.10,Pedurungan,2025-05-05,DBD,1
+33.74.10,Pedurungan,2025-05-12,DBD,4
+33.74.10,Pedurungan,2025-05-19,DBD,1
+33.74.10,Pedurungan,2025-05-26,DBD,2
+33.74.10,Pedurungan,2025-06-02,DBD,1
+33.74.10,Pedurungan,2025-06-09,DBD,1
+33.74.10,Pedurungan,2025-06-16,DBD,0
+33.74.10,Pedurungan,2025-06-23,DBD,0
+33.74.10,Pedurungan,2025-06-30,DBD,1
+33.74.10,Pedurungan,2025-07-07,DBD,0
+33.74.10,Pedurungan,2025-07-14,DBD,0
+33.74.10,Pedurungan,2025-07-21,DBD,1
+33.74.10,Pedurungan,2025-07-28,DBD,0
+33.74.10,Pedurungan,2025-08-04,DBD,1
+33.74.10,Pedurungan,2025-08-11,DBD,0
+33.74.10,Pedurungan,2025-08-18,DBD,0
+33.74.10,Pedurungan,2025-08-25,DBD,0
+33.74.10,Pedurungan,2025-09-01,DBD,0
+33.74.10,Pedurungan,2025-09-08,DBD,0
+33.74.10,Pedurungan,2025-09-15,DBD,0
+33.74.10,Pedurungan,2025-09-22,DBD,2
+33.74.10,Pedurungan,2025-09-29,DBD,0
+33.74.10,Pedurungan,2025-10-06,DBD,0
+33.74.10,Pedurungan,2025-10-13,DBD,0
+33.74.10,Pedurungan,2025-10-20,DBD,0
+33.74.10,Pedurungan,2025-10-27,DBD,0
+33.74.10,Pedurungan,2025-11-03,DBD,0
+33.74.10,Pedurungan,2025-11-10,DBD,0
+33.74.10,Pedurungan,2025-11-17,DBD,0
+33.74.10,Pedurungan,2025-11-24,DBD,0
+33.74.10,Pedurungan,2025-12-01,DBD,0
+33.74.10,Pedurungan,2025-12-08,DBD,0
+33.74.10,Pedurungan,2025-12-15,DBD,0
+33.74.10,Pedurungan,2025-12-22,DBD,0
+33.74.10,Pedurungan,2025-12-29,DBD,0
+33.74.11,Tembalang,2025-01-06,DBD,4
+33.74.11,Tembalang,2025-01-13,DBD,0
+33.74.11,Tembalang,2025-01-20,DBD,0
+33.74.11,Tembalang,2025-01-27,DBD,3
+33.74.11,Tembalang,2025-02-03,DBD,1
+33.74.11,Tembalang,2025-02-10,DBD,3
+33.74.11,Tembalang,2025-02-17,DBD,3
+33.74.11,Tembalang,2025-02-24,DBD,0
+33.74.11,Tembalang,2025-03-03,DBD,3
+33.74.11,Tembalang,2025-03-10,DBD,0
+33.74.11,Tembalang,2025-03-17,DBD,2
+33.74.11,Tembalang,2025-03-24,DBD,3
+33.74.11,Tembalang,2025-03-31,DBD,0
+33.74.11,Tembalang,2025-04-07,DBD,6
+33.74.11,Tembalang,2025-04-14,DBD,1
+33.74.11,Tembalang,2025-04-21,DBD,2
+33.74.11,Tembalang,2025-04-28,DBD,0
+33.74.11,Tembalang,2025-05-05,DBD,1
+33.74.11,Tembalang,2025-05-12,DBD,1
+33.74.11,Tembalang,2025-05-19,DBD,0
+33.74.11,Tembalang,2025-05-26,DBD,1
+33.74.11,Tembalang,2025-06-02,DBD,1
+33.74.11,Tembalang,2025-06-09,DBD,2
+33.74.11,Tembalang,2025-06-16,DBD,0
+33.74.11,Tembalang,2025-06-23,DBD,0
+33.74.11,Tembalang,2025-06-30,DBD,0
+33.74.11,Tembalang,2025-07-07,DBD,1
+33.74.11,Tembalang,2025-07-14,DBD,0
+33.74.11,Tembalang,2025-07-21,DBD,0
+33.74.11,Tembalang,2025-07-28,DBD,0
+33.74.11,Tembalang,2025-08-04,DBD,1
+33.74.11,Tembalang,2025-08-11,DBD,1
+33.74.11,Tembalang,2025-08-18,DBD,0
+33.74.11,Tembalang,2025-08-25,DBD,0
+33.74.11,Tembalang,2025-09-01,DBD,1
+33.74.11,Tembalang,2025-09-08,DBD,0
+33.74.11,Tembalang,2025-09-15,DBD,0
+33.74.11,Tembalang,2025-09-22,DBD,2
+33.74.11,Tembalang,2025-09-29,DBD,0
+33.74.11,Tembalang,2025-10-06,DBD,0
+33.74.11,Tembalang,2025-10-13,DBD,0
+33.74.11,Tembalang,2025-10-20,DBD,0
+33.74.11,Tembalang,2025-10-27,DBD,0
+33.74.11,Tembalang,2025-11-03,DBD,0
+33.74.11,Tembalang,2025-11-10,DBD,0
+33.74.11,Tembalang,2025-11-17,DBD,0
+33.74.11,Tembalang,2025-11-24,DBD,0
+33.74.11,Tembalang,2025-12-01,DBD,0
+33.74.11,Tembalang,2025-12-08,DBD,0
+33.74.11,Tembalang,2025-12-15,DBD,0
+33.74.11,Tembalang,2025-12-22,DBD,0
+33.74.11,Tembalang,2025-12-29,DBD,0
+33.74.12,Banyumanik,2025-01-06,DBD,1
+33.74.12,Banyumanik,2025-01-13,DBD,0
+33.74.12,Banyumanik,2025-01-20,DBD,2
+33.74.12,Banyumanik,2025-01-27,DBD,1
+33.74.12,Banyumanik,2025-02-03,DBD,2
+33.74.12,Banyumanik,2025-02-10,DBD,3
+33.74.12,Banyumanik,2025-02-17,DBD,1
+33.74.12,Banyumanik,2025-02-24,DBD,1
+33.74.12,Banyumanik,2025-03-03,DBD,0
+33.74.12,Banyumanik,2025-03-10,DBD,1
+33.74.12,Banyumanik,2025-03-17,DBD,2
+33.74.12,Banyumanik,2025-03-24,DBD,2
+33.74.12,Banyumanik,2025-03-31,DBD,0
+33.74.12,Banyumanik,2025-04-07,DBD,0
+33.74.12,Banyumanik,2025-04-14,DBD,2
+33.74.12,Banyumanik,2025-04-21,DBD,3
+33.74.12,Banyumanik,2025-04-28,DBD,1
+33.74.12,Banyumanik,2025-05-05,DBD,1
+33.74.12,Banyumanik,2025-05-12,DBD,1
+33.74.12,Banyumanik,2025-05-19,DBD,0
+33.74.12,Banyumanik,2025-05-26,DBD,1
+33.74.12,Banyumanik,2025-06-02,DBD,0
+33.74.12,Banyumanik,2025-06-09,DBD,1
+33.74.12,Banyumanik,2025-06-16,DBD,0
+33.74.12,Banyumanik,2025-06-23,DBD,0
+33.74.12,Banyumanik,2025-06-30,DBD,0
+33.74.12,Banyumanik,2025-07-07,DBD,0
+33.74.12,Banyumanik,2025-07-14,DBD,1
+33.74.12,Banyumanik,2025-07-21,DBD,0
+33.74.12,Banyumanik,2025-07-28,DBD,0
+33.74.12,Banyumanik,2025-08-04,DBD,0
+33.74.12,Banyumanik,2025-08-11,DBD,0
+33.74.12,Banyumanik,2025-08-18,DBD,0
+33.74.12,Banyumanik,2025-08-25,DBD,0
+33.74.12,Banyumanik,2025-09-01,DBD,0
+33.74.12,Banyumanik,2025-09-08,DBD,0
+33.74.12,Banyumanik,2025-09-15,DBD,0
+33.74.12,Banyumanik,2025-09-22,DBD,1
+33.74.12,Banyumanik,2025-09-29,DBD,0
+33.74.12,Banyumanik,2025-10-06,DBD,1
+33.74.12,Banyumanik,2025-10-13,DBD,0
+33.74.12,Banyumanik,2025-10-20,DBD,0
+33.74.12,Banyumanik,2025-10-27,DBD,0
+33.74.12,Banyumanik,2025-11-03,DBD,0
+33.74.12,Banyumanik,2025-11-10,DBD,0
+33.74.12,Banyumanik,2025-11-17,DBD,0
+33.74.12,Banyumanik,2025-11-24,DBD,0
+33.74.12,Banyumanik,2025-12-01,DBD,0
+33.74.12,Banyumanik,2025-12-08,DBD,0
+33.74.12,Banyumanik,2025-12-15,DBD,0
+33.74.12,Banyumanik,2025-12-22,DBD,0
+33.74.12,Banyumanik,2025-12-29,DBD,0
+33.74.13,Gunungpati,2025-01-06,DBD,0
+33.74.13,Gunungpati,2025-01-13,DBD,0
+33.74.13,Gunungpati,2025-01-20,DBD,0
+33.74.13,Gunungpati,2025-01-27,DBD,1
+33.74.13,Gunungpati,2025-02-03,DBD,0
+33.74.13,Gunungpati,2025-02-10,DBD,2
+33.74.13,Gunungpati,2025-02-17,DBD,0
+33.74.13,Gunungpati,2025-02-24,DBD,1
+33.74.13,Gunungpati,2025-03-03,DBD,0
+33.74.13,Gunungpati,2025-03-10,DBD,1
+33.74.13,Gunungpati,2025-03-17,DBD,0
+33.74.13,Gunungpati,2025-03-24,DBD,2
+33.74.13,Gunungpati,2025-03-31,DBD,0
+33.74.13,Gunungpati,2025-04-07,DBD,0
+33.74.13,Gunungpati,2025-04-14,DBD,0
+33.74.13,Gunungpati,2025-04-21,DBD,0
+33.74.13,Gunungpati,2025-04-28,DBD,0
+33.74.13,Gunungpati,2025-05-05,DBD,0
+33.74.13,Gunungpati,2025-05-12,DBD,1
+33.74.13,Gunungpati,2025-05-19,DBD,0
+33.74.13,Gunungpati,2025-05-26,DBD,0
+33.74.13,Gunungpati,2025-06-02,DBD,1
+33.74.13,Gunungpati,2025-06-09,DBD,0
+33.74.13,Gunungpati,2025-06-16,DBD,0
+33.74.13,Gunungpati,2025-06-23,DBD,0
+33.74.13,Gunungpati,2025-06-30,DBD,0
+33.74.13,Gunungpati,2025-07-07,DBD,0
+33.74.13,Gunungpati,2025-07-14,DBD,0
+33.74.13,Gunungpati,2025-07-21,DBD,0
+33.74.13,Gunungpati,2025-07-28,DBD,0
+33.74.13,Gunungpati,2025-08-04,DBD,0
+33.74.13,Gunungpati,2025-08-11,DBD,0
+33.74.13,Gunungpati,2025-08-18,DBD,0
+33.74.13,Gunungpati,2025-08-25,DBD,0
+33.74.13,Gunungpati,2025-09-01,DBD,0
+33.74.13,Gunungpati,2025-09-08,DBD,0
+33.74.13,Gunungpati,2025-09-15,DBD,0
+33.74.13,Gunungpati,2025-09-22,DBD,0
+33.74.13,Gunungpati,2025-09-29,DBD,0
+33.74.13,Gunungpati,2025-10-06,DBD,1
+33.74.13,Gunungpati,2025-10-13,DBD,0
+33.74.13,Gunungpati,2025-10-20,DBD,0
+33.74.13,Gunungpati,2025-10-27,DBD,0
+33.74.13,Gunungpati,2025-11-03,DBD,0
+33.74.13,Gunungpati,2025-11-10,DBD,0
+33.74.13,Gunungpati,2025-11-17,DBD,0
+33.74.13,Gunungpati,2025-11-24,DBD,0
+33.74.13,Gunungpati,2025-12-01,DBD,0
+33.74.13,Gunungpati,2025-12-08,DBD,0
+33.74.13,Gunungpati,2025-12-15,DBD,0
+33.74.13,Gunungpati,2025-12-22,DBD,0
+33.74.13,Gunungpati,2025-12-29,DBD,0
+33.74.14,Mijen,2025-01-06,DBD,0
+33.74.14,Mijen,2025-01-13,DBD,0
+33.74.14,Mijen,2025-01-20,DBD,0
+33.74.14,Mijen,2025-01-27,DBD,1
+33.74.14,Mijen,2025-02-03,DBD,1
+33.74.14,Mijen,2025-02-10,DBD,4
+33.74.14,Mijen,2025-02-17,DBD,1
+33.74.14,Mijen,2025-02-24,DBD,0
+33.74.14,Mijen,2025-03-03,DBD,3
+33.74.14,Mijen,2025-03-10,DBD,4
+33.74.14,Mijen,2025-03-17,DBD,2
+33.74.14,Mijen,2025-03-24,DBD,1
+33.74.14,Mijen,2025-03-31,DBD,0
+33.74.14,Mijen,2025-04-07,DBD,0
+33.74.14,Mijen,2025-04-14,DBD,0
+33.74.14,Mijen,2025-04-21,DBD,0
+33.74.14,Mijen,2025-04-28,DBD,3
+33.74.14,Mijen,2025-05-05,DBD,0
+33.74.14,Mijen,2025-05-12,DBD,1
+33.74.14,Mijen,2025-05-19,DBD,0
+33.74.14,Mijen,2025-05-26,DBD,1
+33.74.14,Mijen,2025-06-02,DBD,1
+33.74.14,Mijen,2025-06-09,DBD,0
+33.74.14,Mijen,2025-06-16,DBD,0
+33.74.14,Mijen,2025-06-23,DBD,0
+33.74.14,Mijen,2025-06-30,DBD,0
+33.74.14,Mijen,2025-07-07,DBD,0
+33.74.14,Mijen,2025-07-14,DBD,0
+33.74.14,Mijen,2025-07-21,DBD,0
+33.74.14,Mijen,2025-07-28,DBD,0
+33.74.14,Mijen,2025-08-04,DBD,0
+33.74.14,Mijen,2025-08-11,DBD,0
+33.74.14,Mijen,2025-08-18,DBD,0
+33.74.14,Mijen,2025-08-25,DBD,0
+33.74.14,Mijen,2025-09-01,DBD,0
+33.74.14,Mijen,2025-09-08,DBD,0
+33.74.14,Mijen,2025-09-15,DBD,0
+33.74.14,Mijen,2025-09-22,DBD,0
+33.74.14,Mijen,2025-09-29,DBD,0
+33.74.14,Mijen,2025-10-06,DBD,0
+33.74.14,Mijen,2025-10-13,DBD,0
+33.74.14,Mijen,2025-10-20,DBD,0
+33.74.14,Mijen,2025-10-27,DBD,0
+33.74.14,Mijen,2025-11-03,DBD,0
+33.74.14,Mijen,2025-11-10,DBD,0
+33.74.14,Mijen,2025-11-17,DBD,0
+33.74.14,Mijen,2025-11-24,DBD,0
+33.74.14,Mijen,2025-12-01,DBD,0
+33.74.14,Mijen,2025-12-08,DBD,0
+33.74.14,Mijen,2025-12-15,DBD,0
+33.74.14,Mijen,2025-12-22,DBD,0
+33.74.14,Mijen,2025-12-29,DBD,0
+33.74.15,Ngaliyan,2025-01-06,DBD,1
+33.74.15,Ngaliyan,2025-01-13,DBD,0
+33.74.15,Ngaliyan,2025-01-20,DBD,1
+33.74.15,Ngaliyan,2025-01-27,DBD,0
+33.74.15,Ngaliyan,2025-02-03,DBD,0
+33.74.15,Ngaliyan,2025-02-10,DBD,2
+33.74.15,Ngaliyan,2025-02-17,DBD,2
+33.74.15,Ngaliyan,2025-02-24,DBD,2
+33.74.15,Ngaliyan,2025-03-03,DBD,2
+33.74.15,Ngaliyan,2025-03-10,DBD,2
+33.74.15,Ngaliyan,2025-03-17,DBD,1
+33.74.15,Ngaliyan,2025-03-24,DBD,0
+33.74.15,Ngaliyan,2025-03-31,DBD,1
+33.74.15,Ngaliyan,2025-04-07,DBD,2
+33.74.15,Ngaliyan,2025-04-14,DBD,3
+33.74.15,Ngaliyan,2025-04-21,DBD,0
+33.74.15,Ngaliyan,2025-04-28,DBD,2
+33.74.15,Ngaliyan,2025-05-05,DBD,2
+33.74.15,Ngaliyan,2025-05-12,DBD,2
+33.74.15,Ngaliyan,2025-05-19,DBD,1
+33.74.15,Ngaliyan,2025-05-26,DBD,2
+33.74.15,Ngaliyan,2025-06-02,DBD,1
+33.74.15,Ngaliyan,2025-06-09,DBD,1
+33.74.15,Ngaliyan,2025-06-16,DBD,0
+33.74.15,Ngaliyan,2025-06-23,DBD,0
+33.74.15,Ngaliyan,2025-06-30,DBD,2
+33.74.15,Ngaliyan,2025-07-07,DBD,1
+33.74.15,Ngaliyan,2025-07-14,DBD,0
+33.74.15,Ngaliyan,2025-07-21,DBD,1
+33.74.15,Ngaliyan,2025-07-28,DBD,0
+33.74.15,Ngaliyan,2025-08-04,DBD,0
+33.74.15,Ngaliyan,2025-08-11,DBD,0
+33.74.15,Ngaliyan,2025-08-18,DBD,0
+33.74.15,Ngaliyan,2025-08-25,DBD,0
+33.74.15,Ngaliyan,2025-09-01,DBD,1
+33.74.15,Ngaliyan,2025-09-08,DBD,0
+33.74.15,Ngaliyan,2025-09-15,DBD,0
+33.74.15,Ngaliyan,2025-09-22,DBD,1
+33.74.15,Ngaliyan,2025-09-29,DBD,0
+33.74.15,Ngaliyan,2025-10-06,DBD,0
+33.74.15,Ngaliyan,2025-10-13,DBD,0
+33.74.15,Ngaliyan,2025-10-20,DBD,0
+33.74.15,Ngaliyan,2025-10-27,DBD,0
+33.74.15,Ngaliyan,2025-11-03,DBD,0
+33.74.15,Ngaliyan,2025-11-10,DBD,0
+33.74.15,Ngaliyan,2025-11-17,DBD,0
+33.74.15,Ngaliyan,2025-11-24,DBD,0
+33.74.15,Ngaliyan,2025-12-01,DBD,0
+33.74.15,Ngaliyan,2025-12-08,DBD,0
+33.74.15,Ngaliyan,2025-12-15,DBD,0
+33.74.15,Ngaliyan,2025-12-22,DBD,0
+33.74.15,Ngaliyan,2025-12-29,DBD,0
+33.74.16,Tugu,2025-01-06,DBD,0
+33.74.16,Tugu,2025-01-13,DBD,0
+33.74.16,Tugu,2025-01-20,DBD,0
+33.74.16,Tugu,2025-01-27,DBD,2
+33.74.16,Tugu,2025-02-03,DBD,2
+33.74.16,Tugu,2025-02-10,DBD,0
+33.74.16,Tugu,2025-02-17,DBD,0
+33.74.16,Tugu,2025-02-24,DBD,0
+33.74.16,Tugu,2025-03-03,DBD,0
+33.74.16,Tugu,2025-03-10,DBD,0
+33.74.16,Tugu,2025-03-17,DBD,0
+33.74.16,Tugu,2025-03-24,DBD,0
+33.74.16,Tugu,2025-03-31,DBD,0
+33.74.16,Tugu,2025-04-07,DBD,0
+33.74.16,Tugu,2025-04-14,DBD,1
+33.74.16,Tugu,2025-04-21,DBD,0
+33.74.16,Tugu,2025-04-28,DBD,0
+33.74.16,Tugu,2025-05-05,DBD,0
+33.74.16,Tugu,2025-05-12,DBD,1
+33.74.16,Tugu,2025-05-19,DBD,0
+33.74.16,Tugu,2025-05-26,DBD,0
+33.74.16,Tugu,2025-06-02,DBD,0
+33.74.16,Tugu,2025-06-09,DBD,0
+33.74.16,Tugu,2025-06-16,DBD,0
+33.74.16,Tugu,2025-06-23,DBD,0
+33.74.16,Tugu,2025-06-30,DBD,0
+33.74.16,Tugu,2025-07-07,DBD,0
+33.74.16,Tugu,2025-07-14,DBD,0
+33.74.16,Tugu,2025-07-21,DBD,0
+33.74.16,Tugu,2025-07-28,DBD,0
+33.74.16,Tugu,2025-08-04,DBD,0
+33.74.16,Tugu,2025-08-11,DBD,1
+33.74.16,Tugu,2025-08-18,DBD,0
+33.74.16,Tugu,2025-08-25,DBD,0
+33.74.16,Tugu,2025-09-01,DBD,0
+33.74.16,Tugu,2025-09-08,DBD,0
+33.74.16,Tugu,2025-09-15,DBD,0
+33.74.16,Tugu,2025-09-22,DBD,1
+33.74.16,Tugu,2025-09-29,DBD,0
+33.74.16,Tugu,2025-10-06,DBD,0
+33.74.16,Tugu,2025-10-13,DBD,0
+33.74.16,Tugu,2025-10-20,DBD,0
+33.74.16,Tugu,2025-10-27,DBD,0
+33.74.16,Tugu,2025-11-03,DBD,0
+33.74.16,Tugu,2025-11-10,DBD,0
+33.74.16,Tugu,2025-11-17,DBD,0
+33.74.16,Tugu,2025-11-24,DBD,0
+33.74.16,Tugu,2025-12-01,DBD,0
+33.74.16,Tugu,2025-12-08,DBD,0
+33.74.16,Tugu,2025-12-15,DBD,0
+33.74.16,Tugu,2025-12-22,DBD,0
+33.74.16,Tugu,2025-12-29,DBD,0
