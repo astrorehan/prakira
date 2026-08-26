@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Activity, ArrowLeftRight, Lock, MapPin, Phone } from "lucide-react";
+import { ArrowLeftRight, Lock, MapPin, Phone } from "lucide-react";
+import { BrandMark } from "@/components/brand-mark";
 
 const COLUMNS: Array<{ title: string; note?: string; links: Array<{ label: string; href: string }> }> = [
   {
@@ -7,7 +8,7 @@ const COLUMNS: Array<{ title: string; note?: string; links: Array<{ label: strin
     links: [
       { label: "Cek status wilayah", href: "#status" },
       { label: "Peringatan resmi", href: "#peringatan" },
-      { label: "Lapor kasus & jentik", href: "/warga" },
+      { label: "Lapor kasus & jentik", href: "/warga/lapor" },
       { label: "Langganan peringatan dini", href: "/hubungi-kami" },
       { label: "Unduh data terbuka", href: "#register" },
     ],
@@ -42,7 +43,7 @@ export function SistemFooter() {
           <div className="lg:col-span-4">
             <div className="flex items-center gap-3">
               <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-700 text-white">
-                <Activity className="h-5 w-5" />
+                <BrandMark className="h-5 w-5" />
               </span>
               <span className="flex flex-col leading-none">
                 <span className="text-base font-semibold tracking-tight text-foreground">Prakira</span>

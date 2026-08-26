@@ -40,13 +40,15 @@
     --dur-slow: 320ms;
   }
 
-  /* ── Dual surface: temperature encodes audience (DESIGN-SYSTEM.md §3) ──
+  /* ── Dual surface: depth encodes audience (DESIGN-SYSTEM.md §3) ──
+     Both surfaces are cool now. Public sits one step bluer and one step
+     deeper than the console canvas; density carries the rest of the split.
      Components never need to know which surface they are on. */
   :root[data-surface="public"] {
-    --canvas: #faf7f1;
-    --surface-sunken: #f2ede3;
-    --border: #e5ddcc;
-    --border-strong: #d2c6ae;
+    --canvas: #eff5f9;
+    --surface-sunken: #e3edf4;
+    --border: #cfdfe9;
+    --border-strong: #afc6d5;
     --row-h: 56px;
     --card-pad: 28px;
     --base-size: 1.125rem;

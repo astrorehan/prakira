@@ -4,16 +4,18 @@ import * as React from "react";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, Menu, LogIn } from "lucide-react";
+import { Menu, LogIn } from "lucide-react";
+import { BrandMark } from "@/components/brand-mark";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "./ui/sheet";
 
+/* "Lapor" adalah satu-satunya hal yang bisa warga berikan kembali ke sistem
+   ini, dan sebelumnya hanya bisa dicapai dari halaman depan atau kaki halaman.
+   Pembaca yang sedang berada di /tentang atau /warga/status tidak punya jalan
+   ke sana sama sekali. */
 const MARKETING_ITEMS = [
-  { href: "/#risk-check", label: "Cek Risiko" },
-  { href: "/#cara-kerja", label: "Cara Kerja" },
-  { href: "/#edukasi", label: "Edukasi" },
-  { href: "/#bukti", label: "Akurasi" },
+  { href: "/warga", label: "Lapor" },
   { href: "/tentang", label: "Tentang" },
 ];
 
@@ -26,7 +28,7 @@ function Wordmark({ inverted }: { inverted: boolean }) {
           "bg-brand-700 text-white",
         )}
       >
-        <Activity className="h-5 w-5" />
+        <BrandMark className="h-5 w-5" />
       </span>
       <span className="flex flex-col leading-none">
         <span
@@ -71,7 +73,7 @@ export function Navbar() {
       className={cn(
         "sticky top-0 z-50 w-full border-b transition-[background-color,border-color,box-shadow] duration-slow ease-out",
         scrolled
-          ? "border-sand-200 bg-[#FAF7F1]/90 shadow-[0_1px_0_rgba(14,34,37,.04),0_8px_24px_-16px_rgba(14,34,37,.25)] backdrop-blur-md"
+          ? "border-sand-200 bg-sand-50/90 shadow-[0_1px_0_rgba(14,34,37,.04),0_8px_24px_-16px_rgba(14,34,37,.25)] backdrop-blur-md"
           : "border-transparent bg-transparent",
       )}
     >

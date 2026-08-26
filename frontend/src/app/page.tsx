@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Hero } from "@/components/landing/hero";
 import { RiskResultSection } from "@/components/landing/risk-result-section";
 import { HowItWorks } from "@/components/landing/how-it-works";
@@ -8,6 +8,11 @@ import { DistrictBoard } from "@/components/landing/district-board";
 import { EducationSection } from "@/components/landing/features";
 import { TrustSection } from "@/components/landing/dashboard-preview";
 import { CtaBanner } from "@/components/landing/cta-banner";
+import {
+  KECAMATAN_PARAM,
+  rememberKecamatan,
+  resolveKecamatan,
+} from "@/lib/kecamatan-selection";
 
 /**
  * The page answers one question, then earns the answer.
@@ -27,24 +32,41 @@ export default function LandingPage() {
   // the result section reports the city as a whole.
   const [selectedKecamatan, setSelectedKecamatan] = useState<string | null>(null);
 
+  /* `?kecamatan=` is the one exception, and it is not a guess: the reader
+     already named their district somewhere else in this product — most often
+     on /warga — and followed a link that carries the answer back here.
+     Remembered choices are deliberately NOT restored on a plain visit: the
+     hero's question stands on its own, and swapping the city summary for one
+     district a frame after paint reads as a glitch. */
+  useEffect(() => {
+    const fromUrl = resolveKecamatan(
+      new URLSearchParams(window.location.search).get(KECAMATAN_PARAM),
+    );
+    if (fromUrl) setSelectedKecamatan(fromUrl);
+  }, []);
+
+  /* Every pick is remembered so the report form on /warga/lapor arrives with
+     the district already filled. The reader answers "where do you live" once. */
+  const choose = useCallback((name: string) => {
+    setSelectedKecamatan(name);
+    rememberKecamatan(name);
+  }, []);
+
   return (
     <>
-      <Hero
-        selectedKecamatan={selectedKecamatan}
-        onSelectKecamatan={setSelectedKecamatan}
-      />
+      <Hero selectedKecamatan={selectedKecamatan} onSelectKecamatan={choose} />
       <RiskResultSection
         selectedKecamatan={selectedKecamatan}
-        onSelectKecamatan={setSelectedKecamatan}
+        onSelectKecamatan={choose}
       />
       <HowItWorks />
       <DistrictBoard
         selectedKecamatan={selectedKecamatan}
-        onSelectKecamatan={setSelectedKecamatan}
+        onSelectKecamatan={choose}
       />
       <EducationSection />
       <TrustSection />
-      <CtaBanner />
+      <CtaBanner selectedKecamatan={selectedKecamatan} />
     </>
   );
 }

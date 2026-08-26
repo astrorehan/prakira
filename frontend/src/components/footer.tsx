@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Activity, ShieldCheck, HeartHandshake } from "lucide-react";
+import { ShieldCheck, HeartHandshake } from "lucide-react";
+import { BrandMark } from "@/components/brand-mark";
 
 export function Footer() {
   return (
@@ -9,7 +10,7 @@ export function Footer() {
           <div className="md:col-span-2 space-y-3">
             <div className="flex items-center gap-2">
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-xs">
-                <Activity className="h-4 w-4" />
+                <BrandMark className="h-4 w-4" />
               </div>
               <span className="font-display font-semibold text-base text-foreground tracking-tight">
                 Prakira
@@ -55,7 +56,7 @@ export function Footer() {
               </li>
               <li>
                 <Link href="/warga" className="hover:text-primary transition-colors">
-                  Portal Publik Warga
+                  Lapor & Lacak Laporan
                 </Link>
               </li>
             </ul>

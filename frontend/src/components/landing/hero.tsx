@@ -248,8 +248,8 @@ export function Hero({ selectedKecamatan, onSelectKecamatan }: HeroProps) {
               "radial-gradient(120% 90% at 20% 0%, #000 0%, transparent 70%)",
           }}
         />
-        <div className="absolute -right-32 top-[-18%] h-[38rem] w-[38rem] rounded-full bg-[radial-gradient(circle,rgba(214,233,236,.75)_0%,rgba(250,247,241,0)_68%)]" />
-        <div className="absolute -left-40 bottom-[-30%] h-[32rem] w-[32rem] rounded-full bg-[radial-gradient(circle,rgba(232,201,155,.45)_0%,rgba(250,247,241,0)_70%)]" />
+        <div className="absolute -right-32 top-[-18%] h-[38rem] w-[38rem] rounded-full bg-[radial-gradient(circle,rgba(214,233,236,.75)_0%,rgba(239,245,249,0)_68%)]" />
+        <div className="absolute -left-40 bottom-[-30%] h-[32rem] w-[32rem] rounded-full bg-[radial-gradient(circle,rgba(127,184,192,.40)_0%,rgba(239,245,249,0)_70%)]" />
       </div>
 
       <div className="container relative pb-12 pt-12 md:pb-16 md:pt-16">

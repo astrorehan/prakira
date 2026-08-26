@@ -170,7 +170,7 @@ function ForecastBand({ play }: { play: boolean }) {
         y1={PAD}
         x2={splitX}
         y2={H - PAD}
-        stroke="#D2C6AE"
+        stroke="#AFC6D5"
         strokeWidth="1"
         strokeDasharray="3 3"
       />

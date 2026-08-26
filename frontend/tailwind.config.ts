@@ -58,13 +58,16 @@ const config: Config = {
           foreground: "#FFFFFF",
         },
 
-        /* ── Warm surface: "Tanah" — the public/warga side ──────────────── */
+        /* ── Public surface: "Kabut" — the public/warga side ────────────────
+           Was warm sand. Now a cool low-chroma tint at the brand hue, one step
+           bluer than `paper` so the two surfaces still read apart without
+           using temperature to do it. See DESIGN-SYSTEM.md §2.6 and §3. */
         sand: {
-          DEFAULT: "#F2EDE3",
-          50: "#FAF7F1",
-          100: "#F2EDE3",
-          200: "#E5DDCC",
-          300: "#D2C6AE",
+          DEFAULT: "#E3EDF4",
+          50: "#EFF5F9",
+          100: "#E3EDF4",
+          200: "#CFDFE9",
+          300: "#AFC6D5",
         },
 
         /* ── Risk ramp: Earth-tone status palette (Surplus, Cukup, Waspada, Defisit) ── */
@@ -237,15 +240,15 @@ const config: Config = {
         wash:
           "radial-gradient(1200px 520px at 8% -8%, rgba(11,74,87,.10) 0%, transparent 62%), radial-gradient(900px 460px at 92% 4%, rgba(23,128,143,.07) 0%, transparent 58%)",
         "wash-warm":
-          "radial-gradient(1200px 520px at 8% -8%, rgba(122,92,46,.09) 0%, transparent 62%), radial-gradient(900px 460px at 92% 4%, rgba(11,74,87,.05) 0%, transparent 58%)",
+          "radial-gradient(1200px 520px at 8% -8%, rgba(127,184,192,.22) 0%, transparent 62%), radial-gradient(900px 460px at 92% 4%, rgba(11,74,87,.05) 0%, transparent 58%)",
         /* ── Gradients ─────────────────────────────────────────────────────
            Every gradient is built from tokens already in this file, so they
            stay inside the palette instead of introducing new hues. Risk
            gradients keep the same lightness order as the flat risk ramp. */
         "grad-page":
-          "radial-gradient(1100px 620px at 12% -10%, rgba(232,201,155,.38) 0%, transparent 62%), radial-gradient(900px 520px at 92% 8%, rgba(214,233,236,.55) 0%, transparent 60%), linear-gradient(180deg, #FDFBF7 0%, #FAF7F1 100%)",
-        "grad-sand": "linear-gradient(180deg, #FAF7F1 0%, #F4EEE2 100%)",
-        "grad-paper": "linear-gradient(180deg, #FFFFFF 0%, #FBF9F5 100%)",
+          "radial-gradient(1100px 620px at 12% -10%, rgba(127,184,192,.28) 0%, transparent 62%), radial-gradient(900px 520px at 92% 8%, rgba(11,74,87,.10) 0%, transparent 60%), linear-gradient(180deg, #FFFFFF 0%, #EFF5F9 100%)",
+        "grad-sand": "linear-gradient(180deg, #EFF5F9 0%, #E3EDF4 100%)",
+        "grad-paper": "linear-gradient(180deg, #FFFFFF 0%, #F5F7F7 100%)",
         "grad-brand": "linear-gradient(135deg, #17808F 0%, #0B4A57 52%, #06282F 100%)",
         "grad-brand-soft": "linear-gradient(135deg, #EAF4F5 0%, #D6E9EC 60%, #FFFFFF 100%)",
 
