@@ -1,6 +1,6 @@
 # Panduan Kontribusi PRAKIRA
 
-Terima kasih atas minat Anda untuk berkontribusi pada PRAKIRA (Sistem Peringatan Dini Risiko Penyakit Berbasis Iklim — Kota Semarang). Dokumen ini berisi panduan, konvensi, dan alur kerja yang perlu diikuti oleh seluruh kontributor agar kolaborasi berjalan terstruktur dan efisien.
+Panduan berkontribusi pada PRAKIRA (Sistem Peringatan Dini Risiko Penyakit Berbasis Iklim — Kota Semarang). Dokumen ini berisi panduan, konvensi, dan alur kerja yang perlu diikuti oleh seluruh kontributor agar kolaborasi berjalan terstruktur dan efisien.
 
 ---
 
