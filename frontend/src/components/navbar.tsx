@@ -5,7 +5,7 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, LogIn } from "lucide-react";
-import { BrandMark } from "@/components/brand-mark";
+import { BrandLockup } from "@/components/brand-lockup";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "./ui/sheet";
@@ -21,34 +21,11 @@ const MARKETING_ITEMS = [
 
 function Wordmark({ inverted }: { inverted: boolean }) {
   return (
-    <Link href="/" className="group flex items-center gap-2.5">
-      <span
-        className={cn(
-          "flex h-10 w-10 items-center justify-center rounded-2xl transition-colors duration-base",
-          "bg-brand-700 text-white",
-        )}
-      >
-        <BrandMark className="h-5 w-5" />
-      </span>
-      <span className="flex flex-col leading-none">
-        <span
-          className={cn(
-            "text-base font-semibold tracking-tight transition-colors duration-base",
-            inverted ? "text-white" : "text-foreground",
-          )}
-        >
-          Prakira
-        </span>
-        <span
-          className={cn(
-            "mt-1 hidden font-mono text-[10px] uppercase tracking-[0.08em] transition-colors duration-base sm:inline",
-            inverted ? "text-white/50" : "text-paper-500",
-          )}
-        >
-          Peringatan Dini Risiko Iklim
-        </span>
-      </span>
-    </Link>
+    <BrandLockup
+      inverted={inverted}
+      subline="Peringatan Dini Risiko Iklim"
+      sublineClassName="hidden sm:inline"
+    />
   );
 }
 

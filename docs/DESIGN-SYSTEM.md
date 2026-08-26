@@ -156,6 +156,18 @@ Namanya sekarang keliru — ganti nama ke `mist-*` sudah tercatat sebagai utang,
 Kontras `paper-600` (`#5A6C6E`, teks sekunder) di atas `sand-50` turun tipis
 5.09:1 → **4.95:1**. Masih lolos WCAG AA teks normal.
 
+### 2.6b Identitas — mark & lockup
+
+Spesifikasi lengkap ada di [`frontend/public/brand/README.md`](../frontend/public/brand/README.md)
+§Lockup, satu sumber. Yang mengikat di sini cuma satu hal, karena ia turunan langsung
+dari prinsip 1 (§1): **kotak petrol di belakang mark bukan bagian dari identitas.**
+Kotak itu elemen paling jenuh di layar, dan kejenuhan disediakan untuk risiko. Kotak
+hanya hidup di ikon platform yang memaksa bidang persegi — favicon, `apple-icon`, PWA,
+*maskable*. Di dalam aplikasi mark berdiri telanjang, `brand-700` di latar terang.
+
+Enam permukaan dulu masing-masing menggulung lockup sendiri; sekarang semuanya lewat
+`components/brand-lockup.tsx`.
+
 ### 2.7 Slot semantik (kompatibel shadcn)
 
 `background` `#F5F7F7` · `surface` `#FFFFFF` · `foreground` `#0E2225` ·

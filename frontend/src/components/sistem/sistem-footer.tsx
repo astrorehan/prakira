@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowLeftRight, Lock, MapPin, Phone } from "lucide-react";
-import { BrandMark } from "@/components/brand-mark";
+import { BrandLockup } from "@/components/brand-lockup";
 
 const COLUMNS: Array<{ title: string; note?: string; links: Array<{ label: string; href: string }> }> = [
   {
@@ -41,17 +41,7 @@ export function SistemFooter() {
         <div className="grid gap-10 lg:grid-cols-12">
           {/* Instansi */}
           <div className="lg:col-span-4">
-            <div className="flex items-center gap-3">
-              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-700 text-white">
-                <BrandMark className="h-5 w-5" />
-              </span>
-              <span className="flex flex-col leading-none">
-                <span className="text-base font-semibold tracking-tight text-foreground">Prakira</span>
-                <span className="mt-1 font-mono text-[10px] uppercase tracking-[0.08em] text-paper-500">
-                  Sistem Peringatan Dini Risiko Iklim
-                </span>
-              </span>
-            </div>
+            <BrandLockup subline="Sistem Peringatan Dini Risiko Iklim" />
 
             <p className="mt-5 max-w-sm text-caption text-paper-600">
               Diselenggarakan oleh Dinas Kesehatan Kota Semarang bersama Badan Meteorologi,

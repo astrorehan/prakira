@@ -15,7 +15,7 @@ import {
   ClipboardCheck,
   ArrowUpRight,
 } from "lucide-react";
-import { BrandMark } from "@/components/brand-mark";
+import { BrandLockup } from "@/components/brand-lockup";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -54,17 +54,7 @@ type NavItem = {
 };
 
 function Wordmark({ href = "/" }: { href?: string }) {
-  return (
-    <Link href={href} className="group flex items-center gap-2.5">
-      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm transition-transform group-hover:-rotate-6">
-        <BrandMark className="h-5 w-5" />
-      </span>
-      <span className="flex flex-col leading-none">
-        <span className="text-h3 text-foreground">Prakira</span>
-        <span className="overline mt-1 block">Konsol Nakes</span>
-      </span>
-    </Link>
-  );
+  return <BrandLockup href={href} subline="Konsol Nakes" />;
 }
 
 export function Sidebar() {

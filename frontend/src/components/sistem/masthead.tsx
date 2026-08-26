@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { Menu, LogIn, Landmark, Radio, ShieldCheck, X } from "lucide-react";
-import { BrandMark } from "@/components/brand-mark";
+import { BrandLockup } from "@/components/brand-lockup";
 
 import { cn } from "@/lib/utils";
 import { BMKG_SYNC_STATUS } from "@/lib/mock-data";
@@ -51,19 +51,14 @@ function useActiveSection(ids: string[]) {
 
 function Wordmark() {
   return (
-    <Link href="/sistem" className="flex items-center gap-3">
-      <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-700 text-white">
-        <BrandMark className="h-6 w-6" />
-      </span>
-      <span className="flex flex-col leading-none">
-        <span className="text-xl font-semibold tracking-tight text-foreground">Prakira</span>
-        {/* The full service name is the legal identity of the site; on a phone
-            it costs four lines next to the buttons, so it steps aside. */}
-        <span className="mt-1 hidden font-mono text-[10px] uppercase tracking-[0.09em] text-paper-500 sm:block">
-          Sistem Peringatan Dini Risiko Penyakit Berbasis Iklim
-        </span>
-      </span>
-    </Link>
+    <BrandLockup
+      href="/sistem"
+      size="lg"
+      subline="Sistem Peringatan Dini Risiko Penyakit Berbasis Iklim"
+      // The full service name is the legal identity of the site; on a phone it
+      // costs four lines next to the buttons, so it steps aside.
+      sublineClassName="hidden sm:block"
+    />
   );
 }
 

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ShieldCheck, HeartHandshake } from "lucide-react";
-import { BrandMark } from "@/components/brand-mark";
+import { BrandLockup } from "@/components/brand-lockup";
 
 export function Footer() {
   return (
@@ -8,14 +8,7 @@ export function Footer() {
       <div className="container py-12 md:py-16">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="md:col-span-2 space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-xs">
-                <BrandMark className="h-4 w-4" />
-              </div>
-              <span className="font-display font-semibold text-base text-foreground tracking-tight">
-                Prakira
-              </span>
-            </div>
+            <BrandLockup size="sm" />
             <p className="text-xs text-muted-foreground leading-relaxed max-w-sm">
               Platform Prediksi Risiko Penyakit Berbasis Iklim (DBD, ISPA, Diare) per Wilayah. Mengubah paradigma surveilans kesehatan dari reaktif menjadi tindakan preventif terarah.
             </p>
