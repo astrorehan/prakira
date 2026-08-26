@@ -2,35 +2,50 @@
 
 import * as React from "react";
 import {
+  Building2,
+  Calendar,
+  Check,
+  CheckCircle2,
+  Clock,
+  CloudRain,
+  Copy,
+  ExternalLink,
+  FileText,
+  Info,
+  Phone,
+  Send,
+  ShieldAlert,
+  Sparkles,
+  Users,
+} from "lucide-react";
+import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { ActionRecommendation } from "@/types";
-import {
-  Sparkles,
-  CheckCircle2,
-  Clock,
-  MapPin,
-  Building2,
-  Phone,
-  Copy,
-  Check,
-  Send,
-  ShieldAlert,
-  CloudRain,
-  Flame,
-  FileText,
-  AlertTriangle,
-  ExternalLink,
-  Users,
-  Calendar,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatNumber } from "@/lib/utils";
+import { describeDeadline } from "@/lib/period";
+import { parsePopulation, PRIORITY_LABEL } from "@/lib/action-queue";
+
+/**
+ * Modal SOP & instruksi.
+ *
+ * Tiga hal yang dibongkar dari versi sebelumnya, semuanya soal kejujuran data:
+ *
+ * 1. Checklist kesiapan mencentang sendiri dua butir pertama "supaya terasa
+ *    realistis". Di konsol pengiriman instruksi lapangan, itu berarti layar
+ *    melaporkan verifikasi yang tidak pernah dilakukan siapa pun.
+ * 2. Tab kontak menampilkan tiga puskesmas Pedurungan sebagai cadangan ketika
+ *    `target_puskesmas` kosong — termasuk untuk tindakan di Semarang Barat.
+ *    Kontak yang salah lebih berbahaya daripada kontak yang tidak ada.
+ * 3. Angka model, lead time, dan populasi punya nilai cadangan yang dikarang.
+ *
+ * Selain itu: butir checklist dulu `div onClick` (tidak bisa dijangkau
+ * keyboard) dan tab-nya `button` polos tanpa peran tab.
+ */
 
 interface DispatchActionModalProps {
   recommendation: ActionRecommendation | null;
@@ -39,56 +54,88 @@ interface DispatchActionModalProps {
   onConfirmDispatch: (id: string, checklistCompleted: string[]) => void;
 }
 
+type TabId = "protocol" | "puskesmas" | "draft";
+
+const DEFAULT_CHECKLIST = [
+  "Koordinasi Kepala Puskesmas & Camat wilayah",
+  "Mobilisasi satgas lapangan & kader posyandu",
+  "Distribusi sarana intervensi pencegahan",
+  "Monitoring & pelaporan hasil pasca-intervensi",
+];
+
+function FactTile({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex items-center gap-2 rounded-lg border border-border bg-surface p-2 shadow-xs">
+      <Icon className="h-4 w-4 shrink-0 text-brand-700" aria-hidden="true" />
+      <div className="min-w-0">
+        <div className="overline">{label}</div>
+        <div className="truncate text-caption font-semibold text-foreground">{value}</div>
+      </div>
+    </div>
+  );
+}
+
 export function DispatchActionModal({
   recommendation,
   open,
   onOpenChange,
   onConfirmDispatch,
 }: DispatchActionModalProps) {
-  const [activeTab, setActiveTab] = React.useState<"protocol" | "puskesmas" | "draft">("protocol");
+  const [activeTab, setActiveTab] = React.useState<TabId>("protocol");
   const [checkedItems, setCheckedItems] = React.useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isSuccess, setIsSuccess] = React.useState(false);
-  const [copiedDraft, setCopiedDraft] = React.useState(false);
+  const [copyState, setCopyState] = React.useState<"idle" | "copied" | "failed">("idle");
 
-  // Initialize checklist when recommendation opens
+  const id = recommendation?.id;
+  const status = recommendation?.status;
+
+  /* Reset penuh tiap kali rekomendasi berganti — termasuk yang tidak punya
+     `sop_checklist`. Penjagaan lama membuat status "terkirim" bocor dari satu
+     tindakan ke tindakan berikutnya. */
   React.useEffect(() => {
-    if (recommendation?.sop_checklist) {
-      const initial: Record<string, boolean> = {};
-      recommendation.sop_checklist.forEach((item, index) => {
-        // Pre-check first two items for realistic UX
-        initial[item] = index < 2;
-      });
-      setCheckedItems(initial);
-      setIsSuccess(recommendation.status === "completed");
-    }
-  }, [recommendation]);
+    setActiveTab("protocol");
+    setCheckedItems({});
+    setIsSubmitting(false);
+    setCopyState("idle");
+    setIsSuccess(status === "completed");
+  }, [id, status]);
 
   if (!recommendation) return null;
 
-  const isHighPriority = recommendation.priority === "high";
-  const checklist = recommendation.sop_checklist || [
-    "Koordinasi Kepala Puskesmas & Camat Wilayah",
-    "Mobilisasi Satgas Lapangan & Kader Posyandu",
-    "Distribusi Sarana Intervensi Pencegahan",
-    "Monitoring & Pelaporan Hasil Pasca Intervensi",
-  ];
-
+  const checklist = recommendation.sop_checklist ?? DEFAULT_CHECKLIST;
   const completedCount = checklist.filter((item) => checkedItems[item]).length;
   const progressPct = Math.round((completedCount / checklist.length) * 100);
+  const puskesmas = recommendation.target_puskesmas ?? [];
+  const deadline = describeDeadline(recommendation.due_date);
+  const population = parsePopulation(recommendation.target_population);
+  const alreadyDispatched = recommendation.status !== "pending";
 
-  const toggleCheck = (item: string) => {
-    setCheckedItems((prev) => ({
-      ...prev,
-      [item]: !prev[item],
-    }));
-  };
+  const draftText =
+    recommendation.broadcast_template ??
+    `[INSTRUKSI RESMI DINAS KESEHATAN KOTA SEMARANG]\nPerihal: Intervensi Dini Pengendalian Lonjakan ${recommendation.disease}\n\nKepada Yth. Kepala Puskesmas Wilayah: ${recommendation.target_kecamatan.join(", ")}.\nBerdasarkan sistem prediksi iklim-kesehatan Prakira, terdeteksi kenaikan risiko signifikan. Segera laksanakan intervensi: ${recommendation.title} sebelum ${recommendation.due_date}.`;
 
-  const handleCopyDraft = () => {
-    const text = recommendation.broadcast_template || recommendation.description;
-    navigator.clipboard.writeText(text);
-    setCopiedDraft(true);
-    setTimeout(() => setCopiedDraft(false), 2000);
+  const toggleCheck = (item: string) =>
+    setCheckedItems((prev) => ({ ...prev, [item]: !prev[item] }));
+
+  const handleCopyDraft = async () => {
+    try {
+      await navigator.clipboard.writeText(draftText);
+      setCopyState("copied");
+    } catch {
+      /* Konteks tidak aman atau izin ditolak — katakan apa adanya, jangan
+         tampilkan "Tersalin!" untuk papan klip yang masih kosong. */
+      setCopyState("failed");
+    }
+    setTimeout(() => setCopyState("idle"), 2400);
   };
 
   const handleDispatch = () => {
@@ -96,356 +143,373 @@ export function DispatchActionModal({
     setTimeout(() => {
       setIsSubmitting(false);
       setIsSuccess(true);
-      const verifiedList = checklist.filter((i) => checkedItems[i]);
-      onConfirmDispatch(recommendation.id, verifiedList);
-      setTimeout(() => {
-        onOpenChange(false);
-        setIsSuccess(false);
-      }, 1400);
+      onConfirmDispatch(
+        recommendation.id,
+        checklist.filter((i) => checkedItems[i]),
+      );
+      setTimeout(() => onOpenChange(false), 1400);
     }, 900);
   };
 
+  const tabs: { id: TabId; label: string }[] = [
+    { id: "protocol", label: `1. Protokol & SOP (${completedCount}/${checklist.length})` },
+    { id: "puskesmas", label: `2. Kontak puskesmas (${puskesmas.length})` },
+    { id: "draft", label: "3. Draf surat & broadcast" },
+  ];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[88vh] flex flex-col p-0 gap-0 border-paper-300 shadow-pop rounded-2xl bg-paper-0 overflow-hidden">
-        {/* Modal Top Banner (Pinned) */}
-        <div className="p-5 pb-3.5 border-b border-paper-200 bg-paper-50/80 shrink-0">
-          <div className="flex items-center justify-between gap-3 mb-1.5">
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-[10px] uppercase tracking-wider text-paper-500 bg-paper-200/70 px-2 py-0.5 rounded">
-                SOP-INTERVENSI #{recommendation.id}
+      <DialogContent className="flex max-h-[88vh] max-w-2xl flex-col gap-0 overflow-hidden p-0">
+        {/* Kepala modal */}
+        <div className="shrink-0 border-b border-border bg-paper-50 p-5 pb-3.5">
+          <div className="mb-1.5 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="tabular rounded bg-paper-200/70 px-2 py-0.5 font-mono text-overline text-paper-600">
+                SOP #{recommendation.id}
               </span>
-              <Badge
-                variant={
-                  recommendation.disease === "DBD"
-                    ? "disease-dbd"
-                    : recommendation.disease === "ISPA"
-                    ? "disease-ispa"
-                    : "disease-diare"
-                }
-                size="sm"
-              >
-                {recommendation.disease}
-              </Badge>
-              <Badge
-                variant={isHighPriority ? "risk-high" : "risk-medium"}
-                size="sm"
-              >
-                {isHighPriority ? "Prioritas Tinggi" : "Prioritas Sedang"}
+              <Badge variant="outline">{recommendation.disease}</Badge>
+              <Badge variant={recommendation.priority === "high" ? "risk-high" : "risk-medium"}>
+                {PRIORITY_LABEL[recommendation.priority]}
               </Badge>
             </div>
 
-            <div className="flex items-center gap-1.5 text-xs text-paper-600 font-mono pr-6">
-              <Clock className="h-3.5 w-3.5 text-paper-400" />
-              <span>Tenggat: {recommendation.due_date}</span>
-            </div>
+            <span className="flex items-center gap-1.5 pr-6 text-caption text-paper-600">
+              <Clock className="h-3.5 w-3.5 text-paper-400" aria-hidden="true" />
+              <span className="tabular">
+                {deadline.label} · {deadline.date}
+              </span>
+            </span>
           </div>
 
-          <DialogTitle className="font-display text-base sm:text-lg font-semibold text-foreground leading-tight">
+          <DialogTitle className="text-h3 leading-tight text-foreground">
             {recommendation.title}
           </DialogTitle>
 
-          {/* AI Explainability Strip */}
-          <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2.5 border-t border-paper-200/80">
-            <div className="flex items-center gap-2 bg-paper-0 rounded-lg p-2 border border-paper-200 shadow-xs">
-              <Sparkles className="h-4 w-4 text-brand-700 shrink-0" />
-              <div>
-                <div className="text-[10px] font-mono text-paper-500 uppercase">Akurasi Model AI</div>
-                <div className="text-xs font-semibold text-brand-700">{recommendation.ai_confidence || 94.2}% XGBoost</div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 bg-paper-0 rounded-lg p-2 border border-paper-200 shadow-xs">
-              <Calendar className="h-4 w-4 text-primary shrink-0" />
-              <div>
-                <div className="text-[10px] font-mono text-paper-500 uppercase">Lead Time Intervensi</div>
-                <div className="text-xs font-semibold text-foreground">
-                  {recommendation.lead_time_days || 14} Hari Sebelum Puncak
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 bg-paper-0 rounded-lg p-2 border border-paper-200 shadow-xs">
-              <Users className="h-4 w-4 text-risk-low shrink-0" />
-              <div>
-                <div className="text-[10px] font-mono text-paper-500 uppercase">Populasi Terdampak</div>
-                <div className="text-xs font-semibold text-foreground">
-                  {recommendation.target_population || "120.000 warga"}
-                </div>
-              </div>
-            </div>
+          {/* Alasan model merekomendasikan ini. Hanya bidang yang benar-benar
+              terisi yang tampil — kotak kosong lebih jujur dari angka karangan. */}
+          <div className="mt-3 grid grid-cols-1 gap-2 border-t border-border pt-2.5 sm:grid-cols-3">
+            {typeof recommendation.ai_confidence === "number" && (
+              <FactTile
+                icon={Sparkles}
+                label="Keyakinan model"
+                value={`${recommendation.ai_confidence.toLocaleString("id-ID")}%`}
+              />
+            )}
+            {typeof recommendation.lead_time_days === "number" && (
+              <FactTile
+                icon={Calendar}
+                label="Lead time"
+                value={`${recommendation.lead_time_days} hari sebelum puncak`}
+              />
+            )}
+            {population > 0 && (
+              <FactTile
+                icon={Users}
+                label="Populasi terdampak"
+                value={`${formatNumber(population)} jiwa`}
+              />
+            )}
           </div>
         </div>
 
-        {/* Navigation Tabs inside Modal (Pinned) */}
-        <div className="flex items-center px-5 border-b border-paper-200 bg-paper-0 shrink-0">
-          <button
-            onClick={() => setActiveTab("protocol")}
-            className={cn(
-              "py-2.5 px-3 text-xs font-semibold border-b-2 transition-all",
-              activeTab === "protocol"
-                ? "border-brand-700 text-brand-700"
-                : "border-transparent text-paper-500 hover:text-paper-800"
-            )}
-          >
-            1. Protokol & SOP Kesiapan ({completedCount}/{checklist.length})
-          </button>
-          <button
-            onClick={() => setActiveTab("puskesmas")}
-            className={cn(
-              "py-2.5 px-3 text-xs font-semibold border-b-2 transition-all",
-              activeTab === "puskesmas"
-                ? "border-brand-700 text-brand-700"
-                : "border-transparent text-paper-500 hover:text-paper-800"
-            )}
-          >
-            2. Kontak Puskesmas ({recommendation.target_kecamatan.length} Wilayah)
-          </button>
-          <button
-            onClick={() => setActiveTab("draft")}
-            className={cn(
-              "py-2.5 px-3 text-xs font-semibold border-b-2 transition-all",
-              activeTab === "draft"
-                ? "border-brand-700 text-brand-700"
-                : "border-transparent text-paper-500 hover:text-paper-800"
-            )}
-          >
-            3. Draft Surat & Broadcast WA
-          </button>
+        {/* Tab */}
+        <div
+          role="tablist"
+          aria-label="Bagian instruksi"
+          className="flex shrink-0 items-center overflow-x-auto border-b border-border bg-surface px-5"
+        >
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              id={`dispatch-tab-${tab.id}`}
+              aria-selected={activeTab === tab.id}
+              aria-controls={`dispatch-panel-${tab.id}`}
+              onClick={() => setActiveTab(tab.id)}
+              className={cn(
+                "whitespace-nowrap border-b-2 px-3 py-2.5 text-caption font-semibold transition-colors duration-fast ease-out",
+                activeTab === tab.id
+                  ? "border-brand-700 text-brand-700"
+                  : "border-transparent text-paper-500 hover:text-paper-800",
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
 
-        {/* Scrollable Tab Body */}
         <div className="flex-1 overflow-y-auto">
-
-        {/* Tab 1: SOP Checklist & Rationale */}
-        {activeTab === "protocol" && (
-          <div className="p-6 space-y-4">
-            {/* Climate & Epidemiological Triggers */}
-            {recommendation.climate_trigger && (
-              <div className="p-3.5 rounded-xl bg-brand-50 border border-brand-200/80 flex items-start gap-3">
-                <CloudRain className="h-4 w-4 text-brand-700 shrink-0 mt-0.5" />
-                <div>
-                  <h5 className="text-xs font-semibold text-brand-900">Pemicu Parameter Iklim BMKG:</h5>
-                  <p className="text-xs text-brand-800 mt-0.5 leading-relaxed">
-                    {recommendation.climate_trigger}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Estimated Impact Box */}
-            {recommendation.estimated_impact && (
-              <div className="p-3.5 rounded-xl bg-risk-low-bg border border-risk-low-br flex items-start gap-3">
-                <CheckCircle2 className="h-4 w-4 text-risk-low shrink-0 mt-0.5" />
-                <div>
-                  <h5 className="text-xs font-semibold text-risk-low">Proyeksi Efektivitas Intervensi:</h5>
-                  <p className="text-xs text-paper-700 mt-0.5 leading-relaxed">
-                    {recommendation.estimated_impact}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Checklist Section */}
-            <div className="space-y-2.5 pt-2">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-semibold text-foreground uppercase tracking-wider font-mono">
-                  Checklist Kesiapan Intervensi Lapangan
-                </label>
-                <span className="text-xs font-mono font-semibold text-paper-600">
-                  {completedCount} dari {checklist.length} Terverifikasi ({progressPct}%)
-                </span>
-              </div>
-
-              {/* Progress bar */}
-              <div className="w-full bg-paper-200 h-2 rounded-full overflow-hidden">
-                <div
-                  className="bg-brand-700 h-full transition-all duration-300 rounded-full"
-                  style={{ width: `${progressPct}%` }}
-                />
-              </div>
-
-              <div className="space-y-2 mt-3">
-                {checklist.map((item, idx) => (
-                  <div
-                    key={idx}
-                    onClick={() => toggleCheck(item)}
-                    className={cn(
-                      "flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all",
-                      checkedItems[item]
-                        ? "bg-brand-50/50 border-brand-300 text-foreground"
-                        : "bg-paper-0 border-paper-200 text-paper-700 hover:bg-paper-50"
-                    )}
-                  >
-                    <div
-                      className={cn(
-                        "h-4 w-4 rounded border flex items-center justify-center mt-0.5 shrink-0 transition-colors",
-                        checkedItems[item]
-                          ? "bg-brand-700 border-brand-700 text-white"
-                          : "border-paper-400 bg-paper-0"
-                      )}
-                    >
-                      {checkedItems[item] && <Check className="h-3 w-3 stroke-[3]" />}
-                    </div>
-                    <span className="text-xs leading-snug font-medium select-none">{item}</span>
+          {/* Tab 1 — protokol */}
+          {activeTab === "protocol" && (
+            <div
+              role="tabpanel"
+              id="dispatch-panel-protocol"
+              aria-labelledby="dispatch-tab-protocol"
+              className="space-y-4 p-6"
+            >
+              {recommendation.climate_trigger && (
+                <div className="flex items-start gap-3 rounded-xl border border-brand-300/45 bg-brand-50 p-3.5">
+                  <CloudRain className="mt-0.5 h-4 w-4 shrink-0 text-brand-700" aria-hidden="true" />
+                  <div>
+                    <h4 className="text-caption font-semibold text-brand-900">
+                      Pemicu parameter iklim BMKG
+                    </h4>
+                    <p className="mt-0.5 text-caption leading-relaxed text-brand-800">
+                      {recommendation.climate_trigger}
+                    </p>
                   </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
+                </div>
+              )}
 
-        {/* Tab 2: Puskesmas Contacts & Readiness */}
-        {activeTab === "puskesmas" && (
-          <div className="p-6 space-y-4">
-            <div className="text-xs text-muted-foreground">
-              Daftar Puskesmas dan Satgas lapangan yang akan menerima instruksi penanganan untuk kecamatan target:
-            </div>
+              {recommendation.estimated_impact && (
+                <div className="flex items-start gap-3 rounded-xl border border-risk-low-br bg-risk-low-bg p-3.5">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-risk-low" aria-hidden="true" />
+                  <div>
+                    <h4 className="text-caption font-semibold text-risk-low">
+                      Proyeksi efektivitas intervensi
+                    </h4>
+                    <p className="mt-0.5 text-caption leading-relaxed text-paper-700">
+                      {recommendation.estimated_impact}
+                    </p>
+                  </div>
+                </div>
+              )}
 
-            <div className="space-y-3">
-              {(recommendation.target_puskesmas || [
-                { name: "Puskesmas Pedurungan", head: "dr. Sugiyanto, M.Kes", phone: "+62 812-2849-0112", readiness: "Siaga 1" as const },
-                { name: "Puskesmas Banyumanik", head: "dr. Endang Sri Wahyuni", phone: "+62 813-9021-4458", readiness: "Siaga 1" as const },
-                { name: "Puskesmas Rowosari (Tembalang)", head: "dr. Ahmad Fauzi", phone: "+62 811-2703-9981", readiness: "Siap Operasi" as const },
-              ]).map((pusk, idx) => (
+              <fieldset className="space-y-2.5 pt-2">
+                <div className="flex items-center justify-between gap-3">
+                  <legend className="overline">Checklist kesiapan lapangan</legend>
+                  <span className="tabular text-caption font-semibold text-paper-600">
+                    {completedCount} dari {checklist.length} terverifikasi ({progressPct}%)
+                  </span>
+                </div>
+
                 <div
-                  key={idx}
-                  className="p-3.5 rounded-xl border border-paper-200 bg-paper-0 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                  role="progressbar"
+                  aria-valuenow={progressPct}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label="Kesiapan checklist"
+                  className="h-2 w-full overflow-hidden rounded-full bg-paper-200"
                 >
-                  <div className="flex items-start gap-3">
-                    <div className="h-9 w-9 rounded-lg bg-brand-50 text-brand-700 border border-brand-100 flex items-center justify-center shrink-0">
-                      <Building2 className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <h5 className="text-xs font-semibold text-foreground">{pusk.name}</h5>
-                      <p className="text-[11px] text-muted-foreground">Kepala: {pusk.head}</p>
-                      <div className="flex items-center gap-1.5 mt-1">
-                        <Phone className="h-3 w-3 text-paper-400" />
-                        <span className="font-mono text-[11px] text-paper-600">{pusk.phone}</span>
-                      </div>
-                    </div>
-                  </div>
+                  <div
+                    className="h-full rounded-full bg-brand-700 transition-[width] duration-base ease-out"
+                    style={{ width: `${progressPct}%` }}
+                  />
+                </div>
 
-                  <div className="flex items-center gap-2 self-start sm:self-auto">
-                    <span
+                <div className="mt-3 space-y-2">
+                  {checklist.map((item) => (
+                    <label
+                      key={item}
                       className={cn(
-                        "text-[10px] font-semibold px-2 py-0.5 rounded-full border",
-                        pusk.readiness === "Siaga 1"
-                          ? "bg-risk-high-bg text-risk-high border-risk-high-br"
-                          : "bg-risk-low-bg text-risk-low border-risk-low-br"
+                        "flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-colors duration-fast ease-out",
+                        checkedItems[item]
+                          ? "border-brand-300 bg-brand-50/60 text-foreground"
+                          : "border-border bg-surface text-paper-700 hover:bg-paper-50",
                       )}
                     >
-                      {pusk.readiness}
-                    </span>
-                    <a
-                      href={`https://wa.me/${pusk.phone.replace(/[^0-9]/g, "")}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 px-2.5 py-1 rounded-lg border border-brand-200 transition-colors"
-                    >
-                      <span>Hubungi</span>
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
-                  </div>
+                      <input
+                        type="checkbox"
+                        checked={Boolean(checkedItems[item])}
+                        onChange={() => toggleCheck(item)}
+                        className="peer sr-only"
+                      />
+                      <span
+                        aria-hidden="true"
+                        className={cn(
+                          "mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors peer-focus-visible:shadow-focus",
+                          checkedItems[item]
+                            ? "border-brand-700 bg-brand-700 text-white"
+                            : "border-paper-400 bg-surface",
+                        )}
+                      >
+                        {checkedItems[item] && <Check className="h-3 w-3 stroke-[3]" />}
+                      </span>
+                      <span className="select-none text-caption font-medium leading-snug">
+                        {item}
+                      </span>
+                    </label>
+                  ))}
                 </div>
-              ))}
+              </fieldset>
             </div>
+          )}
 
-            <div className="p-3 bg-paper-50 rounded-xl border border-paper-200 flex items-center justify-between text-xs">
-              <span className="text-paper-600">Unit Komando: <strong>{recommendation.pic_unit || "Satgas Vektor DKK Semarang"}</strong></span>
-              <span className="font-mono text-paper-500">Hotline 119</span>
+          {/* Tab 2 — kontak */}
+          {activeTab === "puskesmas" && (
+            <div
+              role="tabpanel"
+              id="dispatch-panel-puskesmas"
+              aria-labelledby="dispatch-tab-puskesmas"
+              className="space-y-4 p-6"
+            >
+              {puskesmas.length === 0 ? (
+                <div className="space-y-2 rounded-xl border border-risk-none-br bg-risk-none-bg p-6 text-center">
+                  <Info className="mx-auto h-5 w-5 text-risk-none" aria-hidden="true" />
+                  <h4 className="text-body-sm font-semibold text-foreground">
+                    Kontak puskesmas belum terdaftar
+                  </h4>
+                  <p className="text-caption text-paper-600">
+                    Tindakan ini menargetkan {recommendation.target_kecamatan.join(", ")}. Lengkapi
+                    data puskesmas wilayah sebelum instruksi disiarkan.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <p className="text-caption text-paper-600">
+                    Puskesmas dan satgas lapangan yang akan menerima instruksi untuk kecamatan
+                    target:
+                  </p>
+
+                  <div className="space-y-3">
+                    {puskesmas.map((pusk) => (
+                      <div
+                        key={pusk.name}
+                        className="flex flex-col justify-between gap-3 rounded-xl border border-border bg-surface p-3.5 shadow-xs sm:flex-row sm:items-center"
+                      >
+                        <div className="flex items-start gap-3">
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-brand-100 bg-brand-50 text-brand-700">
+                            <Building2 className="h-4 w-4" aria-hidden="true" />
+                          </span>
+                          <div className="min-w-0">
+                            <h4 className="text-caption font-semibold text-foreground">
+                              {pusk.name}
+                            </h4>
+                            <p className="text-caption text-paper-600">Kepala: {pusk.head}</p>
+                            <span className="mt-1 flex items-center gap-1.5">
+                              <Phone className="h-3 w-3 text-paper-400" aria-hidden="true" />
+                              <span className="tabular font-mono text-caption text-paper-600">
+                                {pusk.phone}
+                              </span>
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex shrink-0 items-center gap-2 self-start sm:self-auto">
+                          <Badge
+                            variant={pusk.readiness === "Siaga 1" ? "risk-high" : "risk-low"}
+                          >
+                            {pusk.readiness}
+                          </Badge>
+                          <a
+                            href={`https://wa.me/${pusk.phone.replace(/[^0-9]/g, "")}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 rounded-lg border border-brand-300/45 bg-brand-50 px-2.5 py-1 text-caption font-semibold text-brand-700 transition-colors hover:bg-brand-100"
+                          >
+                            <span>Hubungi</span>
+                            <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                          </a>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-paper-50 p-3 text-caption">
+                <span className="text-paper-600">
+                  Unit komando:{" "}
+                  <strong className="text-foreground">
+                    {recommendation.pic_unit ?? "Belum ditetapkan"}
+                  </strong>
+                </span>
+                <span className="tabular font-mono text-paper-500">Hotline 119</span>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Tab 3: Draft Surat Tugas & Broadcast WA */}
-        {activeTab === "draft" && (
-          <div className="p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold text-foreground uppercase tracking-wider font-mono">
-                Draft Pesan Instruksi / Surat Edaran Resmi
-              </label>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleCopyDraft}
-                className="h-7 text-xs gap-1.5"
-              >
-                {copiedDraft ? (
-                  <>
-                    <Check className="h-3.5 w-3.5 text-risk-low" />
-                    <span>Tersalin!</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="h-3.5 w-3.5" />
-                    <span>Salin Teks</span>
-                  </>
-                )}
-              </Button>
-            </div>
+          {/* Tab 3 — draf */}
+          {activeTab === "draft" && (
+            <div
+              role="tabpanel"
+              id="dispatch-panel-draft"
+              aria-labelledby="dispatch-tab-draft"
+              className="space-y-4 p-6"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <span className="overline" id="draft-label">
+                  Draf pesan instruksi / surat edaran resmi
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCopyDraft}
+                  className="h-8 gap-1.5 px-3 text-caption"
+                >
+                  {copyState === "copied" ? (
+                    <>
+                      <Check className="h-3.5 w-3.5 text-risk-low" aria-hidden="true" />
+                      <span>Tersalin</span>
+                    </>
+                  ) : copyState === "failed" ? (
+                    <>
+                      <Info className="h-3.5 w-3.5 text-risk-medium" aria-hidden="true" />
+                      <span>Gagal menyalin</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3.5 w-3.5" aria-hidden="true" />
+                      <span>Salin teks</span>
+                    </>
+                  )}
+                </Button>
+              </div>
 
-            <div className="relative">
               <textarea
                 readOnly
-                rows={6}
-                value={
-                  recommendation.broadcast_template ||
-                  `[INSTRUKSI RESMI DINAS KESEHATAN KOTA SEMARANG]\nNomor: 440/1892/DKK-P2P/VIII/2026\nPerihal: Intervensi Dini Pengendalian Lonjakan ${recommendation.disease}\n\nKepada Yth. Kepala Puskesmas Wilayah: ${recommendation.target_kecamatan.join(", ")}.\nBerdasarkan sistem prediksi iklim-kesehatan Prakira, terdeteksi kenaikan risiko signifikan. Segera laksanakan intervensi: ${recommendation.title} sebelum ${recommendation.due_date}.`
-                }
-                className="w-full text-xs font-mono bg-paper-50 p-3.5 rounded-xl border border-paper-200 text-paper-800 focus:outline-none resize-none leading-relaxed"
+                rows={7}
+                aria-labelledby="draft-label"
+                value={draftText}
+                className="w-full resize-none rounded-xl border border-border bg-paper-50 p-3.5 font-mono text-caption leading-relaxed text-paper-800 focus-visible:outline-none"
               />
-            </div>
 
-            <div className="flex items-center gap-2 p-3 bg-brand-50/70 border border-brand-200/80 rounded-xl text-xs text-brand-900">
-              <FileText className="h-4 w-4 text-brand-700 shrink-0" />
-              <span>
-                Pesan ini akan otomatis disiarkan ke sistem notifikasi WhatsApp Satgas & Kepala Puskesmas terkait saat Anda menekan tombol kirim.
-              </span>
+              <div className="flex items-center gap-2 rounded-xl border border-brand-300/45 bg-brand-50 p-3 text-caption text-brand-900">
+                <FileText className="h-4 w-4 shrink-0 text-brand-700" aria-hidden="true" />
+                <span>
+                  Pesan ini disiarkan ke notifikasi WhatsApp satgas dan kepala puskesmas terkait
+                  saat tombol kirim ditekan.
+                </span>
+              </div>
             </div>
-          </div>
-        )}
+          )}
         </div>
 
-        {/* Modal Footer (Pinned) */}
-        <div className="p-3.5 px-5 border-t border-paper-200 bg-paper-50/90 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
-          <div className="flex items-center gap-2 text-xs text-paper-600">
-            <ShieldAlert className="h-4 w-4 text-brand-700" />
+        {/* Kaki modal */}
+        <div className="flex shrink-0 flex-col items-center justify-between gap-3 border-t border-border bg-paper-50 px-5 py-3.5 sm:flex-row">
+          <span className="flex items-center gap-2 text-caption text-paper-600">
+            <ShieldAlert className="h-4 w-4 text-brand-700" aria-hidden="true" />
             <span>Otorisasi: Kepala Bidang P2P Dinas Kesehatan Kota Semarang</span>
-          </div>
+          </span>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="flex w-full items-center gap-2 sm:w-auto">
             <Button
               variant="outline"
               size="sm"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
-              className="text-xs flex-1 sm:flex-initial"
+              className="flex-1 sm:flex-initial"
             >
-              Batal
+              Tutup
             </Button>
 
             <Button
-              variant="default"
               size="sm"
+              loading={isSubmitting}
               onClick={handleDispatch}
-              disabled={isSubmitting || isSuccess}
-              className="text-xs text-white font-semibold bg-brand-700 hover:bg-brand-600 gap-1.5 flex-1 sm:flex-initial shadow-sm"
+              disabled={isSubmitting || isSuccess || alreadyDispatched}
+              className="flex-1 gap-1.5 sm:flex-initial"
             >
-              {isSuccess ? (
+              {isSuccess || alreadyDispatched ? (
                 <>
-                  <CheckCircle2 className="h-4 w-4 text-white" />
-                  <span className="text-white">Instruksi Berhasil Disiarkan!</span>
-                </>
-              ) : isSubmitting ? (
-                <>
-                  <span className="animate-spin mr-1">⏳</span>
-                  <span className="text-white">Mengirimkan Instruksi...</span>
+                  <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+                  <span>Instruksi sudah disiarkan</span>
                 </>
               ) : (
                 <>
-                  <Send className="h-3.5 w-3.5 text-white" />
-                  <span className="text-white">Kirim Instruksi Resmi Sekarang</span>
+                  <Send className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>{isSubmitting ? "Mengirimkan…" : "Kirim instruksi resmi"}</span>
                 </>
               )}
             </Button>
