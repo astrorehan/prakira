@@ -3,7 +3,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Activity, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import { BrandMark } from "@/components/brand-mark";
 import { SignInForm } from "./sign-in-form";
 import { DemoAccount } from "./demo-account";
 import {
@@ -89,7 +90,7 @@ export function SignInScreen() {
           <div className="flex items-center justify-between gap-4">
             <Link href="/" className="flex items-center gap-2.5">
               <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-700 text-white">
-                <Activity className="h-5 w-5" aria-hidden />
+                <BrandMark className="h-5 w-5" />
               </span>
               <span className="text-base font-semibold tracking-tight text-foreground">
                 Prakira
