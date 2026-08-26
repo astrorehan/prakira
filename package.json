@@ -1,0 +1,17 @@
+{
+  "name": "prakira",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Prakira — Sistem Prediksi Risiko Penyakit Berbasis Iklim (DBD, ISPA, Diare) Kota Semarang",
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "start": "npm --prefix frontend run start",
+    "lint": "npm --prefix frontend run lint",
+    "type-check": "npm --prefix frontend run type-check"
+  },
+  "engines": {
+    "node": ">=18.18.0"
+  }
+}
+

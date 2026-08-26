@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import {
   Cpu,
   Database,
@@ -11,6 +12,12 @@ import {
   Wind,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
+
+export const metadata: Metadata = {
+  title: "Tentang Prakira — Manifesto Eco-Health & Arsitektur AI",
+  description:
+    "Mengapa kami membangun Prakira: Mengubah surveilans kesehatan reaktif menjadi preventif prediktif 2–4 minggu lebih awal dengan integrasi machine learning dan data cuaca BMKG.",
+};
 
 export default function TentangPage() {
   return (

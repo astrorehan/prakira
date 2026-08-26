@@ -13,7 +13,14 @@ const sans = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Prakira — Sistem Peringatan Dini Risiko Penyakit Berbasis Iklim",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://prakira.vercel.app"),
+  ),
+  title: {
+    default: "Prakira — Sistem Peringatan Dini Risiko Penyakit Berbasis Iklim",
+    template: "%s — Prakira",
+  },
   description:
     "Prakira memprediksi lonjakan kasus penyakit terkait iklim (DBD, ISPA, Diare, Leptospirosis) per kecamatan 2–4 minggu ke depan, dari data cuaca BMKG dan data kasus historis Kota Semarang. Decision support untuk Dinas Kesehatan, Puskesmas, dan warga.",
   keywords: [
@@ -29,6 +36,22 @@ export const metadata: Metadata = {
     "Semarang",
     "ANFORCOM 2026",
   ],
+  authors: [{ name: "Prakira Team — ANFORCOM 2026" }],
+  openGraph: {
+    type: "website",
+    locale: "id_ID",
+    url: "https://prakira.vercel.app",
+    title: "Prakira — Sistem Peringatan Dini Risiko Penyakit Berbasis Iklim",
+    description:
+      "Platform prediksi risiko penyakit berbasis iklim (DBD, ISPA, Diare) per kecamatan 2–4 minggu ke depan Kota Semarang.",
+    siteName: "Prakira",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Prakira — Early Warning Penyakit Berbasis Iklim",
+    description:
+      "Platform prediksi risiko penyakit berbasis iklim (DBD, ISPA, Diare) per kecamatan 2–4 minggu ke depan Kota Semarang.",
+  },
   /* Icons resolve from the App Router file conventions next to this file:
      favicon.ico, icon.svg, apple-icon.png. Only the manifest needs naming. */
   manifest: "/manifest.webmanifest",
