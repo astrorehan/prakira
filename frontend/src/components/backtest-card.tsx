@@ -1,69 +1,139 @@
-﻿import * as React from "react";
-import { CheckCircle2, Cpu, BarChart3, Info } from "lucide-react";
-import { cn } from "@/lib/utils";
-import type { BacktestMetric } from "@/types";
-import { LiquidGlassCard } from "./ui/liquid-glass-card";
+import * as React from "react";
+import { Info } from "lucide-react";
+import { cn, formatNumber } from "@/lib/utils";
+import type { BacktestMetric, DiseaseType } from "@/types";
+import { Card } from "./ui/card";
+import { Badge } from "./ui/badge";
+
+/**
+ * Hasil backtesting model.
+ *
+ * Dua perbaikan:
+ *
+ * 1. Kartu pertama dulu diberi varian `blue` karena posisinya indeks 0 —
+ *    penonjolan berdasarkan urutan berkas, bukan berdasarkan arti. Sekarang
+ *    yang ditonjolkan adalah penyakit yang sedang dipilih di halaman, sehingga
+ *    pemilih penyakit akhirnya juga mengendalikan bagian ini. Sebelumnya
+ *    memilih ISPA mengubah grafik tetapi meninggalkan sorotan di DBD.
+ * 2. `R²` berdiri sebagai angka besar tanpa keterangan. R² 0,89 pada model
+ *    deret waktu berarti "89% ragam kasus historis terjelaskan" — kalimat itu
+ *    sekarang ikut tercetak, karena angka evaluasi model dibaca juga oleh
+ *    pembaca yang bukan statistikawan.
+ */
 
 type BacktestCardProps = {
   metrics: BacktestMetric[];
+  /** Penyakit yang sedang aktif di halaman. Menentukan kartu mana yang utama. */
+  disease: DiseaseType;
   className?: string;
 };
 
-export function BacktestCard({ metrics, className }: BacktestCardProps) {
+function MetricRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-4">
+      <dt className="text-caption text-paper-600">{label}</dt>
+      <dd className="tabular text-caption font-semibold text-foreground">{value}</dd>
+    </div>
+  );
+}
+
+function BacktestPanel({
+  metric,
+  active,
+  best,
+}: {
+  metric: BacktestMetric;
+  /** Penyakit ini yang sedang dipilih di halaman. */
+  active: boolean;
+  /** Model dengan R² tertinggi di antara model penyakit aktif. */
+  best: boolean;
+}) {
+  return (
+    <Card className={cn("p-4", active && "border-brand-300")}>
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <div className="overline">{metric.disease}</div>
+          <div className="truncate text-body-sm font-medium text-foreground">
+            {metric.model_name}
+          </div>
+        </div>
+        {/* Satu lencana untuk satu kartu. Menandai ketiga model DBD dengan
+            "sedang dilihat" tidak memberi tahu apa pun — yang berguna adalah
+            model mana yang terbaik di antara mereka. */}
+        {best && <Badge variant="secondary">R² tertinggi</Badge>}
+      </div>
+
+      <div className="mt-3 flex items-baseline gap-2">
+        <span className="tabular text-metric text-foreground">
+          {formatNumber(metric.r2, { minimumFractionDigits: 2 })}
+        </span>
+        <span className="text-caption text-paper-600">R²</span>
+      </div>
+      <p className="mt-1 text-caption leading-relaxed text-paper-600">
+        {Math.round(metric.r2 * 100)}% ragam kasus historis terjelaskan oleh model.
+      </p>
+
+      <dl className="mt-3 space-y-1.5 border-t border-border pt-2.5">
+        <MetricRow label="MAE (galat absolut rata-rata)" value={`${formatNumber(metric.mae)} kasus`} />
+        <MetricRow label="RMSE" value={formatNumber(metric.rmse)} />
+        <MetricRow label="Akurasi arah tren" value={`${formatNumber(metric.accuracy_pct)}%`} />
+        <MetricRow label="Jumlah data uji" value={`${formatNumber(metric.sample_size)} record`} />
+      </dl>
+
+      <p className="mt-3 border-t border-border pt-2 text-caption text-paper-500">
+        {metric.backtest_period}
+      </p>
+    </Card>
+  );
+}
+
+export function BacktestCard({ metrics, disease, className }: BacktestCardProps) {
+  /* Penyakit aktif lebih dulu; sisanya tetap tampil supaya perbandingan antar
+     model tidak hilang hanya karena filter. */
+  const ordered = React.useMemo(
+    () => [...metrics].sort((a, b) => Number(b.disease === disease) - Number(a.disease === disease)),
+    [metrics, disease],
+  );
+
+  const bestModel = React.useMemo(() => {
+    const forDisease = metrics.filter((m) => m.disease === disease);
+    return forDisease.reduce<BacktestMetric | null>(
+      (best, m) => (best === null || m.r2 > best.r2 ? m : best),
+      null,
+    );
+  }, [metrics, disease]);
+
+  if (metrics.length === 0) {
+    return (
+      <Card className={cn("p-6 text-center", className)}>
+        <p className="text-body-sm text-paper-600">
+          Belum ada hasil backtesting untuk periode ini.
+        </p>
+      </Card>
+    );
+  }
+
   return (
     <div className={cn("flex flex-col gap-4", className)}>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {metrics.map((m, idx) => (
-          <LiquidGlassCard
-            key={idx}
-            variant={idx === 0 ? "blue" : "default"}
-            interactive
-            className="p-4 flex flex-col justify-between"
-          >
-            <div>
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-medium uppercase tracking-wider text-primary">
-                  {m.disease} · {m.model_name.split("(")[0]}
-                </span>
-                <span className="rounded-full bg-risk-low-bg px-2 py-0.5 text-[10px] font-semibold text-risk-low">
-                  {m.accuracy_pct}% Akurasi
-                </span>
-              </div>
-
-              <div className="mt-3 flex items-baseline gap-2">
-                <span className="font-display text-3xl font-semibold text-foreground">
-                  R² = {m.r2}
-                </span>
-              </div>
-
-              <div className="mt-3 space-y-1.5 text-xs text-muted-foreground border-t border-paper-200/60 pt-2.5">
-                <div className="flex justify-between">
-                  <span>MAE (Mean Absolute Error):</span>
-                  <span className="font-semibold text-foreground">{m.mae} kasus</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>RMSE (Root Mean Square):</span>
-                  <span className="font-semibold text-foreground">{m.rmse}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Jumlah Data Uji:</span>
-                  <span className="font-semibold text-foreground">{m.sample_size} records</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-3 pt-2 text-[10px] text-muted-foreground flex items-center gap-1.5 border-t border-paper-100">
-              <CheckCircle2 className="h-3 w-3 text-risk-low shrink-0" />
-              <span>{m.backtest_period}</span>
-            </div>
-          </LiquidGlassCard>
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        {ordered.map((m) => (
+          <BacktestPanel
+            key={`${m.disease}-${m.model_name}`}
+            metric={m}
+            active={m.disease === disease}
+            best={m === bestModel}
+          />
         ))}
       </div>
 
-      <div className="rounded-xl border border-brand-100/80 bg-brand-50/60 p-3.5 text-xs text-brand-900 flex items-start gap-2.5">
-        <Info className="h-4 w-4 text-brand-600 shrink-0 mt-0.5" />
-        <p className="leading-relaxed">
-          <strong>Transparansi Model Machine Learning:</strong> Validasi model dilakukan secara berkala menggunakan metode <em>walk-forward backtesting</em> membandingkan estimasi lag-climate 1-4 minggu sebelumnya dengan rekapitulasi data riil Dinas Kesehatan.
+      <div className="flex items-start gap-2.5 rounded-xl border border-brand-300/45 bg-brand-50 p-3.5">
+        <Info className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />
+        <p className="text-caption leading-relaxed text-brand-900">
+          <strong className="font-semibold">Transparansi model.</strong> Validasi memakai{" "}
+          <em>walk-forward backtesting</em>: model dilatih pada data sampai minggu ke-n, diminta
+          memprediksi minggu ke-(n+2) hingga (n+4), lalu hasilnya dibandingkan dengan rekapitulasi
+          riil Dinas Kesehatan. Prosedur ini tidak pernah memperlihatkan masa depan kepada model
+          saat pelatihan.
         </p>
       </div>
     </div>
