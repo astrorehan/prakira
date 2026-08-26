@@ -40,7 +40,7 @@ export function PublicInfo() {
       <div className="container py-14 md:py-20">
         <Reveal>
           <div className="max-w-2xl border-t border-sand-200 pt-6">
-            <p className="font-mono text-overline uppercase tracking-[0.1em] text-paper-500">
+            <p className="font-mono text-overline uppercase tracking-[0.1em] text-paper-600">
               06 · Informasi publik
             </p>
             <h2 className="mt-4 text-h2 text-balance text-foreground md:text-h1">
@@ -60,7 +60,7 @@ export function PublicInfo() {
               <ol className="border-t border-sand-200">
                 {STEPS.map((step) => (
                   <li key={step.no} className="flex gap-5 border-b border-sand-200 py-5">
-                    <span className="font-mono text-overline uppercase tabular text-paper-400">
+                    <span className="font-mono text-overline uppercase tabular text-paper-600">
                       {step.no}
                     </span>
                     <div className="min-w-0">
@@ -74,11 +74,11 @@ export function PublicInfo() {
 
             <Reveal delay={100} className="mt-8 overflow-hidden rounded-2xl border border-sand-200 bg-white shadow-card">
               <div className="flex flex-wrap items-center justify-between gap-4 border-b border-sand-200 bg-sand-50 px-5 py-3">
-                <span className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.08em] text-paper-500">
+                <span className="flex items-center gap-2 font-mono text-3xs uppercase tracking-[0.08em] text-paper-600">
                   <FileCheck2 className="h-3.5 w-3.5" aria-hidden />
                   Uji ulang model · {best.backtest_period}
                 </span>
-                <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-paper-500">
+                <span className="font-mono text-3xs uppercase tracking-[0.08em] text-paper-600">
                   Akurasi terbaik{" "}
                   <CountUp to={best.accuracy_pct} decimals={1} suffix=" %" className="font-medium text-brand-700" />
                 </span>
@@ -92,7 +92,7 @@ export function PublicInfo() {
                         <th
                           key={h}
                           scope="col"
-                          className={`px-3 py-3 font-mono text-[10px] uppercase tracking-[0.08em] text-paper-500 ${
+                          className={`px-3 py-3 font-mono text-3xs uppercase tracking-[0.08em] text-paper-600 ${
                             i >= 2 ? "text-right" : ""
                           } ${i === 0 ? "pl-5" : ""}`}
                         >
@@ -124,7 +124,7 @@ export function PublicInfo() {
                 </table>
               </div>
 
-              <p className="border-t border-sand-200 bg-sand-50 px-5 py-3 text-[11px] text-paper-500">
+              <p className="border-t border-sand-200 bg-sand-50 px-5 py-3 text-2xs text-paper-600">
                 Dievaluasi pada {BACKTEST_METRICS[0].sample_size.toLocaleString("id-ID")} sampel
                 kecamatan-minggu. Metrik dihitung ulang setiap triwulan dan diterbitkan apa adanya,
                 termasuk ketika turun.
@@ -168,7 +168,7 @@ export function PublicInfo() {
                     ["Biaya", "Tidak dipungut biaya"],
                   ].map(([k, v]) => (
                     <div key={k} className="flex justify-between gap-5">
-                      <dt className="shrink-0 text-paper-500">{k}</dt>
+                      <dt className="shrink-0 text-paper-600">{k}</dt>
                       <dd className="text-right font-medium text-foreground">{v}</dd>
                     </div>
                   ))}

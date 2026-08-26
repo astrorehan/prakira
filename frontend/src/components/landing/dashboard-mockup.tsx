@@ -27,7 +27,7 @@ export function DashboardMockup() {
             <span className="h-2.5 w-2.5 rounded-full bg-risk-medium" />
             <span className="h-2.5 w-2.5 rounded-full bg-risk-low" />
           </div>
-          <div className="rounded-md bg-white border border-paper-200/80 px-3 py-1 text-[10px] font-medium tracking-wide text-muted-foreground shadow-xs">
+          <div className="rounded-md bg-white border border-paper-200/80 px-3 py-1 text-3xs font-medium tracking-wide text-muted-foreground shadow-xs">
             app.prakira.id/dinas/dashboard
           </div>
           <div className="h-2.5 w-12" />
@@ -53,13 +53,13 @@ export function DashboardMockup() {
           <div className="grid gap-3 sm:col-span-9 sm:grid-cols-2">
             <div className="col-span-2 flex items-center justify-between rounded-xl bg-gradient-to-br from-primary to-primary-deep p-4 text-white shadow-sm">
               <div>
-                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider opacity-85 font-medium">
+                <div className="flex items-center gap-1.5 text-3xs uppercase tracking-wider opacity-85 font-medium">
                   <Bug className="h-3 w-3" /> Prediksi Lonjakan DBD (14 Hari)
                 </div>
                 <div className="mt-2 text-2xl font-semibold tracking-tight">
                   +35% Kasus Baru
                 </div>
-                <div className="mt-1 text-[11px] opacity-85">
+                <div className="mt-1 text-2xs opacity-85">
                   Zona Bahaya: Pedurungan & Banyumanik
                 </div>
               </div>
@@ -69,7 +69,7 @@ export function DashboardMockup() {
             </div>
 
             <div className="rounded-xl border border-paper-200/80 bg-white p-3 shadow-xs">
-              <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
+              <div className="flex items-center justify-between text-3xs uppercase tracking-wider text-muted-foreground">
                 <span className="flex items-center gap-1.5 font-semibold">
                   <CloudRain className="h-3 w-3 text-primary" /> Curah Hujan 7h
                 </span>
@@ -77,7 +77,7 @@ export function DashboardMockup() {
               </div>
               <div className="mt-2 text-lg font-semibold tracking-tight text-foreground">
                 225.4
-                <span className="ml-1 text-[10px] font-normal text-muted-foreground">
+                <span className="ml-1 text-3xs font-normal text-muted-foreground">
                   mm (Hujan Lebat)
                 </span>
               </div>
@@ -87,7 +87,7 @@ export function DashboardMockup() {
             </div>
 
             <div className="rounded-xl border border-paper-200/80 bg-white p-3 shadow-xs">
-              <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
+              <div className="flex items-center justify-between text-3xs uppercase tracking-wider text-muted-foreground">
                 <span className="flex items-center gap-1.5 font-semibold">
                   <Droplets className="h-3 w-3 text-brand-600" /> Kelembaban Udara
                 </span>
@@ -99,7 +99,7 @@ export function DashboardMockup() {
               <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-paper-100">
                 <div className="h-full w-[86%] rounded-full bg-gradient-to-r from-brand-500 to-risk-high" />
               </div>
-              <div className="mt-2 text-[10px] text-risk-high font-medium">
+              <div className="mt-2 text-3xs text-risk-high font-medium">
                 Kondisi optimal perkembangan jentik
               </div>
             </div>
@@ -112,7 +112,7 @@ export function DashboardMockup() {
           <span className="animate-beacon absolute inline-flex h-full w-full rounded-full bg-brand-700" />
           <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-700" />
         </span>
-        <div className="text-[10px] leading-tight">
+        <div className="text-3xs leading-tight">
           <div className="font-semibold tracking-tight text-foreground">BMKG AWS Live</div>
           <div className="text-muted-foreground">Update tiap 60 mnt</div>
         </div>
@@ -122,7 +122,7 @@ export function DashboardMockup() {
         <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-100 text-brand-700 shadow-xs">
           <Activity className="h-3.5 w-3.5" />
         </div>
-        <div className="text-[10px] leading-tight">
+        <div className="text-3xs leading-tight">
           <div className="font-semibold tracking-tight text-foreground">XGBoost Regressor</div>
           <div className="text-risk-low font-semibold">Akurasi R² = 0.914</div>
         </div>

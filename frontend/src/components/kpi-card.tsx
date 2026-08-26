@@ -83,7 +83,7 @@ export function KpiCard({
 
       {/* Main Value & Sparkline */}
       {insufficient ? (
-        <p className="my-3 text-body-sm text-paper-500">
+        <p className="my-3 text-body-sm text-paper-600">
           Data historis tidak memadai untuk menghasilkan angka yang dapat
           dipertanggungjawabkan.
         </p>
@@ -99,7 +99,7 @@ export function KpiCard({
 
             {/* Prediction bounds. Never optional on a forecast (PRD §7-H1). */}
             {range && (
-              <span className="font-mono text-caption tabular text-paper-500">
+              <span className="font-mono text-caption tabular text-paper-600">
                 {formatRange(range.lower, range.upper)}
                 <span className="sr-only"> rentang prediksi</span>
               </span>

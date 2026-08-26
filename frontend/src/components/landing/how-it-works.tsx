@@ -267,7 +267,7 @@ export function HowItWorks() {
 
                 <div className="mt-auto pt-7">
                   <Chart play={inView} />
-                  <p className="mt-2 border-t border-sand-200 pt-2 font-mono text-[10px] uppercase tracking-wider text-paper-400">
+                  <p className="mt-2 border-t border-sand-200 pt-2 font-mono text-3xs uppercase tracking-wider text-paper-600">
                     {step.legend}
                   </p>
                 </div>

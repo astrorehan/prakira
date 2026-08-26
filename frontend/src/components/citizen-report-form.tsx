@@ -137,20 +137,20 @@ function SubmittedCard({
 
       <dl className="mt-7 grid gap-4 border-t border-white/70 pt-6 sm:grid-cols-3">
         <div>
-          <dt className="text-overline uppercase tracking-[0.1em] text-paper-500">Jenis</dt>
+          <dt className="text-overline uppercase tracking-[0.1em] text-paper-600">Jenis</dt>
           <dd className="mt-1 text-body-sm font-medium text-foreground">
             {REPORT_KIND[report.kind].label}
           </dd>
         </div>
         <div>
-          <dt className="text-overline uppercase tracking-[0.1em] text-paper-500">Wilayah</dt>
+          <dt className="text-overline uppercase tracking-[0.1em] text-paper-600">Wilayah</dt>
           <dd className="mt-1 text-body-sm font-medium text-foreground">
             {report.kecamatan}
             {report.kelurahan ? ` · ${report.kelurahan}` : ""}
           </dd>
         </div>
         <div>
-          <dt className="text-overline uppercase tracking-[0.1em] text-paper-500">
+          <dt className="text-overline uppercase tracking-[0.1em] text-paper-600">
             Diteruskan ke
           </dt>
           <dd className="mt-1 text-body-sm font-medium text-foreground">
@@ -304,7 +304,7 @@ export function CitizenReportForm() {
           <AlertTriangle
             className={cn(
               "mt-0.5 h-4 w-4 shrink-0",
-              blocked ? "text-risk-medium" : "text-paper-500",
+              blocked ? "text-risk-medium" : "text-paper-600",
             )}
             aria-hidden="true"
           />
@@ -368,7 +368,7 @@ export function CitizenReportForm() {
                     "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border",
                     active
                       ? "border-brand-300 bg-white text-brand-700"
-                      : "border-sand-200 bg-sand-50 text-paper-500",
+                      : "border-sand-200 bg-sand-50 text-paper-600",
                   )}
                 >
                   <Icon className="h-4 w-4" aria-hidden="true" />
@@ -428,7 +428,7 @@ export function CitizenReportForm() {
           <div className="space-y-1.5">
             <Label htmlFor="kelurahan">
               Kelurahan atau RT/RW{" "}
-              <span className="font-normal text-paper-500">— boleh dikosongkan</span>
+              <span className="font-normal text-paper-600">— boleh dikosongkan</span>
             </Label>
             <Input
               id="kelurahan"
@@ -438,7 +438,7 @@ export function CitizenReportForm() {
               placeholder="Mis. Tlogosari Kulon RW 04"
               className="border-sand-200 bg-white text-base sm:text-sm"
             />
-            <p className="text-caption text-paper-500">
+            <p className="text-caption text-paper-600">
               Makin sempit wilayahnya, makin cepat petugas menemukannya.
             </p>
           </div>
@@ -472,7 +472,7 @@ export function CitizenReportForm() {
               maxLength={500}
               aria-describedby="description-help"
               placeholder="Mis. jentik di tiga bak mandi rumah kosong sebelah masjid, airnya tidak pernah dikuras."
-              className="w-full rounded-xl border border-sand-200 bg-white px-4 py-3 text-base leading-relaxed text-foreground shadow-sm sm:text-sm placeholder:text-paper-400 focus-visible:border-brand-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="w-full rounded-xl border border-sand-200 bg-white px-4 py-3 text-base leading-relaxed text-foreground shadow-sm sm:text-sm placeholder:text-paper-600 focus-visible:border-brand-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
             <div
               id="description-help"
@@ -480,14 +480,14 @@ export function CitizenReportForm() {
             >
               <span
                 className={cn(
-                  showErrors && !descriptionOk ? "text-risk-high" : "text-paper-500",
+                  showErrors && !descriptionOk ? "text-risk-high" : "text-paper-600",
                 )}
               >
                 {showErrors && !descriptionOk
                   ? `Tulis minimal ${MIN_DESCRIPTION} karakter — petugas perlu tahu apa yang dicari.`
                   : "Sebut apa, berapa banyak, dan di sebelah mana."}
               </span>
-              <span className="tabular text-paper-400">{description.trim().length}/500</span>
+              <span className="tabular text-paper-600">{description.trim().length}/500</span>
             </div>
           </div>
         </div>
@@ -497,7 +497,7 @@ export function CitizenReportForm() {
       <fieldset>
         <legend className="text-h3 text-foreground">
           Foto{" "}
-          <span className="text-body-sm font-normal text-paper-500">— boleh dilewati</span>
+          <span className="text-body-sm font-normal text-paper-600">— boleh dilewati</span>
         </legend>
         <p className="mt-1 flex items-start gap-1.5 text-body-sm text-paper-600">
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-risk-low" aria-hidden="true" />
@@ -545,7 +545,7 @@ export function CitizenReportForm() {
                   if (fileRef.current) fileRef.current.value = "";
                 }}
                 aria-label="Hapus foto"
-                className="rounded-lg p-1.5 text-paper-400 transition-colors hover:bg-sand-100 hover:text-paper-700"
+                className="rounded-lg p-1.5 text-paper-600 transition-colors hover:bg-sand-100 hover:text-paper-700"
               >
                 <X className="h-4 w-4" aria-hidden="true" />
               </button>
@@ -565,7 +565,7 @@ export function CitizenReportForm() {
         <Button type="submit" size="lg" loading={submitting} disabled={blocked}>
           Kirim laporan
         </Button>
-        <p className="text-caption leading-relaxed text-paper-500">
+        <p className="text-caption leading-relaxed text-paper-600">
           Tanpa akun, tanpa nama, tanpa nomor telepon. Anda akan menerima kode lacak
           setelah mengirim.{" "}
           <Link

@@ -127,7 +127,7 @@ export function TrendChart({
                   <div className="liquid-glass rounded-xl p-3.5 shadow-elevated border border-white/90 text-xs min-w-[200px]">
                     <div className="flex items-center justify-between gap-2 border-b border-paper-200/60 pb-1.5 mb-2">
                       <span className="font-semibold text-foreground">{point.periode}</span>
-                      <span className="text-[10px] text-muted-foreground">{point.tanggal}</span>
+                      <span className="text-3xs text-muted-foreground">{point.tanggal}</span>
                     </div>
 
                     <div className="space-y-1.5">
@@ -152,7 +152,7 @@ export function TrendChart({
                       )}
 
                       {point.lower_bound && point.upper_bound && (
-                        <div className="flex items-center justify-between text-[10px] text-muted-foreground pt-1 border-t border-paper-100">
+                        <div className="flex items-center justify-between text-3xs text-muted-foreground pt-1 border-t border-paper-100">
                           <span>Confidence Interval:</span>
                           <span className="font-medium text-paper-700">
                             {point.lower_bound} - {point.upper_bound}
@@ -161,7 +161,7 @@ export function TrendChart({
                       )}
 
                       {showClimateOverlay && (
-                        <div className="flex items-center justify-between text-[11px] text-brand-700 pt-1">
+                        <div className="flex items-center justify-between text-2xs text-brand-700 pt-1">
                           <span>Curah Hujan:</span>
                           <span className="font-semibold">{point.curah_hujan_mm} mm</span>
                         </div>
@@ -169,7 +169,7 @@ export function TrendChart({
                     </div>
 
                     {isForecast && (
-                      <div className="mt-2 rounded bg-risk-medium-bg px-2 py-1 text-[10px] font-medium text-risk-medium border border-risk-medium-br/60">
+                      <div className="mt-2 rounded bg-risk-medium-bg px-2 py-1 text-3xs font-medium text-risk-medium border border-risk-medium-br/60">
                         Proyeksi Model ML (Lead Time 2-4 Minggu)
                       </div>
                     )}
@@ -241,7 +241,7 @@ export function TrendChart({
         <div
           className={cn(
             "mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-paper-200/70 pt-2.5 text-xs",
-            compact && "mt-2 pt-2 text-[11px] gap-2"
+            compact && "mt-2 pt-2 text-2xs gap-2"
           )}
         >
           <div className="flex flex-wrap items-center gap-3 text-muted-foreground">

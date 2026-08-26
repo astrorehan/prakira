@@ -141,7 +141,7 @@ export function ClimateCorrelationChart({
               <span
                 className={cn(
                   "tabular text-caption",
-                  selected ? "text-foreground" : "text-paper-500",
+                  selected ? "text-foreground" : "text-paper-600",
                 )}
               >
                 r = {c.display}
@@ -226,7 +226,7 @@ export function ClimateCorrelationChart({
                           key={v.key}
                           className={cn(
                             "flex items-center justify-between gap-4",
-                            v.key === active ? "text-foreground" : "text-paper-500",
+                            v.key === active ? "text-foreground" : "text-paper-600",
                           )}
                         >
                           <dt className="flex items-center gap-1.5">

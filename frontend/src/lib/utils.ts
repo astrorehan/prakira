@@ -1,6 +1,48 @@
 import { type ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { extendTailwindMerge } from "tailwind-merge";
 import type { DiseaseType, RiskLevel, DataCoverage } from "@/types";
+
+/* tailwind-merge only knows Tailwind's stock font sizes. Our scale replaces
+   them with names of its own (DESIGN-SYSTEM.md §7), and a name it does not
+   recognise after `text-` is filed as a text *colour* — so `text-overline`
+   and `text-paper-600` looked like the same class group and the colour, being
+   last, silently won.
+
+   That is why kpi-card's coverage label rendered at the inherited size: its
+   `text-overline` was being dropped before it ever reached the DOM. Sizes
+   written as arbitrary values (`text-[10px]`) were immune, which is what hid
+   the bug while the codebase still used them.
+
+   Listing the scale here fixes every call site at once. Keep this in step
+   with `fontSize` in tailwind.config.ts. */
+const twMerge = extendTailwindMerge({
+  extend: {
+    classGroups: {
+      "font-size": [
+        {
+          text: [
+            "5xs",
+            "4xs",
+            "3xs",
+            "2xs",
+            "overline",
+            "caption",
+            "body-sm",
+            "body",
+            "body-lg",
+            "h3",
+            "h2",
+            "h1",
+            "display",
+            "metric-sm",
+            "metric",
+            "metric-xl",
+          ],
+        },
+      ],
+    },
+  },
+});
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -93,12 +135,12 @@ export const COVERAGE_CONFIG: Record<
 > = {
   high: {
     label: "Tinggi",
-    className: "text-paper-500",
+    className: "text-paper-600",
     description: "Data historis lengkap. Interval prediksi relatif sempit.",
   },
   medium: {
     label: "Sedang",
-    className: "text-paper-500",
+    className: "text-paper-600",
     description: "Sebagian periode historis kosong. Interval prediksi lebih lebar.",
   },
   low: {

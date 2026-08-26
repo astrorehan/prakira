@@ -73,7 +73,7 @@ export function Announcements() {
           {/* ── Pengumuman ── */}
           <div className="min-w-0 lg:col-span-7">
             <Reveal className="border-t border-sand-200 pt-6">
-              <p className="font-mono text-overline uppercase tracking-[0.1em] text-paper-500">
+              <p className="font-mono text-overline uppercase tracking-[0.1em] text-paper-600">
                 05 · Pengumuman
               </p>
               <h2 className="mt-4 text-h2 text-balance text-foreground md:text-h1">
@@ -89,12 +89,12 @@ export function Announcements() {
                     className="group flex flex-col gap-2 border-b border-sand-200 py-5 transition-colors duration-base first:border-t first:border-sand-200 hover:bg-white/60"
                   >
                     <div className="flex flex-wrap items-center gap-3">
-                      <span className="font-mono text-[10px] uppercase tracking-[0.08em] tabular text-paper-500">
+                      <span className="font-mono text-3xs uppercase tracking-[0.08em] tabular text-paper-600">
                         {item.date}
                       </span>
                       <span
                         className={cn(
-                          "rounded border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.06em]",
+                          "rounded border px-2 py-0.5 font-mono text-3xs uppercase tracking-[0.06em]",
                           CATEGORY_STYLE[item.category],
                         )}
                       >
@@ -105,7 +105,7 @@ export function Announcements() {
                       {item.title}
                     </h3>
                     <p className="max-w-2xl text-caption text-paper-600">{item.excerpt}</p>
-                    <span className="mt-1 inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.08em] text-paper-500 transition-colors duration-fast group-hover:text-brand-700">
+                    <span className="mt-1 inline-flex items-center gap-1.5 font-mono text-3xs uppercase tracking-[0.08em] text-paper-600 transition-colors duration-fast group-hover:text-brand-700">
                       Baca selengkapnya
                       <ArrowRight className="h-3 w-3" />
                     </span>
@@ -122,8 +122,8 @@ export function Announcements() {
             <Reveal delay={120} className="lg:sticky lg:top-24">
               <div className="overflow-hidden rounded-2xl border border-sand-200 bg-white shadow-card">
                 <div className="flex items-center gap-2 border-b border-sand-200 bg-sand-50 px-5 py-3">
-                  <History className="h-3.5 w-3.5 text-paper-500" aria-hidden />
-                  <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-paper-500">
+                  <History className="h-3.5 w-3.5 text-paper-600" aria-hidden />
+                  <span className="font-mono text-3xs uppercase tracking-[0.08em] text-paper-600">
                     Catatan aktivitas sistem
                   </span>
                 </div>
@@ -140,12 +140,12 @@ export function Announcements() {
                         />
                       </span>
                       <div className="min-w-0">
-                        <p className="font-mono text-[10px] uppercase tracking-[0.08em] tabular text-paper-400">
+                        <p className="font-mono text-3xs uppercase tracking-[0.08em] tabular text-paper-600">
                           {log.timestamp} WIB
                         </p>
                         <p className="mt-1 text-caption font-medium text-foreground">{log.action}</p>
                         <p className="mt-0.5 text-caption text-paper-600">{log.details}</p>
-                        <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.07em] text-paper-400">
+                        <p className="mt-1 font-mono text-3xs uppercase tracking-[0.07em] text-paper-600">
                           {log.role}
                         </p>
                       </div>
@@ -154,8 +154,8 @@ export function Announcements() {
                 </ol>
 
                 <div className="flex items-start gap-2.5 border-t border-sand-200 bg-sand-50 px-5 py-4">
-                  <CircleDot className="mt-0.5 h-3.5 w-3.5 shrink-0 text-paper-400" aria-hidden />
-                  <p className="text-[11px] text-paper-500">
+                  <CircleDot className="mt-0.5 h-3.5 w-3.5 shrink-0 text-paper-600" aria-hidden />
+                  <p className="text-2xs text-paper-600">
                     Catatan bersifat publik dan tidak memuat data pribadi pasien. Setiap
                     perubahan angka pada halaman ini selalu meninggalkan jejak di sini.
                   </p>

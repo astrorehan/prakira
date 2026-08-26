@@ -170,14 +170,14 @@ export default function DesignSystemPage() {
                       style={{ background: swatch.hex }}
                     >
                       {copiedKey === "color-" + i && (
-                        <span className="bg-black/70 text-white text-[9px] font-semibold px-1.5 py-0.5 rounded">
+                        <span className="bg-black/70 text-white text-4xs font-semibold px-1.5 py-0.5 rounded">
                           Tersalin!
                         </span>
                       )}
                     </div>
                     <div className="mt-2 text-xs font-medium text-foreground">{swatch.name}</div>
-                    <div className="text-[11px] font-mono text-muted-foreground">{swatch.hex}</div>
-                    <div className="text-[10px] text-primary mt-0.5">{swatch.desc}</div>
+                    <div className="text-2xs font-mono text-muted-foreground">{swatch.hex}</div>
+                    <div className="text-3xs text-primary mt-0.5">{swatch.desc}</div>
                   </div>
                 ))}
               </div>
@@ -205,8 +205,8 @@ export default function DesignSystemPage() {
                       </div>
                       <div>
                         <div className="font-medium text-xs" style={{ color: risk.hex }}>{risk.name}</div>
-                        <div className="text-[11px] font-mono text-paper-600">{risk.hex}</div>
-                        <div className="text-[10px] text-paper-500 mt-0.5">{risk.desc}</div>
+                        <div className="text-2xs font-mono text-paper-600">{risk.hex}</div>
+                        <div className="text-3xs text-paper-600 mt-0.5">{risk.desc}</div>
                       </div>
                     </div>
                   ))}
@@ -232,8 +232,8 @@ export default function DesignSystemPage() {
                       </div>
                       <div>
                         <div className="font-medium text-xs text-foreground">{dis.disease} · {dis.name}</div>
-                        <div className="text-[11px] font-mono" style={{ color: dis.hex }}>{dis.hex}</div>
-                        <div className="text-[10px] text-muted-foreground">{dis.vector}</div>
+                        <div className="text-2xs font-mono" style={{ color: dis.hex }}>{dis.hex}</div>
+                        <div className="text-3xs text-muted-foreground">{dis.vector}</div>
                       </div>
                     </div>
                   ))}
@@ -258,7 +258,7 @@ export default function DesignSystemPage() {
                   </p>
                 </div>
                 <div className="mt-4 pt-3 border-t border-white/60 flex justify-between items-center text-xs">
-                  <span className="font-mono text-[11px] text-primary">blur(18px) saturate(180%)</span>
+                  <span className="font-mono text-2xs text-primary">blur(18px) saturate(180%)</span>
                   <Button size="sm" variant="glass" className="h-7 text-xs">
                     Interaksi
                   </Button>
@@ -276,7 +276,7 @@ export default function DesignSystemPage() {
                   </p>
                 </div>
                 <div className="mt-4 pt-3 border-t border-brand-100/60 flex justify-between items-center text-xs">
-                  <span className="font-mono text-[11px] text-primary-royal">shadow-glass-blue</span>
+                  <span className="font-mono text-2xs text-primary-royal">shadow-glass-blue</span>
                   <Button size="sm" variant="glass-blue" className="h-7 text-xs">
                     Interaksi
                   </Button>
@@ -294,7 +294,7 @@ export default function DesignSystemPage() {
                   </p>
                 </div>
                 <div className="mt-4 pt-3 border-t border-risk-high-br/60 flex justify-between items-center text-xs">
-                  <span className="font-mono text-[11px] text-risk-high">shadow-glass-risk-high</span>
+                  <span className="font-mono text-2xs text-risk-high">shadow-glass-risk-high</span>
                   <Button size="sm" variant="destructive" className="h-7 text-xs">
                     Siaga
                   </Button>
@@ -314,7 +314,7 @@ export default function DesignSystemPage() {
                     Komponen container tanggal optik VisionOS / iOS 18 dengan material liquid glass, specular reflection 1px, nested week capsule, dan live status beacon.
                   </p>
                 </div>
-                <code className="text-[11px] font-mono text-brand-700 bg-brand-50 px-2 py-1 rounded-md border border-brand-200">
+                <code className="text-2xs font-mono text-brand-700 bg-brand-50 px-2 py-1 rounded-md border border-brand-200">
                   &lt;AppleGlassDate /&gt;
                 </code>
               </div>
@@ -328,7 +328,7 @@ export default function DesignSystemPage() {
                       monthYear="Agustus 2026"
                     />
                   </div>
-                  <p className="text-[11px] text-muted-foreground">Varian utama dengan latar gradien optik transparan, shadow ambient difusi, dan specular highlight rim.</p>
+                  <p className="text-2xs text-muted-foreground">Varian utama dengan latar gradien optik transparan, shadow ambient difusi, dan specular highlight rim.</p>
                 </div>
 
                 <div className="p-4 rounded-xl bg-mesh-blue border border-paper-200/80 space-y-3">
@@ -340,7 +340,7 @@ export default function DesignSystemPage() {
                       dateRange="18 – 24 Ags 2026"
                     />
                   </div>
-                  <p className="text-[11px] text-muted-foreground">Menampilkan rentang hari epidemiologi riil bersama nama bulan dan tahun.</p>
+                  <p className="text-2xs text-muted-foreground">Menampilkan rentang hari epidemiologi riil bersama nama bulan dan tahun.</p>
                 </div>
 
                 <div className="p-4 rounded-xl bg-mesh-blue border border-paper-200/80 space-y-3">
@@ -358,7 +358,7 @@ export default function DesignSystemPage() {
                       showCalendarIcon={false}
                     />
                   </div>
-                  <p className="text-[11px] text-muted-foreground">Varian bernuansa brand teal dan ukuran compact untuk toolbar sempit.</p>
+                  <p className="text-2xs text-muted-foreground">Varian bernuansa brand teal dan ukuran compact untuk toolbar sempit.</p>
                 </div>
 
                 <div className="p-4 rounded-xl bg-mesh-blue border border-paper-200/80 space-y-3">
@@ -370,7 +370,7 @@ export default function DesignSystemPage() {
                       monthYear="Agustus 2026"
                     />
                   </div>
-                  <p className="text-[11px] text-muted-foreground">Ukuran large dengan padding 18px dan font lebih besar untuk highlight dashboard eksekutif.</p>
+                  <p className="text-2xs text-muted-foreground">Ukuran large dengan padding 18px dan font lebih besar untuk highlight dashboard eksekutif.</p>
                 </div>
               </div>
             </LiquidGlassCard>
@@ -516,7 +516,7 @@ export default function DesignSystemPage() {
                     Modul manajemen intervensi taktis dinas kesehatan lengkap dengan status beacon, toolbar filter, pencarian kecamatan, kartu cerdas, dan modal siaran resmi.
                   </p>
                 </div>
-                <code className="text-[11px] font-mono text-brand-700 bg-brand-50 px-2.5 py-1 rounded-md border border-brand-200">
+                <code className="text-2xs font-mono text-brand-700 bg-brand-50 px-2.5 py-1 rounded-md border border-brand-200">
                   &lt;EarlyActionCenter /&gt;
                 </code>
               </div>

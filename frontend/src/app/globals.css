@@ -16,9 +16,15 @@
     --border: #dfe6e6;
     --border-strong: #c9d4d4;
 
+    /* Three text tiers, every one of them AA at 4.5:1 against the five real
+       backgrounds (white, paper-50, sand-50, sand-100, brand-50). The old
+       tier 3 was paper-500 #7c8d8f, which measures 2.92-3.46:1 — below the
+       floor on every one of them. Nothing can sit between paper-400 and
+       paper-600 and still pass, so the ladder shifted up a rung rather than
+       inventing a value that fails. */
     --text: #0e2225;
-    --text-2: #5a6c6e;
-    --text-3: #7c8d8f;
+    --text-2: #3d4e50;
+    --text-3: #5a6c6e;
 
     --brand: #0b4a57;
     --brand-soft: #d6e9ec;
@@ -146,7 +152,11 @@
     background: #ffffff;
     color: #000000;
   }
+  /* paper-500/400 are no longer text colours — the tier shift put every
+     legible utility at paper-600 or darker. Kept in the selector so any
+     stray reintroduced later still darkens in this mode. */
   html.a11y-contrast .text-muted-foreground,
+  html.a11y-contrast .text-paper-400,
   html.a11y-contrast .text-paper-500,
   html.a11y-contrast .text-paper-600 {
     color: #1a1a1a !important;
@@ -174,7 +184,7 @@
 @layer components {
   /* Small-caps mono label. The signature of the data surface. */
   .overline {
-    @apply text-overline font-medium uppercase tracking-[0.1em] text-paper-500 no-underline;
+    @apply text-overline font-medium uppercase tracking-[0.1em] text-paper-600 no-underline;
     text-decoration: none !important;
   }
 

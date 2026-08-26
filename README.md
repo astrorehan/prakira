@@ -66,7 +66,8 @@ prakira/
 ├─ docs/
 │  ├─ PRD.md                # Product Requirements Document (sumber kebenaran)
 │  └─ DESIGN-SYSTEM.md      # token warna, tipografi, spacing, aturan komponen
-└─ frontend/                # Next.js 14 — lihat frontend/README.md
+├─ frontend/                # Next.js 14 — lihat frontend/README.md
+└─ CONTRIBUTING.md          # Panduan kontribusi dan alur pengembangan
 ```
 
 | Layanan | Folder | Status | Port dev |
@@ -102,3 +103,5 @@ di [`frontend/README.md`](./frontend/README.md).
 - [`docs/DESIGN-SYSTEM.md`](./docs/DESIGN-SYSTEM.md) — token desain, skala
   tipografi, aturan komponen; ditulis agar bisa dipetakan 1:1 ke Figma
   Variables.
+- [`CONTRIBUTING.md`](./CONTRIBUTING.md) — panduan alur kerja git, konvensi commit,
+  dan standar penulisan kode.

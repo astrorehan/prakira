@@ -25,7 +25,7 @@ export function CtaBanner({ selectedKecamatan }: { selectedKecamatan: string | n
           <div className="grid md:grid-cols-2">
             {/* Left: the ask that costs the reader nothing */}
             <div className="border-b border-sand-200 bg-grad-brand-soft p-8 md:border-b-0 md:border-r md:p-12">
-              <span className="font-mono text-overline uppercase text-paper-500">
+              <span className="font-mono text-overline uppercase text-paper-600">
                 Peringatan otomatis
               </span>
               <h2 className="mt-5 text-h1 text-balance text-foreground">
@@ -60,7 +60,7 @@ export function CtaBanner({ selectedKecamatan }: { selectedKecamatan: string | n
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     required
-                    className="h-14 flex-1 rounded-2xl border border-sand-200 bg-sand-50 px-5 text-base text-foreground placeholder:text-paper-400 transition-colors duration-fast focus:border-brand-500 focus:outline-none"
+                    className="h-14 flex-1 rounded-2xl border border-sand-200 bg-sand-50 px-5 text-base text-foreground placeholder:text-paper-600 transition-colors duration-fast focus:border-brand-500 focus:outline-none"
                   />
                   <Button type="submit" size="lg" className="shrink-0">
                     Aktifkan
@@ -68,14 +68,14 @@ export function CtaBanner({ selectedKecamatan }: { selectedKecamatan: string | n
                 </form>
               )}
 
-              <p className="mt-3 text-caption text-paper-500">
+              <p className="mt-3 text-caption text-paper-600">
                 Nomor dipakai hanya untuk peringatan Dinas Kesehatan.
               </p>
             </div>
 
             {/* Right: the ask that improves the model */}
             <div className="p-8 md:p-12">
-              <span className="font-mono text-overline uppercase text-paper-500">
+              <span className="font-mono text-overline uppercase text-paper-600">
                 Lapor
               </span>
               <h2 className="mt-5 text-h1 text-balance text-foreground">
@@ -94,7 +94,7 @@ export function CtaBanner({ selectedKecamatan }: { selectedKecamatan: string | n
                 </Link>
               </Button>
 
-              <p className="mt-3 text-caption text-paper-500">
+              <p className="mt-3 text-caption text-paper-600">
                 Tanpa akun. Cukup pilih kecamatan dan jenis laporannya.
               </p>
             </div>

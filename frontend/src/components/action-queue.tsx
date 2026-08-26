@@ -98,8 +98,8 @@ function Fact({
 }) {
   return (
     <div className="flex min-w-0 items-baseline gap-1.5">
-      <Icon className="h-3.5 w-3.5 shrink-0 translate-y-0.5 text-paper-400" aria-hidden="true" />
-      <span className="shrink-0 text-caption text-paper-500">{label}</span>
+      <Icon className="h-3.5 w-3.5 shrink-0 translate-y-0.5 text-paper-600" aria-hidden="true" />
+      <span className="shrink-0 text-caption text-paper-600">{label}</span>
       <span className="min-w-0 truncate text-caption font-medium text-foreground">{children}</span>
     </div>
   );
@@ -145,7 +145,7 @@ function ActionRow({
               <Badge variant={action.priority === "high" ? "risk-high" : "risk-medium"}>
                 {PRIORITY_LABEL[action.priority]}
               </Badge>
-              <span className="tabular font-mono text-overline text-paper-400">
+              <span className="tabular font-mono text-overline text-paper-600">
                 #{action.id}
               </span>
             </div>
@@ -208,7 +208,7 @@ function ActionRow({
               <span>{deadlineLabel}</span>
             </span>
 
-            <span className="tabular text-caption text-paper-500 lg:text-right">
+            <span className="tabular text-caption text-paper-600 lg:text-right">
               Tenggat {action.deadline.date}
             </span>
 
@@ -223,7 +223,7 @@ function ActionRow({
             </span>
 
             {action.dispatched_at && (
-              <span className="text-caption text-paper-500 lg:text-right">
+              <span className="text-caption text-paper-600 lg:text-right">
                 Dikirim {action.dispatched_at}
               </span>
             )}

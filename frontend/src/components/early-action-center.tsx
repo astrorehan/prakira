@@ -64,7 +64,7 @@ function SummaryTile({
               ? "text-risk-critical"
               : tone === "warn"
                 ? "text-risk-medium"
-                : "text-paper-400",
+                : "text-paper-600",
           )}
           aria-hidden="true"
         />
@@ -249,7 +249,7 @@ export function EarlyActionCenter({
       {/* 3. Antrean */}
       {filtered.length === 0 ? (
         <div className="space-y-3 rounded-xl border border-border bg-surface p-10 text-center shadow-xs">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-paper-100 text-paper-400">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-paper-100 text-paper-600">
             <Info className="h-6 w-6" aria-hidden="true" />
           </div>
           <h3 className="text-h3 text-foreground">Tidak ada tindakan berstatus ini</h3>

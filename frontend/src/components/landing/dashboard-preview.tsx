@@ -74,7 +74,7 @@ export function TrustSection() {
                 <CountUp to={m.value} decimals={m.decimals} />
               </p>
               <p className="mt-2 text-body font-medium text-foreground">{m.label}</p>
-              <p className="mt-1.5 text-body-sm leading-relaxed text-paper-500">
+              <p className="mt-1.5 text-body-sm leading-relaxed text-paper-600">
                 {m.note}
               </p>
             </Reveal>
@@ -115,7 +115,7 @@ export function TrustSection() {
           delay={80}
           className="mt-6 flex flex-col items-start justify-between gap-5 border-t border-sand-200 pt-6 md:flex-row md:items-center"
         >
-          <p className="max-w-2xl text-body-sm leading-relaxed text-paper-500">
+          <p className="max-w-2xl text-body-sm leading-relaxed text-paper-600">
             Prakira adalah alat bantu keputusan, bukan alat diagnosis. Prakiraan
             selalu disertai rentang ketidakpastian, dan kecamatan dengan riwayat data
             tipis ditandai secara terpisah — data yang sedikit bukan berarti aman.

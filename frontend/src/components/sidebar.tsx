@@ -15,7 +15,8 @@ import {
   ClipboardCheck,
   ArrowUpRight,
 } from "lucide-react";
-import { BrandMark } from "@/components/brand-mark";
+import { AccessibilityMenu } from "@/components/accessibility-menu";
+import { BrandLockup } from "@/components/brand-lockup";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -24,7 +25,12 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { clearSession, readSession, DEMO_ACCOUNT, type Session } from "@/lib/auth";
+import {
+  clearSession,
+  readSession,
+  DEMO_ACCOUNT,
+  type Session,
+} from "@/lib/auth";
 import { ACTION_RECOMMENDATIONS } from "@/lib/mock-data";
 import { loadReports } from "@/lib/reports";
 
@@ -54,17 +60,7 @@ type NavItem = {
 };
 
 function Wordmark({ href = "/" }: { href?: string }) {
-  return (
-    <Link href={href} className="group flex items-center gap-2.5">
-      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm transition-transform group-hover:-rotate-6">
-        <BrandMark className="h-5 w-5" />
-      </span>
-      <span className="flex flex-col leading-none">
-        <span className="text-h3 text-foreground">Prakira</span>
-        <span className="overline mt-1 block">Konsol Nakes</span>
-      </span>
-    </Link>
-  );
+  return <BrandLockup href={href} subline="Konsol Nakes" />;
 }
 
 export function Sidebar() {
@@ -78,14 +74,18 @@ export function Sidebar() {
      markup pertama tidak berbeda antara server dan klien. */
   React.useEffect(() => {
     setSession(readSession());
-    setPendingReports(loadReports().filter((r) => r.status === "menunggu").length);
+    setPendingReports(
+      loadReports().filter((r) => r.status === "menunggu").length,
+    );
   }, []);
 
   /* Jumlah antrean berubah saat petugas memutuskan di /verifikasi, dan
      sidebar-nya tetap terpasang selama itu. Dibaca ulang tiap kali rute
      berganti — cukup untuk lencana, tanpa menambah kanal antar-komponen. */
   React.useEffect(() => {
-    setPendingReports(loadReports().filter((r) => r.status === "menunggu").length);
+    setPendingReports(
+      loadReports().filter((r) => r.status === "menunggu").length,
+    );
   }, [pathname]);
 
   const pendingActions = React.useMemo(
@@ -119,7 +119,8 @@ export function Sidebar() {
   }
 
   const isActive = (href: string) =>
-    pathname === href || (href !== "/dashboard" && Boolean(pathname?.startsWith(href)));
+    pathname === href ||
+    (href !== "/dashboard" && Boolean(pathname?.startsWith(href)));
 
   const navLinks = (onClick?: () => void) =>
     consoleItems.map((item) => {
@@ -144,11 +145,16 @@ export function Sidebar() {
             <span
               className={cn(
                 "tabular rounded-full px-1.5 py-0.5 text-overline font-semibold",
-                active ? "bg-white/20 text-white" : "bg-risk-high-bg text-risk-high",
+                active
+                  ? "bg-white/20 text-white"
+                  : "bg-risk-high-bg text-risk-high",
               )}
             >
               {item.badge}
-              <span className="sr-only"> {item.badgeLabel ?? "menunggu tindakan"}</span>
+              <span className="sr-only">
+                {" "}
+                {item.badgeLabel ?? "menunggu tindakan"}
+              </span>
             </span>
           ) : null}
         </Link>
@@ -174,7 +180,10 @@ export function Sidebar() {
           >
             <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
             <span className="min-w-0 flex-1 truncate">{item.label}</span>
-            <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-paper-400" aria-hidden="true" />
+            <ArrowUpRight
+              className="h-3.5 w-3.5 shrink-0 text-paper-600"
+              aria-hidden="true"
+            />
           </Link>
         );
       })}
@@ -206,13 +215,22 @@ export function Sidebar() {
           <span>Keluar dari sesi</span>
         </Button>
       ) : (
-        <Button asChild variant="outline" size="sm" className="w-full justify-start gap-2 text-caption">
+        <Button
+          asChild
+          variant="outline"
+          size="sm"
+          className="w-full justify-start gap-2 text-caption"
+        >
           <Link href="/" onClick={onClick}>
             <Home className="h-3.5 w-3.5" aria-hidden="true" />
             <span>Beranda Prakira</span>
           </Link>
         </Button>
       )}
+
+      {/* Foot of the rail: a preference, not a destination, so it sits below
+          the account block rather than in the nav list. */}
+      <AccessibilityMenu variant="inline" />
     </div>
   );
 
@@ -224,7 +242,10 @@ export function Sidebar() {
           <Wordmark href="/dashboard" />
         </div>
 
-        <nav aria-label="Navigasi konsol" className="flex-1 overflow-y-auto px-4 py-3">
+        <nav
+          aria-label="Navigasi konsol"
+          className="flex-1 overflow-y-auto px-4 py-3"
+        >
           <div className="space-y-1">{navLinks()}</div>
           <div className="space-y-0.5">{crossSurfaceLinks()}</div>
         </nav>

@@ -43,7 +43,7 @@ export function CustomSelect({
   return (
     <div ref={containerRef} className={cn("relative w-full", isOpen && "z-50", wrapperClassName)}>
       {label && (
-        <span className="absolute left-4 top-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/80 pointer-events-none z-10">
+        <span className="absolute left-4 top-2 text-3xs font-medium uppercase tracking-wider text-muted-foreground/80 pointer-events-none z-10">
           {label}
         </span>
       )}

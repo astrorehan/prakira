@@ -49,7 +49,7 @@ export function SignInForm({
         <Label htmlFor="email">Surel dinas</Label>
         <div className="relative">
           <Mail
-            className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-paper-400"
+            className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-paper-600"
             aria-hidden
           />
           <Input
@@ -80,7 +80,7 @@ export function SignInForm({
         </div>
         <div className="relative">
           <Lock
-            className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-paper-400"
+            className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-paper-600"
             aria-hidden
           />
           <Input
@@ -99,7 +99,7 @@ export function SignInForm({
             onClick={() => setShowPassword((visible) => !visible)}
             aria-label={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
             aria-pressed={showPassword}
-            className="absolute right-1.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-paper-500 transition-colors duration-fast hover:bg-paper-100 hover:text-paper-800"
+            className="absolute right-1.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-paper-600 transition-colors duration-fast hover:bg-paper-100 hover:text-paper-800"
           >
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>

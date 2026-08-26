@@ -38,7 +38,7 @@ export function ConsoleToast({
         type="button"
         onClick={onDismiss}
         aria-label="Tutup notifikasi"
-        className="ml-auto shrink-0 rounded-md p-1 text-paper-400 transition-colors hover:text-white"
+        className="ml-auto shrink-0 rounded-md p-1 text-paper-600 transition-colors hover:text-white"
       >
         <X className="h-3.5 w-3.5" aria-hidden="true" />
       </button>
