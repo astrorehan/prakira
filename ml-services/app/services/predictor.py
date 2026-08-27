@@ -151,9 +151,18 @@ def predict_single(
     # Confidence interval — estimasi dari variasi prediksi sub-model (ensemble)
     lower, upper = _estimate_confidence(model, feature_row, cfg)
 
-    # Risk score dari distribusi historis kecamatan
+    # Risk score dari distribusi historis kecamatan.
+    #
+    # Yang dinilai adalah `predicted_int`, angka yang benar-benar ditampilkan —
+    # bukan `predicted` yang belum dibulatkan. Persentil atas nilai mentah
+    # membuat skor bertentangan dengan angkanya sendiri pada penyakit yang
+    # jarang: Leptospirosis di Semarang Tengah memprediksi 0,11 kasus, dan
+    # karena 50 dari 57 bulan historisnya bernilai 0, angka 0,11 mengungguli
+    # semuanya dan menghasilkan persentil 88 alias "tinggi" — dashboard
+    # memerahkan 14 dari 16 kecamatan untuk prediksi yang tertulis 0 kasus.
+    # Dinilai pada angka bulat, persentilnya 45.
     historical_cases = df_kec["cases"].values.tolist() if not df_kec.empty else df_hist["cases"].values.tolist()
-    risk_score = calculate_risk_score(predicted, historical_cases)
+    risk_score = calculate_risk_score(predicted_int, historical_cases)
     risk_class = classify_risk(risk_score)
 
     # Drivers

@@ -27,6 +27,12 @@ type ChoroplethMapProps = {
 
 const SEMARANG_CENTER: [number, number] = [-7.005, 110.42];
 
+const CARTO_API_KEY =
+  process.env.NEXT_PUBLIC_CARTO_API_KEY || "cb1_2cl4_1_60997fa79620518562fb2948";
+const CARTO_TILE_URL = `https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}{r}.png?key=${CARTO_API_KEY}`;
+const CARTO_ATTRIBUTION =
+  '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener noreferrer">CARTO</a>';
+
 export default function ChoroplethMap({
   geojson,
   districts,
@@ -198,8 +204,10 @@ export default function ChoroplethMap({
         className="z-0"
       >
         <TileLayer
-          attribution='&copy; <a href="https://carto.com/">CARTO</a> Positron'
-          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+          attribution={CARTO_ATTRIBUTION}
+          url={CARTO_TILE_URL}
+          subdomains="abcd"
+          maxZoom={20}
         />
         <GeoJSON
           key={`semarang-${disease}-${selectedId}`}
