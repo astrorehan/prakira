@@ -18,7 +18,7 @@ router = APIRouter()
 
 @router.get("", response_model=BacktestResponse)
 @router.get("/", response_model=BacktestResponse)
-async def backtest(disease: str = Query(..., description="Nama penyakit: DBD atau ISPA")):
+async def backtest(disease: str = Query(..., description="Nama penyakit sesuai DISEASE_CONFIG, mis. DBD, ISPA, LEPTOSPIROSIS")):
     """Endpoint backtesting — evaluasi model pada data test historis.
 
     Digunakan oleh halaman /model (transparansi model, PRD section 5.7).
