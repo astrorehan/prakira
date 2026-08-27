@@ -27,6 +27,11 @@ import { climateCorrelations, type Correlation } from "@/lib/stats";
  * pemilihnya — jadi pertanyaan "iklim mana yang menjelaskan penyakit ini"
  * dijawab oleh kendalinya sendiri, bukan oleh satu angka tetap di kaki grafik.
  *
+ * `r` yang tercetak adalah korelasi berjeda — iklim mendahului kasus, karena
+ * hujan hari ini baru terbaca sebagai kasus satu sampai tiga bulan kemudian.
+ * Jedanya ikut tertulis di pemilih ("+2 bln") dan di kaki grafik, sebab angka
+ * korelasi yang digeser tanpa menyebutkan pergeserannya menyesatkan.
+ *
  * Warna variabel iklim terkunci di `CLIMATE_COLORS` (§2.5). Hex mentah
  * (`#17808F`, `#EA580C`) yang dulu ditulis langsung di sini bahkan bukan warna
  * palet.
@@ -181,6 +186,9 @@ export function ClimateCorrelationChart({
                 )}
               >
                 r = {c.display}
+                {c.lag > 0 && (
+                  <span className="ml-1 text-paper-500">+{c.lag} bln</span>
+                )}
               </span>
             </button>
           );
@@ -344,9 +352,12 @@ export function ClimateCorrelationChart({
           </span>
         </div>
 
-        {/* Angka korelasi dihitung dari deret yang sedang tergambar. */}
+        {/* Angka korelasi dihitung dari deret yang sedang tergambar. Jeda ikut
+            tercetak: tanpa itu pembaca akan mengira `r` mengukur bulan yang
+            sama, padahal ia mengukur pengaruh yang tertunda. */}
         <p className="tabular text-caption text-paper-600">
-          Pearson {variable.label.toLowerCase()} vs kasus {disease}:{" "}
+          Pearson {variable.label.toLowerCase()} vs kasus {disease} (
+          {activeCorrelation.lagLabel}):{" "}
           <strong className="text-foreground">r = {activeCorrelation.display}</strong> ·{" "}
           {activeCorrelation.strength} · {activeCorrelation.significance} · n ={" "}
           {activeCorrelation.n}

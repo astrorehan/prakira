@@ -132,7 +132,7 @@ districtsRouter.get(
         ...(await reportingPeriod()),
         diseases: await availableDiseases(),
       },
-      data: await getClimateSeries(Number.isFinite(months) ? months : 24),
+      data: await getClimateSeries(Number.isFinite(months) ? months : 60),
     });
   }),
 );

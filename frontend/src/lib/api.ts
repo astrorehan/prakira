@@ -161,7 +161,7 @@ export function fetchTrend(
 }
 
 export function fetchClimateSeries(
-  months = 24,
+  months = 60,
 ): Promise<Envelope<ClimatePoint[], ReportingPeriod>> {
   return request(`/api/climate?months=${months}`);
 }

@@ -271,7 +271,7 @@ export function HowItWorks() {
   const { diseases, meta } = useCityData();
   const disease = diseases[0] ?? "";
 
-  const climate = useApi(() => fetchClimateSeries(24), []);
+  const climate = useApi(() => fetchClimateSeries(60), []);
   const trend = useApi(
     () => (disease ? fetchTrend(disease, 12) : Promise.resolve(null as never)),
     [disease],

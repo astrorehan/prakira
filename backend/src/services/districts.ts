@@ -290,7 +290,11 @@ export async function getTrend(disease: string, historyMonths = 12) {
 }
 
 /** Korelasi iklim–kasus: satu baris per bulan, semua penyakit sekaligus. */
-export async function getClimateSeries(historyMonths = 24) {
+/* 60 bulan, bukan 24: korelasi iklim–penyakit dipindai sampai jeda 3 bulan,
+   dan jendela sependek 24 titik membuat `r` goyah — pada data Semarang,
+   potongan 24 bulan terakhir memberi +0,09 sedangkan 60 bulan penuh +0,32
+   untuk pasangan yang sama. */
+export async function getClimateSeries(historyMonths = 60) {
   const monthRows = await all<{ month_start: string }>(
     `SELECT DISTINCT month_start FROM observasi ORDER BY month_start DESC LIMIT ?`,
     historyMonths,

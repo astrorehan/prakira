@@ -33,7 +33,7 @@ export default function AnalitikPage() {
   const toast = useConsoleToast();
 
   const diseases = useApi(() => fetchDiseases(), []);
-  const climate = useApi(() => fetchClimateSeries(24), []);
+  const climate = useApi(() => fetchClimateSeries(60), []);
   const backtests = useApi(() => fetchBacktests(), []);
 
   React.useEffect(() => {
@@ -164,7 +164,7 @@ export default function AnalitikPage() {
                     className="shrink-0"
                   >
                     {strongest.label} paling menjelaskan · r = {strongest.display} ·{" "}
-                    {strongest.significance}
+                    {strongest.lagLabel} · {strongest.significance}
                   </Badge>
                 )}
               </div>
@@ -212,6 +212,7 @@ export default function AnalitikPage() {
               <BacktestCard
                 metrics={backtests.data?.data ?? []}
                 disease={selectedDisease}
+                onSelectDisease={setSelectedDisease}
               />
             )}
           </DataState>

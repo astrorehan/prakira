@@ -5,6 +5,7 @@ import { AlertTriangle, FileCheck2, Mail, ScrollText } from "lucide-react";
 
 import { fetchBacktests } from "@/lib/api";
 import { useApi } from "@/lib/use-api";
+import { formatAlgorithmName, formatPeriodRange } from "@/lib/stats";
 import { DataState } from "@/components/data-state";
 import { Reveal } from "@/components/landing/reveal";
 import { CountUp } from "@/components/landing/count-up";
@@ -89,7 +90,7 @@ export function PublicInfo() {
               <div className="flex flex-wrap items-center justify-between gap-4 border-b border-sand-200 bg-sand-50 px-5 py-3">
                 <span className="flex items-center gap-2 font-mono text-3xs uppercase tracking-[0.08em] text-paper-600">
                   <FileCheck2 className="h-3.5 w-3.5" aria-hidden />
-                  Uji ulang model · {best?.test_period ?? "belum tersedia"}
+                  Uji ulang model · {formatPeriodRange(best?.test_period).formatted}
                 </span>
                 {best?.class_accuracy_pct !== null && best?.class_accuracy_pct !== undefined && (
                   <span className="font-mono text-3xs uppercase tracking-[0.08em] text-paper-600">
@@ -133,7 +134,7 @@ export function PublicInfo() {
                     {metrics.map((m) => (
                       <tr key={m.disease} className="border-b border-sand-100 last:border-b-0">
                         <td className="py-3 pl-5 pr-3 text-caption text-foreground">
-                          {m.algorithm ?? m.model_version}
+                          {formatAlgorithmName(m.algorithm).subtitle || m.model_version}
                         </td>
                         <td className="px-3 py-3 text-caption text-paper-600">{m.disease}</td>
                         <td className="px-3 py-3 text-right text-caption tabular text-paper-700">
@@ -159,7 +160,7 @@ export function PublicInfo() {
 
               <p className="border-t border-sand-200 bg-sand-50 px-5 py-3 text-2xs text-paper-600">
                 {best
-                  ? `Periode uji ${best.test_period ?? "—"}, di luar data latih. Metrik diterbitkan apa adanya, termasuk ketika turun.`
+                  ? `Periode uji ${formatPeriodRange(best.test_period).formatted}, di luar data latih. Metrik diterbitkan apa adanya, termasuk ketika turun.`
                   : "Hasil pengujian model belum tersedia pada pemasangan ini."}
               </p>
             </Reveal>

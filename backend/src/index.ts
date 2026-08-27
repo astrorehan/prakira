@@ -15,7 +15,7 @@ import { db, isSeeded } from "./db/index.js";
 import { seedDatabase } from "./db/seed.js";
 import { purgeExpiredSessions } from "./services/auth.js";
 import { attachSession } from "./middleware/auth.js";
-import { errorHandler, notFound } from "./middleware/error.js";
+import { asyncRoute, errorHandler, notFound } from "./middleware/error.js";
 
 import { metaRouter } from "./routes/meta.js";
 import { districtsRouter } from "./routes/districts.js";
@@ -44,14 +44,17 @@ app.use(express.json({ limit: "8mb" }));
 app.use(cookieParser());
 app.use(attachSession);
 
-app.get("/api/health", (_req, res) => {
-  res.json({
-    status: "ok",
-    seeded: isSeeded(),
-    diseases: availableDiseases(),
-    mlServiceUrl: env.mlServiceUrl,
-  });
-});
+app.get(
+  "/api/health",
+  asyncRoute(async (_req, res) => {
+    res.json({
+      status: "ok",
+      seeded: await isSeeded(),
+      diseases: await availableDiseases(),
+      mlServiceUrl: env.mlServiceUrl,
+    });
+  }),
+);
 
 app.use("/api/meta", metaRouter);
 app.use("/api", districtsRouter);
