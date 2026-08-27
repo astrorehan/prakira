@@ -86,12 +86,23 @@ def train_dbd_model(split_date: str = "2025-01-01"):
         except Exception:
             metadata = {}
 
+    # Periode latih/uji dicatat dari data yang benar-benar dipakai, bukan dari
+    # konstanta: halaman transparansi model menampilkannya apa adanya, dan
+    # "unknown" di sana adalah lubang yang hanya bisa ditutup di sini.
     metadata["dbd"] = {
         "algorithm": "ensemble_ridge_trees_xgboost",
         "version": version_str,
         "granularity": "monthly",
         "is_log_transformed": True,
         "trained_at": datetime.now().isoformat(),
+        "train_period": (
+            f"{train_df['month_start'].min():%Y-%m-%d} to {train_df['month_start'].max():%Y-%m-%d}"
+        ),
+        "test_period": (
+            f"{test_df['month_start'].min():%Y-%m-%d} to {test_df['month_start'].max():%Y-%m-%d}"
+        ),
+        "n_train_samples": int(len(train_df)),
+        "n_test_samples": int(len(test_df)),
         "metrics": {
             "mae": round(float(mae), 4),
             "rmse": round(float(rmse), 4),

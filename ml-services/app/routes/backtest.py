@@ -109,6 +109,8 @@ async def backtest(disease: str = Query(..., description="Nama penyakit: DBD ata
     return BacktestResponse(
         disease=disease.upper(),
         model_version=model_meta.get("version", "unknown"),
+        algorithm=model_meta.get("algorithm"),
+        trained_at=model_meta.get("trained_at"),
         train_period=model_meta.get("train_period", "unknown"),
         test_period=model_meta.get("test_period", "unknown"),
         metrics=BacktestMetrics(mae=round(mae, 4), rmse=round(rmse, 4), r2=round(r2, 4)),

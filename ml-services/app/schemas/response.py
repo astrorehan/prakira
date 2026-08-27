@@ -55,6 +55,10 @@ class BacktestResponse(BaseModel):
     """Response untuk /backtest."""
     disease: str
     model_version: str
+    # Nama algoritma dan waktu latih sudah ada di metadata.json; tanpa keduanya
+    # halaman transparansi model hanya bisa menulis "model tersimpan".
+    algorithm: Optional[str] = None
+    trained_at: Optional[str] = None
     train_period: str
     test_period: str
     metrics: BacktestMetrics
