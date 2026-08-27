@@ -26,7 +26,7 @@ export default function HubungiKamiPage() {
           Hubungi Tim <span className="text-primary">Prakira</span>
         </h1>
         <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-          Punya pertanyaan seputar integrasi API BMKG, pelaporan klaster kasus DBD/ISPA di lingkungan Anda, atau kemitraan puskesmas? Kami siap membantu.
+          Punya pertanyaan seputar data yang dipakai sistem ini, pelaporan klaster kasus di lingkungan Anda, atau kemitraan puskesmas? Kami siap membantu.
         </p>
       </section>
 
@@ -92,7 +92,7 @@ export default function HubungiKamiPage() {
                     <input
                       required
                       type="text"
-                      placeholder="dr. Budi Santoso"
+                      placeholder="Nama lengkap Anda"
                       value={form.nama}
                       onChange={(e) => setForm({ ...form, nama: e.target.value })}
                       className="w-full rounded-xl border border-paper-200 bg-white px-3.5 py-2 text-xs focus:border-primary focus:outline-hidden focus:ring-1 focus:ring-primary"
@@ -128,7 +128,7 @@ export default function HubungiKamiPage() {
                   <textarea
                     required
                     rows={4}
-                    placeholder="Jelaskan kebutuhan koordinasi data, sinkronisasi BMKG, atau laporan situasi wilayah Anda..."
+                    placeholder="Jelaskan kebutuhan koordinasi data, pemutakhiran rekapitulasi kasus, atau laporan situasi wilayah Anda…"
                     value={form.pesan}
                     onChange={(e) => setForm({ ...form, pesan: e.target.value })}
                     className="w-full rounded-xl border border-paper-200 bg-white px-3.5 py-2 text-xs focus:border-primary focus:outline-hidden focus:ring-1 focus:ring-primary resize-none"

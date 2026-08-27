@@ -26,15 +26,20 @@ type Service = {
   external?: boolean;
 };
 
-/* A public system is judged by what a citizen can actually do on it. Each entry
-   carries a service code, because that is how a public office refers to it in
-   a letter, a queue ticket, and a complaint. */
+/* Sistem publik dinilai dari apa yang benar-benar bisa dilakukan warga di
+   atasnya. Tiap entri membawa kode layanan, karena begitulah kantor publik
+   merujuknya di surat, nomor antrean, dan pengaduan.
+
+   Dua entri dicabut dari daftar ini: langganan peringatan WhatsApp dan
+   antarmuka data untuk pengembang. Keduanya tidak ada — yang pertama bahkan
+   masuk daftar WON'T di PRD section 4 — dan kartu layanan yang menjanjikan
+   kanal yang tidak berdiri adalah janji yang akan ditagih warga. */
 const SERVICES: Service[] = [
   {
     code: "SL-01",
     title: "Cek status risiko wilayah",
     description:
-      "Lihat status DBD, ISPA, dan Diare di kecamatan tempat tinggal beserta prakiraan empat minggu ke depan.",
+      "Lihat status risiko di kecamatan tempat tinggal beserta prakiraan bulan berikutnya dan rentang ketidakpastiannya.",
     icon: MapPinned,
     href: "#status",
     meta: "Daring · seketika · tanpa biaya",
@@ -50,39 +55,30 @@ const SERVICES: Service[] = [
   },
   {
     code: "SL-03",
-    title: "Langganan peringatan dini",
+    title: "Lacak status laporan",
     description:
-      "Terima peringatan resmi lewat WhatsApp ketika status kecamatan Anda naik ke Waspada atau Siaga.",
+      "Masukkan kode lacak yang Anda terima setelah mengirim laporan untuk melihat keputusan petugas beserta alasannya.",
     icon: BellRing,
-    href: "/hubungi-kami",
-    meta: "Pendaftaran nomor · gratis",
+    href: "/warga/status",
+    meta: "Tanpa akun · dengan kode lacak",
   },
   {
     code: "SL-04",
-    title: "Konsultasi puskesmas wilayah",
+    title: "Hubungi Dinas Kesehatan",
     description:
-      "Cari puskesmas penanggung jawab kecamatan Anda, jam layanan, dan kontak petugas kesehatan lingkungan.",
+      "Alamat kantor, nomor telepon layanan, dan jalur permohonan informasi publik.",
     icon: Stethoscope,
     href: "/hubungi-kami",
-    meta: "Senin–Sabtu · 07.30–14.00 WIB",
+    meta: "Senin–Jumat · jam kerja",
   },
   {
     code: "SL-05",
     title: "Unduh data terbuka",
     description:
-      "Register status 16 kecamatan dalam format CSV dan batas wilayah GeoJSON, terbit setiap Senin.",
+      "Register status seluruh kecamatan dalam format CSV, berisi kolom prakiraan beserta batas bawah dan atasnya.",
     icon: Database,
     href: "#register",
-    meta: "CSV · GeoJSON · pembaruan mingguan",
-  },
-  {
-    code: "SL-06",
-    title: "Antarmuka data untuk pengembang",
-    description:
-      "Titik akses baca-saja bagi peneliti dan instansi lain yang ingin mengintegrasikan data risiko Prakira.",
-    icon: Code2,
-    href: "/tentang",
-    meta: "Kunci akses · atas permohonan",
+    meta: "CSV · mengikuti bulan data terakhir",
   },
 ];
 
@@ -137,7 +133,7 @@ export function Services() {
               04 · Layanan publik
             </p>
             <h2 className="mt-4 text-h2 text-balance text-foreground md:text-h1">
-              Enam layanan yang bisa diakses warga
+              {SERVICES.length} layanan yang bisa diakses warga
             </h2>
             <p className="mt-4 text-body-lg text-paper-600">
               Seluruh layanan terbuka tanpa pendaftaran dan tanpa biaya, kecuali yang
@@ -167,14 +163,20 @@ export function Services() {
                 <p className="mt-1 text-caption text-white/60">Ekstensi 9 · 24 jam</p>
               </div>
             </div>
+            {/* Nomor WhatsApp "0812 2849 0119" dihapus: nomornya dikarang,
+                dan aduan yang dikirim ke sana tidak sampai ke mana pun. Kanal
+                pengaduan yang benar-benar ada di sistem ini adalah formulir
+                laporan warga. */}
             <div className="flex items-start gap-3 bg-brand-900 p-6">
               <BellRing className="mt-0.5 h-4 w-4 shrink-0 text-brand-300" aria-hidden />
               <div>
                 <p className="font-mono text-3xs uppercase tracking-[0.08em] text-white/50">
-                  Aduan cepat WhatsApp
+                  Lapor temuan lingkungan
                 </p>
-                <p className="mt-1.5 text-metric-sm tabular text-white">0812 2849 0119</p>
-                <p className="mt-1 text-caption text-white/60">Balasan pada jam kerja</p>
+                <p className="mt-1.5 text-body-lg font-medium text-white">/warga/lapor</p>
+                <p className="mt-1 text-caption text-white/60">
+                  Tanpa akun · diverifikasi petugas
+                </p>
               </div>
             </div>
             <div className="flex items-start gap-3 bg-brand-900 p-6">

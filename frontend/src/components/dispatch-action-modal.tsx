@@ -2,66 +2,62 @@
 
 import * as React from "react";
 import {
-  Building2,
   Calendar,
   Check,
   CheckCircle2,
   Clock,
   CloudRain,
   Copy,
-  ExternalLink,
   FileText,
   Info,
-  Phone,
+  MapPin,
   Send,
   ShieldAlert,
-  Sparkles,
   Users,
 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { ActionRecommendation } from "@/types";
 import { cn, formatNumber } from "@/lib/utils";
-import { describeDeadline } from "@/lib/period";
-import { parsePopulation, PRIORITY_LABEL } from "@/lib/action-queue";
+import { describeDeadline, formatMonth } from "@/lib/period";
+import { COVERAGE_LABEL, PRIORITY_LABEL } from "@/lib/action-queue";
 
 /**
  * Modal SOP & instruksi.
  *
- * Tiga hal yang dibongkar dari versi sebelumnya, semuanya soal kejujuran data:
+ * Yang dibongkar dari versi sebelumnya, semuanya soal kejujuran data:
  *
- * 1. Checklist kesiapan mencentang sendiri dua butir pertama "supaya terasa
- *    realistis". Di konsol pengiriman instruksi lapangan, itu berarti layar
- *    melaporkan verifikasi yang tidak pernah dilakukan siapa pun.
- * 2. Tab kontak menampilkan tiga puskesmas Pedurungan sebagai cadangan ketika
- *    `target_puskesmas` kosong — termasuk untuk tindakan di Semarang Barat.
- *    Kontak yang salah lebih berbahaya daripada kontak yang tidak ada.
- * 3. Angka model, lead time, dan populasi punya nilai cadangan yang dikarang.
- *
- * Selain itu: butir checklist dulu `div onClick` (tidak bisa dijangkau
- * keyboard) dan tab-nya `button` polos tanpa peran tab.
+ * 1. Tab "Kontak puskesmas" dihapus seluruhnya. Isinya tiga nama dokter,
+ *    tiga nomor telepon, dan status "Siaga 1" yang ditulis tangan di berkas
+ *    mock, lengkap dengan tautan `wa.me` ke nomor-nomor itu. Kontak dinas
+ *    yang salah lebih berbahaya daripada kontak yang tidak ada — dan ini
+ *    satu-satunya bagian produk yang bisa membuat seseorang menelepon nomor
+ *    orang asing.
+ * 2. `ai_confidence` (94,2%) dihapus; digantikan cakupan data dan interval
+ *    prediksi, dua besaran yang benar-benar dihitung.
+ * 3. Nomor surat `440/1892/DKK-P2P/VIII/2026` di draf pesan hilang. Gateway
+ *    menyusun draf tanpa nomor surat dan tanpa pejabat penanda tangan, dan
+ *    mengatakannya di badan pesan.
+ * 4. Tombol kirim dulu `setTimeout(900)` lalu berpura-pura menyiarkan pesan
+ *    WhatsApp. Sekarang ia menulis status ke gateway, dan teks di sekitarnya
+ *    hanya menjanjikan apa yang benar-benar terjadi: statusnya tercatat dan
+ *    drafnya bisa disalin.
  */
 
 interface DispatchActionModalProps {
   recommendation: ActionRecommendation | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirmDispatch: (id: string, checklistCompleted: string[]) => void;
+  /** Menulis status ke gateway. Melempar bila gagal. */
+  onConfirmDispatch: (id: string, checklistCompleted: string[]) => Promise<void>;
+  /** Hari acuan konsol dari `/api/meta/period`. */
+  systemToday: string | null;
+  /** Nama petugas yang sedang masuk — tercatat di audit trail. */
+  operator: string | null;
 }
 
-type TabId = "protocol" | "puskesmas" | "draft";
-
-const DEFAULT_CHECKLIST = [
-  "Koordinasi Kepala Puskesmas & Camat wilayah",
-  "Mobilisasi satgas lapangan & kader posyandu",
-  "Distribusi sarana intervensi pencegahan",
-  "Monitoring & pelaporan hasil pasca-intervensi",
-];
+type TabId = "protocol" | "draft";
 
 function FactTile({
   icon: Icon,
@@ -88,47 +84,42 @@ export function DispatchActionModal({
   open,
   onOpenChange,
   onConfirmDispatch,
+  systemToday,
+  operator,
 }: DispatchActionModalProps) {
   const [activeTab, setActiveTab] = React.useState<TabId>("protocol");
   const [checkedItems, setCheckedItems] = React.useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [isSuccess, setIsSuccess] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
   const [copyState, setCopyState] = React.useState<"idle" | "copied" | "failed">("idle");
 
   const id = recommendation?.id;
-  const status = recommendation?.status;
 
-  /* Reset penuh tiap kali rekomendasi berganti — termasuk yang tidak punya
-     `sop_checklist`. Penjagaan lama membuat status "terkirim" bocor dari satu
-     tindakan ke tindakan berikutnya. */
+  /* Reset penuh tiap kali rekomendasi berganti. Penjagaan lama membuat status
+     "terkirim" bocor dari satu tindakan ke tindakan berikutnya. */
   React.useEffect(() => {
     setActiveTab("protocol");
     setCheckedItems({});
     setIsSubmitting(false);
+    setError(null);
     setCopyState("idle");
-    setIsSuccess(status === "completed");
-  }, [id, status]);
+  }, [id]);
 
   if (!recommendation) return null;
 
-  const checklist = recommendation.sop_checklist ?? DEFAULT_CHECKLIST;
+  const checklist = recommendation.sop_checklist;
   const completedCount = checklist.filter((item) => checkedItems[item]).length;
-  const progressPct = Math.round((completedCount / checklist.length) * 100);
-  const puskesmas = recommendation.target_puskesmas ?? [];
-  const deadline = describeDeadline(recommendation.due_date);
-  const population = parsePopulation(recommendation.target_population);
+  const progressPct =
+    checklist.length === 0 ? 0 : Math.round((completedCount / checklist.length) * 100);
+  const deadline = describeDeadline(recommendation.due_date, systemToday);
   const alreadyDispatched = recommendation.status !== "pending";
-
-  const draftText =
-    recommendation.broadcast_template ??
-    `[INSTRUKSI RESMI DINAS KESEHATAN KOTA SEMARANG]\nPerihal: Intervensi Dini Pengendalian Lonjakan ${recommendation.disease}\n\nKepada Yth. Kepala Puskesmas Wilayah: ${recommendation.target_kecamatan.join(", ")}.\nBerdasarkan sistem prediksi iklim-kesehatan Prakira, terdeteksi kenaikan risiko signifikan. Segera laksanakan intervensi: ${recommendation.title} sebelum ${recommendation.due_date}.`;
 
   const toggleCheck = (item: string) =>
     setCheckedItems((prev) => ({ ...prev, [item]: !prev[item] }));
 
   const handleCopyDraft = async () => {
     try {
-      await navigator.clipboard.writeText(draftText);
+      await navigator.clipboard.writeText(recommendation.broadcast_draft);
       setCopyState("copied");
     } catch {
       /* Konteks tidak aman atau izin ditolak — katakan apa adanya, jangan
@@ -138,23 +129,25 @@ export function DispatchActionModal({
     setTimeout(() => setCopyState("idle"), 2400);
   };
 
-  const handleDispatch = () => {
+  const handleDispatch = async () => {
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setIsSuccess(true);
-      onConfirmDispatch(
+    setError(null);
+    try {
+      await onConfirmDispatch(
         recommendation.id,
         checklist.filter((i) => checkedItems[i]),
       );
-      setTimeout(() => onOpenChange(false), 1400);
-    }, 900);
+      onOpenChange(false);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : String(caught));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const tabs: { id: TabId; label: string }[] = [
     { id: "protocol", label: `1. Protokol & SOP (${completedCount}/${checklist.length})` },
-    { id: "puskesmas", label: `2. Kontak puskesmas (${puskesmas.length})` },
-    { id: "draft", label: "3. Draf surat & broadcast" },
+    { id: "draft", label: "2. Draf pesan" },
   ];
 
   return (
@@ -165,7 +158,7 @@ export function DispatchActionModal({
           <div className="mb-1.5 flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-2">
               <span className="tabular rounded bg-paper-200/70 px-2 py-0.5 font-mono text-overline text-paper-600">
-                SOP #{recommendation.id}
+                {recommendation.id}
               </span>
               <Badge variant="outline">{recommendation.disease}</Badge>
               <Badge variant={recommendation.priority === "high" ? "risk-high" : "risk-medium"}>
@@ -185,30 +178,24 @@ export function DispatchActionModal({
             {recommendation.title}
           </DialogTitle>
 
-          {/* Alasan model merekomendasikan ini. Hanya bidang yang benar-benar
-              terisi yang tampil — kotak kosong lebih jujur dari angka karangan. */}
           <div className="mt-3 grid grid-cols-1 gap-2 border-t border-border pt-2.5 sm:grid-cols-3">
-            {typeof recommendation.ai_confidence === "number" && (
-              <FactTile
-                icon={Sparkles}
-                label="Keyakinan model"
-                value={`${recommendation.ai_confidence.toLocaleString("id-ID")}%`}
-              />
-            )}
-            {typeof recommendation.lead_time_days === "number" && (
-              <FactTile
-                icon={Calendar}
-                label="Lead time"
-                value={`${recommendation.lead_time_days} hari sebelum puncak`}
-              />
-            )}
-            {population > 0 && (
-              <FactTile
-                icon={Users}
-                label="Populasi terdampak"
-                value={`${formatNumber(population)} jiwa`}
-              />
-            )}
+            <FactTile
+              icon={Calendar}
+              label="Lead time"
+              value={`${recommendation.lead_time_days} hari sebelum ${formatMonth(recommendation.prediction_month)}`}
+            />
+            <FactTile
+              icon={Users}
+              label="Populasi target"
+              value={`${formatNumber(recommendation.target_population)} jiwa`}
+            />
+            <FactTile
+              icon={ShieldAlert}
+              label="Cakupan data"
+              value={
+                COVERAGE_LABEL[recommendation.data_coverage] ?? recommendation.data_coverage
+              }
+            />
           </div>
         </div>
 
@@ -248,12 +235,33 @@ export function DispatchActionModal({
               aria-labelledby="dispatch-tab-protocol"
               className="space-y-4 p-6"
             >
+              {/* Kalimat "Dasar:" dari mesin aturan. §5.2 melarang rekomendasi
+                  tanpa alasan muncul sama sekali, jadi tempatnya di paling atas. */}
+              <div className="flex items-start gap-3 rounded-xl border border-border bg-paper-50 p-3.5">
+                <Info className="mt-0.5 h-4 w-4 shrink-0 text-brand-700" aria-hidden="true" />
+                <p className="text-caption leading-relaxed text-paper-800">
+                  {recommendation.basis}
+                </p>
+              </div>
+
+              <div className="flex items-start gap-3 rounded-xl border border-border bg-surface p-3.5">
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-brand-700" aria-hidden="true" />
+                <div>
+                  <h4 className="text-caption font-semibold text-foreground">
+                    Kecamatan target
+                  </h4>
+                  <p className="mt-0.5 text-caption leading-relaxed text-paper-700">
+                    {recommendation.target_kecamatan.join(", ")}
+                  </p>
+                </div>
+              </div>
+
               {recommendation.climate_trigger && (
                 <div className="flex items-start gap-3 rounded-xl border border-brand-300/45 bg-brand-50 p-3.5">
                   <CloudRain className="mt-0.5 h-4 w-4 shrink-0 text-brand-700" aria-hidden="true" />
                   <div>
                     <h4 className="text-caption font-semibold text-brand-900">
-                      Pemicu parameter iklim BMKG
+                      Kondisi iklim bulan observasi
                     </h4>
                     <p className="mt-0.5 text-caption leading-relaxed text-brand-800">
                       {recommendation.climate_trigger}
@@ -262,19 +270,20 @@ export function DispatchActionModal({
                 </div>
               )}
 
-              {recommendation.estimated_impact && (
-                <div className="flex items-start gap-3 rounded-xl border border-risk-low-br bg-risk-low-bg p-3.5">
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-risk-low" aria-hidden="true" />
-                  <div>
-                    <h4 className="text-caption font-semibold text-risk-low">
-                      Proyeksi efektivitas intervensi
-                    </h4>
-                    <p className="mt-0.5 text-caption leading-relaxed text-paper-700">
-                      {recommendation.estimated_impact}
-                    </p>
-                  </div>
+              <div className="flex items-start gap-3 rounded-xl border border-risk-medium-br bg-risk-medium-bg p-3.5">
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-risk-medium" aria-hidden="true" />
+                <div>
+                  {/* "Proyeksi efektivitas intervensi" adalah klaim yang tidak
+                      pernah diukur. Yang bisa dikatakan sistem adalah beban
+                      yang diproyeksikan bila tidak ada intervensi. */}
+                  <h4 className="text-caption font-semibold text-foreground">
+                    Beban yang diproyeksikan tanpa intervensi
+                  </h4>
+                  <p className="mt-0.5 text-caption leading-relaxed text-paper-700">
+                    {recommendation.estimated_impact}
+                  </p>
                 </div>
-              )}
+              </div>
 
               <fieldset className="space-y-2.5 pt-2">
                 <div className="flex items-center justify-between gap-3">
@@ -336,91 +345,7 @@ export function DispatchActionModal({
             </div>
           )}
 
-          {/* Tab 2 — kontak */}
-          {activeTab === "puskesmas" && (
-            <div
-              role="tabpanel"
-              id="dispatch-panel-puskesmas"
-              aria-labelledby="dispatch-tab-puskesmas"
-              className="space-y-4 p-6"
-            >
-              {puskesmas.length === 0 ? (
-                <div className="space-y-2 rounded-xl border border-risk-none-br bg-risk-none-bg p-6 text-center">
-                  <Info className="mx-auto h-5 w-5 text-risk-none" aria-hidden="true" />
-                  <h4 className="text-body-sm font-semibold text-foreground">
-                    Kontak puskesmas belum terdaftar
-                  </h4>
-                  <p className="text-caption text-paper-600">
-                    Tindakan ini menargetkan {recommendation.target_kecamatan.join(", ")}. Lengkapi
-                    data puskesmas wilayah sebelum instruksi disiarkan.
-                  </p>
-                </div>
-              ) : (
-                <>
-                  <p className="text-caption text-paper-600">
-                    Puskesmas dan satgas lapangan yang akan menerima instruksi untuk kecamatan
-                    target:
-                  </p>
-
-                  <div className="space-y-3">
-                    {puskesmas.map((pusk) => (
-                      <div
-                        key={pusk.name}
-                        className="flex flex-col justify-between gap-3 rounded-xl border border-border bg-surface p-3.5 shadow-xs sm:flex-row sm:items-center"
-                      >
-                        <div className="flex items-start gap-3">
-                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-brand-100 bg-brand-50 text-brand-700">
-                            <Building2 className="h-4 w-4" aria-hidden="true" />
-                          </span>
-                          <div className="min-w-0">
-                            <h4 className="text-caption font-semibold text-foreground">
-                              {pusk.name}
-                            </h4>
-                            <p className="text-caption text-paper-600">Kepala: {pusk.head}</p>
-                            <span className="mt-1 flex items-center gap-1.5">
-                              <Phone className="h-3 w-3 text-paper-600" aria-hidden="true" />
-                              <span className="tabular font-mono text-caption text-paper-600">
-                                {pusk.phone}
-                              </span>
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="flex shrink-0 items-center gap-2 self-start sm:self-auto">
-                          <Badge
-                            variant={pusk.readiness === "Siaga 1" ? "risk-high" : "risk-low"}
-                          >
-                            {pusk.readiness}
-                          </Badge>
-                          <a
-                            href={`https://wa.me/${pusk.phone.replace(/[^0-9]/g, "")}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1 rounded-lg border border-brand-300/45 bg-brand-50 px-2.5 py-1 text-caption font-semibold text-brand-700 transition-colors hover:bg-brand-100"
-                          >
-                            <span>Hubungi</span>
-                            <ExternalLink className="h-3 w-3" aria-hidden="true" />
-                          </a>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-
-              <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-paper-50 p-3 text-caption">
-                <span className="text-paper-600">
-                  Unit komando:{" "}
-                  <strong className="text-foreground">
-                    {recommendation.pic_unit ?? "Belum ditetapkan"}
-                  </strong>
-                </span>
-                <span className="tabular font-mono text-paper-600">Hotline 119</span>
-              </div>
-            </div>
-          )}
-
-          {/* Tab 3 — draf */}
+          {/* Tab 2 — draf */}
           {activeTab === "draft" && (
             <div
               role="tabpanel"
@@ -430,7 +355,7 @@ export function DispatchActionModal({
             >
               <div className="flex items-center justify-between gap-3">
                 <span className="overline" id="draft-label">
-                  Draf pesan instruksi / surat edaran resmi
+                  Draf pesan instruksi
                 </span>
                 <Button
                   variant="outline"
@@ -459,17 +384,20 @@ export function DispatchActionModal({
 
               <textarea
                 readOnly
-                rows={7}
+                rows={10}
                 aria-labelledby="draft-label"
-                value={draftText}
+                value={recommendation.broadcast_draft}
                 className="w-full resize-none rounded-xl border border-border bg-paper-50 p-3.5 font-mono text-caption leading-relaxed text-paper-800 focus-visible:outline-none"
               />
 
-              <div className="flex items-center gap-2 rounded-xl border border-brand-300/45 bg-brand-50 p-3 text-caption text-brand-900">
-                <FileText className="h-4 w-4 shrink-0 text-brand-700" aria-hidden="true" />
+              {/* Tidak ada integrasi WhatsApp di sistem ini. Menjanjikannya di
+                  layar berarti petugas mengira pesannya sudah terkirim. */}
+              <div className="flex items-start gap-2 rounded-xl border border-border bg-paper-50 p-3 text-caption text-paper-700">
+                <FileText className="mt-0.5 h-4 w-4 shrink-0 text-paper-600" aria-hidden="true" />
                 <span>
-                  Pesan ini disiarkan ke notifikasi WhatsApp satgas dan kepala puskesmas terkait
-                  saat tombol kirim ditekan.
+                  Sistem tidak mengirim pesan ke kanal mana pun. Salin draf ini ke
+                  kanal resmi dinas, lalu tandai tindakannya sebagai berjalan supaya
+                  statusnya tercatat di jejak audit.
                 </span>
               </div>
             </div>
@@ -477,11 +405,23 @@ export function DispatchActionModal({
         </div>
 
         {/* Kaki modal */}
-        <div className="flex shrink-0 flex-col items-center justify-between gap-3 border-t border-border bg-paper-50 px-5 py-3.5 sm:flex-row">
-          <span className="flex items-center gap-2 text-caption text-paper-600">
-            <ShieldAlert className="h-4 w-4 text-brand-700" aria-hidden="true" />
-            <span>Otorisasi: Kepala Bidang P2P Dinas Kesehatan Kota Semarang</span>
-          </span>
+        <div className="flex shrink-0 flex-col items-start justify-between gap-3 border-t border-border bg-paper-50 px-5 py-3.5 sm:flex-row sm:items-center">
+          <div className="space-y-1">
+            <span className="flex items-center gap-2 text-caption text-paper-600">
+              <ShieldAlert className="h-4 w-4 text-brand-700" aria-hidden="true" />
+              <span>Unit pelaksana: {recommendation.pic_unit}</span>
+            </span>
+            {operator && (
+              <span className="block text-caption text-paper-600">
+                Tercatat atas nama {operator}
+              </span>
+            )}
+            {error && (
+              <span role="alert" className="block text-caption font-medium text-risk-high">
+                {error}
+              </span>
+            )}
+          </div>
 
           <div className="flex w-full items-center gap-2 sm:w-auto">
             <Button
@@ -498,18 +438,18 @@ export function DispatchActionModal({
               size="sm"
               loading={isSubmitting}
               onClick={handleDispatch}
-              disabled={isSubmitting || isSuccess || alreadyDispatched}
+              disabled={isSubmitting || alreadyDispatched}
               className="flex-1 gap-1.5 sm:flex-initial"
             >
-              {isSuccess || alreadyDispatched ? (
+              {alreadyDispatched ? (
                 <>
                   <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-                  <span>Instruksi sudah disiarkan</span>
+                  <span>Sudah diinstruksikan</span>
                 </>
               ) : (
                 <>
                   <Send className="h-3.5 w-3.5" aria-hidden="true" />
-                  <span>{isSubmitting ? "Mengirimkan…" : "Kirim instruksi resmi"}</span>
+                  <span>{isSubmitting ? "Menyimpan…" : "Tandai sebagai berjalan"}</span>
                 </>
               )}
             </Button>

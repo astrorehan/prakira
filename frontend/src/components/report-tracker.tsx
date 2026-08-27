@@ -9,15 +9,14 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
-  findReport,
-  formatDate,
-  formatDateTime,
   normalizeTrackingCode,
   REPORT_KIND,
   REPORT_STATUS,
   FAMILY_ROUTING,
-  type CitizenReport,
 } from "@/lib/reports";
+import { formatDate, formatDateTime } from "@/lib/period";
+import { ApiError, trackReport } from "@/lib/api";
+import type { CitizenReport } from "@/types";
 
 /**
  * Pelacak laporan — PRD §5.4.
@@ -56,7 +55,7 @@ function buildSteps(report: CitizenReport): Step[] {
         ? `Diputuskan oleh ${report.reviewer ?? "petugas wilayah"}.`
         : "Petugas puskesmas wilayah Anda belum memberi keputusan.",
       state: decided ? "done" : "current",
-      at: report.reviewedAt,
+      at: report.reviewedAt ?? undefined,
     },
     rejected
       ? {
@@ -177,7 +176,7 @@ function ReportDetail({ report }: { report: CitizenReport }) {
           <span>
             Laporan bertipe {kind.family === "lingkungan" ? "pemicu lingkungan" : "kesehatan"}{" "}
             diteruskan ke {FAMILY_ROUTING[kind.family]}. Terima kasih — yang Anda lihat di
-            gang memang tidak selalu terlihat di data mingguan.
+            gang memang tidak selalu terlihat di rekapitulasi bulanan.
           </span>
         </p>
       )}
@@ -200,11 +199,35 @@ export function ReportTracker() {
   const [code, setCode] = React.useState("");
   const [result, setResult] = React.useState<CitizenReport | null>(null);
   const [searched, setSearched] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
+  /* Dibedakan dari "tidak ditemukan": gateway yang padam dan kode yang salah
+     ketik menuntut tindakan berbeda dari pelapor. */
+  const [failure, setFailure] = React.useState<string | null>(null);
 
-  const lookup = React.useCallback((raw: string) => {
+  const lookup = React.useCallback(async (raw: string) => {
     const id = normalizeTrackingCode(raw);
     setSearched(true);
-    setResult(id ? findReport(id) : null);
+    setFailure(null);
+    setResult(null);
+    if (!id) return;
+
+    setLoading(true);
+    try {
+      const found = await trackReport(id);
+      setResult(found.data);
+    } catch (caught) {
+      if (caught instanceof ApiError && caught.status === 404) {
+        setResult(null);
+      } else {
+        setFailure(
+          caught instanceof Error
+            ? caught.message
+            : "Status laporan tidak dapat diambil sekarang.",
+        );
+      }
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   /* Kode dari `?kode=` — tautan yang diberikan halaman berhasil-kirim membawa
@@ -238,7 +261,7 @@ export function ReportTracker() {
             spellCheck={false}
             className="tabular h-14 border-sand-200 bg-white font-mono text-base uppercase tracking-[0.08em] sm:flex-1"
           />
-          <Button type="submit" size="lg" className="shrink-0 gap-2">
+          <Button type="submit" size="lg" loading={loading} className="shrink-0 gap-2">
             <Search className="h-4 w-4" aria-hidden="true" />
             Cek status
           </Button>
@@ -248,18 +271,30 @@ export function ReportTracker() {
         </p>
       </form>
 
-      {result ? (
+      {failure ? (
+        <div
+          role="alert"
+          className="rounded-3xl border border-risk-high-br bg-risk-high-bg p-8 text-center"
+        >
+          <p className="text-h3 text-foreground">Status belum bisa diambil</p>
+          <p className="mx-auto mt-2 max-w-md text-body-sm leading-relaxed text-paper-700">
+            {failure}
+          </p>
+          <Button variant="outline" className="mt-5" onClick={() => lookup(code)}>
+            Coba lagi
+          </Button>
+        </div>
+      ) : result ? (
         <ReportDetail report={result} />
-      ) : searched ? (
+      ) : searched && !loading ? (
         <div
           role="status"
           className="rounded-3xl border border-sand-200 bg-white p-8 text-center"
         >
           <p className="text-h3 text-foreground">Kode tidak ditemukan</p>
           <p className="mx-auto mt-2 max-w-md text-body-sm leading-relaxed text-paper-600">
-            Periksa kembali penulisannya. Laporan juga hanya bisa dilacak dari peramban
-            yang dipakai mengirimnya — versi demo ini menyimpan laporan di perangkat, bukan
-            di server.
+            Periksa kembali penulisannya. Kode lacak berbentuk PKR- diikuti enam
+            huruf/angka.
           </p>
           <Button asChild variant="outline" className="mt-5">
             <Link href="/warga/lapor">Kirim laporan baru</Link>

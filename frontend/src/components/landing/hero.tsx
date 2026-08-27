@@ -12,8 +12,8 @@ import {
   Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { SEMARANG_KECAMATAN_RAW, getKecamatanDataList } from "@/lib/mock-data";
-import { getCityRiskRows } from "@/lib/city-risk";
+import { useKecamatanDirectory } from "@/lib/kecamatan";
+import { useCityData } from "@/lib/use-city-data";
 import { useLocateKecamatan } from "@/hooks/use-locate-kecamatan";
 import type { RiskLevel } from "@/types";
 
@@ -49,17 +49,23 @@ function KecamatanSearch({
   const inputRef = useRef<HTMLInputElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
+  const directory = useKecamatanDirectory();
+  const { rows } = useCityData();
+
+  /* Lencana di daftar memakai kelas terburuk lintas penyakit, bukan kelas DBD
+     saja. Versi sebelumnya menandai setiap kecamatan dengan kelas DBD-nya —
+     sehingga kecamatan yang Siaga untuk ISPA tetap berlabel "Aman" di sini. */
   const riskByName = useMemo(() => {
-    const map = new Map<string, RiskLevel>();
-    getKecamatanDataList("DBD").forEach((k) => map.set(k.nama, k.tingkat_risiko));
+    const map = new Map<string, RiskLevel | null>();
+    rows.forEach((r) => map.set(r.nama, r.level));
     return map;
-  }, []);
+  }, [rows]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return SEMARANG_KECAMATAN_RAW;
-    return SEMARANG_KECAMATAN_RAW.filter((k) => k.nama.toLowerCase().includes(q));
-  }, [query]);
+    if (!q) return directory.list;
+    return directory.list.filter((k) => k.nama.toLowerCase().includes(q));
+  }, [query, directory.list]);
 
   useEffect(() => setCursor(0), [query]);
 
@@ -157,11 +163,15 @@ function KecamatanSearch({
           <div className="max-h-72 overflow-y-auto py-1">
             {filtered.length === 0 ? (
               <p className="px-4 py-6 text-center text-sm text-paper-600">
-                Kecamatan tidak ditemukan.
+                {directory.loading
+                  ? "Memuat daftar kecamatan…"
+                  : directory.error
+                    ? directory.error
+                    : "Kecamatan tidak ditemukan."}
               </p>
             ) : (
               filtered.map((kec, i) => {
-                const level = riskByName.get(kec.nama) ?? "rendah";
+                const level = riskByName.get(kec.nama) ?? null;
                 return (
                   <button
                     key={kec.id}
@@ -179,13 +189,16 @@ function KecamatanSearch({
                     <span className="flex-1 truncate text-sm font-medium text-foreground">
                       {kec.nama}
                     </span>
+                    {/* Tanpa prakiraan bukan "Aman": lencananya berbeda. */}
                     <span
                       className={cn(
                         "rounded-md px-1.5 py-0.5 font-mono text-3xs uppercase tracking-wider",
-                        RISK_TAG[level].className,
+                        level
+                          ? RISK_TAG[level].className
+                          : "bg-paper-100 text-paper-600",
                       )}
                     >
-                      {RISK_TAG[level].word}
+                      {level ? RISK_TAG[level].word : "Belum ada"}
                     </span>
                   </button>
                 );
@@ -226,9 +239,25 @@ export function Hero({ selectedKecamatan, onSelectKecamatan }: HeroProps) {
   /* Shortcuts are the four highest-scoring kecamatan this week, not a fixed
      list. A hardcoded row is an editorial choice about which districts matter;
      the ranking is a fact the data already carries. */
+  const { rows: cityRows, diseases } = useCityData();
+
+  /* Daftar penyakit di kalimat pembuka mengikuti isi dataset. Versi sebelumnya
+     menulis "DBD, ISPA, dan Diare" sebagai teks tetap — dan Diare tidak punya
+     satu baris pun di sistem ini, jadi kalimat pertama halaman depan adalah
+     janji yang tidak bisa ditepati produknya sendiri. */
+  const diseaseList = useMemo(() => {
+    if (diseases.length === 0) return "penyakit terkait iklim";
+    if (diseases.length === 1) return diseases[0];
+    return `${diseases.slice(0, -1).join(", ")} dan ${diseases[diseases.length - 1]}`;
+  }, [diseases]);
+
   const shortcuts = useMemo(
-    () => getCityRiskRows().slice(0, 4).map((r) => r.nama),
-    [],
+    () =>
+      cityRows
+        .filter((r) => r.level !== null)
+        .slice(0, 4)
+        .map((r) => r.nama),
+    [cityRows],
   );
 
   return (
@@ -289,12 +318,12 @@ export function Hero({ selectedKecamatan, onSelectKecamatan }: HeroProps) {
             </h1>
 
             <p className="animate-fade-in-up stagger-2 mt-6 max-w-xl text-body-lg text-paper-600">
-              Prakira membaca cuaca BMKG dan riwayat kasus Dinas Kesehatan untuk
+              Prakira membaca deret iklim dan riwayat kasus per kecamatan untuk
               memperkirakan lonjakan{" "}
               <strong className="font-semibold text-foreground">
-                DBD, ISPA, dan Diare
+                {diseaseList}
               </strong>{" "}
-              2–4 minggu sebelum terjadi.
+              satu bulan sebelum terjadi.
             </p>
 
             <div className="animate-fade-in-up stagger-3 mt-9">
@@ -360,7 +389,7 @@ export function Hero({ selectedKecamatan, onSelectKecamatan }: HeroProps) {
       <div className="container">
         <div className="flex items-center justify-between gap-6 border-t border-sand-200 py-5">
           <p className="hidden font-mono text-overline uppercase text-paper-600 sm:block">
-            Sumber · BMKG · Dinkes Kota Semarang · Laporan warga terverifikasi
+            Sumber · deret iklim & rekapitulasi kasus bulanan · laporan warga terverifikasi
           </p>
           <button
             type="button"

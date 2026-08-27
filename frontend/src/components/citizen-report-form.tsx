@@ -21,18 +21,14 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { SEMARANG_KECAMATAN_RAW } from "@/lib/mock-data";
-import { REPORTING_TODAY } from "@/lib/period";
+import { useKecamatanDirectory } from "@/lib/kecamatan";
 import {
-  submitReport,
-  checkRateLimit,
-  RATE_LIMIT,
   REPORT_KIND,
   FAMILY_ROUTING,
   type ReportKind,
-  type RateLimitState,
-  type CitizenReport,
 } from "@/lib/reports";
+import type { CitizenReport, RateLimitState } from "@/types";
+import { ApiError, fetchRateLimit, submitReport } from "@/lib/api";
 import { preparePhoto, formatBytes, ACCEPTED_IMAGE_TYPES } from "@/lib/photo";
 import { useRememberedKecamatan, withKecamatan } from "@/lib/kecamatan-selection";
 
@@ -70,8 +66,11 @@ const KIND_ORDER: ReportKind[] = ["gejala", "jentik", "genangan", "sampah", "sal
 
 const MIN_DESCRIPTION = 15;
 
+/* Tanggal kejadian mengacu ke kalender pelapor, bukan ke periode dataset:
+   yang dilaporkan warga terjadi hari ini, bukan pada bulan terakhir yang
+   sempat direkap dinas. Ini satu-satunya tempat "hari ini" berarti hari ini. */
 function todayValue(): string {
-  const d = REPORTING_TODAY;
+  const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
     d.getDate(),
   ).padStart(2, "0")}`;
@@ -87,11 +86,9 @@ const PHOTO_ERROR: Record<string, string> = {
 
 function SubmittedCard({
   report,
-  persisted,
   onAgain,
 }: {
   report: CitizenReport;
-  persisted: boolean;
   onAgain: () => void;
 }) {
   const [copied, setCopied] = React.useState<"idle" | "done" | "failed">("idle");
@@ -159,15 +156,6 @@ function SubmittedCard({
         </div>
       </dl>
 
-      {!persisted && (
-        <p className="mt-6 flex items-start gap-2 rounded-2xl border border-risk-medium-br bg-risk-medium-bg p-3.5 text-caption leading-relaxed text-risk-medium">
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-          Peramban ini menolak menyimpan laporan — biasanya karena mode privat atau
-          penyimpanan penuh. Kodenya tetap sah, tapi mungkin tidak bisa dilacak dari
-          perangkat ini.
-        </p>
-      )}
-
       <div className="mt-7 flex flex-wrap gap-3 border-t border-white/70 pt-6">
         <Button asChild className="group">
           <Link href={`/warga/status?kode=${encodeURIComponent(report.id)}`}>
@@ -198,18 +186,26 @@ export function CitizenReportForm() {
   const [photoBusy, setPhotoBusy] = React.useState(false);
 
   const [submitting, setSubmitting] = React.useState(false);
-  const [submitted, setSubmitted] = React.useState<{
-    report: CitizenReport;
-    persisted: boolean;
-  } | null>(null);
+  const [submitted, setSubmitted] = React.useState<CitizenReport | null>(null);
   const [limit, setLimit] = React.useState<RateLimitState | null>(null);
+  const [submitError, setSubmitError] = React.useState<string | null>(null);
   const [showErrors, setShowErrors] = React.useState(false);
 
   const fileRef = React.useRef<HTMLInputElement>(null);
+  const directory = useKecamatanDirectory();
 
-  /* Kuota dibaca setelah mount dan ditampilkan sebelum orang mengetik, bukan
-     setelah mereka selesai menulis dan menekan kirim. */
-  React.useEffect(() => setLimit(checkRateLimit()), []);
+  /* Kuota dihitung server dari sidik jari perangkat, bukan dari `localStorage`
+     yang bisa dibersihkan dengan satu klik. Dibaca sebelum orang mengetik,
+     bukan setelah mereka selesai menulis dan menekan kirim. */
+  React.useEffect(() => {
+    let alive = true;
+    fetchRateLimit()
+      .then((state) => alive && setLimit(state))
+      .catch(() => alive && setLimit(null));
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   /* Pilihan dari halaman depan mengisi kecamatan, tapi hanya selama pembaca
      belum menyentuh bidangnya sendiri. */
@@ -237,32 +233,37 @@ export function CitizenReportForm() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setShowErrors(true);
+    setSubmitError(null);
     if (!valid || blocked || !kind) return;
 
     setSubmitting(true);
-    /* Jeda pendek supaya tombol sempat terbaca sebagai "sedang mengirim".
-       Tanpa backend, tanpa jeda ini keadaan berhasil muncul begitu cepat
-       sehingga terbaca sebagai halaman yang tidak melakukan apa-apa. */
-    window.setTimeout(() => {
-      const result = submitReport({
+    try {
+      const result = await submitReport({
         kind,
         kecamatan,
-        kelurahan,
+        kelurahan: kelurahan.trim() || undefined,
         occurredAt,
         description,
         photo: photo?.dataUrl,
       });
-      setSubmitting(false);
-      if (result.ok) {
-        chooseKecamatan(kecamatan);
-        setSubmitted({ report: result.report, persisted: result.persisted });
-      } else {
-        setLimit(result.state);
+      chooseKecamatan(kecamatan);
+      setLimit(result.rateLimit);
+      setSubmitted(result.data);
+    } catch (caught) {
+      if (caught instanceof ApiError && caught.status === 429) {
+        setLimit((current) => (current ? { ...current, blocked: true, remaining: 0 } : current));
       }
-    }, 700);
+      setSubmitError(
+        caught instanceof Error
+          ? caught.message
+          : "Laporan gagal terkirim. Coba lagi sebentar lagi.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const reset = () => {
@@ -272,26 +273,23 @@ export function CitizenReportForm() {
     setDescription("");
     setPhoto(null);
     setPhotoError(null);
+    setSubmitError(null);
     setShowErrors(false);
     setOccurredAt(todayValue());
-    setLimit(checkRateLimit());
+    fetchRateLimit()
+      .then(setLimit)
+      .catch(() => setLimit(null));
     if (fileRef.current) fileRef.current.value = "";
   };
 
   if (submitted) {
-    return (
-      <SubmittedCard
-        report={submitted.report}
-        persisted={submitted.persisted}
-        onAgain={reset}
-      />
-    );
+    return <SubmittedCard report={submitted} onAgain={reset} />;
   }
 
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-9">
       {/* Kuota */}
-      {limit && limit.remaining < RATE_LIMIT.max && (
+      {limit && limit.remaining < limit.max && (
         <div
           role="status"
           className={cn(
@@ -311,20 +309,22 @@ export function CitizenReportForm() {
           <p className="text-body-sm leading-relaxed text-paper-700">
             {blocked ? (
               <>
-                <strong className="font-semibold">Kuota harian habis.</strong> Batasnya{" "}
-                {RATE_LIMIT.max} laporan per perangkat per {RATE_LIMIT.windowHours} jam,
-                supaya satu perangkat tidak bisa membanjiri antrean petugas. Kuota
-                terbuka lagi sekitar pukul{" "}
-                {limit.resetsAt?.toLocaleTimeString("id-ID", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}{" "}
+                <strong className="font-semibold">Kuota habis.</strong> Batasnya{" "}
+                {limit.max} laporan per perangkat per {limit.windowHours} jam, supaya
+                satu perangkat tidak bisa membanjiri antrean petugas. Kuota terbuka
+                lagi sekitar pukul{" "}
+                {limit.resetsAt
+                  ? new Date(limit.resetsAt).toLocaleTimeString("id-ID", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  : "—"}{" "}
                 WIB. Kalau ini keadaan mendesak, hubungi 119.
               </>
             ) : (
               <>
-                Sisa kuota hari ini: <strong className="font-semibold">{limit.remaining}</strong>{" "}
-                dari {RATE_LIMIT.max} laporan.
+                Sisa kuota: <strong className="font-semibold">{limit.remaining}</strong>{" "}
+                dari {limit.max} laporan.
               </>
             )}
           </p>
@@ -406,8 +406,10 @@ export function CitizenReportForm() {
               onChange={(e) => setKecamatan(e.target.value)}
               className="h-11 w-full rounded-xl border border-sand-200 bg-white px-4 text-base text-foreground shadow-sm sm:text-sm focus-visible:border-brand-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <option value="">Pilih kecamatan…</option>
-              {SEMARANG_KECAMATAN_RAW.map((k) => (
+              <option value="">
+                {directory.loading ? "Memuat daftar kecamatan…" : "Pilih kecamatan…"}
+              </option>
+              {directory.list.map((k) => (
                 <option key={k.id} value={k.nama}>
                   {k.nama}
                 </option>
@@ -559,6 +561,18 @@ export function CitizenReportForm() {
           </p>
         )}
       </fieldset>
+
+      {/* Kegagalan pengiriman disebut apa adanya. Formulir yang "berhasil"
+          padahal gateway menolak adalah laporan yang hilang tanpa diketahui. */}
+      {submitError && (
+        <p
+          role="alert"
+          className="flex items-start gap-2 rounded-2xl border border-risk-high-br bg-risk-high-bg p-3.5 text-body-sm leading-relaxed text-risk-high"
+        >
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <span>{submitError}</span>
+        </p>
+      )}
 
       {/* Kirim */}
       <div className="flex flex-col gap-3 border-t border-sand-200 pt-6 sm:flex-row sm:items-center">

@@ -21,15 +21,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ConsoleToast, useConsoleToast } from "@/components/console/toast";
+import { DataState } from "@/components/data-state";
 import {
-  loadReports,
-  resetReports,
-  reviewReport,
   sortForQueue,
-  summarize,
-  formatDate,
-  formatDateTime,
-  relativeAge,
   REPORT_KIND,
   REPORT_STATUS,
   FAMILY_ROUTING,
@@ -37,6 +31,9 @@ import {
   type ReportKind,
   type ReportStatus,
 } from "@/lib/reports";
+import { formatDate, formatDateTime, relativeAge } from "@/lib/period";
+import { fetchReportQueue, reviewReport } from "@/lib/api";
+import { useApi } from "@/lib/use-api";
 
 /**
  * Antrean verifikasi petugas — PRD §5.5 (M7).
@@ -56,6 +53,12 @@ import {
  *    genangan, sampah, dan saluran tersumbat pergi ke unit lingkungan, bukan ke
  *    puskesmas. Petugas kesehatan yang membuka antrean ini perlu tahu mana yang
  *    bukan pekerjaannya sebelum ia membacanya.
+ *
+ * Yang berubah setelah ada gateway: antrean tidak lagi hidup di `localStorage`
+ * perangkat ini. Laporan yang dikirim warga dari ponselnya benar-benar sampai
+ * ke sini, keputusan petugas tercatat di jejak audit atas namanya, dan tombol
+ * "Setel ulang data contoh" hilang bersama enam laporan benihnya - antrean
+ * kosong pada pemasangan baru adalah keadaan yang jujur.
  */
 
 const KIND_ICON: Record<ReportKind, React.ElementType> = {
@@ -100,7 +103,11 @@ function ReportRow({
   onDecide,
 }: {
   report: CitizenReport;
-  onDecide: (id: string, status: "terverifikasi" | "ditolak", note?: string) => void;
+  onDecide: (
+    id: string,
+    status: "terverifikasi" | "ditolak",
+    note?: string,
+  ) => void | Promise<void>;
 }) {
   const [rejecting, setRejecting] = React.useState(false);
   const [note, setNote] = React.useState("");
@@ -260,20 +267,22 @@ function ReportRow({
 
 /* ── Antrean ──────────────────────────────────────────────────────────────── */
 
-export function VerificationQueue({ reviewer }: { reviewer: string }) {
-  const [reports, setReports] = React.useState<CitizenReport[] | null>(null);
+export function VerificationQueue() {
+  const queue = useApi(() => fetchReportQueue(), []);
   const [status, setStatus] = React.useState<ReportStatus | "semua">("menunggu");
   const [wilayah, setWilayah] = React.useState("semua");
+  const [decideError, setDecideError] = React.useState<string | null>(null);
   const toast = useConsoleToast();
 
-  /* localStorage tidak ada saat render server. `null` berarti belum dibaca —
-     bukan "tidak ada laporan", yang akan menampilkan keadaan kosong palsu
-     selama satu frame. */
-  React.useEffect(() => {
-    setReports(loadReports());
-  }, []);
-
-  const summary = React.useMemo(() => summarize(reports ?? []), [reports]);
+  const reports = queue.data?.data ?? null;
+  const summary = queue.data?.meta ?? {
+    total: 0,
+    menunggu: 0,
+    terverifikasi: 0,
+    ditolak: 0,
+    lingkunganMenunggu: 0,
+    oldestWaitHours: null as number | null,
+  };
 
   const wilayahOptions = React.useMemo(() => {
     const set = new Set((reports ?? []).map((r) => r.kecamatan));
@@ -302,21 +311,22 @@ export function VerificationQueue({ reviewer }: { reviewer: string }) {
   }, [reports, wilayah]);
 
   const decide = React.useCallback(
-    (id: string, next: "terverifikasi" | "ditolak", note?: string) => {
-      setReports(reviewReport(id, { status: next, note }, reviewer));
-      toast.show(
-        next === "terverifikasi"
-          ? `${id} diterima. Pelapor bisa melihat perubahan ini di halaman lacak.`
-          : `${id} ditolak. Alasannya dikirim ke pelapor.`,
-      );
+    async (id: string, next: "terverifikasi" | "ditolak", note?: string) => {
+      setDecideError(null);
+      try {
+        await reviewReport(id, { status: next, note });
+        queue.reload();
+        toast.show(
+          next === "terverifikasi"
+            ? `${id} diterima. Pelapor bisa melihat perubahan ini di halaman lacak.`
+            : `${id} ditolak. Alasannya terlihat pelapor.`,
+        );
+      } catch (caught) {
+        setDecideError(caught instanceof Error ? caught.message : String(caught));
+      }
     },
-    [reviewer, toast],
+    [queue, toast],
   );
-
-  const handleReset = React.useCallback(() => {
-    setReports(resetReports());
-    toast.show("Antrean dikembalikan ke enam laporan contoh.");
-  }, [toast]);
 
   return (
     <div className="space-y-6">
@@ -394,45 +404,53 @@ export function VerificationQueue({ reviewer }: { reviewer: string }) {
         <Button
           size="sm"
           variant="ghost"
-          onClick={handleReset}
+          onClick={queue.reload}
+          disabled={queue.refreshing}
           className="ml-auto gap-1.5"
         >
-          <RotateCcw className="h-4 w-4" aria-hidden="true" />
-          Setel ulang data contoh
+          <RotateCcw
+            className={queue.refreshing ? "h-4 w-4 animate-spin" : "h-4 w-4"}
+            aria-hidden="true"
+          />
+          Muat ulang antrean
         </Button>
       </div>
 
-      {reports === null ? (
-        <Card className="p-8 text-center">
-          <p className="text-body-sm text-paper-600">Memuat antrean…</p>
-        </Card>
-      ) : visible.length === 0 ? (
-        <Card className="p-8 text-center">
-          <p className="text-body-sm font-medium text-foreground">
-            Tidak ada laporan pada saringan ini.
-          </p>
-          <p className="mt-1 text-caption text-paper-600">
-            Ubah status atau wilayah untuk melihat laporan lain.
-          </p>
-        </Card>
-      ) : (
+      {decideError && (
+        <p
+          role="alert"
+          className="rounded-xl border border-risk-high-br bg-risk-high-bg px-3.5 py-2.5 text-body-sm text-risk-high"
+        >
+          {decideError}
+        </p>
+      )}
+
+      <DataState
+        loading={queue.loading}
+        error={queue.error}
+        empty={!queue.loading && visible.length === 0}
+        emptyMessage={
+          (reports?.length ?? 0) === 0
+            ? "Belum ada laporan warga yang masuk."
+            : "Tidak ada laporan pada saringan ini. Ubah status atau wilayah untuk melihat laporan lain."
+        }
+        loadingMessage="Memuat antrean…"
+        onRetry={queue.reload}
+      >
         <div className="space-y-3">
           {visible.map((r) => (
             <ReportRow key={r.id} report={r} onDecide={decide} />
           ))}
         </div>
-      )}
+      </DataState>
 
       <div className="flex items-start gap-2.5 rounded-xl border border-brand-300/45 bg-brand-50 p-3.5">
         <Info className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />
         <p className="text-caption leading-relaxed text-brand-900">
-          <strong className="font-semibold">Batas versi demo.</strong> Belum ada layanan
-          gateway di repositori ini, jadi antrean disimpan di peramban perangkat ini saja
-          — laporan yang dikirim dari ponsel lain tidak akan muncul di sini. Keputusan
-          Terima/Tolak benar-benar mengubah status yang dilihat pelapor di{" "}
-          <span className="font-medium">/warga/status</span> pada peramban yang sama.
-          Pembatasan wilayah tugas ditampilkan sebagai saringan, bukan sebagai kontrol
-          akses; kontrol akses menunggu autentikasi yang belum ada.
+          <strong className="font-semibold">Batas versi ini.</strong> Pembatasan wilayah
+          tugas ditampilkan sebagai saringan, bukan sebagai kontrol akses: setiap petugas
+          yang sudah masuk dapat melihat seluruh antrean kota. Pemetaan petugas ke wilayah
+          tugasnya belum ada di basis data.
         </p>
       </div>
 

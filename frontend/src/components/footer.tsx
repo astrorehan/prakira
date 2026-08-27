@@ -103,7 +103,7 @@ export function Footer() {
                   href="/admin"
                   className="hover:text-primary transition-colors"
                 >
-                  Manajemen Data & BMKG
+                  Manajemen Data
                 </Link>
               </li>
             </ul>
@@ -120,7 +120,7 @@ export function Footer() {
 
             <span className="inline-flex items-center gap-1 text-paper-600">
               <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-              <span>BMKG Real-Time Sync</span>
+              <span>Data iklim bulanan</span>
             </span>
             <span className="inline-flex items-center gap-1 text-paper-600">
               <HeartHandshake className="h-3.5 w-3.5 text-risk-low" />

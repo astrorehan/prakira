@@ -11,8 +11,9 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { ClimateCorrelationPoint, DiseaseType } from "@/types";
-import { cn, CLIMATE_COLORS, DISEASE_CONFIG } from "@/lib/utils";
+import type { ClimatePoint, DiseaseType } from "@/types";
+import { cn, CLIMATE_COLORS, diseaseProfile } from "@/lib/utils";
+import { formatMonthShort } from "@/lib/period";
 import { climateCorrelations, type Correlation } from "@/lib/stats";
 
 /**
@@ -29,6 +30,11 @@ import { climateCorrelations, type Correlation } from "@/lib/stats";
  * Warna variabel iklim terkunci di `CLIMATE_COLORS` (§2.5). Hex mentah
  * (`#17808F`, `#EA580C`) yang dulu ditulis langsung di sini bahkan bukan warna
  * palet.
+ *
+ * Deret masuk sebagai `ClimatePoint` dari gateway: kasus per penyakit dibawa
+ * dalam peta `kasus`, bukan tiga kolom tetap `kasus_dbd`/`kasus_ispa`/
+ * `kasus_diare`. Bentuk lamanya memaksa setiap penyakit baru menyentuh berkas
+ * ini, dan memaksa "Diare" tetap ada sebagai kolom kosong.
  */
 
 type ClimateKey = "rain" | "temp" | "humid";
@@ -36,7 +42,7 @@ type ClimateKey = "rain" | "temp" | "humid";
 const VARIABLES: {
   key: ClimateKey;
   label: string;
-  dataKey: keyof ClimateCorrelationPoint;
+  dataKey: "curah_hujan_mm" | "suhu_c" | "kelembaban_pct";
   unit: string;
   color: string;
   /** Curah hujan adalah akumulasi — batang. Suhu & kelembaban kontinu — garis. */
@@ -71,25 +77,55 @@ const VARIABLES: {
 const AXIS_TICK = { fill: "#A3B2B3", fontSize: 11 };
 
 type ClimateCorrelationProps = {
-  data: ClimateCorrelationPoint[];
-  disease?: DiseaseType;
+  data: ClimatePoint[];
+  disease: DiseaseType;
   className?: string;
+};
+
+type ChartRow = {
+  periode: string;
+  periodeLabel: string;
+  curah_hujan_mm: number;
+  suhu_c: number;
+  kelembaban_pct: number;
+  kasus: number;
 };
 
 export function ClimateCorrelationChart({
   data,
-  disease = "DBD",
+  disease,
   className,
 }: ClimateCorrelationProps) {
   const [active, setActive] = React.useState<ClimateKey>("rain");
 
-  const cfg = DISEASE_CONFIG[disease];
-  const diseaseKey =
-    disease === "DBD" ? "kasus_dbd" : disease === "ISPA" ? "kasus_ispa" : "kasus_diare";
+  const cfg = diseaseProfile(disease);
+
+  /* Bulan yang salah satu variabelnya kosong dibuang, bukan diisi nol:
+     korelasi yang dihitung dari nol palsu bukan korelasi. */
+  const rows = React.useMemo<ChartRow[]>(
+    () =>
+      data
+        .filter(
+          (d) =>
+            d.curah_hujan_mm !== null &&
+            d.suhu_c !== null &&
+            d.kelembaban_pct !== null &&
+            typeof d.kasus[disease] === "number",
+        )
+        .map((d) => ({
+          periode: d.periode,
+          periodeLabel: formatMonthShort(d.periode),
+          curah_hujan_mm: d.curah_hujan_mm as number,
+          suhu_c: d.suhu_c as number,
+          kelembaban_pct: d.kelembaban_pct as number,
+          kasus: d.kasus[disease],
+        })),
+    [data, disease],
+  );
 
   const correlations = React.useMemo(
-    () => climateCorrelations(data, data.map((d) => d[diseaseKey])),
-    [data, diseaseKey],
+    () => climateCorrelations(rows, rows.map((d) => d.kasus)),
+    [rows],
   );
 
   const byKey = React.useMemo(
@@ -153,12 +189,12 @@ export function ClimateCorrelationChart({
 
       <div className="h-80 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={data} margin={{ top: 16, right: 8, bottom: 0, left: -8 }}>
+          <ComposedChart data={rows} margin={{ top: 16, right: 8, bottom: 0, left: -8 }}>
             {/* Kisi horizontal saja (§7.9). */}
             <CartesianGrid stroke="#DFE6E6" strokeDasharray="3 3" vertical={false} />
 
             <XAxis
-              dataKey="periode"
+              dataKey="periodeLabel"
               tick={AXIS_TICK}
               tickMargin={8}
               axisLine={false}
@@ -202,12 +238,12 @@ export function ClimateCorrelationChart({
               cursor={{ stroke: "#C9D4D4", strokeWidth: 1 }}
               content={({ active: hovered, payload }) => {
                 if (!hovered || !payload?.length) return null;
-                const pt = payload[0]?.payload as ClimateCorrelationPoint;
+                const pt = payload[0]?.payload as ChartRow;
 
                 return (
                   <div className="min-w-[220px] rounded-xl border border-border bg-surface p-3.5 shadow-pop">
                     <div className="mb-2 border-b border-border pb-1 text-body-sm font-semibold text-foreground">
-                      {pt.periode}
+                      {pt.periodeLabel}
                     </div>
                     <dl className="space-y-1.5 text-caption">
                       <div className="flex items-center justify-between gap-4 font-semibold text-foreground">
@@ -219,7 +255,7 @@ export function ClimateCorrelationChart({
                           />
                           Kasus {disease}
                         </dt>
-                        <dd className="tabular">{pt[diseaseKey]}</dd>
+                        <dd className="tabular">{pt.kasus}</dd>
                       </div>
                       {VARIABLES.map((v) => (
                         <div
@@ -274,7 +310,7 @@ export function ClimateCorrelationChart({
             <Line
               yAxisId="cases"
               type="monotone"
-              dataKey={diseaseKey}
+              dataKey="kasus"
               stroke={cfg.color}
               strokeWidth={3}
               dot={{ r: 4, fill: cfg.color, stroke: "#FFFFFF", strokeWidth: 2 }}

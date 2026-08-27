@@ -2,22 +2,26 @@
 
 import { useCallback, useState } from "react";
 
-import { nearestKecamatan } from "@/lib/nearest-kecamatan";
+import { loadKecamatanDirectory, nearestKecamatan } from "@/lib/kecamatan";
 
 export type LocateStatus =
   | "idle"
   | "locating"
-  /** Permission refused, or the device could not produce a fix. */
+  /** Izin ditolak, atau perangkat gagal mendapat titik. */
   | "denied"
-  /** A fix arrived, but it is not inside Kota Semarang. */
+  /** Titiknya ada, tapi bukan di Kota Semarang. */
   | "outside"
   | "unsupported";
 
 /**
- * Resolves the reader's kecamatan from the browser's geolocation — on demand
- * only. Nothing is requested until the reader presses the button, and every
- * failure path is silent-but-visible: the caller keeps whatever it was showing
- * and we surface a short reason instead of guessing a district.
+ * Menentukan kecamatan pembaca dari geolokasi peramban — hanya saat diminta.
+ *
+ * Tidak ada permintaan sebelum tombolnya ditekan, dan setiap jalur gagal
+ * terlihat tanpa berisik: pemanggil tetap menampilkan apa yang sudah ada dan
+ * kita memberi alasan pendek alih-alih menebak kecamatan.
+ *
+ * Sentroid pembanding datang dari gateway, jadi hasilnya mengikuti poligon
+ * yang sama dengan yang digambar peta.
  */
 export function useLocateKecamatan(onFound: (nama: string) => void) {
   const [status, setStatus] = useState<LocateStatus>("idle");
@@ -31,13 +35,17 @@ export function useLocateKecamatan(onFound: (nama: string) => void) {
     setStatus("locating");
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
-        const nama = nearestKecamatan(coords.latitude, coords.longitude);
-        if (!nama) {
-          setStatus("outside");
-          return;
-        }
-        setStatus("idle");
-        onFound(nama);
+        loadKecamatanDirectory()
+          .then((list) => {
+            const nama = nearestKecamatan(list, coords.latitude, coords.longitude);
+            if (!nama) {
+              setStatus("outside");
+              return;
+            }
+            setStatus("idle");
+            onFound(nama);
+          })
+          .catch(() => setStatus("denied"));
       },
       () => setStatus("denied"),
       { enableHighAccuracy: false, timeout: 8000, maximumAge: 300_000 },

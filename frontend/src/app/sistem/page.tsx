@@ -10,7 +10,7 @@ import { PublicInfo } from "@/components/sistem/public-info";
 export const metadata: Metadata = {
   title: "Prakira — Sistem Informasi Publik Risiko Penyakit Iklim Kota Semarang",
   description:
-    "Portal layanan publik Dinas Kesehatan Kota Semarang: status risiko DBD, ISPA, dan Diare per kecamatan, peringatan resmi yang sedang berlaku, data terbuka, dan layanan warga.",
+    "Portal layanan publik: status risiko penyakit iklim per kecamatan Kota Semarang, peringatan yang sedang berlaku, data terbuka, dan layanan warga.",
 };
 
 /**

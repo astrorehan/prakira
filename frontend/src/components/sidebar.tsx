@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   Users,
   LogOut,
+  LogIn,
   Home,
   Menu,
   Siren,
@@ -25,14 +26,9 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import {
-  clearSession,
-  readSession,
-  DEMO_ACCOUNT,
-  type Session,
-} from "@/lib/auth";
-import { ACTION_RECOMMENDATIONS } from "@/lib/mock-data";
-import { loadReports } from "@/lib/reports";
+import { ROLE_LABEL } from "@/lib/auth";
+import { useSessionContext } from "@/components/session-provider";
+import { fetchActions, fetchReportQueue } from "@/lib/api";
 
 /**
  * Sidebar konsol — chrome bersama seluruh rute nakes.
@@ -47,6 +43,9 @@ import { loadReports } from "@/lib/reports";
  * 2. Tombol keluar diwarnai `risk-high`. Merah di produk ini berarti tingkat
  *    risiko penyakit (§1.1: "Warna adalah data"), bukan "tombol berbahaya".
  *    Keluar dari sesi bukan kedaruratan; kontrolnya kembali netral.
+ * 3. Kedua lencana angka dulu menghitung array mock dan `localStorage`, jadi
+ *    "3 laporan menunggu" adalah angka yang sama untuk setiap petugas di
+ *    setiap perangkat. Sekarang keduanya ditarik dari gateway.
  */
 
 type NavItem = {
@@ -67,31 +66,39 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = React.useState(false);
-  const [session, setSession] = React.useState<Session | null>(null);
-  const [pendingReports, setPendingReports] = React.useState(0);
+  const { session, signOut } = useSessionContext();
+  const [pendingReports, setPendingReports] = React.useState<number | null>(null);
+  const [pendingActions, setPendingActions] = React.useState<number | null>(null);
 
-  /* localStorage tidak ada saat render server; baca setelah mount supaya
-     markup pertama tidak berbeda antara server dan klien. */
+  /* Kedua angka berubah saat petugas memutuskan sesuatu di /verifikasi atau
+     /tindakan, dan sidebar tetap terpasang selama itu. Ditarik ulang tiap kali
+     rute berganti — cukup untuk lencana, tanpa menambah kanal antar-komponen.
+     Kegagalan berarti lencananya tidak muncul, bukan lencana bernilai nol. */
   React.useEffect(() => {
-    setSession(readSession());
-    setPendingReports(
-      loadReports().filter((r) => r.status === "menunggu").length,
-    );
-  }, []);
+    if (!session) {
+      setPendingReports(null);
+      setPendingActions(null);
+      return;
+    }
 
-  /* Jumlah antrean berubah saat petugas memutuskan di /verifikasi, dan
-     sidebar-nya tetap terpasang selama itu. Dibaca ulang tiap kali rute
-     berganti — cukup untuk lencana, tanpa menambah kanal antar-komponen. */
-  React.useEffect(() => {
-    setPendingReports(
-      loadReports().filter((r) => r.status === "menunggu").length,
-    );
-  }, [pathname]);
+    let alive = true;
 
-  const pendingActions = React.useMemo(
-    () => ACTION_RECOMMENDATIONS.filter((r) => r.status === "pending").length,
-    [],
-  );
+    fetchReportQueue()
+      .then((result) => alive && setPendingReports(result.meta.menunggu))
+      .catch(() => alive && setPendingReports(null));
+
+    fetchActions()
+      .then(
+        (result) =>
+          alive &&
+          setPendingActions(result.data.filter((a) => a.status === "pending").length),
+      )
+      .catch(() => alive && setPendingActions(null));
+
+    return () => {
+      alive = false;
+    };
+  }, [pathname, session]);
 
   const consoleItems: NavItem[] = [
     { href: "/dashboard", label: "Dashboard Prediksi", icon: Activity },
@@ -99,23 +106,26 @@ export function Sidebar() {
       href: "/tindakan",
       label: "Aksi Dini",
       icon: Siren,
-      badge: pendingActions,
+      badge: pendingActions ?? undefined,
       badgeLabel: "menunggu instruksi",
     },
     {
       href: "/verifikasi",
       label: "Verifikasi Laporan",
       icon: ClipboardCheck,
-      badge: pendingReports,
+      badge: pendingReports ?? undefined,
       badgeLabel: "laporan menunggu verifikasi",
     },
     { href: "/analitik", label: "Analitik & Riwayat", icon: BarChart3 },
-    { href: "/admin", label: "Manajemen Data BMKG", icon: ShieldCheck },
+    { href: "/admin", label: "Manajemen Data", icon: ShieldCheck },
   ];
 
-  function handleSignOut() {
-    clearSession();
-    router.push("/");
+  async function handleSignOut() {
+    try {
+      await signOut();
+    } finally {
+      router.push("/");
+    }
   }
 
   const isActive = (href: string) =>
@@ -194,10 +204,12 @@ export function Sidebar() {
     <div className="space-y-2">
       <div className="rounded-xl border border-border bg-paper-50 p-3">
         <div className="text-caption font-semibold text-foreground">
-          {session?.label ?? DEMO_ACCOUNT.label}
+          {session?.label ?? "Belum masuk"}
         </div>
         <div className="text-caption text-paper-600">
-          {session ? session.email : "Sesi demo · 16 kecamatan terpantau"}
+          {session
+            ? `${session.email} · ${ROLE_LABEL[session.role] ?? session.role}`
+            : "Masuk untuk mengubah data dan memutuskan laporan."}
         </div>
       </div>
 
@@ -221,9 +233,9 @@ export function Sidebar() {
           size="sm"
           className="w-full justify-start gap-2 text-caption"
         >
-          <Link href="/" onClick={onClick}>
-            <Home className="h-3.5 w-3.5" aria-hidden="true" />
-            <span>Beranda Prakira</span>
+          <Link href="/masuk" onClick={onClick}>
+            <LogIn className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>Masuk ke konsol</span>
           </Link>
         </Button>
       )}

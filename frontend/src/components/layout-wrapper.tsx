@@ -7,6 +7,8 @@ import { Footer } from "./footer";
 import { Sidebar } from "./sidebar";
 import { SistemMasthead } from "./sistem/masthead";
 import { SistemFooter } from "./sistem/sistem-footer";
+import { SessionProvider } from "./session-provider";
+import { ConsoleGuard } from "./console-guard";
 import { BARE_ROUTES, CONSOLE_ROUTES, SISTEM_ROUTES } from "@/lib/routes";
 
 /* WCAG 2.4.1. The /sistem masthead alone puts a government strip, six service
@@ -47,25 +49,31 @@ export function LayoutWrapper({ children }: { children: React.ReactNode }) {
      above a page that is the sign-in would be noise. */
   if (isBare) {
     return (
-      <main id="konten" tabIndex={-1} className="min-h-screen">
-        {children}
-      </main>
+      <SessionProvider>
+        <main id="konten" tabIndex={-1} className="min-h-screen">
+          {children}
+        </main>
+      </SessionProvider>
     );
   }
 
+  /* Konsol dijaga: tanpa sesi, rute ini mengalihkan ke /masuk alih-alih
+     menampilkan halaman penuh yang setiap tombolnya akan ditolak gateway. */
   if (isConsole) {
     return (
-      <div className="flex min-h-screen flex-col md:flex-row">
-        <SkipLink />
-        <Sidebar />
-        <main
-          id="konten"
-          tabIndex={-1}
-          className="min-h-screen min-w-0 flex-1 overflow-y-auto"
-        >
-          {children}
-        </main>
-      </div>
+      <SessionProvider>
+        <div className="flex min-h-screen flex-col md:flex-row">
+          <SkipLink />
+          <Sidebar />
+          <main
+            id="konten"
+            tabIndex={-1}
+            className="min-h-screen min-w-0 flex-1 overflow-y-auto"
+          >
+            <ConsoleGuard>{children}</ConsoleGuard>
+          </main>
+        </div>
+      </SessionProvider>
     );
   }
 

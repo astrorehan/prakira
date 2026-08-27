@@ -175,26 +175,28 @@ export const CAT_COLORS = ["#0B4A57", "#7A5C2E", "#47617F", "#5B4A70", "#2C6650"
    charts only (docs/DESIGN-SYSTEM.md §2.4). Diseases are distinguished in the
    UI by icon + label.
 
-   Leptospirosis (PRD §3.2) is pending the data pass; add it to `DiseaseType`
-   in src/types/index.ts together with its TREND_DATA entry once the Semarang
-   historical series is loaded.
+   Daftar penyakit yang benar-benar tampil ditentukan gateway
+   (`/api/meta/diseases`), bukan berkas ini. Yang ada di sini adalah profil
+   penjelasnya — nama panjang, vektor, pemicu iklim — yaitu pengetahuan domain
+   yang tidak berubah mengikuti dataset. Penyakit tanpa profil tetap bisa
+   tampil lewat `diseaseProfile()` di bawah, dengan label seadanya alih-alih
+   membuat halamannya jatuh.
    ========================================================================= */
 
-export const DISEASE_CONFIG: Record<
-  DiseaseType,
-  {
-    name: string;
-    short: DiseaseType;
-    vector: string;
-    /** Categorical chart series colour. Not a risk colour. */
-    color: string;
-    softColor: string;
-    borderColor: string;
-    iconName: string;
-    climateTriggers: string;
-    defaultIntervention: string;
-  }
-> = {
+export type DiseaseProfile = {
+  name: string;
+  short: DiseaseType;
+  vector: string;
+  /** Categorical chart series colour. Not a risk colour. */
+  color: string;
+  softColor: string;
+  borderColor: string;
+  iconName: string;
+  climateTriggers: string;
+  defaultIntervention: string;
+};
+
+export const DISEASE_CONFIG: Record<string, DiseaseProfile> = {
   DBD: {
     name: "Demam Berdarah Dengue",
     short: "DBD",
@@ -254,14 +256,6 @@ export function formatRange(lower: number, upper: number): string {
   return `${formatNumber(lower)} – ${formatNumber(upper)}`;
 }
 
-/** Coverage class from model confidence. One place, so the thresholds stay honest. */
-export function coverageFromConfidence(confidence: number): DataCoverage {
-  if (confidence >= 0.94) return "high";
-  if (confidence >= 0.88) return "medium";
-  if (confidence >= 0.75) return "low";
-  return "insufficient";
-}
-
 /** Worst coverage in the set, ordered high → insufficient. */
 const COVERAGE_RANK: DataCoverage[] = ["high", "medium", "low", "insufficient"];
 
@@ -276,4 +270,71 @@ export function aggregateCoverage(parts: DataCoverage[]): DataCoverage {
       COVERAGE_RANK.indexOf(c) > COVERAGE_RANK.indexOf(worst) ? c : worst,
     "high",
   );
+}
+
+/** Profil penyakit, dengan cadangan seadanya untuk penyakit yang belum dikenal. */
+export function diseaseProfile(disease: DiseaseType): DiseaseProfile {
+  return (
+    DISEASE_CONFIG[disease] ?? {
+      name: disease,
+      short: disease,
+      vector: "—",
+      color: CAT_COLORS[3],
+      softColor: "#F1F0F4",
+      borderColor: "#DEDCE4",
+      iconName: "Activity",
+      climateTriggers: "Belum ada profil pemicu iklim untuk penyakit ini.",
+      defaultIntervention: "Belum ada intervensi baku yang terdaftar.",
+    }
+  );
+}
+
+/* ── Nilai yang boleh kosong ─────────────────────────────────────────────
+   Prediksi sekarang bisa benar-benar tidak ada. Pembantu di bawah memastikan
+   kekosongan tampil sebagai "—", bukan sebagai 0 — nol berarti "diprediksi nol
+   kasus", dan dua hal berbeda tidak boleh terlihat sama. */
+
+export function formatMaybeNumber(
+  value: number | null | undefined,
+  opts?: Intl.NumberFormatOptions,
+): string {
+  return value === null || value === undefined ? "—" : formatNumber(value, opts);
+}
+
+export function formatMaybeRange(
+  lower: number | null | undefined,
+  upper: number | null | undefined,
+): string | null {
+  if (lower === null || lower === undefined || upper === null || upper === undefined) {
+    return null;
+  }
+  return formatRange(lower, upper);
+}
+
+export function formatMaybePercent(value: number | null | undefined): string {
+  return value === null || value === undefined ? "—" : formatPercent(value);
+}
+
+export function formatMaybeIncidence(value: number | null | undefined): string {
+  return value === null || value === undefined ? "—" : formatIncidence(value);
+}
+
+/** Konfigurasi risiko, termasuk keadaan "belum ada prediksi". */
+export const RISK_UNKNOWN = {
+  label: "Data tidak memadai",
+  color: "#6B6560",
+  fill: "#D6D2CC",
+  textColor: "text-risk-none",
+  bgSoft: "bg-paper-100",
+  border: "border-paper-300",
+  iconName: "HelpCircle",
+  badgeVariant: "risk-none" as const,
+  hatch: false,
+  description:
+    "Belum ada prediksi untuk kecamatan ini pada periode berjalan. Kekosongan ini bukan tanda aman.",
+  glassClass: "liquid-glass",
+};
+
+export function riskConfigOf(level: RiskLevel | null | undefined) {
+  return level ? RISK_CONFIG[level] : RISK_UNKNOWN;
 }

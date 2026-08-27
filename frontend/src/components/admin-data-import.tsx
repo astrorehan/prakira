@@ -4,40 +4,54 @@ import * as React from "react";
 import {
   AlertTriangle,
   CheckCircle2,
+  Database,
   FileSpreadsheet,
   Info,
   RefreshCw,
   Search,
-  Server,
   Shield,
   UploadCloud,
 } from "lucide-react";
 import { cn, formatNumber } from "@/lib/utils";
-import type { AuditLog } from "@/types";
-import { BMKG_SYNC_STATUS, AUDIT_LOGS } from "@/lib/mock-data";
+import { formatDateTime, formatMonth } from "@/lib/period";
+import type { AuditLog, DiseaseSummary } from "@/types";
+import {
+  commitImport,
+  fetchAuditLog,
+  fetchDiseases,
+  fetchIngestStatus,
+  previewImport,
+  refreshPredictions,
+  type ImportPreview,
+} from "@/lib/api";
+import { useApi } from "@/lib/use-api";
+import { invalidatePeriod } from "@/lib/use-period";
+import { DataState } from "./data-state";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 
 /**
- * Tata kelola data: impor CSV, konektor BMKG, dan jejak audit.
+ * Tata kelola data: impor CSV, status ingest, dan jejak audit.
  *
- * Tiga hal yang diperbaiki:
+ * Yang berubah bersamaan dengan masuknya gateway:
  *
- * 1. Lencana status di tabel audit selalu hijau dan mencetak kata Inggris
- *    mentah dari datanya (`success`). Entri berstatus `info` dan `warning`
- *    karena itu tampil sebagai keberhasilan — jejak audit yang salah warna
- *    lebih buruk daripada tidak ada jejak audit.
- * 2. Panel BMKG mencetak "API Connected" sebagai teks tetap, dan menuliskan
- *    ulang "tiap 60 menit" serta daftar fitur iklim sebagai konstanta di
- *    markup, padahal `BMKG_SYNC_STATUS` sudah memuat `status`, `next_sync_in`,
- *    dan `synced_features`. Layar dan data harus membaca sumber yang sama.
- * 3. Unggah CSV hanya punya jalur berhasil. Sekarang berkas yang formatnya
- *    tidak dikenali ditolak dan ikut tercatat di audit sebagai peringatan
- *    (§7.10: empat keadaan, bukan satu).
+ * 1. **Panel "Konektor BMKG Open Data" hilang.** Ia melaporkan 4 stasiun aktif,
+ *    latensi 184 ms, "sinkronisasi berikutnya 15 menit lagi", dan lima variabel
+ *    iklim termasuk radiasi matahari dan kecepatan angin. Tidak ada satu pun
+ *    yang berasal dari pekerjaan yang benar-benar berjalan, dan dua variabel
+ *    terakhir tidak punya kolom di dataset mana pun. Penggantinya melaporkan
+ *    pekerjaan ingest yang sungguh tercatat: kapan, berapa lama, berapa baris.
+ * 2. **Unggah CSV benar-benar mengunggah.** Sebelumnya berkasnya hanya diperiksa
+ *    ekstensinya, lalu `setTimeout(1500)` menampilkan "16 record kecamatan
+ *    terverifikasi" — angka yang sama untuk berkas apa pun, termasuk berkas
+ *    kosong. Sekarang isinya diurai gateway, sepuluh baris pertama ditampilkan
+ *    sebagai pratinjau, dan barisnya baru masuk basis data setelah dikonfirmasi.
+ * 3. **Jejak audit dibaca, bukan ditulis.** `AUDIT_LOGS` berisi empat entri
+ *    beserta nama petugasnya; entri baru dibuat di peramban dengan id acak dan
+ *    hilang saat halaman disegarkan. Sekarang isinya peristiwa yang terjadi di
+ *    server.
  */
-
-/* ── Kamus status ───────────────────────────────────────────────────────── */
 
 const AUDIT_STATUS: Record<
   AuditLog["status"],
@@ -47,27 +61,6 @@ const AUDIT_STATUS: Record<
   warning: { label: "Peringatan", variant: "risk-medium", icon: AlertTriangle },
   info: { label: "Informasi", variant: "outline", icon: Info },
 };
-
-const CONNECTOR_STATUS: Record<
-  (typeof BMKG_SYNC_STATUS)["status"],
-  { label: string; variant: "risk-low" | "secondary" | "risk-none"; live: boolean }
-> = {
-  online: { label: "Terhubung", variant: "risk-low", live: true },
-  syncing: { label: "Menyinkronkan", variant: "secondary", live: true },
-  idle: { label: "Tidak aktif", variant: "risk-none", live: false },
-};
-
-const ACCEPTED_EXTENSIONS = [".csv", ".xlsx"];
-
-function nowStamp(): string {
-  return new Date().toLocaleString("id-ID");
-}
-
-function makeLogId(): string {
-  return `LOG_${Math.floor(1000 + Math.random() * 9000)}`;
-}
-
-/* ── Baris fakta ────────────────────────────────────────────────────────── */
 
 function DataRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -80,53 +73,73 @@ function DataRow({ label, children }: { label: string; children: React.ReactNode
 
 /* ── Impor CSV ──────────────────────────────────────────────────────────── */
 
-type UploadState =
+type ImportState =
   | { kind: "idle" }
-  | { kind: "uploading"; fileName: string }
-  | { kind: "success"; fileName: string }
+  | { kind: "reading"; fileName: string }
+  | { kind: "preview"; fileName: string; csv: string; preview: ImportPreview }
+  | { kind: "committing"; fileName: string }
+  | { kind: "done"; fileName: string; imported: number; rejected: number }
   | { kind: "error"; fileName: string; reason: string };
 
-function CsvImportCard({ onLog }: { onLog: (log: AuditLog) => void }) {
-  const [state, setState] = React.useState<UploadState>({ kind: "idle" });
+function CsvImportCard({
+  diseases,
+  onImported,
+}: {
+  diseases: DiseaseSummary[];
+  onImported: () => void;
+}) {
+  const [disease, setDisease] = React.useState<string>("");
+  const [state, setState] = React.useState<ImportState>({ kind: "idle" });
+  const inputRef = React.useRef<HTMLInputElement>(null);
 
-  const handleFile = (event: React.ChangeEvent<HTMLInputElement>) => {
+  React.useEffect(() => {
+    if (!disease && diseases.length > 0) setDisease(diseases[0].disease);
+  }, [diseases, disease]);
+
+  const handleFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
-
-    const name = file.name;
-    const extension = name.slice(name.lastIndexOf(".")).toLowerCase();
-
-    if (!ACCEPTED_EXTENSIONS.includes(extension)) {
-      const reason = `Format ${extension || "tanpa ekstensi"} tidak didukung. Gunakan .csv atau .xlsx.`;
-      setState({ kind: "error", fileName: name, reason });
-      onLog({
-        id: makeLogId(),
-        timestamp: nowStamp(),
-        user: "Admin Dinkes",
-        role: "Data Manager",
-        action: "Upload Dataset Ditolak",
-        details: `Berkas '${name}' ditolak validasi skema. ${reason}`,
-        status: "warning",
-      });
-      event.target.value = "";
-      return;
-    }
-
-    setState({ kind: "uploading", fileName: name });
-    setTimeout(() => {
-      setState({ kind: "success", fileName: name });
-      onLog({
-        id: makeLogId(),
-        timestamp: nowStamp(),
-        user: "Admin Dinkes",
-        role: "Data Manager",
-        action: "Upload Dataset CSV",
-        details: `Validasi skema berhasil untuk '${name}' (16 record kecamatan terverifikasi).`,
-        status: "success",
-      });
-    }, 1500);
-
     event.target.value = "";
+    if (!file || !disease) return;
+
+    setState({ kind: "reading", fileName: file.name });
+
+    try {
+      const csv = await file.text();
+      const preview = await previewImport(disease, csv);
+      setState({ kind: "preview", fileName: file.name, csv, preview });
+    } catch (caught) {
+      setState({
+        kind: "error",
+        fileName: file.name,
+        reason: caught instanceof Error ? caught.message : String(caught),
+      });
+    }
+  };
+
+  const commit = async () => {
+    if (state.kind !== "preview") return;
+    const { fileName, csv, preview } = state;
+    setState({ kind: "committing", fileName });
+
+    try {
+      const result = await commitImport(preview.disease, csv);
+      setState({
+        kind: "done",
+        fileName,
+        imported: result.imported,
+        rejected: result.problems.length,
+      });
+      /* Bulan terakhir bisa berubah setelah impor; chip periode di seluruh
+         konsol membaca nilai yang di-memo, jadi memonya harus dibuang. */
+      invalidatePeriod();
+      onImported();
+    } catch (caught) {
+      setState({
+        kind: "error",
+        fileName,
+        reason: caught instanceof Error ? caught.message : String(caught),
+      });
+    }
   };
 
   return (
@@ -137,18 +150,36 @@ function CsvImportCard({ onLog }: { onLog: (log: AuditLog) => void }) {
             <FileSpreadsheet className="h-4 w-4 text-brand-700" aria-hidden="true" />
             <span className="overline">Impor dataset kasus</span>
           </span>
-          <Badge variant="outline">CSV / XLSX</Badge>
+          <Badge variant="outline">CSV</Badge>
         </div>
 
-        <h3 className="mt-2 text-h3 text-foreground">Unggah laporan epidemiologi</h3>
+        <h3 className="mt-2 text-h3 text-foreground">Unggah rekapitulasi kasus</h3>
         <p className="mt-1 text-caption leading-relaxed text-paper-600">
-          Data kasus mingguan per kecamatan diproses pipeline ETL dan memicu inferensi ulang
-          model.
+          Satu baris per kecamatan per bulan. Berkas diurai dan divalidasi lebih
+          dulu; tidak ada baris yang masuk sebelum Anda mengonfirmasi pratinjaunya.
         </p>
+
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <label htmlFor="import-disease" className="text-caption text-paper-600">
+            Penyakit
+          </label>
+          <select
+            id="import-disease"
+            value={disease}
+            onChange={(e) => setDisease(e.target.value)}
+            className="h-9 rounded-lg border border-border bg-surface px-3 text-body-sm text-foreground"
+          >
+            {diseases.map((d) => (
+              <option key={d.disease} value={d.disease}>
+                {d.disease}
+              </option>
+            ))}
+          </select>
+        </div>
 
         <label
           className={cn(
-            "mt-4 flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-6 text-center transition-colors",
+            "mt-3 flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-6 text-center transition-colors",
             state.kind === "error"
               ? "border-risk-medium-br bg-risk-medium-bg"
               : "border-brand-300 bg-brand-50/50 hover:bg-brand-50",
@@ -156,32 +187,111 @@ function CsvImportCard({ onLog }: { onLog: (log: AuditLog) => void }) {
         >
           <UploadCloud className="mb-2 h-8 w-8 text-brand-700" aria-hidden="true" />
           <span className="text-body-sm font-medium text-foreground">
-            {state.kind === "uploading"
+            {state.kind === "reading"
               ? `Memvalidasi ${state.fileName}…`
-              : "Klik untuk memilih berkas atau seret ke sini"}
+              : "Klik untuk memilih berkas CSV"}
           </span>
+          {/* Kolom yang benar-benar dibaca gateway, bukan daftar karangan.
+              Versi sebelumnya menyebut `periode_minggu` dan `jumlah_diare`,
+              dua kolom yang tidak pernah ada di pengurai mana pun. */}
           <span className="mt-1 text-caption text-paper-600">
-            Kolom wajib: kode_bps, kecamatan, periode_minggu, jumlah_dbd, jumlah_ispa,
-            jumlah_diare
+            Kolom wajib: kecamatan_nama, month_start, cases. Opsional:
+            rainfall_mm, temp_mean_c, humidity_pct.
           </span>
           <input
+            ref={inputRef}
             type="file"
-            accept=".csv,.xlsx"
+            accept=".csv,text/csv"
             className="sr-only"
             onChange={handleFile}
-            disabled={state.kind === "uploading"}
+            disabled={state.kind === "reading" || state.kind === "committing" || !disease}
           />
         </label>
       </div>
 
-      {/* Keadaan hasil — berhasil dan gagal punya tampilan berbeda. */}
-      <div aria-live="polite" className="mt-3 empty:mt-0">
-        {state.kind === "success" && (
-          <p className="flex items-center gap-2 rounded-xl border border-risk-low-br bg-risk-low-bg p-2.5 text-caption font-medium text-risk-low">
-            <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
-            <span>Dataset {state.fileName} terverifikasi dan masuk antrean inferensi.</span>
+      <div aria-live="polite" className="mt-3 space-y-3 empty:mt-0">
+        {state.kind === "preview" && (
+          <div className="rounded-xl border border-border bg-paper-50 p-3.5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-body-sm font-semibold text-foreground">
+                {state.preview.validRows} dari {state.preview.totalRows} baris lolos
+                validasi
+              </span>
+              <Badge variant={state.preview.problems.length > 0 ? "risk-medium" : "risk-low"}>
+                {state.preview.problems.length} baris ditolak
+              </Badge>
+            </div>
+
+            {state.preview.preview.length > 0 && (
+              <div className="mt-2.5 overflow-x-auto">
+                <table className="w-full text-left text-caption">
+                  <thead className="text-overline uppercase text-paper-600">
+                    <tr>
+                      <th className="py-1 pr-3">Kecamatan</th>
+                      <th className="py-1 pr-3">Bulan</th>
+                      <th className="py-1 pr-3 text-right">Kasus</th>
+                      <th className="py-1 pr-3 text-right">Hujan</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {state.preview.preview.map((row) => (
+                      <tr key={`${row.nama}-${row.month}`}>
+                        <td className="py-1 pr-3 text-foreground">{row.nama}</td>
+                        <td className="py-1 pr-3 text-paper-700">{formatMonth(row.month)}</td>
+                        <td className="tabular py-1 pr-3 text-right text-foreground">
+                          {row.cases}
+                        </td>
+                        <td className="tabular py-1 pr-3 text-right text-paper-700">
+                          {row.rainfall === null ? "—" : `${row.rainfall} mm`}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {state.preview.problems.length > 0 && (
+              <ul className="mt-2.5 max-h-28 space-y-0.5 overflow-y-auto text-caption text-risk-medium">
+                {state.preview.problems.slice(0, 8).map((p) => (
+                  <li key={`${p.line}-${p.message}`}>Baris {p.line}: {p.message}</li>
+                ))}
+                {state.preview.problems.length > 8 && (
+                  <li>…dan {state.preview.problems.length - 8} baris lain.</li>
+                )}
+              </ul>
+            )}
+
+            <div className="mt-3 flex flex-wrap gap-2 border-t border-border pt-2.5">
+              <Button
+                size="sm"
+                onClick={commit}
+                disabled={state.preview.validRows === 0}
+                className="gap-1.5"
+              >
+                Impor {state.preview.validRows} baris
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setState({ kind: "idle" })}>
+                Batal
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {state.kind === "committing" && (
+          <p className="text-caption text-paper-600">Menyimpan {state.fileName}…</p>
+        )}
+
+        {state.kind === "done" && (
+          <p className="flex items-start gap-2 rounded-xl border border-risk-low-br bg-risk-low-bg p-2.5 text-caption font-medium text-risk-low">
+            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <span>
+              {state.imported} baris dari {state.fileName} masuk basis data
+              {state.rejected > 0 ? `, ${state.rejected} baris ditolak` : ""}.
+            </span>
           </p>
         )}
+
         {state.kind === "error" && (
           <p className="flex items-start gap-2 rounded-xl border border-risk-medium-br bg-risk-medium-bg p-2.5 text-caption font-medium text-risk-medium">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
@@ -193,29 +303,27 @@ function CsvImportCard({ onLog }: { onLog: (log: AuditLog) => void }) {
   );
 }
 
-/* ── Konektor BMKG ──────────────────────────────────────────────────────── */
+/* ── Status ingest ──────────────────────────────────────────────────────── */
 
-function BmkgConnectorCard({ onLog }: { onLog: (log: AuditLog) => void }) {
-  const [syncing, setSyncing] = React.useState(false);
-  const [lastSync, setLastSync] = React.useState(BMKG_SYNC_STATUS.last_sync);
+function IngestStatusCard({ onRefreshed }: { onRefreshed: () => void }) {
+  const status = useApi(() => fetchIngestStatus(), []);
+  const [refreshing, setRefreshing] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
 
-  const connector = CONNECTOR_STATUS[BMKG_SYNC_STATUS.status];
+  const job = status.data?.lastJob ?? null;
 
-  const handleTriggerSync = () => {
-    setSyncing(true);
-    setTimeout(() => {
-      setSyncing(false);
-      setLastSync(nowStamp() + " WIB");
-      onLog({
-        id: makeLogId(),
-        timestamp: nowStamp(),
-        user: "Admin (Manual Trigger)",
-        role: "Admin Dinkes",
-        action: "BMKG API Sync Manual",
-        details: `Berhasil menarik data iklim ${BMKG_SYNC_STATUS.stations_active} stasiun cuaca Kota Semarang.`,
-        status: "success",
-      });
-    }, 1800);
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    setError(null);
+    try {
+      await refreshPredictions();
+      status.reload();
+      onRefreshed();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : String(caught));
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   return (
@@ -223,63 +331,92 @@ function BmkgConnectorCard({ onLog }: { onLog: (log: AuditLog) => void }) {
       <div>
         <div className="flex items-start justify-between gap-3">
           <span className="flex items-center gap-1.5">
-            <Server className="h-4 w-4 text-brand-700" aria-hidden="true" />
-            <span className="overline">Konektor BMKG Open Data</span>
+            <Database className="h-4 w-4 text-brand-700" aria-hidden="true" />
+            <span className="overline">Status data & model</span>
           </span>
-          {/* Status dibaca dari data, bukan ditulis di markup. `pulse` pada
-              Badge memakai animate-pulse-dot — animate-pulse disediakan untuk
-              skeleton (§6.3). */}
-          <Badge variant={connector.variant} pulse={connector.live}>
-            {connector.label}
-          </Badge>
+          {job && (
+            <Badge variant={job.status === "success" ? "risk-low" : "risk-medium"}>
+              {job.status === "success" ? "Berhasil" : "Gagal"}
+            </Badge>
+          )}
         </div>
 
-        <h3 className="mt-2 text-h3 text-foreground">Sinkronisasi iklim otomatis</h3>
+        <h3 className="mt-2 text-h3 text-foreground">Ingest terakhir</h3>
         <p className="mt-1 text-caption leading-relaxed text-paper-600">
-          Cron menarik observasi cuaca dari {BMKG_SYNC_STATUS.stations_active} Automatic Weather
-          Station BMKG di wilayah Semarang.
+          Sumber data iklim saat ini adalah berkas dataset di repositori, bukan
+          tarikan langsung dari layanan BMKG. Yang dilaporkan di bawah adalah
+          pekerjaan ingest yang benar-benar dijalankan.
         </p>
 
-        <dl className="mt-4 space-y-2 rounded-xl border border-border bg-paper-50 p-3.5">
-          <DataRow label="Sinkronisasi terakhir">
-            <span className="tabular">{lastSync}</span>
-          </DataRow>
-          <DataRow label="Sinkronisasi berikutnya">{BMKG_SYNC_STATUS.next_sync_in}</DataRow>
-          <DataRow label="Stasiun aktif">
-            <span className="tabular">{BMKG_SYNC_STATUS.stations_active} stasiun</span>
-          </DataRow>
-          <DataRow label="Latensi API">
-            <span
-              className={cn(
-                "tabular",
-                BMKG_SYNC_STATUS.latency_ms > 1000 ? "text-risk-medium" : "text-risk-low",
-              )}
-            >
-              {formatNumber(BMKG_SYNC_STATUS.latency_ms)} ms
-            </span>
-          </DataRow>
-        </dl>
+        <DataState
+          loading={status.loading}
+          error={status.error}
+          onRetry={status.reload}
+          className="mt-4 min-h-[120px]"
+        >
+          <dl className="mt-4 space-y-2 rounded-xl border border-border bg-paper-50 p-3.5">
+            <DataRow label="Sumber">{job?.source ?? "—"}</DataRow>
+            <DataRow label="Selesai">
+              <span className="tabular">{formatDateTime(job?.finishedAt)}</span>
+            </DataRow>
+            <DataRow label="Baris diproses">
+              <span className="tabular">{formatNumber(job?.rows ?? 0)}</span>
+            </DataRow>
+            <DataRow label="Durasi">
+              <span className="tabular">
+                {job?.latencyMs === null || job?.latencyMs === undefined
+                  ? "—"
+                  : `${formatNumber(job.latencyMs)} ms`}
+              </span>
+            </DataRow>
+          </dl>
 
-        <div className="mt-3">
-          <span className="overline">Fitur iklim tersinkron</span>
-          <ul className="mt-1.5 flex flex-wrap gap-1.5">
-            {BMKG_SYNC_STATUS.synced_features.map((feature) => (
-              <li key={feature}>
-                <Badge variant="muted">{feature}</Badge>
-              </li>
-            ))}
-          </ul>
-        </div>
+          {job?.detail && (
+            <p className="mt-2 text-caption leading-relaxed text-paper-600">{job.detail}</p>
+          )}
+
+          <div className="mt-3">
+            <span className="overline">Cakupan dataset</span>
+            <ul className="mt-1.5 space-y-1">
+              {(status.data?.coverage ?? []).map((c) => (
+                <li key={c.disease} className="flex justify-between gap-3 text-caption">
+                  <span className="font-medium text-foreground">{c.disease}</span>
+                  <span className="text-paper-600">
+                    {c.months} bulan · {formatNumber(c.rows)} baris · s.d. {c.latestLabel}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="mt-3">
+            <span className="overline">Variabel iklim tersimpan</span>
+            <ul className="mt-1.5 flex flex-wrap gap-1.5">
+              {(status.data?.climateVariables ?? []).map((feature) => (
+                <li key={feature}>
+                  <Badge variant="muted">{feature}</Badge>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </DataState>
       </div>
 
-      <div className="mt-4 flex items-center justify-end border-t border-border pt-3">
-        <Button size="sm" loading={syncing} onClick={handleTriggerSync} className="gap-1.5">
-          <RefreshCw
-            className={cn("h-3.5 w-3.5", syncing && "animate-spin")}
-            aria-hidden="true"
-          />
-          <span>{syncing ? "Menyinkronkan…" : "Sinkronkan sekarang"}</span>
-        </Button>
+      <div className="mt-4 space-y-2 border-t border-border pt-3">
+        {error && (
+          <p role="alert" className="text-caption font-medium text-risk-high">
+            {error}
+          </p>
+        )}
+        <div className="flex items-center justify-end">
+          <Button size="sm" loading={refreshing} onClick={handleRefresh} className="gap-1.5">
+            <RefreshCw
+              className={cn("h-3.5 w-3.5", refreshing && "animate-spin")}
+              aria-hidden="true"
+            />
+            <span>{refreshing ? "Menghitung ulang…" : "Hitung ulang prediksi"}</span>
+          </Button>
+        </div>
       </div>
     </Card>
   );
@@ -289,7 +426,17 @@ function BmkgConnectorCard({ onLog }: { onLog: (log: AuditLog) => void }) {
 
 type AuditFilter = "all" | AuditLog["status"];
 
-function AuditTrailCard({ logs }: { logs: AuditLog[] }) {
+function AuditTrailCard({
+  logs,
+  loading,
+  error,
+  onRetry,
+}: {
+  logs: AuditLog[];
+  loading: boolean;
+  error: string | null;
+  onRetry: () => void;
+}) {
   const [filter, setFilter] = React.useState<AuditFilter>("all");
   const [query, setQuery] = React.useState("");
 
@@ -298,7 +445,7 @@ function AuditTrailCard({ logs }: { logs: AuditLog[] }) {
     return logs.filter((log) => {
       if (filter !== "all" && log.status !== filter) return false;
       if (!needle) return true;
-      return [log.id, log.user, log.role, log.action, log.details]
+      return [log.id, log.actor, log.role, log.action, log.details]
         .join(" ")
         .toLowerCase()
         .includes(needle);
@@ -331,8 +478,8 @@ function AuditTrailCard({ logs }: { logs: AuditLog[] }) {
             <span>Jejak audit integritas data</span>
           </h3>
           <p className="mt-0.5 text-caption text-paper-600">
-            Setiap pembaruan data kasus dan eksekusi model tercatat kronologis untuk kepatuhan
-            dan transparansi publik.
+            Setiap masuk-keluar sesi, impor data, keputusan verifikasi, dan eksekusi
+            model tercatat kronologis di server.
           </p>
         </div>
         <Badge variant="outline">{formatNumber(logs.length)} entri</Badge>
@@ -380,17 +527,18 @@ function AuditTrailCard({ logs }: { logs: AuditLog[] }) {
         </label>
       </div>
 
-      {filtered.length === 0 ? (
-        <div className="mt-4 rounded-xl border border-border bg-paper-50 p-8 text-center">
-          <Info className="mx-auto h-5 w-5 text-paper-600" aria-hidden="true" />
-          <p className="mt-2 text-body-sm font-medium text-foreground">
-            Tidak ada entri yang cocok
-          </p>
-          <p className="text-caption text-paper-600">
-            Ubah kata kunci atau pilih status lain.
-          </p>
-        </div>
-      ) : (
+      <DataState
+        loading={loading}
+        error={error}
+        empty={!loading && filtered.length === 0}
+        emptyMessage={
+          logs.length === 0
+            ? "Belum ada peristiwa tercatat. Jejak audit terisi saat seseorang masuk, mengimpor data, atau memutuskan laporan."
+            : "Tidak ada entri yang cocok. Ubah kata kunci atau pilih status lain."
+        }
+        onRetry={onRetry}
+        className="mt-4"
+      >
         <div className="mt-4 overflow-x-auto rounded-xl border border-border">
           <table className="w-full text-left">
             <caption className="sr-only">Jejak audit pembaruan data dan eksekusi model</caption>
@@ -421,12 +569,14 @@ function AuditTrailCard({ logs }: { logs: AuditLog[] }) {
                   <tr key={log.id} className="transition-colors hover:bg-paper-50">
                     <td className="px-3.5 py-3 align-top">
                       <div className="tabular text-body-sm font-semibold text-foreground">
-                        {log.id}
+                        #{log.id}
                       </div>
-                      <div className="tabular text-caption text-paper-600">{log.timestamp}</div>
+                      <div className="tabular text-caption text-paper-600">
+                        {formatDateTime(log.ts)}
+                      </div>
                     </td>
                     <td className="px-3 py-3 align-top">
-                      <div className="text-body-sm font-medium text-foreground">{log.user}</div>
+                      <div className="text-body-sm font-medium text-foreground">{log.actor}</div>
                       <div className="text-caption text-paper-600">{log.role}</div>
                     </td>
                     <td className="px-3 py-3 align-top text-body-sm font-medium text-brand-700">
@@ -447,7 +597,7 @@ function AuditTrailCard({ logs }: { logs: AuditLog[] }) {
             </tbody>
           </table>
         </div>
-      )}
+      </DataState>
     </Card>
   );
 }
@@ -455,20 +605,22 @@ function AuditTrailCard({ logs }: { logs: AuditLog[] }) {
 /* ── Komposisi ──────────────────────────────────────────────────────────── */
 
 export function AdminDataImport({ className }: { className?: string }) {
-  const [logs, setLogs] = React.useState<AuditLog[]>(AUDIT_LOGS);
-
-  const prependLog = React.useCallback((log: AuditLog) => {
-    setLogs((prev) => [log, ...prev]);
-  }, []);
+  const diseases = useApi(() => fetchDiseases(), []);
+  const audit = useApi(() => fetchAuditLog(50), []);
 
   return (
     <div className={cn("flex flex-col gap-6", className)}>
       <div className="grid grid-cols-1 items-stretch gap-5 lg:grid-cols-2">
-        <CsvImportCard onLog={prependLog} />
-        <BmkgConnectorCard onLog={prependLog} />
+        <CsvImportCard diseases={diseases.data ?? []} onImported={audit.reload} />
+        <IngestStatusCard onRefreshed={audit.reload} />
       </div>
 
-      <AuditTrailCard logs={logs} />
+      <AuditTrailCard
+        logs={audit.data?.data ?? []}
+        loading={audit.loading}
+        error={audit.error}
+        onRetry={audit.reload}
+      />
     </div>
   );
 }

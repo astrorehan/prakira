@@ -8,13 +8,25 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ["lucide-react", "recharts"],
   },
+  /**
+   * Proksi ke gateway.
+   *
+   * `API_PROXY_TARGET` sengaja bukan variabel `NEXT_PUBLIC_`: nilainya hanya
+   * dipakai proses Next di server. Dengan begitu peramban memanggil `/api/*`
+   * secara same-origin, cookie sesi ikut tanpa konfigurasi CORS, dan alamat
+   * internal gateway tidak ikut terkirim ke klien.
+   *
+   * `NEXT_PUBLIC_API_URL` tetap dihormati untuk pemasangan yang memang menaruh
+   * gateway di host lain tanpa proksi — di sana `lib/api.ts` memanggilnya
+   * langsung dan CORS gateway harus mengizinkan asal frontend-nya.
+   */
   async rewrites() {
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL;
-    if (!backendUrl) return [];
+    const target = process.env.API_PROXY_TARGET ?? process.env.NEXT_PUBLIC_API_URL;
+    if (!target) return [];
     return [
       {
         source: "/api/:path*",
-        destination: `${backendUrl}/api/:path*`,
+        destination: `${target.replace(/\/$/, "")}/api/:path*`,
       },
     ];
   },

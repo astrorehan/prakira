@@ -1,39 +1,53 @@
-import { getKecamatanDataList } from "@/lib/mock-data";
-import type { DiseaseType, RiskLevel } from "@/types";
+import type { DiseaseType, KecamatanData, RiskLevel } from "@/types";
 
-const DISEASES: DiseaseType[] = ["DBD", "ISPA", "Diare"];
 const ORDER: Record<RiskLevel, number> = { rendah: 0, sedang: 1, tinggi: 2 };
 
 export interface CityRiskRow {
   nama: string;
-  /** Worst level the district carries across all three diseases. */
-  level: RiskLevel;
-  /** Score of the disease that set that level. */
-  score: number;
-  driver: DiseaseType;
+  /** Kelas terburuk yang dibawa kecamatan ini di seluruh penyakit. */
+  level: RiskLevel | null;
+  /** Skor penyakit yang menetapkan kelas itu. `null` bila belum ada prediksi. */
+  score: number | null;
+  driver: DiseaseType | null;
 }
 
 /**
- * One row per kecamatan, carrying its worst disease rather than an average.
+ * Satu baris per kecamatan, membawa penyakit terburuknya alih-alih rata-rata.
  *
- * A district that is Siaga for ISPA and Aman for the other two is Siaga — the
- * same rule the single-district panel already uses to pick its headline, so
- * the city view and the district view can never disagree about a district.
+ * Kecamatan yang Siaga untuk ISPA dan Aman untuk yang lain tetap Siaga — aturan
+ * yang sama dipakai panel kecamatan tunggal, sehingga tampilan kota dan
+ * tampilan kecamatan tidak bisa berbeda pendapat tentang satu kecamatan.
+ *
+ * Kecamatan tanpa prediksi tetap muncul dengan `level: null`. Menghilangkannya
+ * dari daftar akan membuat kota tampak lebih terpantau daripada kenyataannya.
  */
-export function getCityRiskRows(): CityRiskRow[] {
+export function getCityRiskRows(byDisease: Record<string, KecamatanData[]>): CityRiskRow[] {
   const worst = new Map<string, CityRiskRow>();
 
-  for (const disease of DISEASES) {
-    for (const kec of getKecamatanDataList(disease)) {
+  for (const [disease, districts] of Object.entries(byDisease)) {
+    for (const kec of districts) {
       const current = worst.get(kec.nama);
-      const beatsLevel =
-        !current || ORDER[kec.tingkat_risiko] > ORDER[current.level];
-      const tiesLevelButScoresHigher =
-        current &&
-        ORDER[kec.tingkat_risiko] === ORDER[current.level] &&
-        kec.skor_risiko > current.score;
 
-      if (beatsLevel || tiesLevelButScoresHigher) {
+      if (!current) {
+        worst.set(kec.nama, {
+          nama: kec.nama,
+          level: kec.tingkat_risiko,
+          score: kec.skor_risiko,
+          driver: kec.tingkat_risiko ? disease : null,
+        });
+        continue;
+      }
+
+      if (kec.tingkat_risiko === null) continue;
+
+      const beatsLevel =
+        current.level === null || ORDER[kec.tingkat_risiko] > ORDER[current.level];
+      const tiesButScoresHigher =
+        current.level !== null &&
+        ORDER[kec.tingkat_risiko] === ORDER[current.level] &&
+        (kec.skor_risiko ?? 0) > (current.score ?? 0);
+
+      if (beatsLevel || tiesButScoresHigher) {
         worst.set(kec.nama, {
           nama: kec.nama,
           level: kec.tingkat_risiko,
@@ -44,20 +58,24 @@ export function getCityRiskRows(): CityRiskRow[] {
     }
   }
 
-  return [...worst.values()].sort(
-    (a, b) => ORDER[b.level] - ORDER[a.level] || b.score - a.score,
-  );
+  return [...worst.values()].sort((a, b) => {
+    const rankA = a.level === null ? -1 : ORDER[a.level];
+    const rankB = b.level === null ? -1 : ORDER[b.level];
+    if (rankA !== rankB) return rankB - rankA;
+    return (b.score ?? 0) - (a.score ?? 0);
+  });
 }
 
 export interface CityRiskSummary {
-  /** Every district, worst-first. */
+  /** Setiap kecamatan, terburuk lebih dulu. */
   rows: CityRiskRow[];
   counts: Record<RiskLevel, number>;
+  /** Kecamatan yang belum punya prediksi sama sekali. */
+  unknown: number;
   total: number;
 }
 
-export function getCityRiskSummary(): CityRiskSummary {
-  const rows = getCityRiskRows();
+export function summarizeCityRisk(rows: CityRiskRow[]): CityRiskSummary {
   return {
     rows,
     counts: {
@@ -65,6 +83,7 @@ export function getCityRiskSummary(): CityRiskSummary {
       sedang: rows.filter((r) => r.level === "sedang").length,
       rendah: rows.filter((r) => r.level === "rendah").length,
     },
+    unknown: rows.filter((r) => r.level === null).length,
     total: rows.length,
   };
 }

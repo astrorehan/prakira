@@ -4,18 +4,25 @@ import * as React from "react";
 import { useMemo, useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getKecamatanDataList } from "@/lib/mock-data";
+import { useCityData } from "@/lib/use-city-data";
 import type { DiseaseType, RiskLevel } from "@/types";
 
 import { Reveal } from "./reveal";
 import { SectionHeading } from "./section-heading";
 
-const DISEASES: DiseaseType[] = ["DBD", "ISPA", "Diare"];
-
 const RISK: Record<RiskLevel, { word: string; bar: string; ink: string; tint: string }> = {
   tinggi: { word: "Siaga", bar: "bg-grad-bar-high", ink: "text-risk-high", tint: "bg-risk-high-bg" },
   sedang: { word: "Waspada", bar: "bg-grad-bar-medium", ink: "text-risk-medium", tint: "bg-risk-medium-bg" },
   rendah: { word: "Rendah", bar: "bg-grad-bar-low", ink: "text-risk-low", tint: "bg-risk-low-bg" },
+};
+
+/* Kecamatan tanpa prakiraan punya penampilannya sendiri. Meminjam gaya
+   "rendah" akan membuat kekosongan data terbaca sebagai kabar baik. */
+const RISK_UNKNOWN = {
+  word: "Belum ada",
+  bar: "bg-paper-300",
+  ink: "text-paper-600",
+  tint: "bg-paper-100",
 };
 
 interface DistrictBoardProps {
@@ -33,15 +40,23 @@ export function DistrictBoard({
   selectedKecamatan,
   onSelectKecamatan,
 }: DistrictBoardProps) {
-  const [disease, setDisease] = useState<DiseaseType>("DBD");
+  const { byDisease, diseases, loading, error } = useCityData();
+  const [disease, setDisease] = useState<DiseaseType | null>(null);
 
-  const ranked = useMemo(
-    () =>
-      [...getKecamatanDataList(disease)].sort((a, b) => b.skor_risiko - a.skor_risiko),
-    [disease],
-  );
+  React.useEffect(() => {
+    if (!disease && diseases.length > 0) setDisease(diseases[0]);
+  }, [diseases, disease]);
 
-  const columns = [ranked.slice(0, 8), ranked.slice(8)];
+  /* Kecamatan tanpa skor turun ke dasar daftar, bukan naik ke puncak sebagai
+     "skor 0". Papan peringkat yang menaruh kekosongan di posisi teraman
+     adalah kesimpulan yang tidak pernah dibuat model. */
+  const ranked = useMemo(() => {
+    const list = disease ? (byDisease[disease] ?? []) : [];
+    return [...list].sort((a, b) => (b.skor_risiko ?? -1) - (a.skor_risiko ?? -1));
+  }, [byDisease, disease]);
+
+  const half = Math.ceil(ranked.length / 2);
+  const columns = [ranked.slice(0, half), ranked.slice(half)];
 
   return (
     <section id="peta" className="scroll-mt-24 bg-grad-paper py-16 md:py-24">
@@ -56,7 +71,7 @@ export function DistrictBoard({
               aria-label="Pilih penyakit"
               className="inline-flex rounded-full border border-sand-200 bg-sand-50 p-1"
             >
-              {DISEASES.map((d) => (
+              {diseases.map((d) => (
                 <button
                   key={d}
                   role="tab"
@@ -81,8 +96,8 @@ export function DistrictBoard({
           {columns.map((col, ci) => (
             <ul key={ci} className="divide-y divide-sand-200 border-t border-sand-200">
               {col.map((kec, i) => {
-                const rank = ci * 8 + i + 1;
-                const risk = RISK[kec.tingkat_risiko];
+                const rank = ci * half + i + 1;
+                const risk = kec.tingkat_risiko ? RISK[kec.tingkat_risiko] : RISK_UNKNOWN;
                 const active = kec.nama === selectedKecamatan;
 
                 return (
@@ -116,7 +131,7 @@ export function DistrictBoard({
                         <span className="mt-1.5 block h-1 w-full overflow-hidden rounded-full bg-sand-100">
                           <span
                             className={cn("block h-full rounded-full", risk.bar)}
-                            style={{ width: `${kec.skor_risiko}%` }}
+                            style={{ width: `${kec.skor_risiko ?? 0}%` }}
                           />
                         </span>
                       </span>
@@ -134,7 +149,7 @@ export function DistrictBoard({
                         <span
                           className={cn("tabular w-8 text-right text-h3", risk.ink)}
                         >
-                          {Math.round(kec.skor_risiko)}
+                          {kec.skor_risiko === null ? "—" : Math.round(kec.skor_risiko)}
                         </span>
                       </span>
                     </button>
@@ -145,9 +160,22 @@ export function DistrictBoard({
           ))}
         </Reveal>
 
+        {(loading || error || ranked.length === 0) && (
+          <p className="mt-6 text-body-sm text-paper-600">
+            {loading
+              ? "Memuat papan peringkat…"
+              : error
+                ? error
+                : "Belum ada kecamatan dengan prakiraan untuk penyakit ini."}
+          </p>
+        )}
+
+        {/* Skor adalah persentil prediksi terhadap riwayat kecamatan itu
+            sendiri, bukan gabungan tiga faktor seperti yang tertulis
+            sebelumnya - kepadatan penduduk tidak pernah masuk perhitungannya. */}
         <p className="mt-6 border-t border-sand-200 pt-4 font-mono text-3xs uppercase tracking-wider text-paper-600">
-          Skor 0–100 · gabungan riwayat kasus, kepadatan penduduk, dan pemicu iklim
-          per kecamatan
+          Skor 0–100 · posisi prakiraan bulan depan terhadap riwayat kasus kecamatan
+          itu sendiri
         </p>
       </div>
     </section>

@@ -5,9 +5,10 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { ArrowRight, Bug, Wind, Droplets, Check, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getKecamatanDataList } from "@/lib/mock-data";
-import { getCityRiskSummary } from "@/lib/city-risk";
 import { withKecamatan } from "@/lib/kecamatan-selection";
+import { districtAcrossDiseases, useCityData } from "@/lib/use-city-data";
+import { formatMonth } from "@/lib/period";
+import { diseaseProfile } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import type { DiseaseType, KecamatanData, RiskLevel } from "@/types";
 
@@ -37,7 +38,7 @@ const STATUS: Record<
 > = {
   rendah: {
     word: "Aman",
-    lead: "Tidak ada indikasi lonjakan dalam 2–4 minggu ke depan.",
+    lead: "Tidak ada indikasi lonjakan pada bulan yang diprakirakan.",
     ink: "text-risk-low",
     surface: "bg-grad-risk-low",
     bar: "bg-grad-bar-low",
@@ -55,7 +56,7 @@ const STATUS: Record<
   },
   tinggi: {
     word: "Siaga",
-    lead: "Potensi lonjakan kasus dalam 2–4 minggu ke depan.",
+    lead: "Potensi lonjakan kasus pada bulan yang diprakirakan.",
     ink: "text-risk-high",
     surface: "bg-grad-risk-high",
     bar: "bg-grad-bar-high",
@@ -64,16 +65,32 @@ const STATUS: Record<
   },
 };
 
-const DISEASE: Record<
-  DiseaseType,
-  { icon: React.ElementType; full: string; blurb: string }
-> = {
-  DBD: { icon: Bug, full: "Demam Berdarah", blurb: "Nyamuk Aedes aegypti" },
-  ISPA: { icon: Wind, full: "Infeksi Pernapasan", blurb: "Udara & partikulat" },
-  Diare: { icon: Droplets, full: "Diare & Pencernaan", blurb: "Air & sanitasi" },
+const DISEASE_ICON: Record<string, React.ElementType> = {
+  DBD: Bug,
+  ISPA: Wind,
+  Diare: Droplets,
 };
 
+/** Profil penyakit dari `lib/utils`, jadi nama panjang dan vektornya tidak
+ *  ditulis dua kali di dua berkas yang bisa saling melenceng. */
+function diseaseMeta(type: DiseaseType) {
+  const profile = diseaseProfile(type);
+  return {
+    icon: DISEASE_ICON[type] ?? Bug,
+    full: profile.name,
+    blurb: profile.vector,
+  };
+}
+
 const ORDER: Record<RiskLevel, number> = { rendah: 0, sedang: 1, tinggi: 2 };
+
+/** Cakupan data dalam bahasa sehari-hari — permukaan ini dibaca warga. */
+const COVERAGE_WORD: Record<string, string> = {
+  high: "lengkap",
+  medium: "cukup",
+  low: "tipis",
+  insufficient: "tidak memadai",
+};
 
 /** Score 0–100 on a continuous gradient track, with the quartile ticks that
  *  separate the three risk classes marked on it. */
@@ -88,6 +105,20 @@ function ScoreBar({ score, bar }: { score: number; bar: string }) {
   );
 }
 
+const STATUS_UNKNOWN = {
+  word: "Belum ada",
+  lead: "Belum ada prakiraan untuk periode berjalan.",
+  ink: "text-paper-600",
+  surface: "bg-sand-50",
+  bar: "bg-paper-300",
+  edge: "border-sand-200",
+  textGrad: "linear-gradient(120deg,#6B6560 0%,#4A443F 100%)",
+};
+
+function statusOf(level: RiskLevel | null) {
+  return level ? STATUS[level] : STATUS_UNKNOWN;
+}
+
 function DiseaseCard({
   type,
   data,
@@ -97,8 +128,8 @@ function DiseaseCard({
   data: KecamatanData;
   index: number;
 }) {
-  const status = STATUS[data.tingkat_risiko];
-  const meta = DISEASE[type];
+  const status = statusOf(data.tingkat_risiko);
+  const meta = diseaseMeta(type);
   const Icon = meta.icon;
 
   return (
@@ -136,12 +167,12 @@ function DiseaseCard({
             Skor risiko
           </span>
           <span className="tabular text-metric leading-none text-foreground">
-            {Math.round(data.skor_risiko)}
+            {data.skor_risiko === null ? "—" : Math.round(data.skor_risiko)}
             <span className="text-caption text-paper-600"> /100</span>
           </span>
         </div>
         <div className="mt-3">
-          <ScoreBar score={data.skor_risiko} bar={status.bar} />
+          <ScoreBar score={data.skor_risiko ?? 0} bar={status.bar} />
         </div>
       </div>
 
@@ -150,31 +181,46 @@ function DiseaseCard({
           <dt className="text-overline uppercase tracking-[0.1em] text-paper-600">
             Kasus aktif
           </dt>
-          <dd className="tabular mt-1 text-h3 text-foreground">{data.kasus_aktif}</dd>
+          <dd className="tabular mt-1 text-h3 text-foreground">
+            {data.kasus_aktif ?? "—"}
+          </dd>
         </div>
         <div className="flex-1 px-4 py-3">
           <dt className="text-overline uppercase tracking-[0.1em] text-paper-600">
             Prakiraan
           </dt>
           <dd className="tabular mt-1 text-h3 text-foreground">
-            {data.kasus_prediksi_lower}–{data.kasus_prediksi_upper}
+            {data.kasus_prediksi_lower === null
+              ? "—"
+              : `${data.kasus_prediksi_lower}–${data.kasus_prediksi_upper}`}
           </dd>
         </div>
       </dl>
 
-      <div className="mt-6 border-t border-white/80 pt-5">
-        <p className="text-overline uppercase tracking-[0.1em] text-paper-600">
-          Yang bisa Anda lakukan
-        </p>
-        <ul className="mt-3 space-y-2.5">
-          {data.rekomendasi.slice(0, 2).map((rek, i) => (
-            <li key={i} className="flex gap-2.5 text-body-sm text-paper-700">
-              <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden />
-              <span>{rek}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
+      {/* Dulu di sini ada dua kalimat "Yang bisa Anda lakukan" yang diambil dari
+          `rekomendasi` bawaan berkas mock — teks yang sama untuk setiap
+          kecamatan pada kelas risiko yang sama, tanpa hubungan dengan model.
+          Yang menggantikannya adalah pemicu yang benar-benar dipakai model,
+          dan tautan ke panduan pencegahan yang memang ditulis untuk dibaca. */}
+      {data.drivers.length > 0 && (
+        <div className="mt-6 border-t border-white/80 pt-5">
+          <p className="text-overline uppercase tracking-[0.1em] text-paper-600">
+            Pemicu menurut model
+          </p>
+          <ul className="mt-3 space-y-2.5">
+            {data.drivers.slice(0, 2).map((driver) => (
+              <li key={driver.feature} className="flex gap-2.5 text-body-sm text-paper-700">
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden />
+                <span>
+                  {driver.label}{" "}
+                  {driver.value.toLocaleString("id-ID", { maximumFractionDigits: 1 })}
+                  {driver.unit} · persentil {driver.percentile} dari riwayatnya
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </Reveal>
   );
 }
@@ -187,7 +233,7 @@ function DiseaseCard({
    opening state reports the whole city and treats every district equally. */
 
 const CITY_LEVEL_META: { level: RiskLevel; blurb: string }[] = [
-  { level: "tinggi", blurb: "potensi lonjakan 2–4 minggu ke depan" },
+  { level: "tinggi", blurb: "potensi lonjakan pada bulan yang diprakirakan" },
   { level: "sedang", blurb: "cuaca mulai mendukung penularan" },
   { level: "rendah", blurb: "tidak ada indikasi lonjakan" },
 ];
@@ -197,7 +243,8 @@ function CitySummary({
 }: {
   onSelectKecamatan: (name: string) => void;
 }) {
-  const { rows, counts, total } = useMemo(() => getCityRiskSummary(), []);
+  const { summary, meta, loading, error } = useCityData();
+  const { rows, counts, total } = summary;
 
   /* The city wears its worst district's colour. A headline that reads "Aman"
      over three Siaga kecamatan would be a lie of aggregation. */
@@ -212,12 +259,26 @@ function CitySummary({
      already lives in the board further down the page. */
   const watchlist = rows.filter((r) => r.level === headlineLevel && r.level !== "rendah");
 
+  if (loading || error || total === 0) {
+    return (
+      <div className="rounded-3xl border border-sand-200 bg-white/70 p-10 text-center">
+        <p className="text-body text-paper-600">
+          {loading
+            ? "Memuat status kota…"
+            : error
+              ? error
+              : "Belum ada data kecamatan di sistem."}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <>
       <Reveal>
         <div className="border-t border-sand-200 pt-4">
           <span className="text-overline uppercase tracking-[0.1em] text-paper-600">
-            Ringkasan · 16 kecamatan Kota Semarang
+            Ringkasan · {total} kecamatan Kota Semarang
           </span>
         </div>
 
@@ -231,7 +292,7 @@ function CitySummary({
           <div className="grid gap-10 p-8 md:grid-cols-12 md:items-stretch md:p-12">
             <div className="md:col-span-7">
               <p className="text-overline uppercase tracking-[0.1em] text-paper-600">
-                Status kota minggu ini
+                Status kota, prakiraan {formatMonth(meta?.predictionMonth)}
               </p>
               <p
                 className="tabular mt-3 text-display leading-[0.95] tracking-[-0.03em]"
@@ -250,8 +311,11 @@ function CitySummary({
                   : `${headlineCount} dari ${total} kecamatan berstatus ${status.word} untuk setidaknya satu penyakit. Cari kecamatan Anda di atas untuk hasil yang spesifik.`}
               </p>
               <p className="mt-6 border-t border-white/70 pt-4 text-caption text-paper-600">
-                Diperbarui minggu ke-34 2026 · dihitung dari cuaca BMKG dan riwayat
-                kasus Dinas Kesehatan Kota Semarang
+                Dihitung dari data iklim dan riwayat kasus sampai{" "}
+                {formatMonth(meta?.latestObserved)}
+                {summary.unknown > 0
+                  ? ` · ${summary.unknown} kecamatan belum punya prakiraan`
+                  : ""}
               </p>
             </div>
 
@@ -308,7 +372,7 @@ function CitySummary({
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             {watchlist.map(({ nama, level, driver, score }) => {
-              const levelStatus = STATUS[level];
+              const levelStatus = statusOf(level);
               return (
                 <button
                   key={nama}
@@ -326,7 +390,8 @@ function CitySummary({
                       levelStatus.ink,
                     )}
                   >
-                    {levelStatus.word} · {driver} {Math.round(score)}
+                    {levelStatus.word} · {driver ?? "—"}{" "}
+                    {score === null ? "" : Math.round(score)}
                   </span>
                 </button>
               );
@@ -344,23 +409,26 @@ function CitySummary({
 /* ── District view ────────────────────────────────────────────────────────── */
 
 function DistrictResult({ selectedKecamatan }: { selectedKecamatan: string }) {
-  const rows = useMemo(() => {
-    const types: DiseaseType[] = ["DBD", "ISPA", "Diare"];
-    const found = types.map((t) => ({
-      type: t,
-      data: getKecamatanDataList(t).find((k) => k.nama === selectedKecamatan),
-    }));
-    return found.every((f) => f.data)
-      ? (found as { type: DiseaseType; data: KecamatanData }[])
-      : null;
-  }, [selectedKecamatan]);
+  const { byDisease, meta } = useCityData();
 
-  if (!rows) return null;
-
-  const worst = rows.reduce((prev, curr) =>
-    ORDER[curr.data.tingkat_risiko] > ORDER[prev.data.tingkat_risiko] ? curr : prev,
+  const rows = useMemo(
+    () =>
+      districtAcrossDiseases(byDisease, selectedKecamatan).map(({ disease, data }) => ({
+        type: disease as DiseaseType,
+        data,
+      })),
+    [byDisease, selectedKecamatan],
   );
-  const status = STATUS[worst.data.tingkat_risiko];
+
+  if (rows.length === 0) return null;
+
+  /* Kecamatan tanpa prakiraan diperlakukan sebagai peringkat terendah, bukan
+     sebagai "rendah": kelasnya tetap kosong di layar. */
+  const rank = (level: RiskLevel | null) => (level === null ? -1 : ORDER[level]);
+  const worst = rows.reduce((prev, curr) =>
+    rank(curr.data.tingkat_risiko) > rank(prev.data.tingkat_risiko) ? curr : prev,
+  );
+  const status = statusOf(worst.data.tingkat_risiko);
 
   return (
     <>
@@ -399,8 +467,8 @@ function DistrictResult({ selectedKecamatan }: { selectedKecamatan: string }) {
                 {status.lead}
               </p>
               <p className="mt-6 border-t border-white/70 pt-4 text-caption text-paper-600">
-                Diperbarui minggu ke-34 2026 · dihitung dari cuaca BMKG dan riwayat
-                kasus Dinas Kesehatan Kota Semarang
+                Prakiraan {formatMonth(meta?.predictionMonth)} · dihitung dari data
+                iklim dan riwayat kasus sampai {formatMonth(meta?.latestObserved)}
               </p>
             </div>
 
@@ -410,14 +478,20 @@ function DistrictResult({ selectedKecamatan }: { selectedKecamatan: string }) {
                   Penyumbang risiko tertinggi
                 </p>
                 <p className="mt-2 text-h2 text-foreground">
-                  {DISEASE[worst.type].full}
+                  {diseaseMeta(worst.type).full}
                 </p>
                 <div className="mt-5">
-                  <ScoreBar score={worst.data.skor_risiko} bar={status.bar} />
+                  <ScoreBar score={worst.data.skor_risiko ?? 0} bar={status.bar} />
                 </div>
+                {/* "Keyakinan model 94%" dihapus: angkanya tidak pernah keluar
+                    dari model. Cakupan data dihitung dari kelengkapan riwayat
+                    kecamatan ini dan memang menjawab pertanyaan yang sama. */}
                 <p className="tabular mt-4 text-caption leading-relaxed text-paper-600">
-                  Skor {Math.round(worst.data.skor_risiko)} · keyakinan model{" "}
-                  {Math.round(worst.data.confidence * 100)}%
+                  Skor{" "}
+                  {worst.data.skor_risiko === null
+                    ? "—"
+                    : Math.round(worst.data.skor_risiko)}{" "}
+                  · cakupan data {COVERAGE_WORD[worst.data.coverage]}
                 </p>
 
                 <dl className="mt-auto flex divide-x divide-sand-200 border-t border-sand-200 pt-4">
@@ -426,16 +500,17 @@ function DistrictResult({ selectedKecamatan }: { selectedKecamatan: string }) {
                       Kasus kini
                     </dt>
                     <dd className="tabular mt-1 text-h2 text-foreground">
-                      {worst.data.kasus_aktif}
+                      {worst.data.kasus_aktif ?? "—"}
                     </dd>
                   </div>
                   <div className="flex-1 pl-4">
                     <dt className="text-overline uppercase tracking-[0.1em] text-paper-600">
-                      Prakiraan 4 minggu
+                      Prakiraan {formatMonth(meta?.predictionMonth)}
                     </dt>
                     <dd className="tabular mt-1 text-h2 text-foreground">
-                      {worst.data.kasus_prediksi_lower}–
-                      {worst.data.kasus_prediksi_upper}
+                      {worst.data.kasus_prediksi_lower === null
+                        ? "—"
+                        : `${worst.data.kasus_prediksi_lower}–${worst.data.kasus_prediksi_upper}`}
                     </dd>
                   </div>
                 </dl>
@@ -446,7 +521,7 @@ function DistrictResult({ selectedKecamatan }: { selectedKecamatan: string }) {
       </Reveal>
 
       {/* ── Per-disease detail ── */}
-      <div className="mt-6 grid items-stretch gap-5 md:grid-cols-3">
+      <div className="mt-6 grid items-stretch gap-5 md:grid-cols-2 lg:grid-cols-3">
         {rows.map(({ type, data }, i) => (
           <DiseaseCard key={type} type={type} data={data} index={i} />
         ))}
@@ -459,7 +534,7 @@ function DistrictResult({ selectedKecamatan }: { selectedKecamatan: string }) {
       >
         <p className="max-w-lg text-body-sm text-paper-700">
           Melihat gejala atau genangan air di sekitar rumah? Laporan Anda
-          diverifikasi puskesmas dan ikut memperbaiki prakiraan minggu depan.
+          diverifikasi petugas dan tersedia sebagai sinyal untuk prakiraan bulan depan.
         </p>
         {/* Kecamatan yang sedang dilihat ikut ke formulir. Pembaca sudah
             menjawab "di mana Anda tinggal" untuk sampai ke layar ini;
@@ -479,13 +554,13 @@ export function RiskResultSection({
   selectedKecamatan,
   onSelectKecamatan,
 }: RiskResultSectionProps) {
-  /* An unknown name falls back to the city rather than to an empty section —
-     the anchor the hero scrolls to must always land on something readable. */
+  const { rows } = useCityData();
+
+  /* Nama yang tidak dikenal jatuh ke tampilan kota, bukan ke bagian kosong —
+     jangkar yang dituju hero harus selalu mendarat pada sesuatu yang terbaca. */
   const known = useMemo(
-    () =>
-      !!selectedKecamatan &&
-      getKecamatanDataList("DBD").some((k) => k.nama === selectedKecamatan),
-    [selectedKecamatan],
+    () => !!selectedKecamatan && rows.some((r) => r.nama === selectedKecamatan),
+    [selectedKecamatan, rows],
   );
 
   return (

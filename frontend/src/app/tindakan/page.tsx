@@ -5,28 +5,35 @@ import Link from "next/link";
 import { MapPin } from "lucide-react";
 import { ConsolePageHeader } from "@/components/console/page-header";
 import { EarlyActionCenter } from "@/components/early-action-center";
+import { DataState } from "@/components/data-state";
 import { Button } from "@/components/ui/button";
-import { ACTION_RECOMMENDATIONS } from "@/lib/mock-data";
+import { useSessionContext } from "@/components/session-provider";
+import { fetchActions } from "@/lib/api";
+import { useApi } from "@/lib/use-api";
+import { usePeriod } from "@/lib/use-period";
 
 /**
- * Aksi Dini — the operational half of the product.
+ * Aksi Dini — separuh operasional produk.
  *
- * The dashboard answers "where is the risk"; this page answers "what do we
- * send, to whom, and did it go out". Keeping the dispatch queue here is what
- * lets the dashboard stay a monitoring surface instead of two products in one
- * scroll.
- *
- * The link back to the map is deliberate: the dashboard already points here
- * when actions are pending, but there was no way back to the evidence the
- * queue is derived from.
+ * Dashboard menjawab "di mana risikonya"; halaman ini menjawab "apa yang kita
+ * kirim, ke siapa, dan sudah keluar atau belum". Antreannya sekarang datang
+ * dari mesin aturan di gateway: lima rekomendasi yang dulu ditulis tangan —
+ * lengkap dengan nomor surat, nama kepala puskesmas, dan tanggal pengiriman —
+ * digantikan tindakan yang benar-benar diturunkan dari kelas risiko bulan
+ * berjalan. Kalau tidak ada kecamatan berkelas tinggi atau sedang, antreannya
+ * kosong, dan itu jawaban yang benar.
  */
 export default function TindakanPage() {
+  const { session } = useSessionContext();
+  const { period } = usePeriod();
+  const actions = useApi(() => fetchActions(), []);
+
   return (
     <div className="min-h-screen bg-background bg-mesh-blue px-4 py-8 sm:px-6 lg:px-8">
       <div className="container mx-auto max-w-7xl space-y-6">
         <ConsolePageHeader
           title="Aksi Dini"
-          description="Instruksi intervensi untuk puskesmas dan satgas, dikirim sebelum lonjakan kasus terjadi. Antrean terurut: yang lewat tenggat lebih dulu."
+          description="Instruksi intervensi untuk puskesmas dan satgas, disusun sebelum bulan yang diprakirakan tiba. Antrean terurut: yang lewat tenggat lebih dulu."
           actions={
             <Button asChild variant="outline" size="sm" className="gap-1.5">
               <Link href="/dashboard">
@@ -37,12 +44,20 @@ export default function TindakanPage() {
           }
         />
 
-        <EarlyActionCenter
-          initialRecommendations={ACTION_RECOMMENDATIONS}
-          onExecuteRecommendation={(id, checklist) => {
-            console.log(`Action #${id} dispatched with checklist:`, checklist);
-          }}
-        />
+        <DataState
+          loading={actions.loading}
+          error={actions.error}
+          empty={!actions.loading && (actions.data?.data.length ?? 0) === 0}
+          emptyMessage="Belum ada rekomendasi tindakan. Mesin aturan hanya menerbitkan instruksi untuk kecamatan berkelas risiko sedang atau tinggi pada bulan prakiraan berjalan."
+          onRetry={actions.reload}
+        >
+          <EarlyActionCenter
+            recommendations={actions.data?.data ?? []}
+            systemToday={period?.systemToday ?? null}
+            operator={session?.label ?? null}
+            onChanged={actions.reload}
+          />
+        </DataState>
       </div>
     </div>
   );

@@ -2,85 +2,72 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { BrandLockup } from "@/components/brand-lockup";
 import { SignInForm } from "./sign-in-form";
-import { DemoAccount } from "./demo-account";
-import {
-  DEMO_ACCOUNT,
-  findDemoAccount,
-  saveSession,
-  sessionFromAccount,
-  type DemoAccount as DemoAccountFixture,
-} from "@/lib/auth";
+import { useSessionContext } from "@/components/session-provider";
+import { ApiError } from "@/lib/api";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-/** Long enough to read as work being done, short enough not to annoy a judge. */
-const FAKE_LATENCY_MS = 650;
-
+/**
+ * Layar masuk.
+ *
+ * Dua hal hilang dari versi sebelumnya, keduanya disengaja:
+ *
+ * 1. Kartu "Akun demo" yang mencetak surel dan kata sandi di layar. Kredensial
+ *    itu dulu juga hidup sebagai konstanta di dalam bundel JavaScript, jadi
+ *    siapa pun bisa membacanya tanpa membuka halaman ini. Akun awal sekarang
+ *    dibuat gateway saat seeding dan kredensialnya ada di `backend/.env.example`
+ *    — tempat yang benar untuk rahasia pemasangan.
+ * 2. `FAKE_LATENCY_MS` — jeda 650 ms yang ditambahkan supaya masuk "terasa
+ *    seperti bekerja". Sekarang ada permintaan jaringan sungguhan, dan
+ *    lamanya adalah lamanya.
+ */
 export function SignInScreen() {
   const router = useRouter();
+  const params = useSearchParams();
+  const { session, signIn } = useSessionContext();
+
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [loading, setLoading] = React.useState(false);
-  const [demoBusy, setDemoBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const [notice, setNotice] = React.useState<string | null>(null);
 
-  const timer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-  React.useEffect(() => () => {
-    if (timer.current) clearTimeout(timer.current);
-  }, []);
+  /** Rute yang tadi ditolak penjaga konsol, supaya masuk mengembalikannya. */
+  const next = params?.get("lanjut") ?? null;
 
-  const enter = (account: DemoAccountFixture) => {
-    saveSession(sessionFromAccount(account));
-    router.push(account.home);
-  };
+  React.useEffect(() => {
+    if (session) router.replace(next ?? session.home);
+  }, [session, next, router]);
 
-  const submit = () => {
+  const submit = async () => {
     if (loading) return;
-    setNotice(null);
 
     if (!EMAIL_PATTERN.test(email.trim())) {
       setError("Format surel belum benar.");
       return;
     }
-    if (password.length < 6) {
-      setError("Kata sandi minimal 6 karakter.");
+    if (password.length === 0) {
+      setError("Kata sandi wajib diisi.");
       return;
     }
 
     setError(null);
     setLoading(true);
-    timer.current = setTimeout(() => {
-      const account = findDemoAccount(email, password);
-      if (!account) {
-        setLoading(false);
-        setError("Kredensial tidak dikenali. Gunakan akun demo di bawah.");
-        return;
-      }
-      enter(account);
-    }, FAKE_LATENCY_MS);
-  };
 
-  const signInAsDemo = () => {
-    if (loading) return;
-    setEmail(DEMO_ACCOUNT.email);
-    setPassword(DEMO_ACCOUNT.password);
-    setError(null);
-    setNotice(null);
-    setLoading(true);
-    setDemoBusy(true);
-    timer.current = setTimeout(() => enter(DEMO_ACCOUNT), FAKE_LATENCY_MS);
-  };
-
-  const fillFromDemo = () => {
-    setEmail(DEMO_ACCOUNT.email);
-    setPassword(DEMO_ACCOUNT.password);
-    setError(null);
-    setNotice("Kredensial demo terisi.");
+    try {
+      const user = await signIn(email.trim(), password);
+      router.replace(next ?? user.home);
+    } catch (caught) {
+      setError(
+        caught instanceof ApiError
+          ? caught.message
+          : "Tidak dapat menghubungi gateway. Pastikan layanan backend berjalan.",
+      );
+      setLoading(false);
+    }
   };
 
   return (
@@ -109,9 +96,9 @@ export function SignInScreen() {
               <SignInForm
                 email={email}
                 password={password}
-                loading={loading && !demoBusy}
+                loading={loading}
                 error={error}
-                notice={notice}
+                notice={null}
                 onEmailChange={(value) => {
                   setEmail(value);
                   if (error) setError(null);
@@ -125,18 +112,9 @@ export function SignInScreen() {
             </div>
           </div>
 
-          {/* Reviewer shortcut — its own paper, clear of the card above. */}
-          <div className="mt-8">
-            <DemoAccount
-              busy={demoBusy}
-              disabled={loading}
-              onFill={fillFromDemo}
-              onSignIn={signInAsDemo}
-            />
-          </div>
-
           <p className="mt-6 text-center text-caption text-paper-600">
-            Prototipe DSDC ANFORCOM 2026 — rute konsol belum dijaga.
+            Kredensial awal pemasangan ada di <code>backend/.env.example</code>.
+            Ganti sebelum sistem dipakai di luar pengembangan.
           </p>
         </div>
       </div>

@@ -3,7 +3,8 @@
 import * as React from "react";
 import { useMemo } from "react";
 import { ArrowUpRight, CloudRain, Thermometer, Droplet } from "lucide-react";
-import { getKecamatanDataList } from "@/lib/mock-data";
+import { useCityData } from "@/lib/use-city-data";
+import { formatMonth } from "@/lib/period";
 import type { RiskLevel } from "@/types";
 
 const RISK_META: Record<RiskLevel, { label: string; color: string; fill: string }> = {
@@ -47,40 +48,66 @@ interface CityPulseProps {
 }
 
 /**
- * The hero's data object: a city-level readout that shows the product working
- * before the reader types anything. It reads the same mock source as the rest
- * of the page, so the numbers here and in the results never disagree.
+ * Objek data di hero: ringkasan kota yang menunjukkan produknya bekerja sebelum
+ * pembaca mengetik apa pun.
+ *
+ * Sebelumnya kartu ini membaca `getKecamatanDataList("DBD")` — satu penyakit,
+ * datanya karangan — dan mencetak "Mg 34 · 2026" sebagai label periode. Yang
+ * dibaca sekarang adalah ringkasan lintas penyakit dari gateway, dan label
+ * periodenya adalah bulan data terakhir yang sungguh ada.
  */
 export function CityPulse({ onSelectKecamatan }: CityPulseProps) {
-  const list = useMemo(() => getKecamatanDataList("DBD"), []);
+  const { byDisease, diseases, rows, summary, meta, loading, error } = useCityData();
 
-  const counts = useMemo(() => {
-    const tinggi = list.filter((k) => k.tingkat_risiko === "tinggi").length;
-    const sedang = list.filter((k) => k.tingkat_risiko === "sedang").length;
-    const rendah = list.filter((k) => k.tingkat_risiko === "rendah").length;
-    return { tinggi, sedang, rendah, total: list.length || 1 };
-  }, [list]);
-
-  const hotspots = useMemo(
-    () => [...list].sort((a, b) => b.skor_risiko - a.skor_risiko).slice(0, 3),
-    [list],
+  /* Iklim dibaca dari penyakit mana pun yang tersedia: kolom cuacanya sama
+     untuk seluruh penyakit pada bulan yang sama. */
+  const list = useMemo(
+    () => (diseases.length > 0 ? (byDisease[diseases[0]] ?? []) : []),
+    [byDisease, diseases],
   );
 
-  /* City-wide climate context — the input side of the model, averaged. */
+  const counts = useMemo(
+    () => ({
+      tinggi: summary.counts.tinggi,
+      sedang: summary.counts.sedang,
+      rendah: summary.counts.rendah,
+      total: summary.total || 1,
+    }),
+    [summary],
+  );
+
+  const hotspots = useMemo(
+    () =>
+      rows
+        .filter((r) => r.level !== null)
+        .slice(0, 3)
+        .map((r) => ({
+          row: r,
+          data: byDisease[r.driver ?? ""]?.find((d) => d.nama === r.nama) ?? null,
+        }))
+        .filter((h): h is { row: (typeof rows)[number]; data: NonNullable<typeof h.data> } =>
+          h.data !== null,
+        ),
+    [rows, byDisease],
+  );
+
+  /* Konteks iklim kota — sisi masukan model, dirata-ratakan. Kecamatan yang
+     kolom iklimnya kosong tidak ikut dihitung, bukan dihitung sebagai nol. */
   const climate = useMemo(() => {
-    const n = list.length || 1;
-    const sum = list.reduce(
-      (acc, k) => ({
-        hujan: acc.hujan + k.cuaca.curah_hujan_mm,
-        suhu: acc.suhu + k.cuaca.suhu_c,
-        lembab: acc.lembab + k.cuaca.kelembaban_pct,
-      }),
-      { hujan: 0, suhu: 0, lembab: 0 },
-    );
+    const mean = (pick: (k: (typeof list)[number]) => number | null) => {
+      const values = list.map(pick).filter((v): v is number => v !== null);
+      if (values.length === 0) return null;
+      return values.reduce((a, b) => a + b, 0) / values.length;
+    };
+
+    const hujan = mean((k) => k.cuaca.curah_hujan_mm);
+    const suhu = mean((k) => k.cuaca.suhu_c);
+    const lembab = mean((k) => k.cuaca.kelembaban_pct);
+
     return {
-      hujan: Math.round(sum.hujan / n),
-      suhu: (sum.suhu / n).toFixed(1),
-      lembab: Math.round(sum.lembab / n),
+      hujan: hujan === null ? "—" : `${Math.round(hujan)} mm`,
+      suhu: suhu === null ? "—" : `${suhu.toFixed(1)}°C`,
+      lembab: lembab === null ? "—" : `${Math.round(lembab)}%`,
     };
   }, [list]);
 
@@ -97,12 +124,14 @@ export function CityPulse({ onSelectKecamatan }: CityPulseProps) {
       <figcaption className="flex items-start justify-between gap-4 border-b border-sand-200 px-6 py-5">
         <div>
           <p className="font-mono text-overline uppercase text-paper-600">
-            Ringkasan kota · DBD
+            Ringkasan kota · {diseases.join(" & ") || "—"}
           </p>
-          <h2 className="mt-1.5 text-h3 text-foreground">Semarang minggu ini</h2>
+          <h2 className="mt-1.5 text-h3 text-foreground">
+            Semarang, prakiraan {formatMonth(meta?.predictionMonth)}
+          </h2>
         </div>
         <span className="shrink-0 rounded-md bg-sand-100 px-2 py-1 font-mono text-3xs uppercase tracking-wider text-paper-600">
-          Mg 34 · 2026
+          Data {formatMonth(meta?.latestObserved)}
         </span>
       </figcaption>
 
@@ -141,9 +170,19 @@ export function CityPulse({ onSelectKecamatan }: CityPulseProps) {
           Perlu perhatian
         </p>
 
+        {hotspots.length === 0 && (
+          <p className="px-3 py-3 text-2xs text-paper-600">
+            {loading
+              ? "Memuat ringkasan kota…"
+              : error
+                ? error
+                : "Belum ada kecamatan dengan prakiraan pada periode berjalan."}
+          </p>
+        )}
+
         <ul className="mt-1">
-          {hotspots.map((kec, i) => {
-            const meta = RISK_META[kec.tingkat_risiko];
+          {hotspots.map(({ row, data: kec }, i) => {
+            const meta = RISK_META[row.level as "tinggi" | "sedang" | "rendah"];
             return (
               <li key={kec.id}>
                 <button
@@ -160,20 +199,23 @@ export function CityPulse({ onSelectKecamatan }: CityPulseProps) {
                       {kec.nama}
                     </span>
                     <span className="tabular block text-2xs text-paper-600">
-                      {kec.kasus_aktif} kasus aktif · prediksi{" "}
-                      {kec.kasus_prediksi_lower}–{kec.kasus_prediksi_upper}
+                      {row.driver} · {kec.kasus_aktif ?? "—"} kasus bulan lalu ·
+                      prakiraan {kec.kasus_prediksi_lower ?? "—"}–
+                      {kec.kasus_prediksi_upper ?? "—"}
                     </span>
                   </span>
 
                   <span className="hidden sm:block">
-                    <Sparkline points={kec.historical_cases_3w} color={meta.fill} />
+                    {kec.riwayat_periode.length > 1 && (
+                      <Sparkline points={kec.riwayat_periode} color={meta.fill} />
+                    )}
                   </span>
 
                   <span
                     className="tabular w-9 shrink-0 text-right text-base font-semibold"
                     style={{ color: meta.color }}
                   >
-                    {Math.round(kec.skor_risiko)}
+                    {row.score === null ? "—" : Math.round(row.score)}
                   </span>
 
                   <ArrowUpRight className="h-4 w-4 shrink-0 text-paper-300 transition-colors duration-fast group-hover:text-brand-700" />
@@ -187,9 +229,9 @@ export function CityPulse({ onSelectKecamatan }: CityPulseProps) {
       {/* Climate inputs — makes the "why" visible without a paragraph */}
       <div className="grid grid-cols-3 gap-2 border-t border-sand-200 px-6 py-5">
         {[
-          { icon: CloudRain, label: "Curah hujan", value: `${climate.hujan} mm` },
-          { icon: Thermometer, label: "Suhu", value: `${climate.suhu}°C` },
-          { icon: Droplet, label: "Kelembaban", value: `${climate.lembab}%` },
+          { icon: CloudRain, label: "Curah hujan", value: climate.hujan },
+          { icon: Thermometer, label: "Suhu", value: climate.suhu },
+          { icon: Droplet, label: "Kelembaban", value: climate.lembab },
         ].map(({ icon: Icon, label, value }) => (
           <div key={label} className="min-w-0">
             <Icon className="h-3.5 w-3.5 text-paper-600" aria-hidden />

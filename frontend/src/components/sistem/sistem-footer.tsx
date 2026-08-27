@@ -1,7 +1,12 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowLeftRight, Lock, MapPin, Phone } from "lucide-react";
 import { AccessibilityMenu } from "@/components/accessibility-menu";
 import { BrandLockup } from "@/components/brand-lockup";
+import { fetchPeriod } from "@/lib/api";
+import { useApi } from "@/lib/use-api";
+import { formatMonth } from "@/lib/period";
 
 const COLUMNS: Array<{
   title: string;
@@ -34,12 +39,15 @@ const COLUMNS: Array<{
     links: [
       { label: "Dashboard prediksi", href: "/dashboard" },
       { label: "Analitik & riwayat iklim", href: "/analitik" },
-      { label: "Manajemen data & BMKG", href: "/admin" },
+      { label: "Manajemen data", href: "/admin" },
     ],
   },
 ];
 
 export function SistemFooter() {
+  /* Kebaruan halaman ditentukan datanya, bukan tanggal yang diketik. */
+  const period = useApi(() => fetchPeriod(), []);
+
   return (
     <footer className="border-t border-sand-200 bg-sand-100">
       <div className="container py-14">
@@ -119,9 +127,14 @@ export function SistemFooter() {
         </div>
 
         <div className="mt-12 flex flex-col gap-4 border-t border-sand-200 pt-6 sm:flex-row sm:items-center sm:justify-between">
+          {/* "Halaman diperbarui 24 Agustus 2026, 18:00 WIB" adalah stempel
+              waktu yang tidak pernah berubah sejak ditulis. Yang benar-benar
+              menentukan kebaruan halaman ini adalah bulan data terakhirnya. */}
           <p className="font-mono text-3xs uppercase tracking-[0.08em] text-paper-600">
-            © 2026 Pemerintah Kota Semarang · Dinas Kesehatan · Halaman
-            diperbarui 24 Agustus 2026, 18:00 WIB
+            Prakira · sistem pendukung keputusan risiko penyakit iklim ·{" "}
+            {period.data
+              ? `data sampai ${formatMonth(period.data.latestObserved)}`
+              : "memuat periode data…"}
           </p>
 
           <div className="flex flex-wrap items-center gap-2">
