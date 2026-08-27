@@ -16,6 +16,7 @@ import { fetchBacktests, fetchClimateSeries, fetchDiseases } from "@/lib/api";
 import { useApi } from "@/lib/use-api";
 import { formatMonth } from "@/lib/period";
 import { downloadCsv, slugify, toCsv } from "@/lib/export";
+import { diseaseLabel } from "@/lib/utils";
 import { climateCorrelations, isSignificant, strongestCorrelation } from "@/lib/stats";
 import type { DiseaseType } from "@/types";
 
@@ -147,7 +148,7 @@ export default function AnalitikPage() {
               <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-start">
                 <div className="min-w-0">
                   <h2 className="text-h3 text-foreground">
-                    Korelasi iklim vs kasus {selectedDisease}
+                    Korelasi iklim vs kasus {diseaseLabel(selectedDisease)}
                   </h2>
                   <p className="text-caption text-paper-600">
                     {usable.length} bulan observasi ·{" "}
@@ -195,7 +196,7 @@ export default function AnalitikPage() {
               <div className="text-body-sm text-paper-700">
                 {Object.entries(backtests.data.meta.errors).map(([disease, message]) => (
                   <p key={disease}>
-                    <span className="font-semibold text-foreground">{disease}:</span> {message}
+                    <span className="font-semibold text-foreground">{diseaseLabel(disease)}:</span> {message}
                   </p>
                 ))}
               </div>
@@ -237,7 +238,7 @@ export default function AnalitikPage() {
           <div className="min-w-0">
             <h2 className="text-h2 text-foreground">Rekapitulasi iklim & kejadian penyakit</h2>
             <p className="text-caption text-paper-600">
-              Klik kepala kolom untuk mengurutkan. Kolom {selectedDisease} ditandai
+              Klik kepala kolom untuk mengurutkan. Kolom {diseaseLabel(selectedDisease)} ditandai
               mengikuti penyakit yang dipilih.
             </p>
           </div>

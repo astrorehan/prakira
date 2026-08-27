@@ -160,7 +160,7 @@ const RULES: Record<string, Partial<Record<RiskClass, ActionTemplate[]>>> = {
      tenggatnya terikat banjir dan rob, bukan siklus vektor. Tujuh hari pada
      kelas tinggi dipilih karena masa inkubasinya 2–14 hari: intervensi yang
      datang tiga minggu setelah genangan surut sudah kehilangan gunanya. */
-  Leptospirosis: {
+  LEPTOSPIROSIS: {
     tinggi: [
       {
         actionType: "klorinasi",
@@ -225,7 +225,6 @@ function normalizeDisease(disease: string): string {
   const upper = disease.toUpperCase();
   if (upper === "ISPA") return "ISPA";
   if (upper === "DIARE") return "Diare";
-  if (upper === "LEPTOSPIROSIS") return "Leptospirosis";
   return upper;
 }
 
