@@ -38,11 +38,11 @@ services:
       # Layanan ML paket gratis butuh ~50 detik untuk bangun dari tidur.
       - key: ML_TIMEOUT_MS
         value: "60000"
+      # `fromService property: host` hanya mengembalikan nama internal
+      # ("prakira-ml"), bukan hostname publik, sehingga gateway tak pernah
+      # sampai ke layanan ML. URL publiknya ditulis apa adanya.
       - key: ML_SERVICE_URL
-        fromService:
-          type: web
-          name: prakira-ml
-          property: host
+        value: https://prakira-ml.onrender.com
       - key: ML_API_TOKEN
         fromService:
           type: web
