@@ -215,14 +215,16 @@ async function seedKecamatan(tx: Tx): Promise<number> {
   );
 }
 
-/* Kuncinya adalah nama penyakit sebagaimana disimpan di kolom `observasi.disease`
-   dan ditampilkan di antarmuka. Sengaja ditulis sama persis dengan `label` pada
-   `DISEASE_CONFIG` di ml-services/config.py: DBD dan ISPA akronim, jadi kapital
-   semua; Leptospirosis sebuah kata, jadi kapital di awal saja. */
+/* Kuncinya adalah nama penyakit sebagaimana disimpan di kolom
+   `observasi.disease`. Wajib kapital semua: setiap pembacaan di
+   `services/districts.ts` menyaring dengan `disease.toUpperCase()`, jadi baris
+   yang tersimpan sebagai "Leptospirosis" ada di tabel tetapi tak pernah
+   terambil satu pun. Nama tampilannya diurus frontend lewat `diseaseProfile()`,
+   bukan lewat bentuk yang disimpan. */
 const MERGED_FILES: Record<string, string> = {
   DBD: "merged_monthly_dbd.csv",
   ISPA: "merged_monthly_ispa.csv",
-  Leptospirosis: "merged_monthly_leptospirosis.csv",
+  LEPTOSPIROSIS: "merged_monthly_leptospirosis.csv",
 };
 
 async function seedObservasiIfEmpty(tx: Tx): Promise<number> {

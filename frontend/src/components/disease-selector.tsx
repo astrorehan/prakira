@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Activity, Bug, Droplets, Rat, Wind } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, diseaseLabel } from "@/lib/utils";
 import type { DiseaseType } from "@/types";
 
 /**
@@ -32,7 +32,7 @@ const ICONS: Record<string, React.ReactNode> = {
   DBD: <Bug className="h-3.5 w-3.5" />,
   ISPA: <Wind className="h-3.5 w-3.5" />,
   Diare: <Droplets className="h-3.5 w-3.5" />,
-  Leptospirosis: <Rat className="h-3.5 w-3.5" />,
+  LEPTOSPIROSIS: <Rat className="h-3.5 w-3.5" />,
 };
 
 export function DiseaseSelector({
@@ -75,7 +75,7 @@ export function DiseaseSelector({
             )}
           >
             {ICONS[id] ?? <Activity className="h-3.5 w-3.5" />}
-            <span>{id}</span>
+            <span>{diseaseLabel(id)}</span>
           </button>
         );
       })}

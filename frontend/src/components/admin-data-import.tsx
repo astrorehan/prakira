@@ -12,7 +12,7 @@ import {
   Shield,
   UploadCloud,
 } from "lucide-react";
-import { cn, formatNumber } from "@/lib/utils";
+import { cn, diseaseLabel, formatNumber } from "@/lib/utils";
 import { formatDateTime, formatMonth } from "@/lib/period";
 import type { AuditLog, DiseaseSummary } from "@/types";
 import {
@@ -171,7 +171,7 @@ function CsvImportCard({
           >
             {diseases.map((d) => (
               <option key={d.disease} value={d.disease}>
-                {d.disease}
+                {diseaseLabel(d.disease)}
               </option>
             ))}
           </select>
