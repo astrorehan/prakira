@@ -92,6 +92,15 @@ DISEASE_CONFIG = {
         "data_years": [2025],
         "label": "ISPA",
     },
+    "leptospirosis": {
+        "feature_file": "features_leptospirosis_monthly.csv",
+        "merged_file": "merged_monthly_leptospirosis.csv",
+        "model_file": "model_leptospirosis.pkl",
+        "split_date": "2025-01-01",
+        "log_transform": True,
+        "data_years": list(range(2021, 2026)),
+        "label": "Leptospirosis",
+    },
 }
 
 # Risk Score Thresholds (Percentile-based)

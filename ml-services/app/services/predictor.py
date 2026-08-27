@@ -28,6 +28,7 @@ from app.services.risk_classifier import (
     classify_risk,
 )
 from app.services.driver_extractor import extract_drivers
+from training.ensemble import DBDEnsembleModel, ISPAEnsembleModel, LeptospirosisEnsembleModel
 
 logger = logging.getLogger(__name__)
 
