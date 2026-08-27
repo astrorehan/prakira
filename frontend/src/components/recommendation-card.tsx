@@ -18,6 +18,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { COVERAGE_LABEL } from "@/lib/action-queue";
 import type { ActionRecommendation } from "@/types";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -150,12 +151,13 @@ export function RecommendationCard({
             </span>
           )}
 
-          {recommendation.ai_confidence && (
-            <span className="inline-flex items-center gap-1 rounded-md bg-brand-50 px-2 py-0.5 font-mono text-3xs font-medium text-brand-800 border border-brand-200/70">
-              <Sparkles className="h-3 w-3 text-brand-700" />
-              <span>AI Conf: {recommendation.ai_confidence}%</span>
-            </span>
-          )}
+          {/* Menggantikan lencana "AI Conf: 94,2%". Cakupan data dihitung
+              layanan ML dari kelengkapan riwayat kecamatan target; "keyakinan
+              model" adalah angka yang tidak pernah dikeluarkan model mana pun. */}
+          <span className="inline-flex items-center gap-1 rounded-md bg-brand-50 px-2 py-0.5 font-mono text-3xs font-medium text-brand-800 border border-brand-200/70">
+            <Sparkles className="h-3 w-3 text-brand-700" />
+            <span>{COVERAGE_LABEL[recommendation.data_coverage] ?? recommendation.data_coverage}</span>
+          </span>
 
           {recommendation.estimated_impact && (
             <span className="inline-flex items-center gap-1 rounded-md bg-risk-low-bg/80 px-2 py-0.5 text-3xs font-medium text-risk-low border border-risk-low-br/60 line-clamp-1 max-w-full">

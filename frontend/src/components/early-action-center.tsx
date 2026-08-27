@@ -4,6 +4,7 @@ import * as React from "react";
 import { AlertTriangle, Clock, Info, RotateCcw, Send, Users, Zap } from "lucide-react";
 import { cn, formatNumber } from "@/lib/utils";
 import type { ActionRecommendation } from "@/types";
+import { updateActionStatus } from "@/lib/api";
 import {
   sortQueue,
   summarizeQueue,
@@ -24,8 +25,13 @@ import {
 } from "./ui/dialog";
 
 interface EarlyActionCenterProps {
-  initialRecommendations?: ActionRecommendation[];
-  onExecuteRecommendation?: (id: string, checklist: string[]) => void;
+  recommendations: ActionRecommendation[];
+  /** Hari acuan konsol dari `/api/meta/period`. */
+  systemToday: string | null;
+  /** Petugas yang sedang masuk - namanya ikut tercatat di jejak audit. */
+  operator: string | null;
+  /** Dipanggil setelah status berubah, supaya halaman menarik data segar. */
+  onChanged?: () => void;
   className?: string;
 }
 
@@ -88,28 +94,23 @@ function SummaryTile({
 }
 
 export function EarlyActionCenter({
-  initialRecommendations = [],
-  onExecuteRecommendation,
+  recommendations,
+  systemToday,
+  operator,
+  onChanged,
   className,
 }: EarlyActionCenterProps) {
-  const [recommendations, setRecommendations] =
-    React.useState<ActionRecommendation[]>(initialRecommendations);
   const [statusFilter, setStatusFilter] = React.useState<StatusFilter>("all");
   const [activeModalRec, setActiveModalRec] = React.useState<ActionRecommendation | null>(null);
   const [batchModalOpen, setBatchModalOpen] = React.useState(false);
   const [isBatchSubmitting, setIsBatchSubmitting] = React.useState(false);
+  const [batchError, setBatchError] = React.useState<string | null>(null);
   const toast = useConsoleToast();
-
-  React.useEffect(() => {
-    if (initialRecommendations.length > 0) {
-      setRecommendations(initialRecommendations);
-    }
-  }, [initialRecommendations]);
 
   /* Tenggat dihitung sekali di sini, bukan di tiap baris saat render. */
   const queue = React.useMemo(
-    () => sortQueue(recommendations.map(toQueuedAction)),
-    [recommendations],
+    () => sortQueue(recommendations.map((r) => toQueuedAction(r, systemToday))),
+    [recommendations, systemToday],
   );
 
   const summary = React.useMemo(() => summarizeQueue(queue), [queue]);
@@ -119,33 +120,42 @@ export function EarlyActionCenter({
     [queue, statusFilter],
   );
 
-  const markDispatched = (ids: Set<string>) => {
-    const at =
-      new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) + " WIB";
-    setRecommendations((prev) =>
-      prev.map((r) =>
-        ids.has(r.id) ? { ...r, status: "in_progress" as const, dispatched_at: at } : r,
-      ),
-    );
-  };
-
-  const handleConfirmDispatch = (id: string, checklist: string[]) => {
-    markDispatched(new Set([id]));
+  /* Status ditulis ke gateway, bukan ke state lokal. Sebelumnya perubahan
+     hanya hidup di memori tab ini: menyegarkan halaman mengembalikan semua
+     tindakan ke "menunggu instruksi", dan petugas kedua tidak pernah melihat
+     keputusan petugas pertama. */
+  const handleConfirmDispatch = async (id: string, checklist: string[]) => {
+    await updateActionStatus(id, "in_progress");
     const rec = recommendations.find((r) => r.id === id);
     const targets = rec ? rec.target_kecamatan.join(", ") : "wilayah target";
-    toast.show(`Instruksi #${id} disiarkan ke Puskesmas ${targets}.`);
-    onExecuteRecommendation?.(id, checklist);
+    toast.show(
+      `${id} ditandai berjalan untuk ${targets}` +
+        (checklist.length > 0 ? ` - ${checklist.length} butir SOP tercentang.` : "."),
+    );
+    onChanged?.();
   };
 
-  const handleBatchDispatchAll = () => {
+  const handleBatchDispatchAll = async () => {
     setIsBatchSubmitting(true);
-    const pendingIds = new Set(queue.filter((r) => r.status === "pending").map((r) => r.id));
-    setTimeout(() => {
-      markDispatched(pendingIds);
-      setIsBatchSubmitting(false);
+    setBatchError(null);
+    const pendingIds = queue.filter((r) => r.status === "pending").map((r) => r.id);
+
+    try {
+      /* Berurutan, bukan paralel: kegagalan di tengah menyisakan keadaan yang
+         bisa dijelaskan ("tiga dari lima tersimpan"), bukan campuran acak. */
+      let saved = 0;
+      for (const id of pendingIds) {
+        await updateActionStatus(id, "in_progress");
+        saved += 1;
+      }
       setBatchModalOpen(false);
-      toast.show(`${pendingIds.size} instruksi disiarkan ke Satgas & Puskesmas terkait.`);
-    }, 1000);
+      toast.show(`${saved} tindakan ditandai berjalan.`);
+      onChanged?.();
+    } catch (caught) {
+      setBatchError(caught instanceof Error ? caught.message : String(caught));
+    } finally {
+      setIsBatchSubmitting(false);
+    }
   };
 
   const filters: { id: StatusFilter; label: string; count: number; alert?: boolean }[] = [
@@ -241,7 +251,7 @@ export function EarlyActionCenter({
             className="shrink-0 gap-1.5 self-start sm:self-auto"
           >
             <Zap className="h-3.5 w-3.5" aria-hidden="true" />
-            <span>Instruksikan semua ({summary.pending})</span>
+            <span>Tandai semua berjalan ({summary.pending})</span>
           </Button>
         )}
       </div>
@@ -273,6 +283,8 @@ export function EarlyActionCenter({
           if (!open) setActiveModalRec(null);
         }}
         onConfirmDispatch={handleConfirmDispatch}
+        systemToday={systemToday}
+        operator={operator}
       />
 
       {/* 5. Konfirmasi instruksi massal.
@@ -287,9 +299,9 @@ export function EarlyActionCenter({
                 <Zap className="h-5 w-5" aria-hidden="true" />
               </span>
               <div className="min-w-0">
-                <DialogTitle className="text-h3">Instruksikan semua tindakan</DialogTitle>
+                <DialogTitle className="text-h3">Tandai semua tindakan berjalan</DialogTitle>
                 <DialogDescription className="text-caption">
-                  Kirim instruksi siaga ke seluruh wilayah terdampak.
+                  Ubah status seluruh tindakan yang masih menunggu.
                 </DialogDescription>
               </div>
             </div>
@@ -316,10 +328,20 @@ export function EarlyActionCenter({
             </div>
           </dl>
 
+          {/* Tidak ada kanal pengiriman di sistem ini; yang berubah adalah
+              status dan jejak auditnya. Menuliskan "broadcast WhatsApp" akan
+              membuat petugas mengira pesannya sudah terkirim. */}
           <p className="text-caption leading-relaxed text-paper-600">
-            Sistem mengirim broadcast instruksi resmi dan SOP intervensi ke WhatsApp Kepala
-            Puskesmas dan Satgas lapangan di wilayah tersebut.
+            Status seluruh tindakan menunggu diubah menjadi berjalan dan tercatat di
+            jejak audit atas nama {operator ?? "petugas yang masuk"}. Draf pesannya
+            tetap harus disalin ke kanal resmi dinas.
           </p>
+
+          {batchError && (
+            <p role="alert" className="text-caption font-medium text-risk-high">
+              {batchError}
+            </p>
+          )}
 
           <DialogFooter className="gap-2 border-t border-border pt-3">
             <Button
@@ -339,8 +361,8 @@ export function EarlyActionCenter({
               <Send className="h-3.5 w-3.5" aria-hidden="true" />
               <span>
                 {isBatchSubmitting
-                  ? "Menyiarkan…"
-                  : `Kirim ${summary.pending} instruksi`}
+                  ? "Menyimpan…"
+                  : `Tandai ${summary.pending} tindakan`}
               </span>
             </Button>
           </DialogFooter>

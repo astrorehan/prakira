@@ -154,7 +154,8 @@ Layanan antarmuka web berada di dalam direktori `frontend/`.
   - Komponen generik ditempatkan di `src/components/ui/`.
   - Komponen berbasis domain (peta, KPI, filter) ditempatkan di direktori komponen yang sesuai.
 - **Fallback Data Mock**:
-  - Seluruh integrasi API di `src/lib/api.ts` harus menyediakan penanganan `try/catch` dengan fallback ke `src/lib/mock-data.ts` agar antarmuka tetap dapat diuji saat gateway belum aktif.
+  - `src/lib/api.ts` melempar `ApiError` saat gateway gagal dijawab; **jangan** menambahkan jalur cadangan yang mengisi layar dengan data contoh. Permukaan data memakai `useApi` + `<DataState>` sehingga keadaan memuat, gagal, kosong, dan terisi semuanya terlihat (PRD §8).
+  - Angka yang tidak berasal dari basis data atau layanan model tidak boleh dicetak di UI. Bila sebuah nilai belum ada, kirim `null` dan tampilkan "—" atau keadaan "data tidak memadai" — bukan nol, bukan tebakan (PRD §7-H1/H2).
 
 ### 2. Backend & Layanan ML (Masa Depan)
 - **Express Gateway (`gateway/`)**: Mengikuti kontrak rute REST dan autentikasi yang tercantum di PRD.

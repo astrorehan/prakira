@@ -20,7 +20,8 @@ import {
   Send,
   Zap,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { DISEASE_CONFIG, aggregateCoverage, cn, formatNumber } from "@/lib/utils";
+import { formatMonth } from "@/lib/period";
 import { LiquidGlassCard } from "@/components/ui/liquid-glass-card";
 import { AppleGlassDate } from "@/components/ui/apple-glass-date";
 import { Button } from "@/components/ui/button";
@@ -34,13 +35,34 @@ import { BacktestCard } from "@/components/backtest-card";
 import { EarlyActionCenter } from "@/components/early-action-center";
 import { RecommendationCard } from "@/components/recommendation-card";
 import { DispatchActionModal } from "@/components/dispatch-action-modal";
+import { DataState } from "@/components/data-state";
 import {
-  TREND_DATA,
-  CLIMATE_CORRELATION_DATA,
-  BACKTEST_METRICS,
-  ACTION_RECOMMENDATIONS,
-} from "@/lib/mock-data";
+  fetchActions,
+  fetchBacktests,
+  fetchClimateSeries,
+  fetchDiseases,
+  fetchDistricts,
+  fetchTrend,
+} from "@/lib/api";
+import { useApi } from "@/lib/use-api";
+import { usePeriod } from "@/lib/use-period";
 import type { DiseaseType, ActionRecommendation } from "@/types";
+
+/**
+ * Galeri design system.
+ *
+ * Halaman ini dulu memberi makan setiap komponennya dari `mock-data.ts`, jadi
+ * ia tetap tampil penuh bahkan saat seluruh sistem mati — dan contoh yang
+ * ditampilkannya adalah bentuk data yang tidak pernah dikirim gateway. Kini ia
+ * membaca sumber yang sama dengan konsol. Konsekuensinya disengaja: kalau
+ * backend padam, galeri ini ikut menunjukkan keadaan gagal, karena itulah yang
+ * akan dilihat pemakainya.
+ */
+const DISEASE_ICONS: Record<string, React.ElementType> = {
+  DBD: Bug,
+  ISPA: Wind,
+  Diare: Droplets,
+};
 
 export default function DesignSystemPage() {
   const [activeTab, setActiveTab] = useState<"foundations" | "liquid-glass" | "components" | "early-action" | "charts" | "playground">(
@@ -51,10 +73,64 @@ export default function DesignSystemPage() {
   // Playground state knobs
   const [glassBlur, setGlassBlur] = useState(20);
   const [glassOpacity, setGlassOpacity] = useState(72);
-  const [selectedDisease, setSelectedDisease] = useState<DiseaseType>("DBD");
+  const [selectedDisease, setSelectedDisease] = useState<DiseaseType | null>(null);
   const [riskScoreKnob, setRiskScoreKnob] = useState(84);
   const [buttonLoading, setButtonLoading] = useState(false);
   const [demoModalRec, setDemoModalRec] = useState<ActionRecommendation | null>(null);
+
+  const { period } = usePeriod();
+  const diseases = useApi(() => fetchDiseases(), []);
+  const actions = useApi(() => fetchActions(), []);
+  const backtests = useApi(() => fetchBacktests(), []);
+  const districts = useApi(
+    () =>
+      selectedDisease ? fetchDistricts(selectedDisease) : Promise.resolve(null as never),
+    [selectedDisease],
+  );
+  const climate = useApi(() => fetchClimateSeries(24), []);
+  const trend = useApi(
+    () => (selectedDisease ? fetchTrend(selectedDisease, 12) : Promise.resolve(null as never)),
+    [selectedDisease],
+  );
+
+  React.useEffect(() => {
+    if (!selectedDisease && diseases.data && diseases.data.length > 0) {
+      setSelectedDisease(diseases.data[0].disease);
+    }
+  }, [diseases.data, selectedDisease]);
+
+  const diseaseNames = (diseases.data ?? []).map((d) => d.disease);
+
+  /* Angka contoh untuk galeri KPI, diturunkan dari deret yang sedang dimuat.
+     `aggregateCoverage` dipakai supaya kartunya mewarisi cakupan terlemah,
+     sama seperti dashboard sungguhan. */
+  const showcase = React.useMemo(() => {
+    const rows = districts.data?.data ?? [];
+    const predicted = rows.filter((d) => d.kasus_prediksi !== null);
+    const rain = rows
+      .map((d) => d.cuaca.curah_hujan_mm)
+      .filter((v): v is number => v !== null);
+
+    return {
+      total: rows.length,
+      observed: rows.reduce((s, d) => s + (d.kasus_aktif ?? 0), 0),
+      siaga: rows.filter((d) => d.tingkat_risiko === "tinggi").length,
+      waspada: rows.filter((d) => d.tingkat_risiko === "sedang").length,
+      predicted:
+        predicted.length === 0
+          ? null
+          : predicted.reduce((s, d) => s + (d.kasus_prediksi ?? 0), 0),
+      lower: predicted.reduce((s, d) => s + (d.kasus_prediksi_lower ?? 0), 0),
+      upper: predicted.reduce((s, d) => s + (d.kasus_prediksi_upper ?? 0), 0),
+      rainfall:
+        rain.length === 0 ? null : Math.round(rain.reduce((a, b) => a + b, 0) / rain.length),
+      history: rows.length > 0 ? rows[0].riwayat_periode : [],
+      coverage:
+        rows.length > 0 ? aggregateCoverage(rows.map((d) => d.coverage)) : ("insufficient" as const),
+    };
+  }, [districts.data]);
+  const periodPrimary = period ? `Data ${period.monthYear}` : "Memuat…";
+  const periodSecondary = period ? `Prakiraan ${period.predictionLabel}` : "—";
 
   const copyToClipboard = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
@@ -76,7 +152,7 @@ export default function DesignSystemPage() {
               EcoHealth <span className="text-primary">Design System</span>
             </h1>
             <p className="text-sm text-muted-foreground mt-2 max-w-2xl leading-relaxed">
-              Spesifikasi desain UI/UX, Liquid Glassmorphism, palet biru cerah, dan pustaka komponen untuk platform prediksi risiko penyakit berbasis iklim (DBD, ISPA, Diare) — Prakira ANFORCOM 2026.
+              Spesifikasi desain UI/UX, Liquid Glassmorphism, palet biru cerah, dan pustaka komponen untuk platform prakiraan risiko penyakit berbasis iklim — Prakira ANFORCOM 2026.
             </p>
           </div>
 
@@ -190,7 +266,7 @@ export default function DesignSystemPage() {
                   {[
                     { name: "Risiko Rendah", hex: "#1F5132", bg: "#EDF4EC", desc: "Insiden terkendali, monitoring sanitasi rutin" },
                     { name: "Risiko Waspada (Sedang)", hex: "#D4933A", bg: "#FDF6E9", desc: "Pola iklim mulai memicu peningkatan vektor" },
-                    { name: "Risiko Siaga (Tinggi)", hex: "#A8442C", bg: "#FBECE8", desc: "Potensi lonjakan kasus 2-4 minggu, intervensi segera" },
+                    { name: "Risiko Siaga (Tinggi)", hex: "#A8442C", bg: "#FBECE8", desc: "Potensi lonjakan kasus pada bulan prakiraan, intervensi segera" },
                   ].map((risk, i) => (
                     <div
                       key={i}
@@ -215,28 +291,42 @@ export default function DesignSystemPage() {
 
               <div className="pt-4 border-t border-paper-200">
                 <h4 className="font-display text-base font-semibold text-foreground mb-3">
-                  Identitas Visual Penyakit (DBD, ISPA, Diare)
+                  Identitas visual penyakit
                 </h4>
+                {/* Dibaca dari `DISEASE_CONFIG`, bukan disalin ulang di sini —
+                    hex dan nama vektornya dulu ditulis dua kali dan sudah mulai
+                    berbeda. Lencana menandai profil yang belum punya data, jadi
+                    galeri ini tidak menyiratkan penyakitnya sudah tampil di
+                    produk. */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {[
-                    { disease: "DBD", name: "Demam Berdarah Dengue", hex: "#0B4A57", icon: <Bug className="h-4 w-4" />, vector: "Aedes aegypti (Genangan & Hujan)" },
-                    { disease: "ISPA", name: "Infeksi Saluran Pernapasan", hex: "#47617F", icon: <Wind className="h-4 w-4" />, vector: "Partikulat & Debu Pancaroba" },
-                    { disease: "Diare", name: "Penyakit Saluran Cerna", hex: "#2C6650", icon: <Droplets className="h-4 w-4" />, vector: "Kontaminasi Air & Banjir Rob" },
-                  ].map((dis, i) => (
-                    <div key={i} className="rounded-2xl border border-paper-200 bg-white p-4 flex items-center gap-3 shadow-sm">
-                      <div
-                        className="h-10 w-10 rounded-xl text-white flex items-center justify-center shadow-sm shrink-0"
-                        style={{ background: dis.hex }}
-                      >
-                        {dis.icon}
+                  {Object.entries(DISEASE_CONFIG).map(([key, profile]) => {
+                    const Icon = DISEASE_ICONS[key] ?? Bug;
+                    const hasData = diseaseNames.includes(key);
+                    return (
+                      <div key={key} className="rounded-2xl border border-paper-200 bg-white p-4 flex items-center gap-3 shadow-sm">
+                        <div
+                          className="h-10 w-10 rounded-xl text-white flex items-center justify-center shadow-sm shrink-0"
+                          style={{ background: profile.color }}
+                        >
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="font-medium text-xs text-foreground">
+                            {profile.short} · {profile.name}
+                          </div>
+                          <div className="text-2xs font-mono" style={{ color: profile.color }}>
+                            {profile.color}
+                          </div>
+                          <div className="text-3xs text-muted-foreground">{profile.vector}</div>
+                          {!hasData && (
+                            <div className="text-3xs text-risk-medium mt-0.5">
+                              Profil siap, dataset belum ada
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <div>
-                        <div className="font-medium text-xs text-foreground">{dis.disease} · {dis.name}</div>
-                        <div className="text-2xs font-mono" style={{ color: dis.hex }}>{dis.hex}</div>
-                        <div className="text-3xs text-muted-foreground">{dis.vector}</div>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </LiquidGlassCard>
@@ -323,21 +413,18 @@ export default function DesignSystemPage() {
                 <div className="p-4 rounded-xl bg-mesh-blue border border-paper-200/80 space-y-3">
                   <span className="text-xs font-semibold text-paper-700 uppercase tracking-wider block">1. Default Pure Liquid Glass</span>
                   <div>
-                    <AppleGlassDate
-                      week="Minggu 34"
-                      monthYear="Agustus 2026"
-                    />
+                    <AppleGlassDate primary={periodPrimary} secondary={periodSecondary} />
                   </div>
                   <p className="text-2xs text-muted-foreground">Varian utama dengan latar gradien optik transparan, shadow ambient difusi, dan specular highlight rim.</p>
                 </div>
 
                 <div className="p-4 rounded-xl bg-mesh-blue border border-paper-200/80 space-y-3">
-                  <span className="text-xs font-semibold text-paper-700 uppercase tracking-wider block">2. With Date Range (18 – 24 Ags 2026)</span>
+                  <span className="text-xs font-semibold text-paper-700 uppercase tracking-wider block">2. Dengan tanggal data</span>
                   <div>
                     <AppleGlassDate
-                      week="Minggu 34"
-                      monthYear="Agustus 2026"
-                      dateRange="18 – 24 Ags 2026"
+                      primary={periodPrimary}
+                      secondary={periodSecondary}
+                      dateRange={period?.latestObserved ?? "—"}
                     />
                   </div>
                   <p className="text-2xs text-muted-foreground">Menampilkan rentang hari epidemiologi riil bersama nama bulan dan tahun.</p>
@@ -348,13 +435,13 @@ export default function DesignSystemPage() {
                   <div className="flex flex-wrap gap-2 items-center">
                     <AppleGlassDate
                       variant="brand"
-                      week="Minggu 34"
-                      monthYear="Agustus 2026"
+                      primary={periodPrimary}
+                      secondary={periodSecondary}
                     />
                     <AppleGlassDate
                       size="sm"
-                      week="W34"
-                      monthYear="Ags 2026"
+                      primary={period?.monthYear ?? "—"}
+                      secondary={period?.predictionLabel ?? "—"}
                       showCalendarIcon={false}
                     />
                   </div>
@@ -366,8 +453,8 @@ export default function DesignSystemPage() {
                   <div>
                     <AppleGlassDate
                       size="lg"
-                      week="Minggu 34"
-                      monthYear="Agustus 2026"
+                      primary={periodPrimary}
+                      secondary={periodSecondary}
                     />
                   </div>
                   <p className="text-2xs text-muted-foreground">Ukuran large dengan padding 18px dan font lebih besar untuk highlight dashboard eksekutif.</p>
@@ -426,54 +513,53 @@ export default function DesignSystemPage() {
               <h3 className="font-display text-xl font-semibold text-foreground">
                 Kartu Metrik & KPI Data (Liquid Glass KPI Cards)
               </h3>
+              {/* Empat kartu ini dulu memakai angka tetap (178 kasus, 3 kecamatan
+                  siaga, 225 mm, akurasi 91,4%). Galeri komponen yang memakai
+                  angka karangan mengajarkan bentuk data yang salah kepada
+                  kontributor berikutnya — dan tiga dari empat angka itu bahkan
+                  tidak pernah cocok dengan yang dikirim gateway. */}
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 <KpiCard
-                  label="Kasus Aktif DBD"
-                  value="178"
+                  label={`Kasus ${selectedDisease ?? "—"} · ${formatMonth(period?.latestObserved)}`}
+                  value={formatNumber(showcase.observed)}
                   unit="kasus"
                   range={null}
-                  coverage="high"
-                  delta="+14.2%"
-                  positive={false}
-                  status="warning"
-                  sparkline={[120, 135, 148, 160, 178]}
+                  coverage={showcase.coverage}
+                  sparkline={showcase.history}
                   icon={<Bug className="h-4 w-4" />}
                 />
                 <KpiCard
-                  label="Wilayah Siaga Tinggi"
-                  value="3"
-                  unit="kecamatan"
+                  label="Wilayah siaga"
+                  value={String(showcase.siaga)}
+                  unit={`dari ${showcase.total}`}
                   range={null}
-                  coverage="medium"
-                  delta="+1 kec"
-                  positive={false}
-                  status="danger"
-                  sparkline={[1, 1, 2, 2, 3]}
+                  coverage={showcase.coverage}
+                  description={`Waspada ${showcase.waspada}`}
+                  status={showcase.siaga > 0 ? "danger" : "normal"}
                   icon={<ShieldAlert className="h-4 w-4 text-risk-high" />}
                 />
                 <KpiCard
-                  label="Curah Hujan Rata-rata"
-                  value="225"
+                  label="Curah hujan rata-rata"
+                  value={showcase.rainfall === null ? "—" : formatNumber(showcase.rainfall)}
                   unit="mm"
                   range={null}
-                  coverage="high"
-                  description="BMKG Stasiun Semarang"
-                  status="normal"
+                  coverage={showcase.coverage}
+                  description="Observasi iklim bulanan"
                   variant="glass-blue"
-                  sparkline={[110, 145, 180, 210, 225]}
                   icon={<CloudRain className="h-4 w-4 text-brand-600" />}
                 />
+                {/* Kartu prakiraan: satu-satunya di baris ini yang membawa
+                    interval, karena satu-satunya yang memang punya. */}
                 <KpiCard
-                  label="Akurasi Model ML"
-                  value="91.4"
-                  unit="%"
-                  range={null}
-                  coverage="high"
-                  delta="+1.2%"
-                  positive={true}
-                  status="success"
-                  description="XGBoost Walk-Forward"
-                  sparkline={[88, 89, 90, 91, 91.4]}
+                  label={`Prakiraan ${formatMonth(period?.predictionMonth)}`}
+                  value={showcase.predicted === null ? "—" : formatNumber(showcase.predicted)}
+                  unit={showcase.predicted === null ? undefined : "kasus"}
+                  range={
+                    showcase.predicted === null
+                      ? null
+                      : { lower: showcase.lower, upper: showcase.upper }
+                  }
+                  coverage={showcase.coverage}
                   icon={<Activity className="h-4 w-4 text-risk-low" />}
                 />
               </div>
@@ -483,7 +569,11 @@ export default function DesignSystemPage() {
               <h3 className="font-display text-xl font-semibold text-foreground">
                 Pengukur Risiko Interaktif (Risk Gauges)
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-4">
+              {/* Skor di sini adalah contoh keadaan komponen, bukan klaim data —
+                  yang penting keempat keadaannya tampil. Keadaan keempat (tanpa
+                  prediksi) ditambahkan bersama gateway: kecamatan yang belum
+                  diprediksi tidak boleh meminjam tampilan "rendah". */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-4">
                 <div className="flex flex-col items-center justify-center p-4 rounded-xl bg-white/70 border border-paper-200">
                   <RiskGauge score={24} level="rendah" size="md" />
                   <span className="text-xs text-muted-foreground mt-3">Zona Aman / Rendah</span>
@@ -495,6 +585,10 @@ export default function DesignSystemPage() {
                 <div className="flex flex-col items-center justify-center p-4 rounded-xl bg-white/70 border border-paper-200">
                   <RiskGauge score={88} level="tinggi" size="md" />
                   <span className="text-xs text-muted-foreground mt-3">Zona Bahaya / KLB Tinggi</span>
+                </div>
+                <div className="flex flex-col items-center justify-center p-4 rounded-xl bg-white/70 border border-paper-200">
+                  <RiskGauge score={null} level={null} size="md" />
+                  <span className="text-xs text-muted-foreground mt-3">Belum ada prediksi</span>
                 </div>
               </div>
             </LiquidGlassCard>
@@ -521,7 +615,20 @@ export default function DesignSystemPage() {
                 </code>
               </div>
 
-              <EarlyActionCenter initialRecommendations={ACTION_RECOMMENDATIONS} />
+              <DataState
+                loading={actions.loading}
+                error={actions.error}
+                empty={!actions.loading && (actions.data?.data.length ?? 0) === 0}
+                emptyMessage="Antrean tindakan kosong pada periode berjalan."
+                onRetry={actions.reload}
+              >
+                <EarlyActionCenter
+                  recommendations={actions.data?.data ?? []}
+                  systemToday={period?.systemToday ?? null}
+                  operator={null}
+                  onChanged={actions.reload}
+                />
+              </DataState>
             </div>
 
             {/* Individual Card States Showcase */}
@@ -534,7 +641,7 @@ export default function DesignSystemPage() {
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {ACTION_RECOMMENDATIONS.slice(0, 3).map((rec, i) => (
+                {(actions.data?.data ?? []).slice(0, 3).map((rec) => (
                   <RecommendationCard
                     key={rec.id}
                     recommendation={rec}
@@ -550,9 +657,11 @@ export default function DesignSystemPage() {
                 onOpenChange={(open) => {
                   if (!open) setDemoModalRec(null);
                 }}
-                onConfirmDispatch={(id) => {
+                onConfirmDispatch={async () => {
                   setDemoModalRec(null);
                 }}
+                systemToday={period?.systemToday ?? null}
+                operator={null}
               />
             </div>
           </div>
@@ -566,6 +675,7 @@ export default function DesignSystemPage() {
                 Pilih Penyakit untuk Demo Visualisasi:
               </span>
               <DiseaseSelector
+                options={diseaseNames}
                 selected={selectedDisease}
                 onSelect={(d) => setSelectedDisease(d)}
               />
@@ -575,18 +685,18 @@ export default function DesignSystemPage() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
                   <h3 className="font-display text-xl font-semibold text-foreground">
-                    Grafik Tren Prediksi 2-4 Minggu ke Depan vs Aktual
+                    Grafik tren aktual vs prakiraan bulan berikutnya
                   </h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     Proyeksi model Machine Learning dengan lead-time 14-28 hari dan interval kepercayaan.
                   </p>
                 </div>
-                <Badge variant="glass-blue">Lead Time 2-4 Minggu</Badge>
+                <Badge variant="glass-blue">Horizon 1 bulan</Badge>
               </div>
 
               <TrendChart
-                data={TREND_DATA[selectedDisease]}
-                disease={selectedDisease}
+                data={trend.data?.data ?? []}
+                disease={selectedDisease ?? ""}
                 showClimateOverlay={true}
               />
             </LiquidGlassCard>
@@ -597,13 +707,13 @@ export default function DesignSystemPage() {
                   Visualisasi Korelasi Iklim & Kejadian Kasus Historis (12 Bulan)
                 </h3>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Menampilkan hubungan linier antara curah hujan BMKG, fluktuasi suhu rata-rata, dan kejadian kasus.
+                  Menampilkan hubungan linier antara curah hujan, fluktuasi suhu rata-rata, dan kejadian kasus.
                 </p>
               </div>
 
               <ClimateCorrelationChart
-                data={CLIMATE_CORRELATION_DATA}
-                disease={selectedDisease}
+                data={climate.data?.data ?? []}
+                disease={selectedDisease ?? ""}
               />
             </LiquidGlassCard>
 
@@ -611,7 +721,7 @@ export default function DesignSystemPage() {
               <h3 className="font-display text-xl font-semibold text-foreground">
                 Evaluasi Akurasi & Backtesting Model Machine Learning
               </h3>
-              <BacktestCard metrics={BACKTEST_METRICS} disease={selectedDisease} />
+              <BacktestCard metrics={backtests.data?.data ?? []} disease={selectedDisease ?? ""} />
             </div>
           </div>
         )}
@@ -702,8 +812,8 @@ export default function DesignSystemPage() {
                 >
                   <div className="flex items-center justify-between pb-4 border-b border-paper-200/60">
                     <div className="flex items-center gap-2">
-                      <Badge variant={`disease-${selectedDisease.toLowerCase()}` as any}>
-                        {selectedDisease}
+                      <Badge variant={`disease-${(selectedDisease ?? "").toLowerCase()}` as any}>
+                        {selectedDisease ?? "—"}
                       </Badge>
                       <Badge
                         variant={riskScoreKnob >= 70 ? "risk-high" : riskScoreKnob >= 40 ? "risk-medium" : "risk-low"}
@@ -734,7 +844,17 @@ export default function DesignSystemPage() {
                     </div>
 
                     <div className="flex items-center justify-center">
-                      <RiskGauge score={riskScoreKnob} size="md" />
+                      <RiskGauge
+                        score={riskScoreKnob}
+                        level={
+                          riskScoreKnob >= 67
+                            ? "tinggi"
+                            : riskScoreKnob >= 34
+                              ? "sedang"
+                              : "rendah"
+                        }
+                        size="md"
+                      />
                     </div>
                   </div>
                 </div>

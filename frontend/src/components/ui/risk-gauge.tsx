@@ -2,9 +2,19 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 import type { RiskLevel } from "@/types";
 
+/**
+ * Gauge skor risiko.
+ *
+ * `score` dan `level` boleh `null`: kecamatan yang belum punya prediksi harus
+ * bisa digambar sebagai kosong. Versi sebelumnya menurunkan `level` dari
+ * ambang skornya sendiri (>=70 tinggi, >=40 sedang) — ambang yang berbeda dari
+ * yang dipakai model (>=67 / >=34), sehingga satu kecamatan bisa tampil
+ * "Waspada" di gauge dan "Siaga" di tabel pada halaman yang sama. Kelas risiko
+ * sekarang selalu datang dari layanan ML, tidak pernah dihitung ulang di sini.
+ */
 type RiskGaugeProps = {
-  score: number; // 0 - 100
-  level?: RiskLevel;
+  score: number | null;
+  level: RiskLevel | null;
   size?: "sm" | "md" | "lg";
   showLabel?: boolean;
   className?: string;
@@ -12,12 +22,12 @@ type RiskGaugeProps = {
 
 export function RiskGauge({
   score,
-  level = score >= 70 ? "tinggi" : score >= 40 ? "sedang" : "rendah",
+  level,
   size = "md",
   showLabel = true,
   className,
 }: RiskGaugeProps) {
-  const normalizedScore = Math.min(100, Math.max(0, score));
+  const normalizedScore = score === null ? 0 : Math.min(100, Math.max(0, score));
 
   // Gauge dimension definitions calibrated for ample clearance inside arc
   const dimensions = {
@@ -58,7 +68,8 @@ export function RiskGauge({
   const circumference = Math.PI * R; // Half circle circumference
   const strokeDashoffset = circumference - (normalizedScore / 100) * circumference;
 
-  const colorConfig = {
+  const colorConfig = level
+    ? {
     rendah: {
       stroke: "#1F5132",
       text: "text-risk-low",
@@ -80,7 +91,14 @@ export function RiskGauge({
       border: "border-risk-high-br",
       label: "Siaga",
     },
-  }[level];
+      }[level]
+    : {
+        stroke: "#B7B1AA",
+        text: "text-risk-none",
+        bgSoft: "bg-paper-100",
+        border: "border-paper-300",
+        label: "Data tidak memadai",
+      };
 
   // SVG arc path from left (cx - R, cy) to right (cx + R, cy)
   const arcPath = `M ${cx - R},${cy} A ${R},${R} 0 0,1 ${cx + R},${cy}`;
@@ -133,7 +151,7 @@ export function RiskGauge({
               colorConfig.text
             )}
           >
-            {Math.round(score)}
+            {score === null ? "—" : Math.round(score)}
           </span>
           <span
             className={cn(

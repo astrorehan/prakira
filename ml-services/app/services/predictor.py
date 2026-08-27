@@ -194,11 +194,26 @@ def _estimate_confidence(model, X: pd.DataFrame, cfg: dict) -> Tuple[int, int]:
     """Estimasi lower/upper bound dari ensemble sub-models.
 
     Untuk ensemble custom, prediksi tiap sub-model lalu ambil P10/P90.
+
+    Interval selalu dilebarkan agar memuat prediksi titik. Sebaran sub-model
+    bisa lebih sempit daripada hasil blending-nya, dan interval yang tidak
+    memuat angkanya sendiri ("2 kasus, rentang 1-1") membatalkan seluruh guna
+    interval itu di UI (PRD section 7-H1).
     """
     predictions = []
 
     # Pastikan X ber-kolom DataFrame untuk mencegah UserWarning sklearn feature_names
     X_df = X if isinstance(X, pd.DataFrame) else pd.DataFrame(X, columns=FEATURE_COLUMNS)
+
+    # Model DBD dilatih pada log1p(cases): sub-model-nya menjawab dalam ruang
+    # log, sedangkan predict() ensemble sudah mengembalikannya ke skala kasus.
+    # Tanpa expm1 di sini, batas bawah/atas dibandingkan dengan angka yang
+    # satuannya berbeda -- itulah asal interval "2 kasus, rentang 1-1".
+    log_transformed = bool(cfg.get("log_transform", False))
+
+    def to_cases(value: float) -> float:
+        restored = np.expm1(value) if log_transformed else value
+        return float(np.clip(restored, 0, None))
 
     # Coba ambil prediksi dari masing-masing sub-model
     sub_model_attrs = ["m_ridge", "m_et", "m_gb", "m_xgb", "m_rf", "m_enet"]
@@ -206,27 +221,32 @@ def _estimate_confidence(model, X: pd.DataFrame, cfg: dict) -> Tuple[int, int]:
         if hasattr(model, attr):
             sub_model = getattr(model, attr)
             p = sub_model.predict(X_df)
-            predictions.append(float(np.clip(p[0], 0, None)))
+            predictions.append(to_cases(float(p[0])))
+
+    base_pred = max(0.0, float(model.predict(X_df)[0]))
 
     # Jika model RandomForest biasa, gunakan prediksi per pohon
     if hasattr(model, "estimators_") and not predictions:
-        tree_preds = np.array([tree.predict(X_df)[0] for tree in model.estimators_])
-        tree_preds = np.clip(tree_preds, 0, None)
-        lower = int(round(np.percentile(tree_preds, 10)))
-        upper = int(round(np.percentile(tree_preds, 90)))
-        return lower, upper
+        tree_preds = np.array([to_cases(float(tree.predict(X_df)[0])) for tree in model.estimators_])
+        return _bracket(base_pred, np.percentile(tree_preds, 10), np.percentile(tree_preds, 90))
 
     if len(predictions) >= 2:
-        lower = int(round(np.percentile(predictions, 10)))
-        upper = int(round(np.percentile(predictions, 90)))
-        return lower, upper
+        return _bracket(
+            base_pred,
+            np.percentile(predictions, 10),
+            np.percentile(predictions, 90),
+        )
 
     # Fallback jika model tunggal
-    base_pred = float(model.predict(X_df)[0])
-    base_pred = max(0, base_pred)
-    lower = max(0, int(round(base_pred * 0.7)))
-    upper = int(round(base_pred * 1.3))
-    return lower, upper
+    return _bracket(base_pred, base_pred * 0.7, base_pred * 1.3)
+
+
+def _bracket(point: float, lower: float, upper: float) -> Tuple[int, int]:
+    """Membulatkan interval sambil memastikan prediksi titik ada di dalamnya."""
+    point_int = int(round(max(0.0, point)))
+    lower_int = min(point_int, max(0, int(round(min(lower, upper)))))
+    upper_int = max(point_int, int(round(max(lower, upper))))
+    return lower_int, upper_int
 
 
 def reload_models():

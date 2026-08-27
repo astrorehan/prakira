@@ -4,9 +4,19 @@ import * as React from "react";
 import { CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+/**
+ * Chip periode bergaya kaca.
+ *
+ * `week`/`monthYear` yang dulu punya nilai bawaan `"Minggu 34"` /
+ * `"Agustus 2026"` diganti sepasang label tanpa bawaan. Nilai bawaan pada
+ * komponen tanggal adalah cara paling halus untuk berbohong: pemanggil yang
+ * lupa mengisi tetap menampilkan tanggal yang tampak sah.
+ */
 export interface AppleGlassDateProps extends React.HTMLAttributes<HTMLDivElement> {
-  week?: string | number;
-  monthYear?: string;
+  /** Label utama di kapsul kiri, mis. "Data Desember 2025". */
+  primary: string;
+  /** Label pendamping, mis. "Prakiraan Januari 2026". */
+  secondary: string;
   dateRange?: string;
   showLivePulse?: boolean;
   liveLabel?: string;
@@ -16,8 +26,8 @@ export interface AppleGlassDateProps extends React.HTMLAttributes<HTMLDivElement
 }
 
 export function AppleGlassDate({
-  week = "Minggu 34",
-  monthYear = "Agustus 2026",
+  primary,
+  secondary,
   dateRange,
   showLivePulse = false,
   liveLabel,
@@ -27,12 +37,10 @@ export function AppleGlassDate({
   className,
   ...props
 }: AppleGlassDateProps) {
-  const weekLabel = typeof week === "number" ? `Minggu ${week}` : week;
-
   return (
     <div
       role="status"
-      aria-label={`${weekLabel}, ${monthYear}`}
+      aria-label={`${primary}, ${secondary}`}
       className={cn(
         "group relative inline-flex items-center select-none transition-all duration-300 ease-out",
         // Apple Liquid Glass Optics (VisionOS / iOS 18 style)
@@ -73,7 +81,7 @@ export function AppleGlassDate({
 
       {/* Week Pill Tag (Inner mini capsule) */}
       <div className="relative inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white/90 text-brand-900 border border-white/90 shadow-[0_1px_2px_rgba(14,34,37,0.05),inset_0_1px_0_rgba(255,255,255,1)] font-semibold text-2xs tracking-tight shrink-0">
-        <span>{weekLabel}</span>
+        <span>{primary}</span>
       </div>
 
       {/* Apple Subtle Separator */}
@@ -81,7 +89,7 @@ export function AppleGlassDate({
 
       {/* Month & Year Text */}
       <span className="relative font-medium text-paper-800 tracking-tight text-xs whitespace-nowrap">
-        {monthYear}
+        {secondary}
       </span>
 
       {/* Optional Date Range Subtitle / Tag */}

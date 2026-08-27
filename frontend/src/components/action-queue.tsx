@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import {
+  Activity,
   AlertTriangle,
   ArrowRight,
   Bug,
@@ -21,10 +22,12 @@ import { formatNumber } from "@/lib/utils";
 import type { DeadlineUrgency } from "@/lib/period";
 import {
   ACTION_TYPE_LABEL,
+  COVERAGE_LABEL,
   PRIORITY_LABEL,
   STATUS_LABEL,
   type QueuedAction,
 } from "@/lib/action-queue";
+import { formatDateTime } from "@/lib/period";
 import type { DiseaseType } from "@/types";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
@@ -42,7 +45,7 @@ import { Button } from "./ui/button";
  * sini hanya perlu cukup untuk memutuskan mana yang dibuka lebih dulu.
  */
 
-const DISEASE_ICON: Record<DiseaseType, React.ComponentType<{ className?: string }>> = {
+const DISEASE_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
   DBD: Bug,
   ISPA: Wind,
   Diare: Droplets,
@@ -82,7 +85,7 @@ const STATUS_STYLE: Record<
 };
 
 const ACTION_LABEL: Record<QueuedAction["status"], string> = {
-  pending: "Instruksikan tim",
+  pending: "Buka & tandai berjalan",
   in_progress: "Buka protokol",
   completed: "Lihat arsip",
 };
@@ -122,7 +125,7 @@ function ActionRow({
   const deadlineLabel = isOpen ? action.deadline.label : "Tenggat terpenuhi";
   const status = STATUS_STYLE[action.status];
   const StatusIcon = status.icon;
-  const DiseaseIcon = DISEASE_ICON[action.disease];
+  const DiseaseIcon = DISEASE_ICON[action.disease] ?? Activity;
 
   return (
     <li>
@@ -153,10 +156,14 @@ function ActionRow({
             <h3 className="text-h3 text-foreground">{action.title}</h3>
 
             {/* Alasan tindakan ini ada. Rekomendasi tanpa pemicunya adalah
-                perintah, bukan keputusan yang bisa ditimbang. */}
+                perintah, bukan keputusan yang bisa ditimbang — §5.2 melarang
+                rekomendasi tanpa kalimat "Dasar:" muncul sama sekali. */}
+            <p className="max-w-3xl text-body-sm leading-relaxed text-paper-700">
+              {action.basis}
+            </p>
+
             {action.climate_trigger && (
-              <p className="max-w-3xl text-body-sm leading-relaxed text-paper-600">
-                <span className="font-medium text-paper-700">Pemicu iklim:</span>{" "}
+              <p className="max-w-3xl text-caption leading-relaxed text-paper-600">
                 {action.climate_trigger}
               </p>
             )}
@@ -166,9 +173,9 @@ function ActionRow({
                 {action.target_kecamatan.join(", ")}
               </Fact>
 
-              {action.population > 0 && (
+              {action.target_population > 0 && (
                 <Fact icon={Users} label="Populasi">
-                  {formatNumber(action.population)} jiwa
+                  {formatNumber(action.target_population)} jiwa
                 </Fact>
               )}
 
@@ -182,16 +189,21 @@ function ActionRow({
                 </Fact>
               )}
 
-              {typeof action.ai_confidence === "number" && (
-                <Fact icon={FileText} label="Keyakinan model">
-                  {action.ai_confidence.toLocaleString("id-ID")}%
-                </Fact>
-              )}
+              {/* Menggantikan "Keyakinan model 94,2%", angka yang dulu
+                  ditulis tangan di berkas mock dan tidak pernah keluar dari
+                  model mana pun. Cakupan data dihitung layanan ML dari
+                  kelengkapan riwayat kecamatan target. */}
+              <Fact icon={FileText} label="Cakupan">
+                {COVERAGE_LABEL[action.data_coverage] ?? action.data_coverage}
+              </Fact>
             </div>
 
             {action.estimated_impact && (
               <p className="text-caption leading-relaxed text-paper-600">
-                <span className="font-medium text-paper-700">Proyeksi dampak:</span>{" "}
+                {/* Bukan "proyeksi dampak": sistem tidak pernah mengukur efek
+                    intervensinya sendiri. Yang bisa dikatakan adalah beban yang
+                    diproyeksikan bila tidak ada yang dikerjakan. */}
+                <span className="font-medium text-paper-700">Tanpa intervensi:</span>{" "}
                 {action.estimated_impact}
               </p>
             )}
@@ -224,7 +236,8 @@ function ActionRow({
 
             {action.dispatched_at && (
               <span className="text-caption text-paper-600 lg:text-right">
-                Dikirim {action.dispatched_at}
+                Dikirim {formatDateTime(action.dispatched_at)}
+                {action.dispatched_by ? ` · ${action.dispatched_by}` : ""}
               </span>
             )}
 

@@ -1,20 +1,14 @@
 /**
- * Antrean aksi dini — urutan, ringkasan, dan pembacaan angka.
+ * Antrean aksi dini — urutan dan ringkasan.
  *
- * Logika ini dulu tersebar di dalam komponen: pengurutan tidak ada sama sekali
- * (kartu tampil sesuai urutan berkas mock), dan angka populasi diurai ulang di
- * dua tempat. Antrean triase yang tidak diurutkan bukan antrean — ia daftar.
+ * `parsePopulation` yang dulu mengurai string `"148.200 warga"` kembali jadi
+ * angka sudah tidak ada: gateway mengirim `target_population` sebagai bilangan,
+ * karena ia menjumlahkannya dari tabel wilayah. Mengarang angka sebagai teks
+ * lalu menguraikannya lagi adalah dua kesempatan untuk salah pada satu nilai.
  */
 
 import type { ActionRecommendation } from "@/types";
 import { describeDeadline, type Deadline } from "./period";
-
-/** "148.200 warga" -> 148200. 0 kalau bidangnya kosong. */
-export function parsePopulation(value?: string): number {
-  if (!value) return 0;
-  const digits = value.replace(/[^\d]/g, "");
-  return digits ? Number(digits) : 0;
-}
 
 const STATUS_RANK: Record<ActionRecommendation["status"], number> = {
   pending: 0,
@@ -46,21 +40,26 @@ export const ACTION_TYPE_LABEL: Record<ActionRecommendation["action_type"], stri
   masker: "Sanitasi udara",
   klorinasi: "Klorinasi air",
   logistik_obat: "Buffer stock obat",
-  penyuluhan: "Penyuluhan & broadcast",
+  penyuluhan: "Penyuluhan & edukasi",
+};
+
+export const COVERAGE_LABEL: Record<string, string> = {
+  high: "Cakupan data tinggi",
+  medium: "Cakupan data sedang",
+  low: "Cakupan data rendah",
+  insufficient: "Data tidak memadai",
 };
 
 export type QueuedAction = ActionRecommendation & {
   deadline: Deadline;
-  population: number;
 };
 
 /** Melekatkan tenggat terhitung supaya komponen tidak menghitung ulang per render. */
-export function toQueuedAction(rec: ActionRecommendation): QueuedAction {
-  return {
-    ...rec,
-    deadline: describeDeadline(rec.due_date),
-    population: parsePopulation(rec.target_population),
-  };
+export function toQueuedAction(
+  rec: ActionRecommendation,
+  systemToday: string | null,
+): QueuedAction {
+  return { ...rec, deadline: describeDeadline(rec.due_date, systemToday) };
 }
 
 /**
@@ -119,8 +118,25 @@ export function summarizeQueue(list: QueuedAction[]): QueueSummary {
     dueSoon: open.filter(
       (r) => r.deadline.urgency === "today" || r.deadline.urgency === "soon",
     ).length,
-    populationPending: pending.reduce((sum, r) => sum + r.population, 0),
+    /* Kecamatan yang sama bisa muncul di dua tindakan; menjumlahkan populasi
+       per tindakan akan menghitungnya dua kali. */
+    populationPending: uniquePopulation(pending),
     districtsPending: Array.from(new Set(pending.flatMap((r) => r.target_kecamatan))),
     nextDeadline: withDeadline[0]?.deadline ?? null,
   };
+}
+
+/* Populasi per tindakan adalah jumlah kecamatannya, jadi tanpa deduplikasi
+   dua instruksi untuk kota yang sama melaporkan dua kali penduduk kota. */
+function uniquePopulation(list: QueuedAction[]): number {
+  const seen = new Set<string>();
+  let total = 0;
+  for (const action of list) {
+    const fresh = action.target_kecamatan.filter((n) => !seen.has(n));
+    if (fresh.length === 0) continue;
+    const share = action.target_population / Math.max(1, action.target_kecamatan.length);
+    total += share * fresh.length;
+    fresh.forEach((n) => seen.add(n));
+  }
+  return Math.round(total);
 }

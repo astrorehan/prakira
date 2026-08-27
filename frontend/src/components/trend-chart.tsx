@@ -14,7 +14,8 @@ import {
   Legend,
 } from "recharts";
 import type { TrendPoint, DiseaseType } from "@/types";
-import { DISEASE_CONFIG, cn } from "@/lib/utils";
+import { diseaseProfile, cn } from "@/lib/utils";
+import { formatMonthShort } from "@/lib/period";
 
 type TrendChartProps = {
   data: TrendPoint[];
@@ -35,26 +36,22 @@ export function TrendChart({
   hideFooterLegend = false,
   compact = false,
 }: TrendChartProps) {
-  const cfg = DISEASE_CONFIG[disease];
+  const cfg = diseaseProfile(disease);
 
-  // Reformat data so prediction line continues smoothly from last actual point
+  /* `periode` datang sebagai `YYYY-MM-01`; label sumbu dibentuk di sini supaya
+     gateway tidak perlu mengirim dua representasi tanggal yang bisa berbeda.
+     Penyambungan garis prediksi ke titik aktual terakhir sudah dilakukan
+     gateway — dulu dikerjakan di sini dengan memutasi array hasil `map`. */
   const formattedData = data.map((d) => ({
     ...d,
+    periodeLabel: formatMonthShort(d.periode),
     actualDisplay: d.kasus_aktual,
     predictionDisplay: d.kasus_prediksi,
     confidenceRange:
-      d.lower_bound && d.upper_bound ? [d.lower_bound, d.upper_bound] : null,
+      d.lower_bound !== null && d.upper_bound !== null
+        ? [d.lower_bound, d.upper_bound]
+        : null,
   }));
-
-  // Find last actual point to bridge with prediction line
-  const lastActualIdx = formattedData.reduce(
-    (maxIdx, cur, i) => (cur.actualDisplay !== null ? i : maxIdx),
-    -1,
-  );
-  if (lastActualIdx !== -1 && lastActualIdx < formattedData.length - 1) {
-    formattedData[lastActualIdx].predictionDisplay =
-      formattedData[lastActualIdx].actualDisplay;
-  }
 
   const primaryColor = cfg.color; // e.g. #0B4A57
   const forecastColor = "#A8442C"; // Alert Terracotta for high forecast
@@ -89,7 +86,7 @@ export function TrendChart({
             <CartesianGrid stroke="#DFE6E6" strokeDasharray="3 3" vertical={false} />
 
             <XAxis
-              dataKey="periode"
+              dataKey="periodeLabel"
               tick={{ fill: "#5A6C6E", fontSize: compact ? 9.5 : 11 }}
               tickMargin={compact ? 4 : 8}
               axisLine={false}
@@ -123,14 +120,18 @@ export function TrendChart({
               cursor={{ stroke: primaryColor, strokeDasharray: "2 4", strokeWidth: 1.5 }}
               content={({ active, payload, label }) => {
                 if (!active || !payload || !payload.length) return null;
-                const point = payload[0]?.payload as TrendPoint;
-                const isForecast = point.kasus_aktual === null || point.periode.includes("*");
+                const point = payload[0]?.payload as TrendPoint & { periodeLabel: string };
+                const isForecast = point.proyeksi;
 
                 return (
                   <div className="liquid-glass rounded-xl p-3.5 shadow-elevated border border-white/90 text-xs min-w-[200px]">
                     <div className="flex items-center justify-between gap-2 border-b border-paper-200/60 pb-1.5 mb-2">
-                      <span className="font-semibold text-foreground">{point.periode}</span>
-                      <span className="text-3xs text-muted-foreground">{point.tanggal}</span>
+                      <span className="font-semibold text-foreground">
+                        {point.periodeLabel}
+                      </span>
+                      <span className="text-3xs text-muted-foreground">
+                        {isForecast ? "Prakiraan" : "Observasi"}
+                      </span>
                     </div>
 
                     <div className="space-y-1.5">
@@ -148,24 +149,27 @@ export function TrendChart({
                         <div className="flex items-center justify-between">
                           <span className="text-paper-600 flex items-center gap-1.5">
                             <span className="h-2 w-2 rounded-full" style={{ background: forecastColor }} />
-                            Prediksi AI:
+                            Prakiraan model:
                           </span>
                           <span className="font-semibold text-foreground">{point.kasus_prediksi} kasus</span>
                         </div>
                       )}
 
-                      {point.lower_bound && point.upper_bound && (
+                      {point.lower_bound !== null && point.upper_bound !== null && (
                         <div className="flex items-center justify-between text-3xs text-muted-foreground pt-1 border-t border-paper-200/40">
-                          <span>Interval 95%:</span>
+                          {/* Interval berasal dari sebaran sub-model ensemble
+                              (persentil 10-90), bukan interval 95% teoretis —
+                              label lamanya menyebut angka yang tidak dihitung. */}
+                          <span>Rentang model:</span>
                           <span className="font-mono">
                             {point.lower_bound} – {point.upper_bound}
                           </span>
                         </div>
                       )}
 
-                      {showClimateOverlay && point.curah_hujan_mm !== undefined && (
+                      {showClimateOverlay && point.curah_hujan_mm !== null && (
                         <div className="flex items-center justify-between text-3xs pt-1 text-paper-600">
-                          <span>Hujan BMKG:</span>
+                          <span>Curah hujan:</span>
                           <span className="font-semibold" style={{ color: rainColor }}>
                             {point.curah_hujan_mm} mm
                           </span>
@@ -175,7 +179,7 @@ export function TrendChart({
 
                     {isForecast && (
                       <div className="mt-2 rounded bg-risk-medium-bg px-2 py-1 text-3xs font-medium text-risk-medium border border-risk-medium-br/60">
-                        Proyeksi Model ML (Lead Time 2-4 Minggu)
+                        Prakiraan model untuk satu bulan ke depan
                       </div>
                     )}
                   </div>
@@ -261,12 +265,12 @@ export function TrendChart({
                   background: `repeating-linear-gradient(to right, ${forecastColor} 0, ${forecastColor} 2.5px, transparent 2.5px, transparent 5px)`,
                 }}
               />
-              <span className="font-semibold text-risk-high">Proyeksi 2–4 minggu</span>
+              <span className="font-semibold text-risk-high">Prakiraan bulan berikutnya</span>
             </span>
             {showClimateOverlay && (
               <span className="flex items-center gap-1.5">
                 <span className="h-2 w-3 rounded-xs bg-brand-500/40" />
-                <span>Hujan BMKG</span>
+                <span>Curah hujan</span>
               </span>
             )}
           </div>

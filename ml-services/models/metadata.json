@@ -1,44 +1,48 @@
 {
   "dbd": {
     "algorithm": "ensemble_ridge_trees_xgboost",
-    "version": "ensemble-monthly-dbd-2026.08.26",
+    "version": "ensemble-monthly-dbd-2026.08.27",
     "granularity": "monthly",
     "is_log_transformed": true,
-    "trained_at": "2026-08-26T18:56:47.673683",
+    "trained_at": "2026-08-27T06:10:27.347816",
+    "train_period": "2021-04-01 to 2024-12-01",
+    "test_period": "2025-01-01 to 2025-12-01",
+    "n_train_samples": 720,
+    "n_test_samples": 192,
     "metrics": {
-      "mae": 1.2483,
-      "rmse": 1.5767,
-      "r2": 0.4463
+      "mae": 1.2501,
+      "rmse": 1.5785,
+      "r2": 0.445
     },
     "top_features": [
       {
         "feature": "cases_ma_3m",
-        "importance": 0.14653966398181978
+        "importance": 0.14691608109297194
       },
       {
         "feature": "cases_lag1",
-        "importance": 0.07789851069552661
+        "importance": 0.07827914846284852
       },
       {
         "feature": "population",
-        "importance": 0.039067240760284984
+        "importance": 0.0391194825019735
       },
       {
         "feature": "cases_lag2",
-        "importance": 0.03205440281456606
+        "importance": 0.032078959306559546
       },
       {
         "feature": "rainfall_cumul_2m",
-        "importance": 0.02567816342596456
+        "importance": 0.025318873535987836
       }
     ]
   },
   "ispa": {
     "algorithm": "ensemble_rf_xgboost_elasticnet",
-    "version": "ensemble-monthly-ispa-2026.08.26",
+    "version": "ensemble-monthly-ispa-2026.08.27",
     "granularity": "monthly",
     "is_log_transformed": false,
-    "trained_at": "2026-08-26T18:56:50.119253",
+    "trained_at": "2026-08-27T06:08:51.604115",
     "train_period": "2025-04-01 to 2025-09-01",
     "test_period": "2025-10-01 to 2025-12-01",
     "n_train_samples": 96,

@@ -8,11 +8,8 @@ import { DistrictBoard } from "@/components/landing/district-board";
 import { EducationSection } from "@/components/landing/features";
 import { TrustSection } from "@/components/landing/dashboard-preview";
 import { CtaBanner } from "@/components/landing/cta-banner";
-import {
-  KECAMATAN_PARAM,
-  rememberKecamatan,
-  resolveKecamatan,
-} from "@/lib/kecamatan-selection";
+import { KECAMATAN_PARAM, rememberKecamatan } from "@/lib/kecamatan-selection";
+import { loadKecamatanDirectory, resolveKecamatanName } from "@/lib/kecamatan";
 
 /**
  * The page answers one question, then earns the answer.
@@ -39,10 +36,22 @@ export default function LandingPage() {
      hero's question stands on its own, and swapping the city summary for one
      district a frame after paint reads as a glitch. */
   useEffect(() => {
-    const fromUrl = resolveKecamatan(
-      new URLSearchParams(window.location.search).get(KECAMATAN_PARAM),
-    );
-    if (fromUrl) setSelectedKecamatan(fromUrl);
+    const raw = new URLSearchParams(window.location.search).get(KECAMATAN_PARAM);
+    if (!raw) return;
+    /* Nama divalidasi terhadap direktori gateway, bukan terhadap salinan
+       tertulis di frontend: `?kecamatan=Jakarta` tidak boleh menembus. */
+    let alive = true;
+    loadKecamatanDirectory()
+      .then((list) => {
+        const resolved = resolveKecamatanName(list, raw);
+        if (alive && resolved) setSelectedKecamatan(resolved);
+      })
+      .catch(() => {
+        /* Tanpa direktori, tidak ada nama yang bisa dipercaya. */
+      });
+    return () => {
+      alive = false;
+    };
   }, []);
 
   /* Every pick is remembered so the report form on /warga/lapor arrives with

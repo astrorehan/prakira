@@ -46,3 +46,12 @@ next-env.d.ts.bak
 
 # councils
 .council/
+
+# Basis data lokal gateway (SQLite) — dibuat ulang dari dataset saat start.
+backend/data/
+
+# Lingkungan virtual layanan ML.
+ml-services/.venv/
+
+# Rahasia lokal gateway (connection string Supabase, kata sandi seed).
+backend/.env

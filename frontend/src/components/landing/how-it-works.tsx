@@ -2,12 +2,25 @@
 
 import * as React from "react";
 import { useMemo } from "react";
-import { CLIMATE_CORRELATION_DATA, TREND_DATA } from "@/lib/mock-data";
 import { CLIMATE_COLORS } from "@/lib/utils";
 import { useInView } from "@/hooks/use-in-view";
+import { fetchClimateSeries, fetchTrend } from "@/lib/api";
+import { useApi } from "@/lib/use-api";
+import { useCityData } from "@/lib/use-city-data";
+import type { ClimatePoint, TrendPoint } from "@/types";
 
 import { Reveal } from "./reveal";
 import { SectionHeading } from "./section-heading";
+
+/**
+ * Tiga panel yang menjelaskan cara kerja model.
+ *
+ * Ketiganya dulu menggambar `CLIMATE_CORRELATION_DATA` dan `TREND_DATA.DBD` —
+ * dua konstanta yang ditulis tangan. Karena panel-panel ini adalah bagian
+ * halaman yang berjanji "Prakira tidak menebak", menggambarnya dari angka
+ * karangan adalah kontradiksi yang paling mahal di seluruh produk. Sekarang
+ * ketiganya membaca deret yang sama dengan konsol.
+ */
 
 /* Charts share one coordinate space so the three panels line up optically. */
 const W = 280;
@@ -25,6 +38,22 @@ function xAt(i: number, n: number) {
   return PAD + (i / (n - 1)) * (W - PAD * 2);
 }
 
+type ChartProps = {
+  play: boolean;
+  series: ClimatePoint[];
+  trend: TrendPoint[];
+  disease: string;
+};
+
+/** Panel tanpa data menampilkan alasannya, bukan sumbu kosong. */
+function EmptyChart({ label }: { label: string }) {
+  return (
+    <div className="flex h-24 w-full items-center justify-center rounded-lg border border-dashed border-sand-200 px-3 text-center">
+      <p className="text-3xs text-paper-600">{label}</p>
+    </div>
+  );
+}
+
 function linePath(values: number[]) {
   const y = scale(values);
   return values
@@ -32,10 +61,12 @@ function linePath(values: number[]) {
     .join(" ");
 }
 
-/* ── 1. Climate intake: monthly rainfall ─────────────────────────────────── */
-function RainfallBars({ play }: { play: boolean }) {
-  const data = CLIMATE_CORRELATION_DATA;
-  const max = Math.max(...data.map((d) => d.curah_hujan_mm));
+/* ── 1. Masukan iklim: curah hujan bulanan ───────────────────────────────── */
+function RainfallBars({ play, series }: ChartProps) {
+  const data = series.filter((d) => d.curah_hujan_mm !== null);
+  if (data.length === 0) return <EmptyChart label="Data curah hujan belum tersedia." />;
+
+  const max = Math.max(...data.map((d) => d.curah_hujan_mm as number));
   const bw = (W - PAD * 2) / data.length - 4;
 
   return (
@@ -48,7 +79,7 @@ function RainfallBars({ play }: { play: boolean }) {
         </linearGradient>
       </defs>
       {data.map((d, i) => {
-        const h = (d.curah_hujan_mm / max) * (H - PAD * 2);
+        const h = ((d.curah_hujan_mm as number) / max) * (H - PAD * 2);
         return (
           <rect
             key={d.periode}
@@ -68,11 +99,26 @@ function RainfallBars({ play }: { play: boolean }) {
   );
 }
 
-/* ── 2. The pattern: rainfall leads cases by roughly a month ─────────────── */
-function LagLines({ play }: { play: boolean }) {
-  const data = CLIMATE_CORRELATION_DATA;
-  const rain = useMemo(() => linePath(data.map((d) => d.curah_hujan_mm)), [data]);
-  const cases = useMemo(() => linePath(data.map((d) => d.kasus_dbd)), [data]);
+/* ── 2. Polanya: hujan mendahului kasus ──────────────────────────────────── */
+function LagLines({ play, series, disease }: ChartProps) {
+  const data = useMemo(
+    () =>
+      series.filter(
+        (d) => d.curah_hujan_mm !== null && typeof d.kasus[disease] === "number",
+      ),
+    [series, disease],
+  );
+
+  const rain = useMemo(
+    () => (data.length > 1 ? linePath(data.map((d) => d.curah_hujan_mm as number)) : ""),
+    [data],
+  );
+  const cases = useMemo(
+    () => (data.length > 1 ? linePath(data.map((d) => d.kasus[disease])) : ""),
+    [data, disease],
+  );
+
+  if (data.length < 2) return <EmptyChart label="Deret iklim–kasus belum cukup panjang." />;
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="h-24 w-full" role="img"
@@ -111,9 +157,17 @@ function LagLines({ play }: { play: boolean }) {
   );
 }
 
-/* ── 3. The output: forecast with its interval ───────────────────────────── */
-function ForecastBand({ play }: { play: boolean }) {
-  const data = TREND_DATA.DBD;
+/* ── 3. Keluarannya: prakiraan beserta rentangnya ────────────────────────── */
+function ForecastBand({ play, trend }: ChartProps) {
+  const data = trend;
+  const forecastIdxAll = data
+    .map((d, i) => (d.kasus_prediksi != null ? i : -1))
+    .filter((i) => i >= 0);
+
+  if (data.length < 2 || forecastIdxAll.length === 0) {
+    return <EmptyChart label="Prakiraan belum tersedia." />;
+  }
+
   const all = data.flatMap((d) => [
     d.kasus_aktual ?? d.kasus_prediksi ?? 0,
     d.upper_bound ?? d.kasus_prediksi ?? 0,
@@ -158,7 +212,7 @@ function ForecastBand({ play }: { play: boolean }) {
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="h-24 w-full" role="img"
-      aria-label="Kasus tercatat dan prakiraan empat minggu ke depan dengan rentang ketidakpastian">
+      aria-label="Kasus tercatat dan prakiraan bulan berikutnya dengan rentang ketidakpastian">
       <defs>
         <linearGradient id="grad-band" x1="0" y1="0" x2="1" y2="0">
           <stop offset="0%" stopColor="#E5AA52" stopOpacity="0.35" />
@@ -212,32 +266,47 @@ function ForecastBand({ play }: { play: boolean }) {
   );
 }
 
-const STEPS = [
-  {
-    n: "01",
-    title: "Baca cuacanya",
-    body: "Curah hujan, suhu, dan kelembaban dari 4 stasiun BMKG masuk setiap hari, per kecamatan.",
-    legend: "Curah hujan bulanan · 12 bulan terakhir",
-    chart: RainfallBars,
-  },
-  {
-    n: "02",
-    title: "Temukan polanya",
-    body: "Model belajar dari 3 tahun riwayat kasus Dinas Kesehatan. Kurva kasus DBD nyaris menempel pada kurva hujan — musim hujan adalah musim wabah.",
-    legend: "Curah hujan (putus-putus) vs kasus DBD · 12 bulan",
-    chart: LagLines,
-  },
-  {
-    n: "03",
-    title: "Terbitkan peringatan",
-    body: "Hasilnya: prakiraan 2–4 minggu ke depan lengkap dengan rentang ketidakpastiannya — bukan satu angka yang berpura-pura pasti.",
-    legend: "Tercatat · prakiraan · rentang",
-    chart: ForecastBand,
-  },
-];
-
 export function HowItWorks() {
   const { ref, inView } = useInView<HTMLDivElement>({ threshold: 0.25 });
+  const { diseases, meta } = useCityData();
+  const disease = diseases[0] ?? "";
+
+  const climate = useApi(() => fetchClimateSeries(24), []);
+  const trend = useApi(
+    () => (disease ? fetchTrend(disease, 12) : Promise.resolve(null as never)),
+    [disease],
+  );
+
+  const series = climate.data?.data ?? [];
+  const trendPoints = trend.data?.data ?? [];
+  const months = series.filter((d) => d.curah_hujan_mm !== null).length;
+
+  /* Keterangan tiap panel menyebut angka yang benar-benar digambar. Versi
+     sebelumnya menuliskan "4 stasiun BMKG", "3 tahun riwayat", dan "12 bulan"
+     sebagai teks tetap, tanpa hubungan apa pun dengan deret di sebelahnya. */
+  const steps = [
+    {
+      n: "01",
+      title: "Baca cuacanya",
+      body: "Curah hujan, suhu, dan kelembaban per kecamatan masuk sebagai deret bulanan, sejajar dengan rekapitulasi kasus.",
+      legend: `Curah hujan bulanan · ${months} bulan terakhir`,
+      chart: RainfallBars,
+    },
+    {
+      n: "02",
+      title: "Temukan polanya",
+      body: `Model belajar dari riwayat kasus dan iklim yang sudah terjadi. Kurva kasus ${disease || "penyakit"} bergerak mengikuti kurva hujan dengan jeda beberapa minggu.`,
+      legend: `Curah hujan (putus-putus) vs kasus ${disease || "—"}`,
+      chart: LagLines,
+    },
+    {
+      n: "03",
+      title: "Terbitkan prakiraan",
+      body: `Hasilnya: prakiraan untuk ${meta?.predictionLabel ?? "bulan berikutnya"} lengkap dengan rentang ketidakpastiannya — bukan satu angka yang berpura-pura pasti.`,
+      legend: "Tercatat · prakiraan · rentang",
+      chart: ForecastBand,
+    },
+  ];
 
   return (
     <section id="cara-kerja" className="scroll-mt-24 bg-grad-sand py-16 md:py-24">
@@ -249,7 +318,7 @@ export function HowItWorks() {
         />
 
         <div ref={ref} className="mt-12 grid gap-px overflow-hidden rounded-3xl border border-sand-200 bg-sand-200 md:grid-cols-3">
-          {STEPS.map((step, i) => {
+          {steps.map((step, i) => {
             const Chart = step.chart;
             return (
               <Reveal
@@ -266,7 +335,12 @@ export function HowItWorks() {
                 </p>
 
                 <div className="mt-auto pt-7">
-                  <Chart play={inView} />
+                  <Chart
+                    play={inView}
+                    series={series}
+                    trend={trendPoints}
+                    disease={disease}
+                  />
                   <p className="mt-2 border-t border-sand-200 pt-2 font-mono text-3xs uppercase tracking-wider text-paper-600">
                     {step.legend}
                   </p>

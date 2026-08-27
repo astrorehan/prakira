@@ -7,7 +7,14 @@ import {
   ChevronRight,
   CloudRain,
 } from "lucide-react";
-import { cn, formatIncidence, formatNumber, RISK_CONFIG } from "@/lib/utils";
+import {
+  cn,
+  formatMaybeIncidence,
+  formatMaybeNumber,
+  formatMaybePercent,
+  riskConfigOf,
+} from "@/lib/utils";
+import { formatMonth } from "@/lib/period";
 import type { KecamatanData } from "@/types";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
@@ -30,15 +37,25 @@ export function DistrictRankingTable({
   const [sortField, setSortField] = useState<SortField>("skor_risiko");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
-  /* Sixteen rows fit on one screen: sorting is enough, a search box and risk
-     chips would only duplicate what the map already filters spatially. */
+  /* Enam belas baris muat di satu layar: pengurutan sudah cukup, kotak cari
+     dan chip risiko hanya menduplikasi apa yang sudah difilter peta.
+
+     Kecamatan tanpa nilai selalu jatuh ke bawah pada kedua arah pengurutan.
+     Memperlakukan `null` sebagai nol akan menaruhnya di puncak daftar
+     "risiko terendah" — persis kesimpulan yang tidak boleh diambil. */
   const sorted = useMemo(() => {
     return [...districts].sort((a, b) => {
       const valA = a[sortField];
       const valB = b[sortField];
+      if (valA === null && valB === null) return a.nama.localeCompare(b.nama);
+      if (valA === null) return 1;
+      if (valB === null) return -1;
       return sortOrder === "desc" ? valB - valA : valA - valB;
     });
   }, [districts, sortField, sortOrder]);
+
+  const periodeObservasi = districts[0]?.periode_observasi ?? null;
+  const periodePrediksi = districts.find((d) => d.periode_prediksi)?.periode_prediksi ?? null;
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) {
@@ -71,11 +88,13 @@ export function DistrictRankingTable({
                 onClick={() => toggleSort("kasus_aktif")}
               >
                 <div className="flex items-center gap-1">
-                  <span>Kasus Aktif</span>
+                  <span>Kasus {formatMonth(periodeObservasi)}</span>
                   <ArrowUpDown className="h-3 w-3" />
                 </div>
               </th>
-              <th className="py-3.5 px-3">Proyeksi 2–4 Minggu</th>
+              <th className="py-3.5 px-3">
+                Prakiraan {formatMonth(periodePrediksi)}
+              </th>
               <th
                 className="py-3.5 px-3 cursor-pointer hover:text-primary transition-colors"
                 onClick={() => toggleSort("incidence_rate")}
@@ -85,14 +104,14 @@ export function DistrictRankingTable({
                   <ArrowUpDown className="h-3 w-3" />
                 </div>
               </th>
-              <th className="py-3.5 px-3">Cuaca BMKG</th>
+              <th className="py-3.5 px-3">Iklim</th>
               <th className="py-3.5 px-4 text-right">Aksi</th>
             </tr>
           </thead>
 
           <tbody className="divide-y divide-paper-100">
             {sorted.map((kec, index) => {
-              const riskCfg = RISK_CONFIG[kec.tingkat_risiko];
+              const riskCfg = riskConfigOf(kec.tingkat_risiko);
               const isSelected = kec.id === selectedId;
 
               return (
@@ -139,18 +158,9 @@ export function DistrictRankingTable({
                         className="font-display font-semibold text-sm"
                         style={{ color: riskCfg.color }}
                       >
-                        {kec.skor_risiko}
+                        {kec.skor_risiko ?? "—"}
                       </span>
-                      <Badge
-                        variant={
-                          kec.tingkat_risiko === "tinggi"
-                            ? "risk-high"
-                            : kec.tingkat_risiko === "sedang"
-                            ? "risk-medium"
-                            : "risk-low"
-                        }
-                        size="sm"
-                      >
+                      <Badge variant={riskCfg.badgeVariant} size="sm">
                         {riskCfg.label}
                       </Badge>
                     </div>
@@ -158,41 +168,57 @@ export function DistrictRankingTable({
 
                   <td className="py-3 px-3">
                     <div className="font-semibold text-foreground">
-                      {formatNumber(kec.kasus_aktif)} kasus
+                      {formatMaybeNumber(kec.kasus_aktif)} kasus
                     </div>
-                    <div className="text-3xs text-muted-foreground font-mono">
-                      3 mgg: {kec.historical_cases_3w.join(" → ")}
-                    </div>
+                    {kec.riwayat_periode.length > 1 && (
+                      <div className="text-3xs text-muted-foreground font-mono">
+                        {kec.riwayat_periode.length} bln:{" "}
+                        {kec.riwayat_periode.join(" → ")}
+                      </div>
+                    )}
                   </td>
 
                   <td className="py-3 px-3">
-                    <div className="font-semibold text-risk-high">
-                      {formatNumber(kec.kasus_prediksi)} kasus
-                    </div>
-                    <div
-                      className={cn(
-                        "text-3xs font-semibold",
-                        kec.delta_mingguan >= 0 ? "text-risk-high" : "text-risk-low",
-                      )}
-                    >
-                      {kec.delta_mingguan >= 0 ? "+" : ""}
-                      {kec.delta_mingguan}% vs kasus aktif
-                    </div>
+                    {kec.kasus_prediksi === null ? (
+                      <span className="text-3xs text-paper-600">Belum diprediksi</span>
+                    ) : (
+                      <>
+                        <div className="font-semibold text-risk-high">
+                          {formatMaybeNumber(kec.kasus_prediksi)} kasus
+                        </div>
+                        {/* Batas selalu ikut angkanya, tidak pernah di kolom lain. */}
+                        <div className="font-mono text-3xs text-muted-foreground">
+                          {formatMaybeNumber(kec.kasus_prediksi_lower)}–
+                          {formatMaybeNumber(kec.kasus_prediksi_upper)}
+                        </div>
+                      </>
+                    )}
+                    {kec.delta_periode !== null && (
+                      <div
+                        className={cn(
+                          "text-3xs font-semibold",
+                          kec.delta_periode >= 0 ? "text-risk-high" : "text-risk-low",
+                        )}
+                      >
+                        {formatMaybePercent(kec.delta_periode)} vs bulan lalu
+                      </div>
+                    )}
                   </td>
 
                   <td className="py-3 px-3">
                     <span className="font-medium text-paper-700">
-                      {formatIncidence(kec.incidence_rate)}
+                      {formatMaybeIncidence(kec.incidence_rate)}
                     </span>
                   </td>
 
                   <td className="py-3 px-3">
                     <div className="text-brand-700 font-semibold flex items-center gap-1">
                       <CloudRain className="h-3 w-3" />
-                      <span>{kec.cuaca.curah_hujan_mm} mm</span>
+                      <span>{formatMaybeNumber(kec.cuaca.curah_hujan_mm)} mm</span>
                     </div>
                     <div className="text-3xs text-muted-foreground">
-                      {kec.cuaca.suhu_c}°C · {kec.cuaca.kelembaban_pct}% RH
+                      {formatMaybeNumber(kec.cuaca.suhu_c)}°C ·{" "}
+                      {formatMaybeNumber(kec.cuaca.kelembaban_pct)}% RH
                     </div>
                   </td>
 

@@ -3,7 +3,9 @@
 import * as React from "react";
 import { AlertTriangle, FileCheck2, Mail, ScrollText } from "lucide-react";
 
-import { BACKTEST_METRICS } from "@/lib/mock-data";
+import { fetchBacktests } from "@/lib/api";
+import { useApi } from "@/lib/use-api";
+import { DataState } from "@/components/data-state";
 import { Reveal } from "@/components/landing/reveal";
 import { CountUp } from "@/components/landing/count-up";
 
@@ -11,12 +13,12 @@ const STEPS = [
   {
     no: "01",
     title: "Pengumpulan data",
-    body: "Empat stasiun BMKG di Kota Semarang mengirim curah hujan, suhu, kelembaban, angin, dan radiasi setiap jam. Dinas Kesehatan mengunggah rekap kasus mingguan per kecamatan.",
+    body: "Curah hujan, suhu, dan kelembaban tersimpan sebagai deret bulanan per kecamatan, sejajar dengan rekapitulasi kasus yang diunggah petugas melalui konsol.",
   },
   {
     no: "02",
     title: "Pemodelan risiko",
-    body: "Model dilatih pada hubungan iklim–kasus dengan jeda dua hingga empat minggu, lalu menghasilkan skor risiko dan rentang proyeksi untuk tiap kecamatan.",
+    body: "Model dilatih pada hubungan iklim–kasus dengan jeda satu hingga tiga bulan, lalu menghasilkan skor risiko dan rentang prakiraan untuk tiap kecamatan.",
   },
   {
     no: "03",
@@ -25,15 +27,26 @@ const STEPS = [
   },
 ];
 
-const LIMITS = [
-  "Prakiraan adalah probabilitas, bukan kepastian. Angka proyeksi selalu ditampilkan sebagai rentang.",
-  "Kecamatan dengan riwayat data tipis menghasilkan rentang yang lebih lebar — bukan berarti wilayah tersebut aman.",
-  "Sistem ini tidak menggantikan diagnosis medis. Keluhan kesehatan perorangan tetap harus diperiksa tenaga kesehatan.",
-  "Perubahan pelaporan kasus di lapangan dapat menggeser hasil model pada pekan berikutnya.",
-];
-
+/**
+ * Halaman informasi publik.
+ *
+ * Tabel akurasi di bawah dulu menyalin lima baris `BACKTEST_METRICS` — termasuk
+ * satu model LSTM dan satu baris Diare yang tidak pernah dilatih — lalu
+ * menutupnya dengan kalimat "dievaluasi pada 2.496 sampel kecamatan-minggu".
+ * Baik modelnya, angkanya, maupun satuan waktunya tidak ada. Daftar batasan
+ * juga tidak lagi ditulis di sini: gateway mengirimkannya bersama hasil
+ * backtest, jadi konsol petugas dan halaman publik membaca batasan yang sama.
+ */
 export function PublicInfo() {
-  const best = [...BACKTEST_METRICS].sort((a, b) => b.accuracy_pct - a.accuracy_pct)[0];
+  const backtests = useApi(() => fetchBacktests(), []);
+  const metrics = backtests.data?.data ?? [];
+  const limits = backtests.data?.meta.limitations ?? [];
+
+  /* Model dengan R² tertinggi mewakili ringkasan di atas tabel. */
+  const best = metrics.reduce<(typeof metrics)[number] | null>(
+    (top, m) => (top === null || m.r2 > top.r2 ? m : top),
+    null,
+  );
 
   return (
     <section id="informasi" className="scroll-mt-16 border-t border-sand-200 bg-grad-paper">
@@ -76,19 +89,34 @@ export function PublicInfo() {
               <div className="flex flex-wrap items-center justify-between gap-4 border-b border-sand-200 bg-sand-50 px-5 py-3">
                 <span className="flex items-center gap-2 font-mono text-3xs uppercase tracking-[0.08em] text-paper-600">
                   <FileCheck2 className="h-3.5 w-3.5" aria-hidden />
-                  Uji ulang model · {best.backtest_period}
+                  Uji ulang model · {best?.test_period ?? "belum tersedia"}
                 </span>
-                <span className="font-mono text-3xs uppercase tracking-[0.08em] text-paper-600">
-                  Akurasi terbaik{" "}
-                  <CountUp to={best.accuracy_pct} decimals={1} suffix=" %" className="font-medium text-brand-700" />
-                </span>
+                {best?.class_accuracy_pct !== null && best?.class_accuracy_pct !== undefined && (
+                  <span className="font-mono text-3xs uppercase tracking-[0.08em] text-paper-600">
+                    Akurasi kelas terbaik{" "}
+                    <CountUp
+                      to={best.class_accuracy_pct}
+                      decimals={1}
+                      suffix=" %"
+                      className="font-medium text-brand-700"
+                    />
+                  </span>
+                )}
               </div>
 
+              <DataState
+                loading={backtests.loading}
+                error={backtests.error}
+                empty={!backtests.loading && metrics.length === 0}
+                emptyMessage="Hasil pengujian model belum tersedia."
+                onRetry={backtests.reload}
+                className="m-4"
+              >
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[560px] text-left">
                   <thead>
                     <tr className="border-b border-sand-200">
-                      {["Model", "Penyakit", "MAE", "RMSE", "R²", "Akurasi"].map((h, i) => (
+                      {["Model", "Penyakit", "MAE", "RMSE", "R²", "Akurasi kelas"].map((h, i) => (
                         <th
                           key={h}
                           scope="col"
@@ -102,9 +130,11 @@ export function PublicInfo() {
                     </tr>
                   </thead>
                   <tbody>
-                    {BACKTEST_METRICS.map((m) => (
-                      <tr key={`${m.model_name}-${m.disease}`} className="border-b border-sand-100 last:border-b-0">
-                        <td className="py-3 pl-5 pr-3 text-caption text-foreground">{m.model_name}</td>
+                    {metrics.map((m) => (
+                      <tr key={m.disease} className="border-b border-sand-100 last:border-b-0">
+                        <td className="py-3 pl-5 pr-3 text-caption text-foreground">
+                          {m.algorithm ?? m.model_version}
+                        </td>
                         <td className="px-3 py-3 text-caption text-paper-600">{m.disease}</td>
                         <td className="px-3 py-3 text-right text-caption tabular text-paper-700">
                           {m.mae.toFixed(2)}
@@ -116,18 +146,21 @@ export function PublicInfo() {
                           {m.r2.toFixed(3)}
                         </td>
                         <td className="px-3 py-3 pr-5 text-right text-caption tabular font-medium text-foreground">
-                          {m.accuracy_pct.toFixed(1)}%
+                          {m.class_accuracy_pct === null
+                            ? "—"
+                            : `${m.class_accuracy_pct.toFixed(1)}%`}
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
+              </DataState>
 
               <p className="border-t border-sand-200 bg-sand-50 px-5 py-3 text-2xs text-paper-600">
-                Dievaluasi pada {BACKTEST_METRICS[0].sample_size.toLocaleString("id-ID")} sampel
-                kecamatan-minggu. Metrik dihitung ulang setiap triwulan dan diterbitkan apa adanya,
-                termasuk ketika turun.
+                {best
+                  ? `Periode uji ${best.test_period ?? "—"}, di luar data latih. Metrik diterbitkan apa adanya, termasuk ketika turun.`
+                  : "Hasil pengujian model belum tersedia pada pemasangan ini."}
               </p>
             </Reveal>
           </div>
@@ -140,13 +173,20 @@ export function PublicInfo() {
                   <AlertTriangle className="h-4 w-4 shrink-0 text-risk-medium" aria-hidden />
                   <h3 className="text-h3 text-foreground">Batasan penggunaan</h3>
                 </div>
+                {/* Daftar batasan datang dari gateway, jadi halaman publik dan
+                    konsol petugas tidak bisa menyebut batasan yang berbeda. */}
                 <ul className="mt-4 space-y-2.5">
-                  {LIMITS.map((line) => (
+                  {limits.map((line) => (
                     <li key={line} className="flex gap-2.5 text-caption text-paper-700">
                       <span aria-hidden className="mt-[0.55em] h-1 w-1 shrink-0 rounded-full bg-risk-medium" />
                       {line}
                     </li>
                   ))}
+                  {limits.length === 0 && (
+                    <li className="text-caption text-paper-700">
+                      Daftar batasan belum dapat diambil dari layanan data.
+                    </li>
+                  )}
                 </ul>
               </div>
             </Reveal>

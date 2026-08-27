@@ -6,15 +6,13 @@ import { MegaphoneIcon, SearchCheck, ArrowRight, MapPin, Check } from "lucide-re
 import { cn } from "@/lib/utils";
 import { WargaShell } from "@/components/warga/shell";
 import { Badge } from "@/components/ui/badge";
-import { getKecamatanDataList } from "@/lib/mock-data";
 import { useRememberedKecamatan, withKecamatan } from "@/lib/kecamatan-selection";
-import {
-  loadReports,
-  relativeAge,
-  REPORT_KIND,
-  type CitizenReport,
-} from "@/lib/reports";
-import type { DiseaseType, RiskLevel } from "@/types";
+import { REPORT_KIND } from "@/lib/reports";
+import { relativeAge } from "@/lib/period";
+import { fetchAllDistricts, fetchVerifiedReports, type VerifiedSignal } from "@/lib/api";
+import { useApi } from "@/lib/use-api";
+import { getCityRiskRows } from "@/lib/city-risk";
+import type { RiskLevel } from "@/types";
 
 /**
  * Portal warga — pintu masuk pelaporan.
@@ -32,9 +30,12 @@ import type { DiseaseType, RiskLevel } from "@/types";
  * Baris status kecamatan di bawah bukan pengecek yang dihidupkan kembali: satu
  * kalimat, tanpa skor dan tanpa kartu, yang menjawab "kenapa saya perlu repot
  * melapor" dan menyerahkan jawaban lengkapnya ke halaman depan.
+ *
+ * Dua sumber data berpindah ke gateway. Status kecamatan dulu dihitung dari
+ * `getKecamatanDataList()` di peramban; daftar "sudah diverifikasi" dulu
+ * membaca seluruh isi `localStorage`, termasuk deskripsi dan foto laporan orang
+ * lain. Yang publik sekarang hanya jenis, kecamatan, dan waktu.
  */
-
-const ORDER: Record<RiskLevel, number> = { rendah: 0, sedang: 1, tinggi: 2 };
 
 const RISK_WORD: Record<RiskLevel, { word: string; badge: "risk-low" | "risk-medium" | "risk-high"; blurb: string }> = {
   rendah: {
@@ -50,7 +51,7 @@ const RISK_WORD: Record<RiskLevel, { word: string; badge: "risk-low" | "risk-med
   tinggi: {
     word: "Siaga",
     badge: "risk-high",
-    blurb: "Potensi lonjakan 2–4 minggu ke depan. Petugas sedang mencari titik pemicu.",
+    blurb: "Potensi lonjakan pada bulan yang diprakirakan. Petugas sedang mencari titik pemicu.",
   },
 };
 
@@ -73,20 +74,24 @@ const ENTRIES = [
   },
 ] as const;
 
-function DistrictLine({ kecamatan }: { kecamatan: string }) {
-  const worst = React.useMemo(() => {
-    const types: DiseaseType[] = ["DBD", "ISPA", "Diare"];
-    const rows = types
-      .map((t) => getKecamatanDataList(t).find((k) => k.nama === kecamatan))
-      .filter((d): d is NonNullable<typeof d> => !!d);
-    if (rows.length === 0) return null;
-    return rows.reduce((prev, curr) =>
-      ORDER[curr.tingkat_risiko] > ORDER[prev.tingkat_risiko] ? curr : prev,
-    );
-  }, [kecamatan]);
-
-  if (!worst) return null;
-  const risk = RISK_WORD[worst.tingkat_risiko];
+function DistrictLine({
+  kecamatan,
+  level,
+}: {
+  kecamatan: string;
+  level: RiskLevel | null;
+}) {
+  /* Kecamatan tanpa prediksi tetap ditampilkan, dengan kalimatnya sendiri.
+     Menyembunyikan barisnya akan membuat halaman terlihat seperti belum
+     memuat, dan menampilkannya sebagai "Aman" adalah kebohongan. */
+  const risk = level
+    ? RISK_WORD[level]
+    : {
+        word: "Belum ada prakiraan",
+        badge: "risk-none" as const,
+        blurb:
+          "Belum ada prakiraan untuk kecamatan ini pada periode berjalan. Laporan Anda justru paling berguna di wilayah seperti ini.",
+      };
 
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-sand-200 bg-white p-5 sm:flex-row sm:items-center sm:justify-between">
@@ -117,16 +122,14 @@ function DistrictLine({ kecamatan }: { kecamatan: string }) {
   );
 }
 
-function VerifiedNearby({ reports, kecamatan }: { reports: CitizenReport[]; kecamatan: string | null }) {
-  const recent = React.useMemo(
-    () =>
-      reports
-        .filter((r) => r.status === "terverifikasi")
-        .filter((r) => !kecamatan || r.kecamatan === kecamatan)
-        .slice(0, 3),
-    [reports, kecamatan],
-  );
-
+function VerifiedNearby({
+  reports,
+  kecamatan,
+}: {
+  reports: VerifiedSignal[];
+  kecamatan: string | null;
+}) {
+  const recent = reports.slice(0, 3);
   if (recent.length === 0) return null;
 
   return (
@@ -148,10 +151,7 @@ function VerifiedNearby({ reports, kecamatan }: { reports: CitizenReport[]; keca
             <span className="text-body-sm font-medium text-foreground">
               {REPORT_KIND[r.kind].label}
             </span>
-            <span className="text-body-sm text-paper-600">
-              {r.kecamatan}
-              {r.kelurahan ? ` · ${r.kelurahan}` : ""}
-            </span>
+            <span className="text-body-sm text-paper-600">{r.kecamatan}</span>
             <span className="ml-auto text-caption text-paper-600">
               {relativeAge(r.submittedAt)}
             </span>
@@ -164,16 +164,25 @@ function VerifiedNearby({ reports, kecamatan }: { reports: CitizenReport[]; keca
 
 export default function PortalWargaPage() {
   const [kecamatan] = useRememberedKecamatan();
-  const [reports, setReports] = React.useState<CitizenReport[]>([]);
 
-  /* localStorage hanya ada di klien; dibaca setelah mount supaya markup
-     pertama sama antara server dan peramban. */
-  React.useEffect(() => setReports(loadReports()), []);
+  const districts = useApi(() => fetchAllDistricts(), []);
+  const verified = useApi(
+    () => fetchVerifiedReports(kecamatan ?? undefined, 3),
+    [kecamatan],
+  );
+
+  /* Kelas terburuk lintas penyakit — aturan yang sama dipakai dashboard, jadi
+     portal warga dan konsol tidak bisa berbeda pendapat soal satu kecamatan. */
+  const level = React.useMemo<RiskLevel | null>(() => {
+    if (!kecamatan || !districts.data) return null;
+    const rows = getCityRiskRows(districts.data.data);
+    return rows.find((r) => r.nama === kecamatan)?.level ?? null;
+  }, [districts.data, kecamatan]);
 
   return (
     <WargaShell
       title="Yang Anda lihat di gang belum tentu terlihat di data"
-      lead="Rekapitulasi resmi Dinas Kesehatan datang mingguan sampai bulanan. Laporan warga datang hari ini. Kirim temuan dari lingkungan Anda, petugas puskesmas memverifikasinya, dan yang terverifikasi ikut memperbaiki prakiraan minggu berikutnya."
+      lead="Rekapitulasi resmi datang bulanan. Laporan warga datang hari ini. Kirim temuan dari lingkungan Anda, petugas memverifikasinya, dan yang terverifikasi tersedia sebagai sinyal untuk prakiraan bulan berikutnya."
     >
       <div className="grid gap-4 md:grid-cols-2">
         {ENTRIES.map((entry) => {
@@ -221,7 +230,7 @@ export default function PortalWargaPage() {
 
       <div className="mt-5">
         {kecamatan ? (
-          <DistrictLine kecamatan={kecamatan} />
+          <DistrictLine kecamatan={kecamatan} level={level} />
         ) : (
           <div className="flex flex-col gap-3 rounded-2xl border border-sand-200 bg-white p-5 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-body-sm text-paper-600">
@@ -242,7 +251,7 @@ export default function PortalWargaPage() {
         )}
       </div>
 
-      <VerifiedNearby reports={reports} kecamatan={kecamatan} />
+      <VerifiedNearby reports={verified.data?.data ?? []} kecamatan={kecamatan} />
     </WargaShell>
   );
 }

@@ -16,7 +16,7 @@ import { Card } from "@/components/ui/card";
 export const metadata: Metadata = {
   title: "Tentang Prakira — Manifesto Eco-Health & Arsitektur AI",
   description:
-    "Mengapa kami membangun Prakira: Mengubah surveilans kesehatan reaktif menjadi preventif prediktif 2–4 minggu lebih awal dengan integrasi machine learning dan data cuaca BMKG.",
+    "Mengapa kami membangun Prakira: mengubah surveilans kesehatan reaktif menjadi preventif dengan prakiraan satu bulan lebih awal, dari machine learning dan deret iklim historis.",
 };
 
 export default function TentangPage() {
@@ -33,7 +33,7 @@ export default function TentangPage() {
         </h1>
         <p className="mt-5 text-base leading-relaxed text-muted-foreground md:text-lg">
           Penanganan wabah DBD, lonjakan ISPA, dan diare di Indonesia selama ini bersifat <em>reaktif</em> — respons baru dimulai setelah bangsal rumah sakit penuh dan status KLB ditetapkan. 
-          <strong> Prakira</strong> mengubah paradigma ini dengan memprediksi lonjakan risiko 2-4 minggu lebih awal memanfaatkan integrasi Machine Learning dan data iklim BMKG secara real-time.
+          <strong> Prakira</strong> mengubah paradigma ini dengan memperkirakan lonjakan risiko satu bulan lebih awal, dari machine learning dan deret iklim historis per kecamatan.
         </p>
       </section>
 
@@ -52,7 +52,7 @@ export default function TentangPage() {
           <Issue
             numeral="02"
             title="Data Terisolasi & Belum Terintegrasi"
-            body="Data observasi cuaca BMKG dan pencatatan epidemiologi puskesmas berada di sistem terpisah, sehingga korelasi curah hujan atau suhu ekstrem tidak termanfaatkan secara prediktif."
+            body="Data observasi iklim dan pencatatan epidemiologi puskesmas berada di sistem terpisah, sehingga korelasi curah hujan atau suhu ekstrem tidak termanfaatkan secara prediktif."
           />
           <Issue
             numeral="03"
@@ -77,7 +77,7 @@ export default function TentangPage() {
         <ol className="space-y-3">
           {[
             {
-              title: "1. Agregasi Data Iklim BMKG",
+              title: "1. Agregasi deret iklim per kecamatan",
               body: "Ekstraksi curah hujan harian kumulatif, fluktuasi suhu minimum-maksimum, dan kelembaban udara per kecamatan.",
             },
             {
@@ -86,7 +86,7 @@ export default function TentangPage() {
             },
             {
               title: "3. Ensemble Machine Learning",
-              body: "Random Forest Regressor, XGBoost, dan LSTM untuk menangani hubungan non-linier antara fluktuasi cuaca dan dinamika transmisi penyakit.",
+              body: "Ensemble regresi linier terregularisasi dan model berbasis pohon (ExtraTrees, Gradient Boosting, XGBoost) untuk menangani hubungan non-linier antara fluktuasi iklim dan dinamika transmisi penyakit. Metrik tiap model diterbitkan apa adanya di halaman analitik.",
             },
             {
               title: "4. Klasifikasi Ambang Batas Risiko",
@@ -154,7 +154,7 @@ export default function TentangPage() {
 const STACK = [
   { icon: Globe, label: "Frontend", value: "Next.js 14 + Tailwind CSS + Leaflet + Recharts" },
   { icon: Cpu, label: "Machine Learning", value: "XGBoost + Random Forest (Scikit-Learn / FastAPI)" },
-  { icon: CloudRain, label: "Data Cuaca", value: "BMKG Open API (4 AWS Kota Semarang)" },
+  { icon: CloudRain, label: "Data iklim", value: "Deret bulanan per kecamatan (berkas dataset repositori)" },
   { icon: Activity, label: "Data Kasus", value: "Open Data Dinas Kesehatan Kota Semarang" },
   { icon: Database, label: "Basis Data", value: "PostgreSQL + PostGIS Spatial Engine" },
   { icon: ShieldCheck, label: "Audit Trail", value: "Immutable Log Logging & Role-Based Access" },

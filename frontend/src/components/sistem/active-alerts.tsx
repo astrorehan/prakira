@@ -2,14 +2,27 @@
 
 import * as React from "react";
 import { useMemo, useState } from "react";
-import { CalendarClock, Download, Megaphone, Siren, Users } from "lucide-react";
+import { CalendarClock, Megaphone, Siren, Users } from "lucide-react";
 
-import { cn } from "@/lib/utils";
-import { ACTION_RECOMMENDATIONS } from "@/lib/mock-data";
+import { cn, formatNumber } from "@/lib/utils";
+import { fetchActions } from "@/lib/api";
+import { useApi } from "@/lib/use-api";
+import { formatDate } from "@/lib/period";
+import { DataState } from "@/components/data-state";
 import type { ActionRecommendation, DiseaseType, RiskLevel } from "@/types";
 import { Reveal } from "@/components/landing/reveal";
 
-const FILTERS: Array<DiseaseType | "Semua"> = ["Semua", "DBD", "ISPA", "Diare"];
+/**
+ * Peringatan resmi.
+ *
+ * Kartu-kartu ini dulu membaca lima rekomendasi tertulis di `mock-data.ts` dan
+ * menerbitkan masing-masing dengan nomor surat buatan sendiri —
+ * `PR/001/VIII/2026` — yang dibentuk dari indeks array. Nomor surat pada
+ * permukaan yang menyebut dirinya "peringatan resmi Dinas Kesehatan" adalah
+ * hal paling berbahaya yang bisa dikarang halaman ini, jadi ia hilang bersama
+ * tombol "Unduh surat edaran" yang tidak pernah mengunduh apa pun. Yang
+ * menggantikannya adalah id tindakan dari gateway, yang memang bisa ditelusuri.
+ */
 
 const LEVEL_BY_PRIORITY: Record<ActionRecommendation["priority"], RiskLevel> = {
   high: "tinggi",
@@ -73,11 +86,7 @@ const CITIZEN_ACTION: Record<ActionRecommendation["action_type"], string[]> = {
   ],
 };
 
-function noticeCode(rec: ActionRecommendation, index: number) {
-  return `PR/${String(index + 1).padStart(3, "0")}/VIII/2026`;
-}
-
-function NoticeCard({ rec, index }: { rec: ActionRecommendation; index: number }) {
+function NoticeCard({ rec }: { rec: ActionRecommendation }) {
   const level = LEVEL_BY_PRIORITY[rec.priority];
   const style = LEVEL_STYLE[level];
   const done = rec.status === "completed";
@@ -94,7 +103,7 @@ function NoticeCard({ rec, index }: { rec: ActionRecommendation; index: number }
       <div className="pl-6 pr-5 py-5 sm:pl-7 sm:pr-6">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
           <span className="font-mono text-3xs uppercase tracking-[0.08em] text-paper-600">
-            {noticeCode(rec, index)}
+            {rec.id}
           </span>
           <span
             className={cn(
@@ -131,17 +140,19 @@ function NoticeCard({ rec, index }: { rec: ActionRecommendation; index: number }
               <dt className="font-mono text-3xs uppercase tracking-[0.08em] text-paper-600">
                 Batas pelaksanaan
               </dt>
-              <dd className="mt-0.5 text-caption font-medium text-foreground">{rec.due_date}</dd>
+              <dd className="mt-0.5 text-caption font-medium text-foreground">
+                {formatDate(rec.due_date)}
+              </dd>
             </div>
           </div>
           <div className="flex items-start gap-2.5">
             <Users className="mt-0.5 h-3.5 w-3.5 shrink-0 text-paper-600" aria-hidden />
             <div className="min-w-0">
               <dt className="font-mono text-3xs uppercase tracking-[0.08em] text-paper-600">
-                Populasi terlindungi
+                Populasi wilayah target
               </dt>
               <dd className="mt-0.5 text-caption font-medium text-foreground">
-                {rec.target_population ?? "—"}
+                {formatNumber(rec.target_population)} jiwa
               </dd>
             </div>
           </div>
@@ -152,7 +163,7 @@ function NoticeCard({ rec, index }: { rec: ActionRecommendation; index: number }
             Yang perlu dilakukan warga
           </p>
           <ul className="mt-2.5 space-y-1.5">
-            {CITIZEN_ACTION[rec.action_type].map((line) => (
+            {(CITIZEN_ACTION[rec.action_type] ?? []).map((line) => (
               <li key={line} className="flex gap-2.5 text-caption text-paper-700">
                 <span aria-hidden className="mt-[0.55em] h-1 w-1 shrink-0 rounded-full bg-brand-500" />
                 {line}
@@ -161,18 +172,11 @@ function NoticeCard({ rec, index }: { rec: ActionRecommendation; index: number }
           </ul>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-          <p className="max-w-xl text-2xs text-paper-600">
-            Pemicu iklim: {rec.climate_trigger}
-          </p>
-          <button
-            type="button"
-            className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg border border-sand-200 bg-white px-3 text-caption font-medium text-paper-700 transition-colors duration-fast hover:border-brand-300 hover:text-brand-700"
-          >
-            <Download className="h-3.5 w-3.5" />
-            Unduh surat edaran
-          </button>
-        </div>
+        {/* Kalimat "Dasar:" dari mesin aturan — sama persis dengan yang dibaca
+            petugas di konsol, sehingga warga dan dinas melihat alasan yang sama. */}
+        <p className="mt-4 max-w-3xl text-2xs leading-relaxed text-paper-600">
+          {rec.basis}
+        </p>
       </div>
     </article>
   );
@@ -180,16 +184,21 @@ function NoticeCard({ rec, index }: { rec: ActionRecommendation; index: number }
 
 export function ActiveAlerts() {
   const [filter, setFilter] = useState<DiseaseType | "Semua">("Semua");
+  const actions = useApi(() => fetchActions(), []);
+
+  const all = useMemo(() => actions.data?.data ?? [], [actions.data]);
+  const diseases = useMemo(
+    () => Array.from(new Set(all.map((r) => r.disease))),
+    [all],
+  );
+  const filters: Array<DiseaseType | "Semua"> = ["Semua", ...diseases];
 
   const list = useMemo(
-    () =>
-      filter === "Semua"
-        ? ACTION_RECOMMENDATIONS
-        : ACTION_RECOMMENDATIONS.filter((r) => r.disease === filter),
-    [filter],
+    () => (filter === "Semua" ? all : all.filter((r) => r.disease === filter)),
+    [all, filter],
   );
 
-  const aktif = ACTION_RECOMMENDATIONS.filter((r) => r.status !== "completed").length;
+  const aktif = all.filter((r) => r.status !== "completed").length;
 
   return (
     <section id="peringatan" className="scroll-mt-16 border-t border-sand-200 bg-grad-paper">
@@ -204,9 +213,9 @@ export function ActiveAlerts() {
                 <span className="tabular">{aktif}</span> peringatan sedang berlaku
               </h2>
               <p className="mt-4 max-w-xl text-body-lg text-paper-600">
-                Setiap peringatan diterbitkan Dinas Kesehatan berdasarkan prakiraan model,
-                lengkap dengan wilayah terdampak, batas waktu, dan langkah yang bisa
-                dilakukan warga.
+                Setiap peringatan disusun mesin aturan dari prakiraan model, lengkap
+                dengan wilayah terdampak, batas waktu, dan langkah yang bisa dilakukan
+                warga. Statusnya diubah petugas dinas lewat konsol.
               </p>
             </div>
 
@@ -215,7 +224,7 @@ export function ActiveAlerts() {
               aria-label="Saring peringatan menurut penyakit"
               className="inline-flex rounded-xl border border-sand-200 bg-white p-1"
             >
-              {FILTERS.map((f) => (
+              {filters.map((f) => (
                 <button
                   key={f}
                   role="tab"
@@ -235,20 +244,29 @@ export function ActiveAlerts() {
           </div>
         </Reveal>
 
-        <div className="mt-8 space-y-4">
-          {list.map((rec, i) => (
-            <Reveal key={rec.id} delay={i * 70}>
-              <NoticeCard rec={rec} index={ACTION_RECOMMENDATIONS.indexOf(rec)} />
-            </Reveal>
-          ))}
-        </div>
+        <DataState
+          loading={actions.loading}
+          error={actions.error}
+          empty={!actions.loading && list.length === 0}
+          emptyMessage="Tidak ada peringatan yang sedang berlaku untuk periode ini."
+          onRetry={actions.reload}
+          className="mt-8"
+        >
+          <div className="mt-8 space-y-4">
+            {list.map((rec, i) => (
+              <Reveal key={rec.id} delay={i * 70}>
+                <NoticeCard rec={rec} />
+              </Reveal>
+            ))}
+          </div>
+        </DataState>
 
         <Reveal className="mt-6 flex items-start gap-2.5 rounded-xl border border-sand-200 bg-sand-50 p-4">
           <Megaphone className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden />
           <p className="text-caption text-paper-600">
-            Peringatan resmi hanya diterbitkan melalui kanal ini, akun resmi Dinas Kesehatan
-            Kota Semarang, dan siaran WhatsApp terdaftar. Pesan berantai di luar kanal
-            tersebut tidak dapat dipertanggungjawabkan.
+            Peringatan di halaman ini dihasilkan mesin aturan dari prakiraan model dan
+            belum berstatus surat edaran resmi. Nomor surat dan pengesahannya diterbitkan
+            Dinas Kesehatan Kota Semarang melalui kanal resminya sendiri.
           </p>
         </Reveal>
       </div>

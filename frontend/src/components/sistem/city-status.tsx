@@ -4,15 +4,24 @@ import * as React from "react";
 import { useMemo, useState } from "react";
 import { ArrowRight, Bug, Droplets, FileText, MapPin, Wind } from "lucide-react";
 
-import { cn, formatNumber, DISEASE_CONFIG, RISK_CONFIG } from "@/lib/utils";
-import { getKecamatanDataList, SEMARANG_KECAMATAN_RAW } from "@/lib/mock-data";
-import type { DiseaseType, RiskLevel } from "@/types";
+import { cn, formatNumber, diseaseProfile, riskConfigOf } from "@/lib/utils";
+import { useKecamatanDirectory } from "@/lib/kecamatan";
+import { useCityData } from "@/lib/use-city-data";
+import { formatMonth } from "@/lib/period";
+import type { DiseaseType, KecamatanData, RiskLevel } from "@/types";
 import { Reveal } from "@/components/landing/reveal";
 import { CountUp } from "@/components/landing/count-up";
 
-const DISEASES: DiseaseType[] = ["DBD", "ISPA", "Diare"];
+/**
+ * Buletin status kota.
+ *
+ * Sebelumnya membaca `getKecamatanDataList()` untuk tiga penyakit tetap dan
+ * mencetak "Edisi Minggu 34 · periode 18-24 Agustus 2026" sebagai teks mati.
+ * Periode itu tidak pernah ada di dataset mana pun, dan salah satu dari tiga
+ * penyakitnya tidak punya satu baris data. Keduanya kini datang dari gateway.
+ */
 
-const DISEASE_ICON: Record<DiseaseType, React.ElementType> = {
+const DISEASE_ICON: Record<string, React.ElementType> = {
   DBD: Bug,
   ISPA: Wind,
   Diare: Droplets,
@@ -37,32 +46,34 @@ type Summary = {
   siaga: number;
   waspada: number;
   rendah: number;
+  tanpaPrakiraan: number;
   kasusAktif: number;
   prediksiLower: number;
   prediksiUpper: number;
-  cells: RiskLevel[];
+  /** Satu sel per kecamatan, terurut skor. `null` = belum ada prakiraan. */
+  cells: (RiskLevel | null)[];
 };
 
-function summarise(disease: DiseaseType): Summary {
-  const list = getKecamatanDataList(disease);
-  const ranked = [...list].sort((a, b) => b.skor_risiko - a.skor_risiko);
+function summarise(disease: DiseaseType, list: KecamatanData[]): Summary {
+  const ranked = [...list].sort((a, b) => (b.skor_risiko ?? -1) - (a.skor_risiko ?? -1));
 
   return {
     disease,
     siaga: list.filter((k) => k.tingkat_risiko === "tinggi").length,
     waspada: list.filter((k) => k.tingkat_risiko === "sedang").length,
     rendah: list.filter((k) => k.tingkat_risiko === "rendah").length,
-    kasusAktif: list.reduce((sum, k) => sum + k.kasus_aktif, 0),
-    prediksiLower: list.reduce((sum, k) => sum + k.kasus_prediksi_lower, 0),
-    prediksiUpper: list.reduce((sum, k) => sum + k.kasus_prediksi_upper, 0),
+    tanpaPrakiraan: list.filter((k) => k.tingkat_risiko === null).length,
+    kasusAktif: list.reduce((sum, k) => sum + (k.kasus_aktif ?? 0), 0),
+    prediksiLower: list.reduce((sum, k) => sum + (k.kasus_prediksi_lower ?? 0), 0),
+    prediksiUpper: list.reduce((sum, k) => sum + (k.kasus_prediksi_upper ?? 0), 0),
     cells: ranked.map((k) => k.tingkat_risiko),
   };
 }
 
 /* ── One disease, one register row ───────────────────────────────────────── */
 function DiseaseRow({ summary }: { summary: Summary }) {
-  const config = DISEASE_CONFIG[summary.disease];
-  const Icon = DISEASE_ICON[summary.disease];
+  const config = diseaseProfile(summary.disease);
+  const Icon = DISEASE_ICON[summary.disease] ?? Bug;
 
   return (
     <div className="border-t border-sand-200 py-6 first:border-t-0 first:pt-0">
@@ -80,7 +91,7 @@ function DiseaseRow({ summary }: { summary: Summary }) {
         <dl className="flex items-start gap-8">
           <div>
             <dt className="font-mono text-3xs uppercase tracking-[0.08em] text-paper-600">
-              Kasus aktif
+              Kasus bulan terakhir
             </dt>
             <dd className="mt-1 text-metric-sm tabular text-foreground">
               <CountUp to={summary.kasusAktif} />
@@ -88,7 +99,7 @@ function DiseaseRow({ summary }: { summary: Summary }) {
           </div>
           <div>
             <dt className="font-mono text-3xs uppercase tracking-[0.08em] text-paper-600">
-              Proyeksi 4 minggu
+              Prakiraan bulan berikutnya
             </dt>
             <dd className="mt-1 text-metric-sm tabular text-foreground">
               {formatNumber(summary.prediksiLower)}
@@ -101,11 +112,19 @@ function DiseaseRow({ summary }: { summary: Summary }) {
 
       {/* 16 districts, ranked left to right. The strip is the finding. */}
       <div className="mt-5">
-        <div className="flex h-2 gap-[3px]" role="img" aria-label={`Sebaran risiko ${summary.disease}: ${summary.siaga} kecamatan siaga, ${summary.waspada} waspada, ${summary.rendah} rendah`}>
+        <div
+          className="flex h-2 gap-[3px]"
+          role="img"
+          aria-label={`Sebaran risiko ${summary.disease}: ${summary.siaga} kecamatan siaga, ${summary.waspada} waspada, ${summary.rendah} rendah, ${summary.tanpaPrakiraan} tanpa prakiraan`}
+        >
           {summary.cells.map((level, i) => (
             <span
               key={i}
-              className={cn("flex-1 rounded-[2px]", CELL[level], level === "tinggi" && "risk-hatch")}
+              className={cn(
+                "flex-1 rounded-[2px]",
+                level ? CELL[level] : "bg-paper-300",
+                level === "tinggi" && "risk-hatch",
+              )}
             />
           ))}
         </div>
@@ -120,11 +139,21 @@ function DiseaseRow({ summary }: { summary: Summary }) {
             <span key={level} className="flex items-center gap-1.5 text-caption text-paper-600">
               <span className={cn("h-2 w-2 rounded-[2px]", CELL[level])} />
               <span className="tabular font-medium text-foreground">{count}</span>
-              {RISK_CONFIG[level].label.toLowerCase()}
+              {riskConfigOf(level).label.toLowerCase()}
             </span>
           ))}
+          {/* Kelas keempat hanya tampil kalau memang ada isinya. */}
+          {summary.tanpaPrakiraan > 0 && (
+            <span className="flex items-center gap-1.5 text-caption text-paper-600">
+              <span className="h-2 w-2 rounded-[2px] bg-paper-300" />
+              <span className="tabular font-medium text-foreground">
+                {summary.tanpaPrakiraan}
+              </span>
+              tanpa prakiraan
+            </span>
+          )}
           <span className="ml-auto font-mono text-3xs uppercase tracking-[0.08em] text-paper-600">
-            16 kecamatan · urut skor
+            {summary.cells.length} kecamatan · urut skor
           </span>
         </div>
       </div>
@@ -134,22 +163,24 @@ function DiseaseRow({ summary }: { summary: Summary }) {
 
 /* ── Layanan 01: cek status wilayah ──────────────────────────────────────── */
 function LookupPanel() {
-  /* Empty until the reader answers. The panel's own label asks which kecamatan
-     they live in — filling that in for them puts one district in front of
-     every visitor and reads as a verdict rather than a prompt. */
+  /* Kosong sampai pembacanya menjawab. Label panel ini menanyakan kecamatan
+     tempat tinggalnya; mengisinya lebih dulu menaruh satu kecamatan di depan
+     setiap pengunjung dan terbaca sebagai vonis, bukan sebagai ajakan. */
   const [kecamatan, setKecamatan] = useState("");
+  const directory = useKecamatanDirectory();
+  const { byDisease, diseases } = useCityData();
 
   const rows = useMemo(
     () =>
-      DISEASES.map((disease) => {
-        const found = getKecamatanDataList(disease).find((k) => k.nama === kecamatan);
-        return { disease, data: found };
-      }),
-    [kecamatan],
+      diseases.map((disease) => ({
+        disease,
+        data: byDisease[disease]?.find((k) => k.nama === kecamatan),
+      })),
+    [byDisease, diseases, kecamatan],
   );
 
-  const profile = SEMARANG_KECAMATAN_RAW.find((k) => k.nama === kecamatan);
-  const cuaca = rows[0]?.data?.cuaca;
+  const profile = directory.list.find((k) => k.nama === kecamatan);
+  const cuaca = rows.find((r) => r.data)?.data?.cuaca;
 
   return (
     <div className="overflow-hidden rounded-2xl border border-sand-200 bg-white shadow-card">
@@ -180,8 +211,10 @@ function LookupPanel() {
             onChange={(e) => setKecamatan(e.target.value)}
             className="h-12 w-full appearance-none rounded-xl border border-sand-200 bg-white pl-10 pr-10 text-sm font-medium text-foreground transition-colors duration-fast hover:border-brand-300 focus:border-brand-500 focus:outline-none"
           >
-            <option value="">Pilih kecamatan…</option>
-            {SEMARANG_KECAMATAN_RAW.map((k) => (
+            <option value="">
+              {directory.loading ? "Memuat daftar kecamatan…" : "Pilih kecamatan…"}
+            </option>
+            {directory.list.map((k) => (
               <option key={k.id} value={k.nama}>
                 {k.nama}
               </option>
@@ -195,13 +228,15 @@ function LookupPanel() {
 
         {profile ? (
           <p className="mt-2.5 font-mono text-3xs uppercase tracking-[0.08em] text-paper-600">
-            Kode BPS {profile.kode_bps} · {formatNumber(profile.pop)} jiwa · {profile.luas.toFixed(2)} km²
+            Kode BPS {profile.kode_bps} · {formatNumber(profile.populasi)} jiwa ·{" "}
+            {profile.luas_km2.toFixed(2)} km²
           </p>
         ) : null}
 
         {!kecamatan && (
           <p className="mt-5 rounded-xl border border-dashed border-sand-300 bg-sand-50/60 px-4 py-6 text-center text-caption text-paper-600">
-            Skor DBD, ISPA, dan Diare muncul di sini setelah kecamatan dipilih.
+            Skor {diseases.join(", ") || "penyakit"} muncul di sini setelah kecamatan
+            dipilih.
           </p>
         )}
 
@@ -209,6 +244,7 @@ function LookupPanel() {
           {rows.map(({ disease, data }) => {
             if (!data) return null;
             const level = data.tingkat_risiko;
+            const risk = riskConfigOf(level);
             return (
               <div
                 key={disease}
@@ -218,23 +254,29 @@ function LookupPanel() {
                 <div className="min-w-0 flex-1">
                   <div className="h-1.5 w-full overflow-hidden rounded-full bg-sand-200">
                     <span
-                      className={cn("block h-full rounded-full", CELL[level])}
-                      style={{ width: `${data.skor_risiko}%` }}
+                      className={cn(
+                        "block h-full rounded-full",
+                        level ? CELL[level] : "bg-paper-300",
+                      )}
+                      style={{ width: `${data.skor_risiko ?? 0}%` }}
                     />
                   </div>
                   <p className="mt-1.5 text-2xs text-paper-600">
-                    Skor <span className="tabular font-medium text-foreground">{data.skor_risiko}</span>
+                    Skor{" "}
+                    <span className="tabular font-medium text-foreground">
+                      {data.skor_risiko ?? "—"}
+                    </span>
                     <span className="mx-1.5 text-paper-300">·</span>
-                    {data.kasus_aktif} kasus aktif
+                    {data.kasus_aktif ?? "—"} kasus bulan lalu
                   </p>
                 </div>
                 <span
                   className={cn(
                     "shrink-0 rounded border px-2 py-0.5 font-mono text-3xs uppercase tracking-[0.06em]",
-                    TAG[level],
+                    level ? TAG[level] : "border-sand-200 bg-sand-50 text-paper-600",
                   )}
                 >
-                  {RISK_CONFIG[level].label}
+                  {risk.label}
                 </span>
               </div>
             );
@@ -244,15 +286,29 @@ function LookupPanel() {
         {cuaca ? (
           <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-sand-200 pt-4 text-2xs text-paper-600">
             <span>
-              Hujan <span className="tabular font-medium text-foreground">{cuaca.curah_hujan_mm}</span> mm
+              Hujan{" "}
+              <span className="tabular font-medium text-foreground">
+                {cuaca.curah_hujan_mm ?? "—"}
+              </span>{" "}
+              mm
             </span>
             <span>
-              Suhu <span className="tabular font-medium text-foreground">{cuaca.suhu_c.toFixed(1)}</span> °C
+              Suhu{" "}
+              <span className="tabular font-medium text-foreground">
+                {cuaca.suhu_c === null ? "—" : cuaca.suhu_c.toFixed(1)}
+              </span>{" "}
+              °C
             </span>
             <span>
-              Lembap <span className="tabular font-medium text-foreground">{cuaca.kelembaban_pct}</span> %
+              Lembap{" "}
+              <span className="tabular font-medium text-foreground">
+                {cuaca.kelembaban_pct ?? "—"}
+              </span>{" "}
+              %
             </span>
-            <span className="text-paper-600">{cuaca.status_cuaca}</span>
+            {cuaca.status_cuaca && (
+              <span className="text-paper-600">{cuaca.status_cuaca}</span>
+            )}
           </div>
         ) : null}
 
@@ -270,8 +326,14 @@ function LookupPanel() {
 
 /* ── Section ─────────────────────────────────────────────────────────────── */
 export function CityStatus() {
-  const summaries = useMemo(() => DISEASES.map(summarise), []);
+  const { byDisease, diseases, meta, loading, error } = useCityData();
+
+  const summaries = useMemo(
+    () => diseases.map((d) => summarise(d, byDisease[d] ?? [])),
+    [byDisease, diseases],
+  );
   const totalSiaga = summaries.reduce((sum, s) => sum + s.siaga, 0);
+  const totalKecamatan = byDisease[diseases[0] ?? ""]?.length ?? 0;
 
   return (
     <section id="status" className="scroll-mt-16 bg-grad-page">
@@ -281,36 +343,53 @@ export function CityStatus() {
           <div className="flex flex-wrap items-start justify-between gap-x-10 gap-y-6">
             <div className="max-w-2xl">
               <p className="font-mono text-overline uppercase tracking-[0.1em] text-paper-600">
-                Buletin risiko mingguan · Edisi Minggu 34
+                Buletin risiko bulanan · Edisi {formatMonth(meta?.predictionMonth)}
               </p>
               <h1 className="mt-4 text-h1 text-balance text-foreground md:text-display">
                 Status risiko penyakit iklim Kota Semarang
               </h1>
               <p className="mt-5 text-body-lg text-paper-600">
-                Ringkasan resmi kondisi risiko DBD, ISPA, dan Diare di 16 kecamatan untuk
-                periode <strong className="font-semibold text-foreground">18–24 Agustus 2026</strong>,
-                disusun dari data iklim BMKG dan laporan kasus Dinas Kesehatan.
-                Saat ini{" "}
-                <strong className="font-semibold text-risk-high">
-                  {totalSiaga} status siaga
-                </strong>{" "}
-                aktif di seluruh kota.
+                {loading
+                  ? "Memuat ringkasan status kota…"
+                  : error
+                    ? error
+                    : null}
+                {!loading && !error && (
+                  <>
+                    Ringkasan kondisi risiko {diseases.join(", ") || "penyakit"} di{" "}
+                    {totalKecamatan} kecamatan untuk prakiraan{" "}
+                    <strong className="font-semibold text-foreground">
+                      {formatMonth(meta?.predictionMonth)}
+                    </strong>
+                    , disusun dari data iklim dan rekapitulasi kasus sampai{" "}
+                    {formatMonth(meta?.latestObserved)}. Saat ini{" "}
+                    <strong className="font-semibold text-risk-high">
+                      {totalSiaga} status siaga
+                    </strong>{" "}
+                    aktif di seluruh kota.
+                  </>
+                )}
               </p>
             </div>
 
-            {/* Document metadata — the block that makes a page a record. */}
+            {/* Blok "dokumen terbitan" dulu memuat nomor surat dinas
+                (`440/1892/DKK-P2P/VIII/2026`), tanggal terbit, dan masa berlaku
+                — semuanya ditulis tangan. Nomor surat palsu di portal yang
+                menyebut dirinya layanan publik adalah pemalsuan dokumen, bukan
+                sekadar data contoh. Yang tersisa adalah keterangan sumber yang
+                bisa dibuktikan sistem sendiri. */}
             <dl className="w-full max-w-xs shrink-0 rounded-2xl border border-sand-200 bg-white/70 p-5 text-caption">
               <div className="flex items-center gap-2 border-b border-sand-200 pb-3">
                 <FileText className="h-3.5 w-3.5 text-brand-600" aria-hidden />
                 <span className="font-mono text-3xs uppercase tracking-[0.08em] text-paper-600">
-                  Dokumen terbitan
+                  Keterangan terbitan
                 </span>
               </div>
               {[
-                ["Nomor", "440/1892/DKK-P2P/VIII/2026"],
-                ["Diterbitkan", "24 Agustus 2026, 18:00 WIB"],
-                ["Berlaku sampai", "31 Agustus 2026"],
-                ["Penanggung jawab", "Bidang P2P Dinkes Kota Semarang"],
+                ["Sumber", "Prakira — sistem pendukung keputusan"],
+                ["Data observasi", formatMonth(meta?.latestObserved)],
+                ["Bulan prakiraan", formatMonth(meta?.predictionMonth)],
+                ["Status", "Belum berstatus surat edaran resmi"],
               ].map(([label, value]) => (
                 <div key={label} className="flex justify-between gap-4 border-b border-sand-100 py-2.5 last:border-b-0 last:pb-0">
                   <dt className="shrink-0 text-paper-600">{label}</dt>

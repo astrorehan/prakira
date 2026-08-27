@@ -1,87 +1,89 @@
+"use client";
+
 /**
- * Mock authentication — docs/DESIGN-SYSTEM.md §3
+ * Sesi petugas — sekarang milik server.
  *
- * There is no auth backend yet. Console routes are not protected; this module
- * only records who is looking, so the shell can name the role and the demo
- * account has somewhere to land. Swap `findDemoAccount` for a Supabase call
- * when the backend exists — nothing else here has to change.
+ * Versi sebelumnya menyimpan `DEMO_ACCOUNT` beserta kata sandinya sebagai
+ * konstanta yang ikut terkirim ke setiap pengunjung, lalu menaruh "sesi" di
+ * `localStorage`. Yang tersisa di sini hanyalah pemanggil `/api/auth/*`:
+ * kata sandi diperiksa di server, tokennya ada di cookie httpOnly yang tidak
+ * bisa dibaca JavaScript, dan keluar berarti sesinya benar-benar dihapus.
  */
 
-export type AuthRole = "dinas" | "analis" | "admin";
+import * as React from "react";
+import { ApiError, fetchSession, signIn as apiSignIn, signOut as apiSignOut } from "@/lib/api";
+import type { Session } from "@/types";
 
-export type DemoAccount = {
-  role: AuthRole;
-  label: string;
-  email: string;
-  password: string;
-  /** Where a successful sign-in lands. */
-  home: string;
+export type { Session };
+
+export type SessionState = {
+  session: Session | null;
+  /** `true` sampai jawaban pertama dari gateway tiba. */
+  loading: boolean;
+  error: string | null;
+  signIn: (email: string, password: string) => Promise<Session>;
+  signOut: () => Promise<void>;
+  reload: () => void;
 };
 
-/* A fixture, printed on the sign-in page on purpose: this build is a review
-   artifact, not a deployment. */
-export const DEMO_ACCOUNT: DemoAccount = {
-  role: "dinas",
-  label: "Dinas Kesehatan Kota Semarang",
-  email: "dinkes@prakira.id",
-  password: "prakira2026",
-  home: "/dashboard",
-};
+export function useSession(): SessionState {
+  const [session, setSession] = React.useState<Session | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+  const [nonce, setNonce] = React.useState(0);
 
-export type Session = {
-  email: string;
-  role: AuthRole;
-  label: string;
-  home: string;
-  /** True when the session came from the fixture above. */
-  demo: boolean;
-  signedInAt: string;
-};
+  React.useEffect(() => {
+    let alive = true;
+    setLoading(true);
 
-const STORAGE_KEY = "prakira.auth";
+    fetchSession()
+      .then((result) => {
+        if (alive) {
+          setSession(result.data);
+          setError(null);
+        }
+      })
+      .catch((caught: unknown) => {
+        if (!alive) return;
+        setSession(null);
+        /* Gateway mati bukan "belum masuk": bedanya menentukan apakah layar
+           menawarkan formulir masuk atau memberi tahu backend sedang padam. */
+        setError(caught instanceof ApiError && caught.status === 0 ? caught.message : null);
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
 
-export function findDemoAccount(email: string, password: string): DemoAccount | null {
-  const normalized = email.trim().toLowerCase();
-  return normalized === DEMO_ACCOUNT.email && password === DEMO_ACCOUNT.password
-    ? DEMO_ACCOUNT
-    : null;
-}
+    return () => {
+      alive = false;
+    };
+  }, [nonce]);
 
-export function sessionFromAccount(account: DemoAccount): Session {
+  const signIn = React.useCallback(async (email: string, password: string) => {
+    const result = await apiSignIn(email, password);
+    setSession(result.data);
+    setError(null);
+    return result.data;
+  }, []);
+
+  const signOut = React.useCallback(async () => {
+    await apiSignOut();
+    setSession(null);
+  }, []);
+
   return {
-    email: account.email,
-    role: account.role,
-    label: account.label,
-    home: account.home,
-    demo: true,
-    signedInAt: new Date().toISOString(),
+    session,
+    loading,
+    error,
+    signIn,
+    signOut,
+    reload: React.useCallback(() => setNonce((n) => n + 1), []),
   };
 }
 
-export function saveSession(session: Session): void {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
-  } catch {
-    /* Private mode or a full quota — the session is a convenience, not a gate. */
-  }
-}
-
-export function readSession(): Session | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as Session) : null;
-  } catch {
-    return null;
-  }
-}
-
-export function clearSession(): void {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.removeItem(STORAGE_KEY);
-  } catch {
-    /* Nothing to clear. */
-  }
-}
+export const ROLE_LABEL: Record<string, string> = {
+  dinas: "Dinas Kesehatan",
+  analis: "Analis",
+  admin: "Administrator",
+  puskesmas: "Petugas Puskesmas",
+};

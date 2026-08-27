@@ -1,0 +1,59 @@
+# Render Blueprint. Basis data di Supabase, frontend di Vercel.
+
+services:
+  - type: web
+    name: prakira-ml
+    runtime: python
+    plan: free
+    rootDir: ml-services
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: ENVIRONMENT
+        value: production
+      - key: ML_API_TOKEN
+        generateValue: true
+
+  - type: web
+    name: prakira-gateway
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm ci && npm run build
+    startCommand: node dist/index.js
+    healthCheckPath: /api/health
+    envVars:
+      # node:sqlite tidak lagi dipakai, tapi Node 24 tetap dipatok agar sama
+      # dengan lingkungan pengembangan.
+      - key: NODE_VERSION
+        value: "24"
+      - key: NODE_ENV
+        value: production
+      # Connection string Supabase, Session pooler port 5432.
+      - key: DATABASE_URL
+        sync: false
+      # Layanan ML paket gratis butuh ~50 detik untuk bangun dari tidur.
+      - key: ML_TIMEOUT_MS
+        value: "60000"
+      - key: ML_SERVICE_URL
+        fromService:
+          type: web
+          name: prakira-ml
+          property: host
+      - key: ML_API_TOKEN
+        fromService:
+          type: web
+          name: prakira-ml
+          envVarKey: ML_API_TOKEN
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: SEED_ADMIN_PASSWORD
+        sync: false
+      - key: SEED_ADMIN_EMAIL
+        sync: false
+      # Asal frontend Vercel.
+      - key: CORS_ORIGINS
+        sync: false

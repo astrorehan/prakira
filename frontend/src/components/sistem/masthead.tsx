@@ -6,7 +6,9 @@ import { Menu, LogIn, Landmark, Radio, ShieldCheck, X } from "lucide-react";
 import { BrandLockup } from "@/components/brand-lockup";
 
 import { cn } from "@/lib/utils";
-import { BMKG_SYNC_STATUS } from "@/lib/mock-data";
+import { fetchPeriod } from "@/lib/api";
+import { useApi } from "@/lib/use-api";
+import { formatMonth } from "@/lib/period";
 
 /* The service menu is the spine of a public system site: it names services,
    not marketing sections. Order follows how a citizen actually arrives —
@@ -66,6 +68,14 @@ export function SistemMasthead() {
   const ids = React.useMemo(() => SERVICE_NAV.map((s) => s.href.slice(1)), []);
   const active = useActiveSection(ids);
   const [menuOpen, setMenuOpen] = React.useState(false);
+
+  /* Baris status dulu mencetak "Sinkron BMKG 24 Agustus 2026, 17:45 WIB · 4
+     stasiun aktif · latensi 184 ms" dari konstanta. Tidak ada sinkronisasi
+     BMKG di sistem ini, tidak ada stasiun yang dipantau, dan latensinya tidak
+     pernah diukur. Yang bisa dikatakan baris ini dengan jujur hanya dua:
+     gateway menjawab atau tidak, dan sampai bulan apa datanya. */
+  const period = useApi(() => fetchPeriod(), []);
+  const online = !period.error && !period.loading;
 
   /* The identity block and the service bar are siblings, not nest-mates: a
      sticky element only travels as far as its own parent, so the service bar
@@ -202,33 +212,47 @@ export function SistemMasthead() {
           a brochure: what the machine is doing, right now. */}
       <div className="border-b border-sand-200 bg-sand-100/70">
         <div className="container flex h-10 items-center gap-x-6 overflow-x-auto whitespace-nowrap">
-          <span className="flex items-center gap-2 font-mono text-3xs uppercase tracking-[0.08em] text-risk-low">
+          <span
+            className={cn(
+              "flex items-center gap-2 font-mono text-3xs uppercase tracking-[0.08em]",
+              online ? "text-risk-low" : "text-risk-medium",
+            )}
+          >
             <span className="relative flex h-1.5 w-1.5">
-              <span className="absolute inline-flex h-full w-full animate-beacon rounded-full bg-risk-low-fill" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-risk-low" />
+              {online && (
+                <span className="absolute inline-flex h-full w-full animate-beacon rounded-full bg-risk-low-fill" />
+              )}
+              <span
+                className={cn(
+                  "relative inline-flex h-1.5 w-1.5 rounded-full",
+                  online ? "bg-risk-low" : "bg-risk-medium",
+                )}
+              />
             </span>
-            Sistem beroperasi normal
+            {period.loading
+              ? "Memeriksa layanan…"
+              : period.error
+                ? "Layanan data tidak menjawab"
+                : "Sistem beroperasi normal"}
           </span>
 
-          <span className="hidden h-3 w-px bg-sand-300 sm:block" />
+          {period.data && (
+            <>
+              <span className="hidden h-3 w-px bg-sand-300 sm:block" />
 
-          <span className="hidden items-center gap-2 font-mono text-3xs uppercase tracking-[0.08em] text-paper-600 sm:flex">
-            <Radio className="h-3 w-3" aria-hidden />
-            Sinkron BMKG {BMKG_SYNC_STATUS.last_sync}
-          </span>
+              <span className="hidden items-center gap-2 font-mono text-3xs uppercase tracking-[0.08em] text-paper-600 sm:flex">
+                <Radio className="h-3 w-3" aria-hidden />
+                Data sampai {formatMonth(period.data.latestObserved)}
+              </span>
 
-          <span className="hidden h-3 w-px bg-sand-300 lg:block" />
+              <span className="hidden h-3 w-px bg-sand-300 lg:block" />
 
-          <span className="hidden font-mono text-3xs uppercase tracking-[0.08em] text-paper-600 lg:inline">
-            {BMKG_SYNC_STATUS.stations_active} stasiun aktif · latensi{" "}
-            <span className="tabular">{BMKG_SYNC_STATUS.latency_ms}</span> ms
-          </span>
-
-          <span className="hidden h-3 w-px bg-sand-300 lg:block" />
-
-          <span className="hidden font-mono text-3xs uppercase tracking-[0.08em] text-paper-600 lg:inline">
-            Pembaruan berikutnya {BMKG_SYNC_STATUS.next_sync_in}
-          </span>
+              <span className="hidden font-mono text-3xs uppercase tracking-[0.08em] text-paper-600 lg:inline">
+                Prakiraan {formatMonth(period.data.predictionMonth)} ·{" "}
+                <span className="tabular">{period.data.historyMonths}</span> bulan riwayat
+              </span>
+            </>
+          )}
         </div>
       </div>
     </>
