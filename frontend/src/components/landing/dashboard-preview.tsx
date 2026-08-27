@@ -11,6 +11,7 @@ import { SectionHeading } from "./section-heading";
 import { fetchBacktests } from "@/lib/api";
 import { useApi } from "@/lib/use-api";
 import { useCityData } from "@/lib/use-city-data";
+import { formatPeriodRange } from "@/lib/stats";
 
 /**
  * Bagian "akurasi & sumber".
@@ -53,7 +54,7 @@ export function TrustSection() {
           value: headline.sample_size ?? 0,
           decimals: 0,
           label: "Bulan diuji",
-          note: `Periode uji ${headline.test_period ?? "—"}, di luar data latih`,
+          note: `Periode uji ${formatPeriodRange(headline.test_period).formatted}, di luar data latih`,
         },
         {
           value: rows.length,

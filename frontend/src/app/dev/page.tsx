@@ -87,7 +87,7 @@ export default function DesignSystemPage() {
       selectedDisease ? fetchDistricts(selectedDisease) : Promise.resolve(null as never),
     [selectedDisease],
   );
-  const climate = useApi(() => fetchClimateSeries(24), []);
+  const climate = useApi(() => fetchClimateSeries(60), []);
   const trend = useApi(
     () => (selectedDisease ? fetchTrend(selectedDisease, 12) : Promise.resolve(null as never)),
     [selectedDisease],
@@ -721,7 +721,11 @@ export default function DesignSystemPage() {
               <h3 className="font-display text-xl font-semibold text-foreground">
                 Evaluasi Akurasi & Backtesting Model Machine Learning
               </h3>
-              <BacktestCard metrics={backtests.data?.data ?? []} disease={selectedDisease ?? ""} />
+              <BacktestCard
+                metrics={backtests.data?.data ?? []}
+                disease={selectedDisease ?? ""}
+                onSelectDisease={setSelectedDisease}
+              />
             </div>
           </div>
         )}

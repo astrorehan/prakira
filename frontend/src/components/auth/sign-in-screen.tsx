@@ -111,11 +111,6 @@ export function SignInScreen() {
               />
             </div>
           </div>
-
-          <p className="mt-6 text-center text-caption text-paper-600">
-            Kredensial awal pemasangan ada di <code>backend/.env.example</code>.
-            Ganti sebelum sistem dipakai di luar pengembangan.
-          </p>
         </div>
       </div>
     </div>
