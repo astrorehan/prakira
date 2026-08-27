@@ -55,3 +55,6 @@ ml-services/.venv/
 
 # Rahasia lokal gateway (connection string Supabase, kata sandi seed).
 backend/.env
+
+#temporary files
+temp
