@@ -1,7 +1,7 @@
 # PRAKIRA Design System — "Buletin"
 
 **Sistem visual untuk platform peringatan dini kesehatan-iklim.**
-Pendamping [`PRD.md`](./PRD.md) · Versi 2.4 · 26 Agustus 2026
+Pendamping [`PRD.md`](./PRD.md) · Versi 2.5 · 27 Agustus 2026
 
 > **Status dokumen.** Versi 1.0 ditulis sebagai rencana, lalu kode bergerak lebih jauh
 > dari rencananya. Versi 2.0 membalik arahnya: **yang tertulis di sini adalah yang
@@ -567,11 +567,38 @@ Deret aktual: garis padat `cat-1`. Deret prediksi: garis putus-putus `cat-1`.
 Pita ketidakpastian: `cat-1` alpha 0.12. Pemisah train/test: garis vertikal putus-putus berlabel.
 Variabel iklim memakai `CLIMATE_COLORS`, tidak pernah warna risiko.
 
-### 7.10 Status kosong / memuat / gagal / tidak memadai
+### 7.10 Status kosong / memuat / gagal / tidak memadai — `components/data-state.tsx`
 
 Empat keadaan ini wajib ada di setiap tampilan data, dan tampilannya berbeda satu sama lain.
 `Data tidak memadai` bukan error dan bukan kosong — ia menyampaikan bahwa sistem tahu
 batas pengetahuannya. Salinan teksnya ada di `COVERAGE_CONFIG` (`src/lib/utils.ts`).
+
+Selama datanya masih mock, tiga dari empat keadaan itu **mustahil terjadi**, jadi
+tidak pernah ditulis. Sekarang keempatnya nyata, dan menuliskannya ulang di setiap
+halaman adalah cara paling pasti agar salah satunya terlupa. Polanya karena itu
+dipusatkan:
+
+```tsx
+const districts = useApi(() => fetchDistricts(disease), [disease]);
+
+<DataState
+  loading={districts.loading}
+  error={districts.error}
+  empty={rows.length === 0}
+  onRetry={districts.reload}
+>
+  …
+</DataState>
+```
+
+`useApi` (`lib/use-api.ts`) memisahkan `loading` (pemuatan pertama) dari
+`refreshing` (muat ulang), supaya menyegarkan halaman tidak mengosongkan layar
+yang sudah terisi.
+
+**Keadaan kelima yang khusus milik produk ini: prakiraan basi.** Bila layanan ML
+tidak terjangkau, gateway tetap menjawab dengan prediksi terakhir yang tersimpan
+dan menandai `meta.stale`. Dashboard **wajib** menampilkan penanda itu — angka
+lama yang tampil tanpa keterangan lebih berbahaya daripada angka yang hilang.
 
 ### 7.11 Chrome konsol — `components/console/`
 
@@ -581,12 +608,18 @@ Tiga bagian bersama seluruh rute nakes, dipisahkan supaya tidak disalin ulang ti
 |---|---|---|
 | `console/page-header.tsx` | `ConsolePageHeader` + `PeriodChip` | Judul halaman **wajib** sama persis dengan label `Sidebar`. Tiga halaman sebelumnya memakai judul berupa kalimat ("Manajemen Dataset, BMKG Sync & Audit Trail") yang tidak cocok dengan navigasinya |
 | `console/toast.tsx` | `ConsoleToast` + `useConsoleToast` | Tiga salinan blok `fixed bottom-6 right-6`, satu di antaranya masih `alert()`. Semua salinan lupa `aria-live` |
-| `lib/period.ts` | `REPORTING_PERIOD`, `describeDeadline()` | Empat berkas menulis sendiri `"Minggu 34"` / `"Agustus 2026"` |
+| `lib/period.ts` | `formatMonth()`, `describeDeadline()` | Empat berkas menulis sendiri `"Minggu 34"` / `"Agustus 2026"`. Sejak v2.5 berkas ini **tidak lagi memuat tanggal apa pun** — periode datang dari `/api/meta/period` lewat `lib/use-period.ts` |
 
 `PeriodChip` menggantikan `AppleGlassDate` di ketiga halaman ini. `AppleGlassDate`
 masih dipakai `/dashboard` dan `/dev`, dan masih membawa `backdrop-blur-xl
 backdrop-saturate-[180%]` — satu-satunya alasan §11 tidak bisa mencentang
 "tidak ada `backdrop-filter`". Lihat §12.
+
+**Tenggat dihitung terhadap periode data, bukan terhadap jam peramban.**
+`describeDeadline(dueDate, systemToday)` menerima `systemToday` dari gateway:
+hari terakhir bulan observasi terakhir. Memakai kalender nyata akan menyatakan
+setiap instruksi terlambat berbulan-bulan hanya karena datasetnya berhenti di
+satu titik.
 
 ### 7.12 Antrean aksi — `components/action-queue.tsx`
 
@@ -631,10 +664,22 @@ atas: pembaca yang membuka `/warga` datang untuk melapor, dan menyambutnya
 dengan penyangkalan sebelum ia melihat apa pun mengubah peringatan jadi
 penghalang.
 
-**`lib/reports.ts`** adalah satu-satunya sumber untuk kedua sisi loop. Kode yang
-terbit di `/warga/lapor` adalah kode yang muncul di antrean `/verifikasi` dan
-yang dilacak di `/warga/status`. Kalau dua sisi loop punya sumber berbeda,
-loop-nya palsu — dan kode lacak adalah undangan untuk diperiksa.
+**Gateway adalah satu-satunya sumber untuk kedua sisi loop.** Kode yang terbit
+di `/warga/lapor` adalah baris yang muncul di antrean `/verifikasi` dan yang
+dilacak di `/warga/status`. Sampai v2.4 ketiganya berbagi `localStorage`, artinya
+laporan warga tidak pernah sampai ke petugas mana pun kecuali petugas itu memakai
+peramban yang sama. `lib/reports.ts` kini tinggal presentasi: label jenis
+laporan, urutan antrean, dan normalisasi kode lacak.
+
+Konsekuensi yang disengaja: **antrean kosong pada pemasangan baru.** Enam laporan
+benih yang dulu ditanam ke `localStorage` ikut hilang. Antrean yang berisi
+laporan yang tidak pernah dikirim siapa pun bukan demo yang lebih baik — ia
+membuat sisi verifikasi tampak sudah bekerja padahal belum.
+
+**Yang publik hanya sebagian.** `/api/reports` (antrean lengkap, dengan deskripsi
+dan foto) menuntut sesi. Portal warga membaca `/api/reports/verified`, yang hanya
+mengembalikan jenis, kecamatan, dan waktu — isi laporan orang lain tidak boleh
+bisa dijelajahi (PRD §8, privasi).
 
 Tiga aturan yang berlaku di sini dan tidak berlaku di konsol:
 
@@ -782,13 +827,13 @@ Diukur dari `frontend/src/`. Kolom terakhir menandai apa yang sudah ditutup 26 A
 | Nilai cadangan yang dikarang saat data kosong | 8 tempat | `\|\| 94.2`, `\|\| 14`, `\|\| "120k"`, `\|\| "~45 Kasus"`, dan daftar puskesmas Pedurungan yang muncul untuk tindakan Semarang Barat — semuanya dihapus. Bidang opsional kini tampil hanya bila datanya ada (§7.12) |
 | Nilai statistik hardcode | 3 klaim | `r = +0.84`, `P-value < 0.001`, `156 Minggu Evaluasi` diganti perhitungan dari deret aktif (`lib/stats.ts`) dan `REPORTING_PERIOD`. Pemilih penyakit kini juga mengendalikan lencana signifikansi dan grid backtesting, bukan grafik saja |
 | Lencana status audit selalu hijau | 1 tabel | Digerakkan `log.status`; entri `info`/`warning` tidak lagi tampil sebagai keberhasilan, dan labelnya berbahasa Indonesia, bukan kata mentah `success` |
-| Panel BMKG mengabaikan datanya sendiri | 3 bidang | `status`, `next_sync_in`, `synced_features` dibaca dari `BMKG_SYNC_STATUS`; "API Connected" yang ditulis tetap dan `animate-pulse` (§6.3 melarangnya di luar *skeleton*) diganti `<Badge pulse>` |
+| Panel BMKG mengabaikan datanya sendiri | 3 bidang | Dibaca dari `BMKG_SYNC_STATUS`, `animate-pulse` diganti `<Badge pulse>`. **Ditutup lebih dalam di v2.5:** seluruh panelnya dihapus — `BMKG_SYNC_STATUS` sendiri adalah konstanta karangan, dan tidak ada sinkronisasi BMKG di sistem ini |
 | Checklist SOP mencentang dirinya sendiri | 2 butir | Pra-centang "supaya terasa realistis" dihapus. Konsol pengiriman instruksi tidak boleh melaporkan verifikasi yang tidak pernah terjadi |
 | Modal buatan tangan | 3 modal | Batch dispatch dan dua modal ekspor pindah ke `<Dialog>`: jebakan fokus, Esc, dan peran dialog yang sebelumnya tidak ada |
 | Kontrol yang tidak bisa dijangkau keyboard | 2 pola | `div onClick` pada kartu aksi dan butir checklist diganti `<button>` / `<label><input type="checkbox">`; tab modal mendapat `role="tab"` + `aria-controls` |
 | `alert()` bawaan peramban | 1 | Diganti `ConsoleToast` dengan `aria-live` |
 | Akordeon horizontal `/tindakan` | 1 komponen, 337 baris | Dihapus, diganti antrean triase terurut (§7.12). `/tindakan` turun dari 9,1 kB ke 3,6 kB *first load* |
-| Judul halaman ≠ label sidebar | 2 halaman | "Analisis Korelasi Iklim & Evaluasi Backtesting Model" → "Analitik & Riwayat"; "Manajemen Dataset, BMKG Sync & Audit Trail" → "Manajemen Data BMKG" |
+| Judul halaman ≠ label sidebar | 2 halaman | "Analisis Korelasi Iklim & Evaluasi Backtesting Model" → "Analitik & Riwayat"; "Manajemen Dataset, BMKG Sync & Audit Trail" → "Manajemen Data BMKG", lalu → "Manajemen Data" di v2.5 (tidak ada integrasi BMKG untuk dinamai) |
 | Hex di luar palet pada grafik | 4 nilai | `#17808F`, `#EA580C`, `#DFE6E6`, `#5A6C6E` di `climate-correlation-chart.tsx` diganti `CLIMATE_COLORS` + token. `#EA580C` bahkan bukan warna palet; §2.5 menetapkan suhu `#B4552A` |
 | Kelembaban tidak pernah tergambar | 1 deret | Tiga variabel iklim dulu berbagi satu sumbu kanan, sehingga suhu jadi garis datar dan kelembaban hanya hidup di tooltip. Sekarang satu variabel per sumbu, dipilih lewat kendali yang sekaligus menampilkan `r` masing-masing |
 | Tabel rekap tanpa fungsi | 1 tabel | Menjadi *drill-down*: kolom dapat diurutkan, kolom penyakit aktif ditandai (`climate-recap-table.tsx`) |
@@ -826,6 +871,30 @@ Keputusan pembukanya dicatat di [`.council/fungsi-dan-nasib-rute-warga.md`](../.
 | Tanpa *skip link* | 3 permukaan | *Masthead* `/sistem` menaruh strip pemerintah, enam tautan layanan, dan baris status sebelum konten. `SkipLink` + `#konten` dengan `tabIndex={-1}` di tiap `<main>` |
 | Nama aksesibel lockup berubah antar-*breakpoint* | 6 pemanggil | `sublineClassName="hidden sm:block"` menjatuhkan subline dari pohon aksesibilitas, jadi tautan yang sama berbunyi "Prakira" di ponsel dan "Prakira Sistem Peringatan Dini…" di desktop. Subline jadi `aria-hidden`; namanya terkunci di "Prakira", cocok dengan teks terlihat (WCAG 2.5.3) |
 
+### Ditutup di sapuan backend (v2.5)
+
+Gateway Express + SQLite masuk, dan bersamanya seluruh lapisan data karangan
+keluar. `frontend/src/lib/mock-data.ts` (480 baris) dihapus; tidak ada berkas
+penggantinya.
+
+| Utang | Ukuran semula | Yang dikerjakan |
+|---|---:|---|
+| `lib/api.ts` diam-diam jatuh ke data mock | 3 fungsi | Setiap `try/catch` yang mengembalikan `mock-data.ts` dihapus. Kegagalan kini `ApiError`, dan `useApi` + `<DataState>` memaksa keempat keadaan (§7.13) benar-benar ada di layar |
+| Angka kecamatan dihitung dari indeks array | 16 baris × 3 penyakit | `getKecamatanDataList()` menghitung "kasus" dari `idx % 6`. Diganti `/api/districts`: kasus dari tabel `observasi`, prediksi dari layanan ML, sentroid dari poligon GeoJSON yang sama yang digambar peta |
+| Periode ditulis tetap: "Minggu 34 · Agustus 2026" | 9 tempat | Dataset berhenti di Desember 2025 dan bergranularitas **bulanan**, jadi setiap halaman mencetak periode yang tidak pernah ada. `REPORTING_TODAY` dihapus; `PeriodChip` dan `AppleGlassDate` membaca `/api/meta/period` |
+| `AppleGlassDate` punya tanggal bawaan | 2 properti | `week="Minggu 34"` / `monthYear="Agustus 2026"` sebagai nilai bawaan adalah cara paling halus berbohong: pemanggil yang lupa mengisi tetap menampilkan tanggal yang tampak sah. Diganti `primary`/`secondary` tanpa bawaan |
+| "Keyakinan model 94,2%" | 4 permukaan | Angkanya berasal dari `0.91 + (idx % 7) * 0.01`, bukan dari model mana pun. Diganti cakupan data + interval prediksi, dua besaran yang benar-benar dihitung |
+| Kontak puskesmas palsu | 1 tab modal | Tiga nama dokter, tiga nomor telepon, dan tautan `wa.me` ke nomor-nomor itu. Satu-satunya bagian produk yang bisa membuat orang menelepon nomor asing. Tab-nya dihapus seluruhnya |
+| Nomor surat dinas karangan | 3 tempat | `440/1892/DKK-P2P/VIII/2026` di draf broadcast, `PR/001/VIII/2026` di kartu peringatan, dan blok "dokumen terbitan" di `/sistem`. Nomor surat palsu di portal yang menyebut dirinya layanan publik adalah pemalsuan dokumen |
+| Lima siaran pers karangan | 1 bagian | `/sistem` menerbitkan penetapan status siaga, jadwal pemeliharaan, dan laporan evaluasi triwulan atas nama Dinas Kesehatan. Diganti feed aktivitas sistem yang sengaja tanpa identitas |
+| Model yang tidak pernah dilatih | 5 kartu | `BACKTEST_METRICS` memuat "LSTM Time-Series Deep Learning" (R² 0,932) dan satu baris Diare. Diganti isi tabel `model_backtest` — dua model, R² 0,45 dan 0,77, apa adanya (§7-H5) |
+| Penyakit tanpa data tetap bisa dipilih | 1 kontrol | `DiseaseSelector` menuliskan tiga pilihan tetap termasuk Diare. Kini daftarnya dari `/api/meta/diseases`; menambah dataset cukup untuk memunculkan penyakitnya di seluruh UI |
+| Nomor WhatsApp & formulir langganan | 2 blok | Utang no. 10 ditutup: formulir di `CtaBanner` dan nomor "0812 2849 0119" di `/sistem` dihapus. Keduanya mengumpulkan atau menjanjikan kanal yang tidak berdiri |
+| Ekspor yang tidak mengekspor | 3 tombol | `setTimeout(1200)` lalu toast "berhasil diunduh". Diganti `lib/export.ts`: CSV sungguhan dengan BOM UTF-8. Opsi PDF dihapus, bukan dipalsukan |
+| Kredensial di dalam bundel | 1 kartu | `DEMO_ACCOUNT` beserta kata sandinya dicetak di `/masuk` **dan** ikut terkirim ke setiap pengunjung sebagai konstanta JavaScript. Diganti sesi cookie httpOnly; kredensial awal pindah ke `backend/.env.example` |
+| Rute konsol tanpa penjaga | 5 rute | Halaman masuk sendiri mengaku "rute konsol belum dijaga". `<ConsoleGuard>` mengalihkan ke `/masuk`, dan gateway menolak setiap penulisan tanpa sesi |
+| Kekosongan data tampil sebagai "rendah" | 6 komponen | `tingkat_risiko` kini boleh `null`. Peta, gauge, tabel, dan papan peringkat punya kelas keempat sendiri; pengurutan menaruh yang kosong di dasar, bukan di puncak daftar "teraman" (§7-H2) |
+
 ### Masih terbuka
 
 | # | Utang | Ukuran | Dampak | Perbaikan |
@@ -836,17 +905,16 @@ Keputusan pembukanya dicatat di [`.council/fungsi-dan-nasib-rute-warga.md`](../.
 | 4 | `--radius` / `--radius-control` tak dirujuk siapa pun | 2 variabel | Dua skala radius hidup berdampingan | Hapus, atau jadikan sumber tunggal skala Tailwind |
 | 5 | `destructive: #DC2626` (red-600 bawaan) | 1 token | Satu-satunya hex luar palet di konfigurasi | Arahkan ke `#A8442C` atau hapus slotnya |
 | 6 | `shadow-glass*` dan alias bayangan warisan | 5 pemakaian | Nama menyesatkan; nilainya sudah rata | Ganti ke `shadow-card` / `shadow-lift`, lalu hapus aliasnya |
-| 7 | `backdrop-filter` masih ada, dan §11 mengaku sebaliknya | 14 pemakaian, 6 berkas | Melanggar prinsip §1.3, dan daftar periksa yang berbohong lebih berbahaya daripada utang yang tercatat | Terberat di `ui/apple-glass-date.tsx` dan `district-detail-panel.tsx`; sisanya `globals.css`, `navbar.tsx`, `landing/mac-risk-browser.tsx`, `sistem/masthead.tsx`. `PeriodChip` (§7.11) sudah menjadi penggantinya — tinggal memakainya di `/dashboard`. *Hitungan berkas dikoreksi dari 5 ke 6: v2.1 lupa menghitung `globals.css`* |
+| 7 | `backdrop-filter` masih ada, dan §11 mengaku sebaliknya | 5 berkas | Melanggar prinsip §1.3, dan daftar periksa yang berbohong lebih berbahaya daripada utang yang tercatat | Terberat di `ui/apple-glass-date.tsx` dan `district-detail-panel.tsx`; sisanya `globals.css`, `navbar.tsx`, `sistem/masthead.tsx`. *`landing/mac-risk-browser.tsx` keluar dari daftar di v2.5: berkasnya dihapus — tidak ada satu pun halaman yang mengimpornya* |
 | 8 | `formatPercent()` memakai `toFixed(1)` → titik desimal | 1 fungsi | `91.4%` terbaca sebagai ribuan dalam kaidah Indonesia | Arahkan ke `formatNumber()` yang sudah memakai `id-ID` |
 | 9 | `<Metric>` tetap 0 pemakaian setelah `KpiCard` menutup kontraknya | 1 komponen | Sama dengan no. 1 | Digabung bersama no. 1 |
-| 10 | `CtaBanner` masih memuat formulir langganan WhatsApp | 1 blok | PRD §4 menaruh "notifikasi broadcast" di daftar **WON'T** untuk babak ini, jadi ini janji layanan yang tidak akan ada | Formulir kembarannya di `/warga` sudah ikut terhapus bersama `PublicRiskChecker`. Yang di *landing* tinggal satu — ganti jadi tautan ke `/hubungi-kami`, atau beri label "belum aktif" |
-| 11 | `lib/reports.ts` menyimpan di `localStorage` saja | 1 modul | Loop warga→verifikasi hanya bergerak dalam satu peramban. Demo lintas perangkat (warga di ponsel, petugas di laptop) tidak akan jalan | Batasnya sudah tercetak di `/verifikasi` dan `/warga/status`, bukan disembunyikan. Tukar `loadReports`/`saveReports` dengan panggilan gateway saat backend-nya ada — tidak ada tempat lain yang perlu berubah |
 | 12b | `--text-2` / `--text-3` masih tak dirujuk | 2 variabel | Nilainya kini benar, tapi tak ada yang membacanya — hierarki teks hidup di utilitas `text-paper-*`. Token yang tidak dipakai akan menyimpang lagi | Arahkan utilitasnya ke token, atau hapus tokennya. Sama polanya dengan no. 4 |
 | 12 | `ui/input.tsx` memakai `text-sm` (14px) | 1 primitif | Safari iOS memperbesar viewport pada bidang di bawah 16px, dan halaman melompat tiap kali bidang difokuskan | Formulir warga menyiasatinya per-instans dengan `text-base sm:text-sm`. Perbaikan sebenarnya ada di primitifnya, tapi itu menyentuh seluruh konsol |
 
-Urutan kerja bila waktunya terbatas: **7 → 3 → 10**.
-Nomor 2 sudah lewat titik baliknya — skala sistem kini unggul 389 lawan 216, dan sisanya
-mekanis. Nomor 7 bertahan di puncak karena satu-satunya utang yang **salah dicatat**:
-daftar periksa mengaku bersih padahal tidak, dan hitungan berkasnya sendiri juga meleset.
-3 menghapus satu lapis komponen sekaligus. 10 naik menggantikan 1 karena murah dan
-menyangkut janji ke publik, bukan kerapian internal.
+Urutan kerja bila waktunya terbatas: **7 → 3 → 1**.
+Nomor 2 sudah lewat titik baliknya — skala sistem unggul jauh, dan sisanya mekanis.
+Nomor 7 bertahan di puncak karena satu-satunya utang yang **salah dicatat**: daftar
+periksa mengaku bersih padahal tidak. 3 menghapus satu lapis komponen sekaligus.
+
+Nomor 10 dan 11 ditutup di v2.5 — keduanya menyangkut janji ke publik, dan keduanya
+gugur bersama lapisan data karangan.

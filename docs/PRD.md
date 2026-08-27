@@ -279,6 +279,21 @@ Rubrik Metodologi (10%) menilai **kesesuaian arsitektur dengan solusi** — buka
 
 **Skema database inti.** `wilayah`, `kasus_penyakit`, `data_cuaca`, `prediksi`, `laporan_warga`, `audit_log`. Detail kolom mengikuti dokumen konsep §3.4.
 
+### 6.1 Status implementasi (27 Agustus 2026)
+
+Bagian ini mencatat jarak antara spesifikasi di atas dan yang benar-benar
+berjalan. Spesifikasinya tidak diubah untuk mengejar implementasi — yang
+berbeda dicatat di sini, apa adanya.
+
+| Spesifikasi | Terkirim | Catatan |
+|---|---|---|
+| PostgreSQL (+PostGIS opsional) | **SQLite** lewat `node:sqlite` | Skema di `backend/src/db/schema.sql` ditulis portabel. Tidak ada modul native yang perlu dikompilasi dan tidak ada server basis data yang perlu dipasang — `npm install` di mesin juri tidak bisa gagal karena toolchain |
+| Granularitas mingguan (`week_start`, `horizon_weeks`) | **bulanan** (`month_start`) | Dataset kasus yang tersedia direkap bulanan; model dilatih bulanan. Seluruh UI menyebut bulan, bukan minggu |
+| Empat penyakit (DBD, ISPA, Diare, Leptospirosis) | **DBD dan ISPA** | Dua sisanya belum punya satu baris data. Daftar penyakit di UI dibentuk dari isi tabel `observasi`, jadi menambah dataset cukup untuk memunculkannya |
+| Cron sinkronisasi BMKG di gateway | **belum ada** | Data iklim masuk sebagai berkas dataset yang di-seed. Halaman admin melaporkan pekerjaan ingest yang benar-benar berjalan, bukan status koneksi yang tidak ada |
+| Login penuh JWT + RBAC (§4 WON'T) | **sesi cookie httpOnly + penjaga rute** | Bukan JWT dan bukan RBAC penuh: satu peran menulis, seluruh peran membaca. Cukup untuk menjaga rute konsol dan mencatat siapa yang memutuskan di jejak audit |
+| §5.6a perbandingan backtest dengan/tanpa sinyal warga | **belum ada** | Agregasi sinyal warga sudah tersedia di `/api/admin/citizen-signal`; perbandingannya belum dijalankan karena belum ada laporan terverifikasi dalam jumlah yang bermakna |
+
 ---
 
 ## 7. Kejujuran sebagai Persyaratan Produk
