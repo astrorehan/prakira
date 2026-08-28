@@ -20,6 +20,7 @@ import type {
   CitizenReport,
   ClimatePoint,
   DiseaseSummary,
+  DistrictTriggerSummary,
   GeoDistrictCollection,
   IngestStatus,
   KecamatanData,
@@ -244,6 +245,14 @@ export function fetchVerifiedReports(
 ): Promise<{ data: VerifiedSignal[] }> {
   const query = kecamatan ? `&kecamatan=${encodeURIComponent(kecamatan)}` : "";
   return request(`/api/reports/verified?limit=${limit}${query}`);
+}
+
+/** Ringkasan agregasi pemicu lingkungan terverifikasi per kecamatan. */
+export function fetchTriggerSummary(
+  kecamatan?: string,
+): Promise<{ data: DistrictTriggerSummary[] }> {
+  const query = kecamatan ? `?kecamatan=${encodeURIComponent(kecamatan)}` : "";
+  return request<{ data: DistrictTriggerSummary[] }>(`/api/reports/triggers${query}`);
 }
 
 export function fetchReportQueue(

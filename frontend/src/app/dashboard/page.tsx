@@ -12,6 +12,7 @@ import {
   ArrowRight,
   CloudOff,
   RefreshCw,
+  Printer,
 } from "lucide-react";
 import { aggregateCoverage, formatNumber, formatMaybeNumber } from "@/lib/utils";
 import { formatMonth } from "@/lib/period";
@@ -29,6 +30,7 @@ import {
   fetchDistricts,
   fetchGeoJson,
   fetchTrend,
+  fetchTriggerSummary,
 } from "@/lib/api";
 import { useApi } from "@/lib/use-api";
 import type { DiseaseType } from "@/types";
@@ -88,6 +90,8 @@ export default function DashboardPrediksiPage() {
     [selectedDisease],
   );
 
+  const triggers = useApi(() => fetchTriggerSummary(), []);
+
   /* `?? []` membuat array baru tiap render; tanpa memo, dua `useMemo` di bawah
      ikut dihitung ulang pada setiap render meskipun datanya tidak berubah. */
   const rows = React.useMemo(() => districts.data?.data ?? [], [districts.data]);
@@ -103,6 +107,13 @@ export default function DashboardPrediksiPage() {
       [...rows].sort((a, b) => (b.skor_risiko ?? -1) - (a.skor_risiko ?? -1))[0]
     );
   }, [rows, selectedDistrictId]);
+
+  const selectedTrigger = React.useMemo(() => {
+    if (!selectedDistrict || !triggers.data?.data) return undefined;
+    return triggers.data.data.find(
+      (t) => t.kecamatan.toLowerCase() === selectedDistrict.nama.toLowerCase(),
+    );
+  }, [selectedDistrict, triggers.data]);
 
   const totals = React.useMemo(() => {
     const observed = rows.filter((d) => d.kasus_aktif !== null);
@@ -195,6 +206,7 @@ export default function DashboardPrediksiPage() {
                 districts.reload();
                 trend.reload();
                 actions.reload();
+                triggers.reload();
               }}
               disabled={districts.refreshing}
               className="gap-1.5"
@@ -204,6 +216,16 @@ export default function DashboardPrediksiPage() {
                 aria-hidden
               />
               <span>Segarkan</span>
+            </Button>
+            <Button
+              asChild
+              size="sm"
+              className="gap-1.5 bg-brand-700 hover:bg-brand-800 text-white shadow-xs"
+            >
+              <Link href={`/buletin?disease=${encodeURIComponent(selectedDisease ?? "DBD")}`}>
+                <Printer className="h-3.5 w-3.5" aria-hidden />
+                <span>Cetak Buletin</span>
+              </Link>
             </Button>
           </div>
         </div>
@@ -309,6 +331,7 @@ export default function DashboardPrediksiPage() {
                       disease={selectedDisease ?? ""}
                       selectedId={selectedDistrictId}
                       onSelect={(id) => setSelectedDistrictId(id)}
+                      triggers={triggers.data?.data ?? []}
                       height="100%"
                     />
                   ) : (
@@ -349,6 +372,7 @@ export default function DashboardPrediksiPage() {
                 district={selectedDistrict}
                 disease={selectedDisease ?? ""}
                 trend={trend.data?.data ?? []}
+                trigger={selectedTrigger}
                 className="h-full min-h-[580px]"
               />
             </div>

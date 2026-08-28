@@ -21,8 +21,10 @@ const nextConfig = {
    * langsung dan CORS gateway harus mengizinkan asal frontend-nya.
    */
   async rewrites() {
-    const target = process.env.API_PROXY_TARGET ?? process.env.NEXT_PUBLIC_API_URL;
-    if (!target) return [];
+    const target =
+      process.env.API_PROXY_TARGET ??
+      process.env.NEXT_PUBLIC_API_URL ??
+      "http://127.0.0.1:4200";
     return [
       {
         source: "/api/:path*",

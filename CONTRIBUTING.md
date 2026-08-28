@@ -1,82 +1,100 @@
 # Panduan Kontribusi PRAKIRA
 
-Panduan berkontribusi pada PRAKIRA (Sistem Peringatan Dini Risiko Penyakit Berbasis Iklim — Kota Semarang). Dokumen ini berisi panduan, konvensi, dan alur kerja yang perlu diikuti oleh seluruh kontributor agar kolaborasi berjalan terstruktur dan efisien.
+Panduan berkontribusi pada **PRAKIRA** (*Sistem Peringatan Dini Risiko Penyakit Berbasis Iklim — Kota Semarang*). Dokumen ini memuat standar teknis, alur pengembangan, konfigurasi lingkungan lokal, serta konvensi kode untuk seluruh kontributor agar kolaborasi berjalan terstruktur, andal, dan selaras dengan arsitektur sistem.
 
 ---
 
 ## Daftar Isi
 
-1. [Prinsip dan Batasan Proyek](#prinsip-dan-batasan-proyek)
-2. [Cara Berkontribusi](#cara-berkontribusi)
-3. [Alur Pengembangan (Workflow)](#alur-pengembangan-workflow)
+1. [Prinsip & Batasan Sistem](#prinsip--batasan-sistem)
+2. [Arsitektur Layanan](#arsitektur-layanan)
+3. [Alur Pengembangan (Workflow Git)](#alur-pengembangan-workflow-git)
 4. [Konvensi Pesan Commit](#konvensi-pesan-commit)
 5. [Pengaturan Lingkungan Lokal](#pengaturan-lingkungan-lokal)
+   - [Prasyarat](#prasyarat)
+   - [Langkah 1: Setup Layanan ML (Python 3.12)](#langkah-1-setup-layanan-ml-python-312)
+   - [Langkah 2: Pasang Dependensi Node](#langkah-2-pasang-dependensi-node)
+   - [Langkah 3: Konfigurasi Environment Variables](#langkah-3-konfigurasi-environment-variables)
+   - [Langkah 4: Seeding Basis Data](#langkah-4-seeding-basis-data)
+   - [Langkah 5: Menjalankan Aplikasi](#langkah-5-menjalankan-aplikasi)
 6. [Standar Penulisan Kode](#standar-penulisan-kode)
-7. [Proses Pengajuan Pull Request](#proses-pengajuan-pull-request)
-8. [Bantuan dan Diskusi](#bantuan-dan-diskusi)
+   - [Frontend (Next.js 14 App Router)](#1-frontend-nextjs-14-app-router)
+   - [Backend Gateway (Express & TypeScript)](#2-backend-gateway-express--typescript)
+   - [ML Services (FastAPI & Python)](#3-ml-services-fastapi--python)
+   - [Integritas Data & Privasi (PRD §8)](#4-integritas-data--privasi-prd-8)
+7. [Daftar Periksa & Validasi Pull Request](#daftar-periksa--validasi-pull-request)
+8. [Dokumen Acuan & Bantuan](#dokumen-acuan--bantuan)
 
 ---
 
-## Prinsip dan Batasan Proyek
+## Prinsip & Batasan Sistem
 
-Sebelum memulai, mohon perhatikan beberapa hal mendasar terkait ruang lingkup sistem:
+Sebelum mulai menulis kode, pahami batasan fundamental PRAKIRA:
 
-- PRAKIRA berfokus pada prediksi risiko berbasis iklim dan rekomendasi tindakan intervensi dini untuk dinas kesehatan, puskesmas, serta edukasi publik.
-- PRAKIRA bukan alat diagnosis klinis, bukan rekam medis elektronik, dan bukan pengganti sistem surveilans resmi pemerintah.
-- Seluruh keputusan arsitektur dan fungsionalitas harus selaras dengan dokumen acuan:
-  - `docs/PRD.md`: Spesifikasi produk, alur logika, kontrak API, dan register risiko.
-  - `docs/DESIGN-SYSTEM.md`: Token warna, tipografi, jarak, dan aturan komponen UI.
+- **Bukan Alat Diagnosis:** PRAKIRA menghasilkan estimasi risiko statistik tingkat kecamatan untuk mendukung pengambilan keputusan (*decision support*) bagi Dinas Kesehatan, puskesmas, dan edukasi warga — bukan pengganti diagnosis medis dan bukan rekam medis.
+- **Kejujuran Data (Anti-Mocking):** Jangan pernah membuat jalur cadangan (*silent fallback*) yang mengisi layar dengan data karangan. Jika data belum tersedia atau layanan ML tidak terjangkau, sistem wajib jujur menampilkan keadaan kosong, data tidak memadai (`insufficient`), atau `stale` (PRD §7-H1/H2, §8).
+- **Desain Otentik (Tanpa Template):** Identitas visual PRAKIRA dibangun di atas Design System **"Buletin"** dengan token semantik mandiri, tanpa menggunakan template instan atau hue di luar palet resmi (`docs/DESIGN-SYSTEM.md`).
 
 ---
 
-## Cara Berkontribusi
+## Arsitektur Layanan
 
-Anda dapat berkontribusi melalui beberapa cara:
+PRAKIRA dirancang dengan arsitektur 3 layanan terpisah untuk memisahkan beban komputasi analitik, logika bisnis, dan antarmuka pengguna:
 
-1. **Melaporkan Masalah (Bug Report)**: Jika menemukan galat atau perilaku tak terduga, buat Issue baru dengan menyertakan langkah reproduksi, lingkungan (OS/browser), dan hasil yang diharapkan.
-2. **Mengusulkan Fitur Baru**: Ajukan ide fitur melalui Issue dengan menjelaskan latar belakang kebutuhan, target pengguna, dan skenario pemanfaatan.
-3. **Memperbaiki atau Menambah Dokumentasi**: Dokumentasi yang jelas sangat penting. Koreksi salah ketik, perbaikan panduan teknis, dan klarifikasi PRD selalu disambut baik.
-4. **Mengirimkan Kode (Pull Request)**: Perbaikan bug, peningkatan performa, atau penambahan fitur sesuai roadmap.
+```
+┌──────────────────────────────────────────────────────────┐
+│                 Frontend — Next.js 14                    │
+│   Port: 3000 · App Router · Tailwind · Leaflet · Recharts │
+└────────────────────────────┬─────────────────────────────┘
+                             │ Proksi internal: /api/*
+┌────────────────────────────▼─────────────────────────────┐
+│              Backend Gateway — Express.js                │
+│   Port: 4200 · TypeScript · Session Auth · Rule Engine   │
+└──────────────┬────────────────────────────┬──────────────┘
+               │                            │
+┌──────────────▼──────────────┐ ┌───────────▼──────────────┐
+│    PostgreSQL (Supabase)    │ │   ML Service — FastAPI   │
+│   Tabel Kasus, Iklim, Audit │ │  Port: 8001 · Ensemble   │
+└─────────────────────────────┘ └──────────────────────────┘
+```
+
+| Direktori | Layanan | Port Dev | Teknologi Utama |
+|---|---|---|---|
+| [`frontend/`](./frontend) | Portal Warga & Konsol Dinas | `3000` | Next.js 14, React 18, Tailwind CSS, Lucide, Leaflet, Recharts |
+| [`backend/`](./backend) | API Gateway & Orchestrator | `4200` | Express, TypeScript, Node.js, PostgreSQL (Supabase `pg`) |
+| [`ml-services/`](./ml-services) | Engine Prediksi & Backtest | `8001` | FastAPI, Uvicorn, Python 3.12, Scikit-Learn, XGBoost, Pandas |
 
 ---
 
-## Alur Pengembangan (Workflow)
+## Alur Pengembangan (Workflow Git)
 
-1. **Fork atau Clone Repositori**
+1. **Clone Repositori**
    ```bash
    git clone https://github.com/astrorehan/prakira.git
    cd prakira
    ```
 
-2. **Sinkronisasi Branch Utama**
-   Pastikan branch dasar Anda mutakhir sebelum membuat branch baru.
+2. **Sinkronisasi Branch Aktif**
    ```bash
    git checkout experimental
    git pull origin experimental
    ```
 
-3. **Buat Branch Baru**
-   Gunakan format penamaan branch berikut:
-   - `feat/nama-fitur`: untuk penambahan fitur baru
-   - `fix/nama-bug`: untuk perbaikan bug
-   - `refactor/area-perubahan`: untuk restrukturisasi kode tanpa mengubah fungsionalitas
-   - `docs/judul-dokumen`: untuk pembaruan dokumentasi
-   - `chore/nama-tugas`: untuk tugas pemeliharaan dependensi atau konfigurasi
+3. **Buat Branch Fitur / Perbaikan**
+   Gunakan awalan branch yang sesuai:
+   - `feat/nama-fitur` — untuk penambahan fungsionalitas baru
+   - `fix/nama-bug` — untuk perbaikan galat atau kerusakan
+   - `refactor/area-kode` — untuk restrukturisasi kode tanpa mengubah fungsionalitas
+   - `docs/judul-dokumen` — untuk pembaruan dokumentasi
+   - `chore/nama-tugas` — untuk pemeliharaan dependensi, konfigurasi, atau tooling
 
    Contoh:
    ```bash
-   git checkout -b feat/triage-rekomendasi
+   git checkout -b feat/layer-pemicu-lingkungan
    ```
 
-4. **Lakukan Perubahan dan Pengujian**
-   Terapkan perubahan kode secara bertahap dan jalankan pengujian lokal.
-
-5. **Commit dan Push ke Remote**
-   ```bash
-   git add .
-   git commit -m "feat(dashboard): tambah filter multi-kecamatan pada peta choropleth"
-   git push origin feat/triage-rekomendasi
-   ```
+4. **Kembangkan, Uji, dan Commit**
+   Pastikan seluruh pengujian lokal lolos sebelum melakukan push.
 
 ---
 
@@ -84,115 +102,186 @@ Anda dapat berkontribusi melalui beberapa cara:
 
 Proyek ini menerapkan standar **Conventional Commits**:
 
-Format:
 ```
-<tipe>(<lingkup-opsional>): <deskripsi singkat dalam bahasa indonesia atau inggris yang jelas>
+<tipe>(<lingkup-opsional>): <deskripsi ringkas dan jelas>
 ```
 
-Tipe yang digunakan:
-- `feat`: Penambahan fitur baru.
+### Tipe Commit:
+- `feat`: Penambahan fitur atau kapabilitas baru.
 - `fix`: Perbaikan bug atau galat logika.
-- `docs`: Perubahan atau penambahan dokumentasi.
-- `style`: Penyesuaian pemformatan kode (spasi, titik koma) tanpa mengubah logika.
-- `refactor`: Pengubahan struktur kode internal tanpa mengubah perilaku eksternal.
-- `perf`: Optimasi performa.
-- `test`: Penambahan atau penyesuaian unit/integration test.
-- `chore`: Pemeliharaan build script, dependensi, atau konfigurasi tooling.
+- `docs`: Perubahan atau pembaruan dokumentasi.
+- `style`: Penyesuaian pemformatan kode (spasi, linting) tanpa mengubah logika.
+- `refactor`: Pengubahan struktur kode tanpa mengubah fungsionalitas eksternal.
+- `perf`: Optimasi performa atau efisiensi komputasi.
+- `test`: Penambahan atau pembaruan berkas pengujian.
+- `chore`: Tugas pemeliharaan build script, paket dependensi, atau konfigurasi.
 
-Contoh pesan commit yang baik:
-- `feat(analitik): implementasi scatter plot korelasi iklim dinamis`
-- `fix(map): perbaiki rendering tooltip pada kecamatan dengan risiko tinggi`
-- `docs: perbarui spesifikasi kontrak endpoint pada PRD`
-- `refactor(lib): rapikan fungsi transformasi data prediksi`
+### Contoh:
+- `feat(map): tambah layer agregasi pemicu lingkungan terverifikasi`
+- `fix(gateway): buka port http listener sebelum pemanasan cache prediksi`
+- `docs(prd): perbarui kontrak response endpoint /api/reports/triggers`
+- `refactor(ml): rapikan pipeline ensemble blending untuk model ispa`
 
 ---
 
 ## Pengaturan Lingkungan Lokal
 
 ### Prasyarat
-- Node.js versi 18.17 atau lebih baru
-- npm versi 9 atau lebih baru
-- Git
+- **Node.js**: Versi `>= 22.5.0`
+- **Python**: Versi `3.12.x`
+- **npm**: Versi `>= 10.0.0`
+- **Git**
 
-### Menjalankan Frontend
-Layanan antarmuka web berada di dalam direktori `frontend/`.
+---
 
-1. Masuk ke direktori frontend:
+### Langkah 1: Setup Layanan ML (Python 3.12)
+
+1. Masuk ke direktori `ml-services/` atau buat *virtual environment* langsung dari root:
    ```bash
-   cd frontend
+   python -m venv ml-services/.venv
    ```
 
-2. Pasang seluruh dependensi:
-   ```bash
-   npm install
+2. Pasang pustaka dependensi:
+   - **Windows (PowerShell):**
+     ```powershell
+     .\ml-services\.venv\Scripts\pip install -r ml-services/requirements.txt
+     ```
+   - **Linux / macOS:**
+     ```bash
+     ./ml-services/.venv/bin/pip install -r ml-services/requirements.txt
+     ```
+
+3. *(Opsional)* Latih ulang model bila scikit-learn mengalami perbedaan versi:
+   ```powershell
+   .\ml-services\.venv\Scripts\python -m training.train --disease all
    ```
 
-3. Jalankan server pengembangan lokal:
-   ```bash
-   npm run dev
-   ```
-   Aplikasi akan berjalan pada `http://localhost:3000`.
+---
 
-4. Skrip npm yang tersedia:
-   - `npm run dev`: Menjalankan development server.
-   - `npm run build`: Memvalidasi dan membuat build produksi.
-   - `npm run lint`: Menjalankan pemeriksaan ESLint.
-   - `npm run type-check`: Menjalankan validasi tipe data TypeScript (`tsc --noEmit`).
+### Langkah 2: Pasang Dependensi Node
+
+Pasang dependensi untuk `backend` dan `frontend` sekaligus dari root:
+```bash
+npm run install:all
+```
+
+---
+
+### Langkah 3: Konfigurasi Environment Variables
+
+Salin template variabel lingkungan:
+
+```bash
+# Backend Gateway
+cp backend/.env.example backend/.env
+
+# Frontend Next.js
+cp frontend/.env.local.example frontend/.env.local
+```
+
+#### Variabel Inti di `backend/.env`:
+- `DATABASE_URL`: Connection string PostgreSQL Supabase (*Session Pooler* port `5432`).
+- `ML_SERVICE_URL`: Alamat layanan ML (default lokal: `http://127.0.0.1:8001`).
+- `CORS_ORIGINS`: Daftar origin yang diizinkan (default: `http://localhost:3000,http://127.0.0.1:3000`).
+- `SEED_ADMIN_EMAIL` & `SEED_ADMIN_PASSWORD`: Akun awal dinas untuk login konsol.
+
+#### Variabel Inti di `frontend/.env.local`:
+- `API_PROXY_TARGET`: Target proxy gateway untuk rute `/api/*` (default: `http://127.0.0.1:4200`).
+
+---
+
+### Langkah 4: Seeding Basis Data
+
+Pastikan skema dan data observasi iklim & penyakit terisi di basis data:
+```bash
+npm run seed
+```
+
+---
+
+### Langkah 5: Menjalankan Aplikasi
+
+#### Opsi A: Menjalankan Seluruh Layanan Sekaligus (Direkomendasikan)
+Gunakan runner otomatis di [`scripts/dev.mjs`](./scripts/dev.mjs) yang mengorkestrasi startup berurutan dan pembersihan proses:
+```bash
+npm run dev
+```
+
+Runner akan menyalakan:
+- `[ml]` di `http://127.0.0.1:8001`
+- `[gateway]` di `http://localhost:4200`
+- `[frontend]` di `http://localhost:3000`
+
+#### Opsi B: Menjalankan Secara Modular (Terminal Terpisah)
+Bila ingin mengisolasi log atau mendebug layanan tertentu:
+
+1. **Terminal 1 — Layanan ML:**
+   ```powershell
+   cd ml-services
+   .\.venv\Scripts\python -m uvicorn app.main:app --host 127.0.0.1 --port 8001 --reload
+   ```
+2. **Terminal 2 — Backend Gateway:**
+   ```powershell
+   npm run dev:backend
+   ```
+3. **Terminal 3 — Frontend:**
+   ```powershell
+   npm run dev:frontend
+   ```
 
 ---
 
 ## Standar Penulisan Kode
 
-### 1. Frontend (Next.js & React)
-- **Struktur Halaman**: Menggunakan App Router (`src/app/`).
-- **TypeScript Ketat**: Hindari penggunaan tipe `any`. Selalu definisikan tipe/antarmuka data di `src/types/` atau di modul terkait.
-- **Design System & Tailwind**:
-  - Gunakan token warna semantik yang telah ditentukan (`bg-brand-moss`, `text-slate-900`, dll.).
-  - Jangan menulis inline styles kecuali untuk perhitungan posisi dinamis yang tidak memungkinkan lewat kelas Tailwind.
-  - Rujuk aturan pada `docs/DESIGN-SYSTEM.md`.
-- **Komponen UI**:
-  - Komponen generik ditempatkan di `src/components/ui/`.
-  - Komponen berbasis domain (peta, KPI, filter) ditempatkan di direktori komponen yang sesuai.
-- **Fallback Data Mock**:
-  - `src/lib/api.ts` melempar `ApiError` saat gateway gagal dijawab; **jangan** menambahkan jalur cadangan yang mengisi layar dengan data contoh. Permukaan data memakai `useApi` + `<DataState>` sehingga keadaan memuat, gagal, kosong, dan terisi semuanya terlihat (PRD §8).
-  - Angka yang tidak berasal dari basis data atau layanan model tidak boleh dicetak di UI. Bila sebuah nilai belum ada, kirim `null` dan tampilkan "—" atau keadaan "data tidak memadai" — bukan nol, bukan tebakan (PRD §7-H1/H2).
+### 1. Frontend (Next.js 14 App Router)
+- **TypeScript Ketat:** Hindari tipe `any`. Seluruh struktur data wajib didefinisikan di [`frontend/src/types/`](./frontend/src/types).
+- **Pengambilan Data & State:** Gunakan hook `useApi` dan bungkus komponen data dengan `<DataState>` agar menangani 4 kondisi: `loading`, `error`, `empty`, dan `data` secara konsisten.
+- **Desain Semantik:** Rujuk [`docs/DESIGN-SYSTEM.md`](./docs/DESIGN-SYSTEM.md). Jangan gunakan nilai *hardcoded hex* di kelas Tailwind atau inline styles.
+- **Peta Spasial (Leaflet):** Komponen peta Leaflet harus dimuat menggunakan `next/dynamic` dengan opsi `{ ssr: false }` untuk mencegah galat window/DOM di sisi server.
 
-### 2. Backend & Layanan ML (Masa Depan)
-- **Express Gateway (`gateway/`)**: Mengikuti kontrak rute REST dan autentikasi yang tercantum di PRD.
-- **FastAPI ML Service (`ml/`)**: Menjaga isolasi komputasi model prediksi, format input/output JSON terstandar, dan menyertakan validasi Pydantic.
+### 2. Backend Gateway (Express & TypeScript)
+- **Abstraksi Basis Data:** Gunakan fungsi pembungkus di [`backend/src/db/index.ts`](./backend/src/db/index.ts) (`db()`, `all()`, `one()`, `run()`, `transaction()`). Placeholder query ditulis dengan `?` dan diterjemahkan otomatis ke `$1..$n` oleh `toPg()`.
+- **Penanganan Galat:** Gunakan wrapper `asyncRoute` untuk rute Express dan lempar error yang sesuai agar ditangkap oleh `errorHandler`.
+- **Autentikasi & Keamanan:** Sesi dikelola via cookie `httpOnly` dengan *signature HMAC* aman. Seluruh endpoint mutasi wajib diverifikasi melalui middleware `requireAuth`.
 
----
+### 3. ML Services (FastAPI & Python)
+- **Skema Validasi:** Gunakan model Pydantic di `app/schemas/` untuk validasi parameter request dan response.
+- **Ensemble Blending:** Penambahan algoritma baru harus diintegrasikan melalui modul `training/ensemble.py` dan memperbarui `metadata.json`.
+- **Proteksi Endpoint Sensitif:** Endpoint yang mengubah state seperti `/retrain` wajib dilindungi oleh header token `x-ml-token`.
 
-## Proses Pengajuan Pull Request
-
-Sebelum membuat Pull Request (PR), pastikan Anda telah menyelesaikan daftar periksa berikut:
-
-1. **Pemeriksaan Kualitas Kode**:
-   Jalankan perintah berikut di dalam direktori `frontend/` dan pastikan tidak ada error:
-   ```bash
-   npm run lint
-   npm run type-check
-   npm run build
-   ```
-
-2. **Kebersihan Kode**:
-   - Hapus `console.log`, komentar sementara, dan kode eksperimen yang tidak terpakai.
-   - Pastikan tidak ada file rahasia (seperti `.env.local` atau kredensial) yang tidak sengaja ter-commit.
-
-3. **Membuat Pull Request**:
-   - Buat PR yang mengarah ke branch `experimental` (atau branch default yang aktif).
-   - Berikan judul PR yang deskriptif dan ringkas.
-   - Jelaskan latar belakang perubahan, daftar perubahan teknis, dan petunjuk pengujian manual yang dapat dilakukan reviewer.
-   - Cantumkan nomor issue yang diselesaikan jika ada (misal: `Closes #12`).
-
-4. **Tinjauan Kode (Code Review)**:
-   - Pengelola repositori akan meninjau perubahan Anda.
-   - Tanggapi umpan balik secara konstruktif dan lakukan commit perbaikan jika diperlukan.
+### 4. Integritas Data & Privasi (PRD §8)
+- **Laporan Warga:** Dilarang memfabrikasi atau mengekspos koordinat GPS presisi milik warga secara publik. Agregasi sinyal pemicu lingkungan hanya disajikan pada tingkat agregat kecamatan.
+- **Ketidakpastian Model:** Tampilkan nilai prediksi lengkap dengan interval batas bawah (`lower_bound`), batas atas (`upper_bound`), dan tingkat cakupan data (`data_coverage`).
 
 ---
 
-## Bantuan dan Diskusi
+## Daftar Periksa & Validasi Pull Request
 
-Jika Anda memiliki pertanyaan seputar arsitektur, menemukan ketidaksesuaian spesifikasi, atau membutuhkan bantuan teknis:
-- Buka thread diskusi atau Issue baru di repositori GitHub ini.
-- Diskusikan rancangan fitur terlebih dahulu sebelum menulis perubahan besar agar selaras dengan roadmap proyek.
+Sebelum mengajukan Pull Request, pastikan seluruh pengujian berikut lolos tanpa peringatan (*zero errors/warnings*):
+
+```bash
+# 1. Validasi tipe data TypeScript (Backend & Frontend)
+npm run type-check
+
+# 2. Pemeriksaan kualitas & formatting kode ESLint
+npm run lint
+
+# 3. Validasi build produksi (Backend & Static Pages Next.js)
+npm run build
+```
+
+### Checklist Pengajuan:
+- [ ] Seluruh skrip validasi (`type-check`, `lint`, `build`) berhasil dieksekusi tanpa galat.
+- [ ] Tidak ada berkas rahasia (`.env`, `.env.local`, file kredensial) yang masuk ke *staging git*.
+- [ ] Tidak ada `console.log` sisa debugging atau data mock tersembunyi.
+- [ ] Deskripsi PR menjelaskan konteks perubahan, motivasi, dan langkah pengujian manual.
+
+---
+
+## Dokumen Acuan & Bantuan
+
+- **[`docs/PRD.md`](./docs/PRD.md)** — Spesifikasi produk lengkap, rubrik kompetisi, arsitektur data, dan kontrak API.
+- **[`docs/DESIGN-SYSTEM.md`](./docs/DESIGN-SYSTEM.md)** — Spesifikasi token warna, tipografi, radius, elevasi, dan panduan visual "Buletin".
+- **[`README.md`](./README.md)** — Ringkasan umum proyek dan petunjuk awal.
+
+Jika menemukan kendala atau ingin mendiskusikan usulan arsitektur baru, silakan buka [GitHub Issues](https://github.com/astrorehan/prakira/issues) atau diskusikan bersama tim pengembang PRAKIRA.

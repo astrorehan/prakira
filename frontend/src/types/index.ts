@@ -260,6 +260,15 @@ export type QueueSummary = {
   oldestWaitHours: number | null;
 };
 
+export type DistrictTriggerSummary = {
+  kecamatan: string;
+  total: number;
+  byKind: Record<ReportKind, number>;
+  latestReportAt: string | null;
+  environmentalCount: number;
+  healthCount: number;
+};
+
 export type RateLimitState = {
   max: number;
   windowHours: number;
