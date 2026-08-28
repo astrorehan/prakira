@@ -12,6 +12,7 @@ import {
   createReport,
   deviceHash,
   findReport,
+  getTriggerSummaryByDistrict,
   listReports,
   reviewReport,
   summarizeQueue,
@@ -182,6 +183,20 @@ reportsRouter.get(
       }));
 
     res.json({ data: rows });
+  }),
+);
+
+/**
+ * Ringkasan pemicu lingkungan & sinyal warga terverifikasi per kecamatan.
+ * Publik — mengembalikan metrik agregasi tanpa data PII, foto, atau deskripsi.
+ */
+reportsRouter.get(
+  "/triggers",
+  asyncRoute(async (req, res) => {
+    const kecamatan =
+      typeof req.query.kecamatan === "string" ? req.query.kecamatan : undefined;
+    const summary = await getTriggerSummaryByDistrict(kecamatan);
+    res.json({ data: summary });
   }),
 );
 

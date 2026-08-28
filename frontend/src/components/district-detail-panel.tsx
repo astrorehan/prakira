@@ -8,6 +8,11 @@ import {
   Activity,
   LineChart,
   Info,
+  Bug,
+  Droplets,
+  Trash2,
+  Waves,
+  AlertTriangle,
 } from "lucide-react";
 import {
   cn,
@@ -17,7 +22,7 @@ import {
   formatMaybePercent,
 } from "@/lib/utils";
 import { formatMonth } from "@/lib/period";
-import type { DiseaseType, KecamatanData, TrendPoint } from "@/types";
+import type { DiseaseType, DistrictTriggerSummary, KecamatanData, TrendPoint } from "@/types";
 import { RiskGauge } from "./ui/risk-gauge";
 import { TrendChart } from "./trend-chart";
 
@@ -25,6 +30,7 @@ interface DistrictDetailPanelProps {
   district: KecamatanData | undefined;
   disease: DiseaseType;
   trend: TrendPoint[];
+  trigger?: DistrictTriggerSummary;
   className?: string;
 }
 
@@ -46,6 +52,7 @@ export function DistrictDetailPanel({
   district,
   disease,
   trend,
+  trigger,
   className,
 }: DistrictDetailPanelProps) {
   if (!district) {
@@ -201,6 +208,53 @@ export function DistrictDetailPanel({
             )
             .join("; ")}
           .
+        </div>
+      )}
+
+      {/* 4b. Sinyal pemicu lingkungan terverifikasi dari warga */}
+      {trigger && trigger.total > 0 && (
+        <div className="rounded-xl border border-amber-300/80 bg-amber-50/80 backdrop-blur-md p-2.5 text-3xs text-amber-950 shrink-0 shadow-xs">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="font-semibold text-amber-950 flex items-center gap-1.5">
+              <AlertTriangle className="h-3.5 w-3.5 text-amber-600 shrink-0" aria-hidden />
+              <span>Sinyal Pemicu Warga:</span>
+            </span>
+            <span className="font-semibold text-amber-800 bg-amber-200/70 px-1.5 py-0.5 rounded text-4xs">
+              {trigger.total} terverifikasi
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {trigger.byKind.jentik > 0 && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/90 border border-amber-200 text-4xs font-semibold text-amber-900">
+                <Bug className="h-3 w-3 text-amber-700 shrink-0" />
+                <span>{trigger.byKind.jentik} Jentik</span>
+              </span>
+            )}
+            {trigger.byKind.genangan > 0 && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/90 border border-amber-200 text-4xs font-semibold text-amber-900">
+                <Droplets className="h-3 w-3 text-sky-600 shrink-0" />
+                <span>{trigger.byKind.genangan} Genangan</span>
+              </span>
+            )}
+            {trigger.byKind.sampah > 0 && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/90 border border-amber-200 text-4xs font-semibold text-amber-900">
+                <Trash2 className="h-3 w-3 text-paper-700 shrink-0" />
+                <span>{trigger.byKind.sampah} Sampah</span>
+              </span>
+            )}
+            {trigger.byKind.saluran > 0 && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/90 border border-amber-200 text-4xs font-semibold text-amber-900">
+                <Waves className="h-3 w-3 text-teal-600 shrink-0" />
+                <span>{trigger.byKind.saluran} Saluran</span>
+              </span>
+            )}
+            {trigger.byKind.gejala > 0 && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/90 border border-amber-200 text-4xs font-semibold text-amber-900">
+                <Activity className="h-3 w-3 text-rose-600 shrink-0" />
+                <span>{trigger.byKind.gejala} Gejala</span>
+              </span>
+            )}
+          </div>
         </div>
       )}
 
