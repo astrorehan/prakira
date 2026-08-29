@@ -12,6 +12,7 @@ import {
   createReport,
   deviceHash,
   findReport,
+  getTriggerSummaryByDistrict,
   listReports,
   reviewReport,
   summarizeQueue,
@@ -22,7 +23,6 @@ import { listKecamatan } from "../services/districts.js";
 import {
   DEFAULT_RULES,
   detectEscalations,
-  environmentSignals,
 } from "../services/escalation.js";
 import { isSimulated } from "../services/demo.js";
 import { requireAuth } from "../middleware/auth.js";
@@ -197,6 +197,20 @@ reportsRouter.get(
   }),
 );
 
+/**
+ * Ringkasan pemicu lingkungan & sinyal warga terverifikasi per kecamatan.
+ * Publik — mengembalikan metrik agregasi tanpa data PII, foto, atau deskripsi.
+ */
+reportsRouter.get(
+  "/triggers",
+  asyncRoute(async (req, res) => {
+    const kecamatan =
+      typeof req.query.kecamatan === "string" ? req.query.kecamatan : undefined;
+    const summary = await getTriggerSummaryByDistrict(kecamatan);
+    res.json({ data: summary });
+  }),
+);
+
 reportsRouter.get(
   "/",
   requireAuth,
@@ -295,33 +309,3 @@ reportsRouter.get(
   }),
 );
 
-/**
- * Sinyal lingkungan terverifikasi per kecamatan — bahan lapisan peta (S1).
- *
- * Publik dengan sengaja: isinya jumlah agregat per kecamatan tanpa deskripsi,
- * tanpa foto, dan tanpa kode lacak. Lapisan yang sama dipakai portal warga
- * untuk menjelaskan kenapa kecamatan tertentu diingatkan soal leptospirosis.
- */
-reportsRouter.get(
-  "/environment-signal",
-  asyncRoute(async (req, res) => {
-    const raw = Number(req.query.windowDays ?? 60);
-    const windowDays = Number.isFinite(raw)
-      ? Math.min(Math.max(raw, 7), 365)
-      : 60;
-
-    const result = await environmentSignals(windowDays);
-
-    res.json({
-      meta: {
-        windowDays: result.windowDays,
-        note: [
-          "Ini peta laporan warga terverifikasi, bukan peta genangan. Kecamatan tanpa penanda berarti tidak ada laporan terverifikasi di sana — bukan berarti kering.",
-          "Hanya laporan berkeluarga lingkungan yang dihitung: genangan, sampah, dan saluran tersumbat.",
-          "Wilayah dengan warga lebih aktif melapor akan tampak lebih ramai. Bias pelaporan ini tidak dikoreksi dan tidak bisa dikoreksi dari data ini sendiri.",
-        ],
-      },
-      data: result.signals,
-    });
-  }),
-);

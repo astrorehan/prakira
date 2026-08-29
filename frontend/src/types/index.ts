@@ -357,6 +357,15 @@ export type QueueSummary = {
   oldestWaitHours: number | null;
 };
 
+export type DistrictTriggerSummary = {
+  kecamatan: string;
+  total: number;
+  byKind: Record<ReportKind, number>;
+  latestReportAt: string | null;
+  environmentalCount: number;
+  healthCount: number;
+};
+
 export type RateLimitState = {
   max: number;
   windowHours: number;
@@ -562,16 +571,6 @@ export type EscalationMeta = {
   defaults: EscalationRules;
   scanned: number;
   explanation: string[];
-};
-
-/** Laporan lingkungan terverifikasi per kecamatan — lapisan pemicu di peta. */
-export type EnvironmentSignal = {
-  kecamatan: string;
-  total: number;
-  genangan: number;
-  sampah: number;
-  saluran: number;
-  terakhir: string | null;
 };
 
 export type SurgeResult = {

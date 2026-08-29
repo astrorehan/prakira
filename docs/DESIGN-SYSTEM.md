@@ -167,7 +167,7 @@ graph TD
 
 Root font-size ditetapkan pada `112.5%` (1rem = 18px).
 
-### 3.2 Inventaris Lengkap 19 Rute Aplikasi
+### 3.2 Inventaris Lengkap 20 Rute Aplikasi
 
 | # | Rute | Kelompok | Surface | Akses | Chrome | Deskripsi Halaman |
 |---|---|---|---|---|---|---|
@@ -190,6 +190,7 @@ Root font-size ditetapkan pada `112.5%` (1rem = 18px).
 | 17 | `/simulasi` | Publik | `public` | Terbuka | `Navbar` + `Footer` | **Simulator Cuaca**: Tiga penggeser iklim (hujan/suhu/kelembaban) yang menghitung ulang prakiraan dan peringkat 16 kecamatan; baris di luar rentang data latih diberi tanda, kalimat pembatas berada di atas penggeser (PRD §5.12) |
 | 18 | `/prioritas` | Publik | `public` | Terbuka | `Navbar` + `Footer` | **Prioritas Terdampak**: Peringkat risiko berdampingan dengan peringkat berbobot populasi/kepadatan, kartu "yang belum masuk indeks ini", dan kalkulator biaya tak-bertindak berbasis asumsi pengguna (PRD §5.13, §5.16) |
 | 19 | `/tindakan/nota/[id]` | `BARE_ROUTES` | `public` | Terbuka | Bare | **Draf Nota Dinas**: Satu tindakan aksi dini sebagai lembar A4 siap tanda tangan; dicetak lewat mesin cetak peramban (`@media print`, lihat §11.1) |
+| 20 | `/buletin` | `BARE_ROUTES` | `public` | Terbuka | Bare | **Buletin Resmi SKDR**: Prakiraan, peringatan, dan rekomendasi satu periode sebagai lembar buletin bernomor; dicetak lewat mesin cetak peramban |
 
 ---
 
@@ -458,7 +459,7 @@ Aturan yang berlaku:
 7. **Mesin Waktu:** Rute publik `/mesin-waktu` menampilkan periode uji per bulan × kecamatan — sensitivitas, alarm palsu, dan peringatan yang terlewat ditampilkan sekeras angka yang bagus.
 8. **Permukaan Cetak:** `/tindakan/nota/[id]` menutup tombol "Ekspor PDF" yang dulu hanya berupa `setTimeout` dan toast; berkasnya kini benar-benar ada dan dibuat mesin cetak peramban (§11.1).
 9. **Simulator & Prioritas:** Dua rute publik baru (`/simulasi`, `/prioritas`) memakai token yang sama tanpa satu pun hex mentah; keduanya menampilkan batas pembacaannya sebagai bagian permanen tata letak, bukan sebagai catatan kaki yang bisa dilewati.
-10. **Lapisan Kedua di Peta:** Penanda laporan lingkungan pada `choropleth-map` memakai netral `paper-*` dengan garis putus-putus, tidak pernah ramp risiko — dua sumber dengan derajat keandalan berbeda tidak boleh berbagi bahasa warna (§2.4). Lapisannya mati secara bawaan.
+10. **Lapisan Kedua di Peta:** Penanda laporan lingkungan pada `choropleth-map` masih memakai amber dan menyala secara bawaan. §2.4 melarang dua sumber dengan derajat keandalan berbeda berbagi bahasa warna dengan ramp risiko resmi, jadi butir ini **belum tertutup** — lihat utang yang tercatat di PRD §5.15.
 11. **Kontribusi Fitur:** Batang dua arah pada dialog "Kenapa angka ini?" memakai `risk-low-fill` untuk pergeseran turun dan `risk-high-fill` untuk naik — satu-satunya tempat ramp risiko dipakai untuk arah, dan sah karena arahnya memang arah risiko. Setiap batang tetap membawa ikon panah dan angka: warna tidak pernah sendirian.
 
 ### Item yang Tercatat untuk Pemeliharaan Masa Depan

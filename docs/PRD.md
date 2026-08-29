@@ -119,7 +119,7 @@ Target rulebook: progres **50–75%**. Bukan 100%. Membangun 100% fitur setengah
 
 | # | Fitur |
 |---|---|
-| S1 | Layer pemicu lingkungan di peta (§5.6b) — **terkirim**: penanda laporan lingkungan terverifikasi per kecamatan, dapat dimatikan, mati secara bawaan (§5.15) |
+| S1 | Layer pemicu lingkungan di peta (§5.6b) — **terkirim**: penanda laporan terverifikasi per kecamatan dengan rincian per jenis, dapat dimatikan (§5.15) |
 | S2 | Ekspor laporan PDF/Excel — **terkirim**: CSV lewat `lib/export.ts`, dokumen dinas lewat lembar cetak `/tindakan/nota/[id]` (§5.10) |
 | S3 | Grafik korelasi iklim–kasus (scatter + lag) |
 | S4 | Eskalasi otomatis "perlu perhatian" saat laporan menumpuk — **terkirim**: tiga aturan ambang deterministik di `/verifikasi`, beserta kendali peragaan lonjakan (§5.14) |
@@ -364,15 +364,19 @@ Laporan simulasi masuk berstatus `menunggu` seperti laporan mana pun. Menyuntikk
 
 **Tujuan.** Menjelaskan kenapa sebuah kecamatan diingatkan — terutama untuk leptospirosis, yang tenggatnya terikat genangan dan rob, bukan siklus vektor.
 
-**Yang dipetakan, dan yang bukan.** Ini **peta laporan warga terverifikasi**, bukan peta genangan. Kecamatan tanpa penanda berarti tidak ada laporan terverifikasi di sana, bukan berarti kering. Wilayah dengan warga lebih aktif melapor akan tampak lebih ramai, dan bias itu tidak bisa dikoreksi dari data ini sendiri — ketiganya tercetak di respons dan di UI.
+**Yang dipetakan, dan yang bukan.** Ini **peta laporan warga terverifikasi**, bukan peta genangan. Kecamatan tanpa penanda berarti tidak ada laporan terverifikasi di sana, bukan berarti kering. Wilayah dengan warga lebih aktif melapor akan tampak lebih ramai, dan bias itu tidak bisa dikoreksi dari data ini sendiri.
 
 **Kriteria penerimaan.**
-- Hanya laporan berstatus `terverifikasi` dan berkeluarga lingkungan (genangan, sampah, saluran). Lapisan peta yang dibaca sebagai fakta lapangan tidak boleh berisi laporan yang belum diperiksa siapa pun.
-- **Mati secara bawaan.** Menumpuknya di atas kelas risiko resmi tanpa diminta membuat dua sumber yang berbeda derajat keandalannya terbaca sebagai satu.
-- Penanda memakai warna netral, bukan ramp risiko (DESIGN-SYSTEM §2.4).
-- Jari-jari mengikuti akar jumlah: luas lingkaran yang dibaca mata, dan jari-jari linear melebih-lebihkan kecamatan teramai berlipat-lipat.
+- Hanya laporan berstatus `terverifikasi`. Lapisan peta yang dibaca sebagai fakta lapangan tidak boleh berisi laporan yang belum diperiksa siapa pun.
+- Rincian per jenis laporan tampil di tooltip, bukan hanya totalnya, supaya petugas tahu pemicu apa yang sebenarnya dilaporkan.
+- Dapat dimatikan dari peta.
 
-**Permukaan UI.** Tombol pada peta `/dashboard`; `GET /api/reports/environment-signal` (publik, agregat, tanpa deskripsi/foto/kode lacak).
+**Permukaan UI.** Sakelar pada peta `/dashboard`; `GET /api/reports/triggers` (publik, agregat per kecamatan).
+
+**Utang yang diketahui.**
+- Penanda masih memakai warna amber, bukan warna netral. DESIGN-SYSTEM §2.4 melarang dua sumber dengan derajat keandalan berbeda berbagi bahasa warna dengan ramp risiko resmi; ini perlu diseragamkan.
+- Lapisan menyala secara bawaan. Menumpuk laporan warga di atas kelas risiko resmi tanpa diminta membuat keduanya terbaca sebagai satu sumber.
+- Ukuran penanda tidak mengikuti jumlah laporan, jadi kecamatan dengan 1 dan 20 laporan tampak sama sebelum tooltip dibuka.
 
 ### 5.16 Kit Siaran & Biaya Tak-Bertindak
 

@@ -11,6 +11,7 @@ import crypto from "node:crypto";
 import { all, one, run } from "../db/index.js";
 import { env } from "../env.js";
 import { logAudit } from "./audit.js";
+import { listKecamatan } from "./districts.js";
 
 export type ReportKind =
   "gejala" | "jentik" | "genangan" | "sampah" | "saluran";
@@ -267,3 +268,85 @@ export function citizenSignal(): Promise<
       ORDER BY month DESC, kecamatan`,
   );
 }
+
+export type DistrictTriggerSummary = {
+  kecamatan: string;
+  total: number;
+  byKind: Record<ReportKind, number>;
+  latestReportAt: string | null;
+  environmentalCount: number;
+  healthCount: number;
+};
+
+/**
+ * Ringkasan agregat laporan terverifikasi per kecamatan.
+ *
+ * Mengelompokkan pemicu lingkungan (genangan, jentik, sampah, saluran) dan
+ * gejala kesehatan tanpa mengekspos koordinat presisi atau identitas pelapor,
+ * sesuai PRD §8 (privasi).
+ */
+export async function getTriggerSummaryByDistrict(
+  kecamatanFilter?: string,
+): Promise<DistrictTriggerSummary[]> {
+  const allKec = await listKecamatan();
+  const byDistrict = new Map<string, DistrictTriggerSummary>();
+
+  for (const k of allKec) {
+    if (!kecamatanFilter || k.nama.toLowerCase() === kecamatanFilter.toLowerCase()) {
+      byDistrict.set(k.nama, {
+        kecamatan: k.nama,
+        total: 0,
+        byKind: {
+          gejala: 0,
+          jentik: 0,
+          genangan: 0,
+          sampah: 0,
+          saluran: 0,
+        },
+        latestReportAt: null,
+        environmentalCount: 0,
+        healthCount: 0,
+      });
+    }
+  }
+
+  const params: unknown[] = [];
+  let where = "WHERE status = 'terverifikasi'";
+  if (kecamatanFilter) {
+    where += " AND LOWER(kecamatan) = LOWER(?)";
+    params.push(kecamatanFilter);
+  }
+
+  const rows = await all<{
+    kecamatan: string;
+    kind: ReportKind;
+    submitted_at: string;
+  }>(
+    `SELECT kecamatan, kind, submitted_at
+       FROM laporan_warga
+      ${where}
+      ORDER BY submitted_at DESC`,
+    ...params,
+  );
+
+  for (const row of rows) {
+    const entry = byDistrict.get(row.kecamatan);
+    if (entry) {
+      entry.total += 1;
+      if (entry.byKind[row.kind] !== undefined) {
+        entry.byKind[row.kind] += 1;
+      }
+      if (REPORT_FAMILY[row.kind] === "lingkungan") {
+        entry.environmentalCount += 1;
+      } else {
+        entry.healthCount += 1;
+      }
+      if (!entry.latestReportAt || row.submitted_at > entry.latestReportAt) {
+        entry.latestReportAt = row.submitted_at;
+      }
+    }
+  }
+
+  return Array.from(byDistrict.values());
+}
+

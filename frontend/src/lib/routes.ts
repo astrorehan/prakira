@@ -22,7 +22,7 @@ export const CONSOLE_ROUTES = [
 export const SISTEM_ROUTES = ["/sistem"] as const;
 
 /** Routes that bring their own full-page chrome: no navbar, no footer. */
-export const BARE_ROUTES = ["/masuk", "/tindakan/nota"] as const;
+export const BARE_ROUTES = ["/masuk", "/buletin", "/tindakan/nota"] as const;
 
 export function isBareRoute(pathname: string): boolean {
   return BARE_ROUTES.some((r) => pathname.startsWith(r));

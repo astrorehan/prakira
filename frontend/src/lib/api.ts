@@ -20,7 +20,7 @@ import type {
   CitizenReport,
   ClimatePoint,
   DiseaseSummary,
-  EnvironmentSignal,
+  DistrictTriggerSummary,
   Escalation,
   EscalationMeta,
   EscalationRules,
@@ -279,6 +279,14 @@ export function fetchVerifiedReports(
   return request(`/api/reports/verified?limit=${limit}${query}`);
 }
 
+/** Ringkasan agregasi pemicu lingkungan terverifikasi per kecamatan. */
+export function fetchTriggerSummary(
+  kecamatan?: string,
+): Promise<{ data: DistrictTriggerSummary[] }> {
+  const query = kecamatan ? `?kecamatan=${encodeURIComponent(kecamatan)}` : "";
+  return request<{ data: DistrictTriggerSummary[] }>(`/api/reports/triggers${query}`);
+}
+
 export function fetchReportQueue(
   kecamatan?: string,
 ): Promise<Envelope<CitizenReport[], QueueSummary>> {
@@ -414,15 +422,6 @@ export function fetchEscalations(): Promise<
   Envelope<Escalation[], EscalationMeta>
 > {
   return request("/api/reports/escalations");
-}
-
-/** Laporan lingkungan terverifikasi per kecamatan — lapisan pemicu peta. */
-export function fetchEnvironmentSignal(
-  windowDays = 60,
-): Promise<
-  Envelope<EnvironmentSignal[], { windowDays: number; note: string[] }>
-> {
-  return request(`/api/reports/environment-signal?windowDays=${windowDays}`);
 }
 
 /* ── Peragaan lonjakan (admin/dinas) ─────────────────────────────────────── */
