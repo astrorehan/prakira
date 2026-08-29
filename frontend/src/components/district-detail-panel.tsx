@@ -20,6 +20,7 @@ import { formatMonth } from "@/lib/period";
 import type { DiseaseType, KecamatanData, TrendPoint } from "@/types";
 import { RiskGauge } from "./ui/risk-gauge";
 import { TrendChart } from "./trend-chart";
+import { WhyThisNumber } from "./why-this-number";
 
 interface DistrictDetailPanelProps {
   district: KecamatanData | undefined;
@@ -190,19 +191,32 @@ export function DistrictDetailPanel({
         </div>
       </div>
 
-      {/* 4. Pemicu dominan menurut model — mengisi kalimat "Dasar:" (§5.2) */}
-      {district.drivers.length > 0 && (
-        <div className="rounded-xl border border-white/85 bg-white/70 p-2.5 text-3xs leading-relaxed text-paper-700 shrink-0">
-          <span className="font-semibold text-foreground">Pemicu dominan: </span>
-          {district.drivers
-            .map(
-              (d) =>
-                `${d.label} ${d.value.toLocaleString("id-ID", { maximumFractionDigits: 1 })}${d.unit} (persentil ${d.percentile})`,
-            )
-            .join("; ")}
-          .
-        </div>
-      )}
+      {/* 4. Pemicu dominan menurut model — mengisi kalimat "Dasar:" (§5.2)
+             Daftar ini bersifat global: fitur iklim ber-importance tertinggi
+             menurut model secara keseluruhan, sama untuk keenam belas
+             kecamatan. Tombol di sebelahnya membuka hitungan yang lokal —
+             berapa kasus prakiraan kecamatan INI bergeser per kelompok fitur. */}
+      <div className="shrink-0 space-y-2">
+        {district.drivers.length > 0 && (
+          <div className="rounded-xl border border-white/85 bg-white/70 p-2.5 text-3xs leading-relaxed text-paper-700">
+            <span className="font-semibold text-foreground">Pemicu dominan: </span>
+            {district.drivers
+              .map(
+                (d) =>
+                  `${d.label} ${d.value.toLocaleString("id-ID", { maximumFractionDigits: 1 })}${d.unit} (persentil ${d.percentile})`,
+              )
+              .join("; ")}
+            .
+          </div>
+        )}
+
+        <WhyThisNumber
+          disease={disease}
+          kecamatanId={district.id}
+          kecamatanNama={district.nama}
+          hasPrediction={district.kasus_prediksi !== null}
+        />
+      </div>
 
       {/* 5. Tren kota — deret bulanan aktual lalu prakiraan */}
       <div className="rounded-xl bg-white/80 backdrop-blur-md p-3.5 border border-white/90 shadow-[0_2px_8px_-2px_rgba(14,34,37,0.04),inset_0_1px_0_rgba(255,255,255,0.9)] flex-1 min-h-[220px] flex flex-col justify-between">

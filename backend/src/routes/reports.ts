@@ -19,6 +19,12 @@ import {
   type ReportRow,
 } from "../services/reports.js";
 import { listKecamatan } from "../services/districts.js";
+import {
+  DEFAULT_RULES,
+  detectEscalations,
+  environmentSignals,
+} from "../services/escalation.js";
+import { isSimulated } from "../services/demo.js";
 import { requireAuth } from "../middleware/auth.js";
 import { asyncRoute, HttpError } from "../middleware/error.js";
 
@@ -46,9 +52,15 @@ function hashOf(req: Request): string {
   return deviceHash(ip, agent);
 }
 
-/** Tanpa `device_hash`: sidik jari perangkat tidak pernah keluar dari server. */
+/** Tanpa `device_hash`: sidik jari perangkat tidak pernah keluar dari server.
+ *
+ *  `simulated` diturunkan dari sidik jari itu sebelum ia dibuang. Baris hasil
+ *  peragaan wajib bisa dikenali di antrean verifikasi — petugas yang melihat
+ *  delapan laporan baru berhak tahu mana yang datang dari warga dan mana yang
+ *  disuntikkan untuk demo. */
 function publicView(row: ReportRow) {
   return {
+    simulated: isSimulated(row),
     id: row.id,
     kind: row.kind,
     kecamatan: row.kecamatan,
@@ -233,5 +245,83 @@ reportsRouter.patch(
 
     if (!updated) throw new HttpError(404, "Laporan tidak ditemukan.");
     res.json({ meta: await summarizeQueue(), data: publicView(updated) });
+  }),
+);
+
+/**
+ * Eskalasi "perlu perhatian" (S4).
+ *
+ * Butuh sesi. Isinya bukan deskripsi laporan — hanya nama kecamatan dan
+ * hitungan — tapi pola pengaduan per wilayah tetap informasi operasional
+ * dinas, bukan informasi publik. Yang publik adalah kelas risiko di
+ * `/api/districts`, dan itu berasal dari data resmi, bukan dari aduan.
+ */
+reportsRouter.get(
+  "/escalations",
+  requireAuth,
+  asyncRoute(async (req, res) => {
+    const num = (key: string): number | undefined => {
+      const raw = req.query[key];
+      if (typeof raw !== "string") return undefined;
+      const value = Number(raw);
+      return Number.isFinite(value) ? value : undefined;
+    };
+
+    const { rules, escalations, scanned } = await detectEscalations({
+      windowDays: num("windowDays"),
+      minReports: num("minReports"),
+      minSameKind: num("minSameKind"),
+      maxWaitHours: num("maxWaitHours"),
+    });
+
+    res.json({
+      meta: {
+        rules,
+        defaults: DEFAULT_RULES,
+        scanned,
+        /* Aturan ditulis di sini, bukan hanya di kode: halaman verifikasi
+           menampilkannya persis begini supaya petugas tahu kenapa sebuah
+           kecamatan naik — dan bisa membantahnya. */
+        explanation: [
+          `Jendela pengamatan ${rules.windowDays} hari terakhir. Laporan yang sudah ditolak verifikator tidak dihitung sama sekali.`,
+          `Ambang volume: ${rules.minReports} laporan dari satu kecamatan.`,
+          `Ambang pemusatan: ${rules.minSameKind} laporan berjenis sama dari satu kecamatan.`,
+          `Ambang antrean tertahan: laporan menunggu lebih dari ${rules.maxWaitHours} jam.`,
+          "Eskalasi menandai wilayah untuk dilihat manusia. Ia tidak menerbitkan tindakan dan tidak mengubah kelas risiko model.",
+        ],
+      },
+      data: escalations,
+    });
+  }),
+);
+
+/**
+ * Sinyal lingkungan terverifikasi per kecamatan — bahan lapisan peta (S1).
+ *
+ * Publik dengan sengaja: isinya jumlah agregat per kecamatan tanpa deskripsi,
+ * tanpa foto, dan tanpa kode lacak. Lapisan yang sama dipakai portal warga
+ * untuk menjelaskan kenapa kecamatan tertentu diingatkan soal leptospirosis.
+ */
+reportsRouter.get(
+  "/environment-signal",
+  asyncRoute(async (req, res) => {
+    const raw = Number(req.query.windowDays ?? 60);
+    const windowDays = Number.isFinite(raw)
+      ? Math.min(Math.max(raw, 7), 365)
+      : 60;
+
+    const result = await environmentSignals(windowDays);
+
+    res.json({
+      meta: {
+        windowDays: result.windowDays,
+        note: [
+          "Ini peta laporan warga terverifikasi, bukan peta genangan. Kecamatan tanpa penanda berarti tidak ada laporan terverifikasi di sana — bukan berarti kering.",
+          "Hanya laporan berkeluarga lingkungan yang dihitung: genangan, sampah, dan saluran tersumbat.",
+          "Wilayah dengan warga lebih aktif melapor akan tampak lebih ramai. Bias pelaporan ini tidak dikoreksi dan tidak bisa dikoreksi dari data ini sendiri.",
+        ],
+      },
+      data: result.signals,
+    });
   }),
 );

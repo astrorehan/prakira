@@ -93,16 +93,7 @@ export function RecommendationCard({
               <span>{getActionTypeLabel()}</span>
             </div>
 
-            <Badge
-              variant={
-                recommendation.disease === "DBD"
-                  ? "disease-dbd"
-                  : recommendation.disease === "ISPA"
-                  ? "disease-ispa"
-                  : "disease-diare"
-              }
-              size="sm"
-            >
+            <Badge variant="disease" size="sm">
               {recommendation.disease}
             </Badge>
 

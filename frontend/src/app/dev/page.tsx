@@ -13,7 +13,7 @@ import {
   Activity,
   Bug,
   Wind,
-  Droplets,
+  Rat,
   CloudRain,
   ShieldAlert,
   ExternalLink,
@@ -61,7 +61,7 @@ import type { DiseaseType, ActionRecommendation } from "@/types";
 const DISEASE_ICONS: Record<string, React.ElementType> = {
   DBD: Bug,
   ISPA: Wind,
-  Diare: Droplets,
+  LEPTOSPIROSIS: Rat,
 };
 
 export default function DesignSystemPage() {
@@ -503,9 +503,9 @@ export default function DesignSystemPage() {
                 <Badge variant="risk-low" pulse>Risiko Rendah</Badge>
                 <Badge variant="risk-medium" pulse>Risiko Sedang</Badge>
                 <Badge variant="risk-high" pulse>Risiko Tinggi (Bahaya)</Badge>
-                <Badge variant="disease-dbd">DBD · Dengue</Badge>
-                <Badge variant="disease-ispa">ISPA · Pernapasan</Badge>
-                <Badge variant="disease-diare">Diare · Pencernaan</Badge>
+                <Badge variant="disease">DBD · Dengue</Badge>
+                <Badge variant="disease">ISPA · Pernapasan</Badge>
+                <Badge variant="disease">Leptospirosis · Zoonosis</Badge>
               </div>
             </LiquidGlassCard>
 
@@ -788,7 +788,7 @@ export default function DesignSystemPage() {
                 <div className="space-y-2 pt-2 border-t border-paper-200">
                   <span className="text-xs font-medium block">Jenis Penyakit:</span>
                   <div className="grid grid-cols-3 gap-2">
-                    {(["DBD", "ISPA", "Diare"] as const).map((d) => (
+                    {(["DBD", "ISPA", "LEPTOSPIROSIS"] as const).map((d) => (
                       <button
                         key={d}
                         onClick={() => setSelectedDisease(d)}

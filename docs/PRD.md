@@ -119,10 +119,10 @@ Target rulebook: progres **50–75%**. Bukan 100%. Membangun 100% fitur setengah
 
 | # | Fitur |
 |---|---|
-| S1 | Layer pemicu lingkungan di peta (§5.6b) |
-| S2 | Ekspor laporan PDF/Excel |
+| S1 | Layer pemicu lingkungan di peta (§5.6b) — **terkirim**: penanda laporan lingkungan terverifikasi per kecamatan, dapat dimatikan, mati secara bawaan (§5.15) |
+| S2 | Ekspor laporan PDF/Excel — **terkirim**: CSV lewat `lib/export.ts`, dokumen dinas lewat lembar cetak `/tindakan/nota/[id]` (§5.10) |
 | S3 | Grafik korelasi iklim–kasus (scatter + lag) |
-| S4 | Eskalasi otomatis "perlu perhatian" saat laporan menumpuk |
+| S4 | Eskalasi otomatis "perlu perhatian" saat laporan menumpuk — **terkirim**: tiga aturan ambang deterministik di `/verifikasi`, beserta kendali peragaan lonjakan (§5.14) |
 
 ### WON'T — eksplisit tidak dikerjakan untuk penyisihan
 
@@ -221,9 +221,172 @@ Halaman `/model` — bukan halaman "tentang kami". Isi wajib:
 
 **Rubrik.** Ini halaman dengan rasio nilai-per-jam tertinggi di seluruh produk. Menyentuh Impact Projection (20%), Progres & Validasi (20%), dan Metodologi (10%) sekaligus.
 
+**Catatan implementasi.** Rutenya **publik**, bukan rute konsol: halaman yang menjelaskan seberapa jauh angka prakiraan boleh dipercaya tidak boleh berada di balik kotak masuk petugas. Ia hanya membaca, tidak menampilkan identitas pelapor, dan tidak punya tombol yang menulis. Cakupan per kecamatan datang dari layanan ML dengan kunci kode BPS bertitik (`33.74.01`) lalu diterjemahkan gateway ke `kecamatan.id` (`KEC_SMG_01`) lewat kolom `ml_id`; tanpa terjemahan itu seluruh kecamatan terbaca `Tidak memadai` meski datanya lengkap.
+
 ### 5.8 Admin & Data (M9)
 
 Upload CSV kasus → validasi kolom & tipe → preview 10 baris → konfirmasi. Sinkronisasi BMKG ditampilkan sebagai status (terakhir sinkron, jumlah stasiun, latensi). Audit trail untuk seluruh perubahan data.
+
+---
+
+### 5.9 Mesin Waktu (`/mesin-waktu`)
+
+**Tujuan.** Menjawab pertanyaan yang tidak bisa dijawab satu angka MAE: *"bulan itu, di kecamatan saya, apakah sistem ini sudah mengatakannya lebih dulu?"*
+
+**Sumber data.** Periode uji yang sama dengan §5.7 — data yang tidak pernah dilihat model saat dilatih — tapi dirinci per **bulan × kecamatan**. Layanan ML mengirimkannya sebagai `district_results` pada `/backtest`; gateway menyimpannya dan menghitung putusannya di `/api/model/rewind`.
+
+**Empat putusan per pasangan bulan × kecamatan.**
+
+| Putusan | Definisi |
+|---|---|
+| Tertandai | Kelas aktual `tinggi` dan kelas prakiraan `tinggi` |
+| Terlewat | Kelas aktual `tinggi`, prakiraan bukan — tidak ada instruksi yang terbit |
+| Alarm palsu | Prakiraan `tinggi`, aktual bukan — sumber daya bergerak sia-sia |
+| Kelas sama / meleset | Sisanya, di luar kelas `tinggi` |
+
+**Kriteria penerimaan.**
+- Sensitivitas dan alarm palsu berdiri **bersebelahan**. Menampilkan satu tanpa yang lain adalah overclaim, dan §2 menghukumnya.
+- Tabel bulan aktif menaruh kecamatan yang **terlewat** di baris teratas, bukan di dasar tabel.
+- Dua peta berdampingan pada bingkai yang sama: prakiraan dan rekap resmi. Tidak ada mode tombol — perbandingan tidak boleh bergantung pada ingatan pemirsa.
+- Rute **publik**, dengan alasan yang sama seperti §5.7.
+
+**Keunggulan waktu.** Ditampilkan sebagai ±30 hari, dan **bukan asumsi**: model memakai `cases_lag1..3`, jadi prakiraan bulan M dihitung begitu rekap bulan M−1 masuk, sementara rekap bulan M sendiri baru terbit setelah bulan M berakhir. Selisihnya persis satu siklus pelaporan. Berapa lama rekap tertunda setelah bulan berakhir tidak perlu diasumsikan karena penundaan itu berlaku sama pada kedua sisi dan saling meniadakan. Uraian ini ikut tercetak di halamannya, bukan disimpan di dokumen ini saja.
+
+**Rubrik.** Impact Projection (20%) — inilah bukti bahwa peringatannya datang lebih awal; Progres & Validasi (20%); Originalitas (15%).
+
+### 5.10 Draf Nota Dinas (`/tindakan/nota/[id]`)
+
+**Tujuan.** Menutup jarak terakhir antara layar dan pekerjaan Senin pagi. Instruksi ke puskesmas berjalan sebagai nota dinas, bukan sebagai tangkapan layar dashboard.
+
+**Isi.** Satu tindakan §5.2 disusun sebagai satu lembar A4: kop, kepala surat, kalimat "Dasar:" apa adanya, tabel kecamatan sasaran (penduduk, rentang prakiraan, kelas risiko, cakupan data), langkah SOP bernomor, tenggat, unit pelaksana, batas keandalan, dan blok tanda tangan.
+
+**Yang sengaja dikosongkan** — tercetak sebagai garis isian: **nomor surat, pejabat pengirim, tanggal surat, dan penanda tangan**. Keempatnya ditetapkan unit tata usaha. Versi lama produk ini pernah menampilkan nomor surat `440/1892/DKK-P2P/VIII/2026` beserta nama kepala puskesmas; keduanya karangan, dan dokumen resmi berisi nomor palsu lebih berbahaya daripada dokumen yang jujur mengaku draf. Lencana **DRAF** tampil di kop, dan kaki dokumen menyatakan surat baru berlaku setelah diberi nomor dan ditandatangani.
+
+**Cara mencetak.** Tidak ada pustaka penata halaman PDF di repositori ini dan tidak perlu ada: halaman ini adalah lembar A4 yang benar di layar dan di kertas, dan "Simpan sebagai PDF" sudah tersedia di dialog cetak setiap peramban. Aturan cetaknya di `DESIGN-SYSTEM.md` §11.1.
+
+**Kriteria penerimaan.**
+- Angka per kecamatan hanya ditempelkan bila bulan prediksinya sama dengan bulan nota; kalau tidak, selnya "—" dengan catatan. Angka dari bulan lain tidak boleh masuk surat dinas.
+- Tidak ada nama orang, nomor telepon, nomor surat, atau angka "confidence" di mana pun pada lembar ini.
+
+**Rubrik.** Impact Projection (20%), Originalitas (15%).
+
+### 5.11 "Kenapa angka ini?" — kontribusi fitur lokal
+
+**Tujuan.** Menjawab pertanyaan yang selalu menyusul setelah angka muncul: kenapa kecamatan ini segini, dan bukan segitu.
+
+**Metode — dan apa yang bukan.** Yang dihitung adalah **substitusi median**, bukan SHAP dan tidak boleh disebut SHAP. Tiap kelompok fitur diganti nilai lazimnya di kecamatan yang sama, seluruh fitur turunannya (hujan kumulatif, interaksi, rata-rata bergerak, insidens) dihitung ulang, lalu model memprediksi ulang. Selisihnya adalah kontribusi kelompok itu.
+
+Enam kelompok: curah hujan, suhu, kelembaban, riwayat kasus, bulan & musim, serta populasi & identitas kecamatan. Dua penyimpangan yang disengaja:
+
+- **Bulan** tidak diganti median. Median variabel siklis tidak punya arti — median antara Desember dan Januari adalah Juli. Pembandingnya rata-rata prakiraan atas kedua belas bulan dengan fitur lain dikunci.
+- **Populasi & identitas kecamatan** dibandingkan terhadap median **kota**, bukan median kecamatan. Keduanya konstan sepanjang riwayat satu kecamatan, jadi median kecamatan sama dengan nilainya sendiri dan ablasinya selalu nol — angka yang tampak seperti "identitas wilayah tidak berpengaruh" padahal tidak ada yang diuji.
+
+**Kriteria penerimaan.**
+- Tiap kontribusi ditampilkan sebagai pergeseran berarah (naik/turun) **dalam satuan kasus**, bukan sebagai potongan kue. Jumlah kontribusi tidak sama dengan prakiraan, dan itu dinyatakan di layar.
+- Tiap baris membawa kalimat tandingannya: "tanpa faktor ini prakiraan jadi X kasus".
+- Importance gain hasil pelatihan tetap ditampilkan **dengan label berbeda** — global, berlaku sekota, menjawab pertanyaan yang lain. Menyembunyikannya akan membuat kontribusi lokal terbaca sebagai "fitur terpenting model".
+- Empat batas pembacaan tercetak di dialog yang sama, termasuk bahwa yang diterangkan adalah keputusan model, bukan mekanisme penularan.
+
+**Permukaan UI.** Tombol "Kenapa angka ini?" pada panel detail kecamatan `/dashboard`; membuka dialog. Endpoint `POST /explain` (ML) → `GET /api/model/explain` (gateway). Tidak ada cadangan tersimpan: penjelasan basi menerangkan angka yang sudah berganti.
+
+**Rubrik.** Metodologi (10%), Originalitas (15%).
+
+### 5.12 Simulator Cuaca (`/simulasi`)
+
+**Tujuan.** Menunjukkan model yang hidup, bukan tabel statis: geser curah hujan, suhu, dan kelembaban, lalu lihat prakiraan dan peringkat 16 kecamatan dihitung ulang.
+
+**Kriteria penerimaan.**
+- Tiga penggeser: curah hujan −100..+200%, suhu ±5 °C, kelembaban ±30 poin. Batasnya ditegakkan dua kali — di skema permintaan dan di layanan skenario — supaya pemanggil non-UI tidak bisa melewatinya.
+- Fitur turunan **wajib** dihitung ulang. Menaikkan `rainfall_lag1` tanpa memperbarui `rainfall_cumul_2m` dan `rain_x_humidity` menyodorkan baris yang mustahil ada di dunia nyata; model tetap menjawab dan jawabannya tidak berarti apa-apa.
+- Nilai skenario yang keluar dari rentang data latih **ditandai per kecamatan** dan dihitung di ringkasan. Model berbasis pohon tidak mengekstrapolasi — jawabannya membeku di daun terluar.
+- Kalimat "ini menjawab apa kata model, bukan apa yang akan terjadi" tampil **di atas** penggeser, bukan sebagai catatan kaki.
+- Kecamatan tanpa cakupan data cukup tetap kosong: bukan nol, bukan "rendah".
+- Penggeser ditahan 350 ms sebelum menembakkan permintaan. Satu permintaan = 32 prediksi.
+- Angka yang tampil dibaca dari muatan yang sedang tampil, bukan dari posisi penggeser — kalau tidak, layar sempat menampilkan hasil netral yang lama dengan penggeser sudah bergerak.
+
+**Permukaan UI.** Rute publik `/simulasi`. Endpoint `POST /simulate` (ML) → `POST /api/model/simulate` (gateway).
+
+**Rubrik.** Originalitas (15%), Metodologi (10%).
+
+### 5.13 Prioritas Terdampak (`/prioritas`)
+
+**Tujuan.** Memperbaiki satu kelemahan jujur dari skor risiko sistem ini: skornya persentil terhadap sejarah kecamatan itu sendiri, jadi tiga kasus bisa berarti "tinggi" di kecamatan yang biasanya nol. Untuk pertanyaan "seberapa tidak biasa", itu benar. Untuk "kecamatan mana yang dijaga lebih dulu", ia bisa menaruh kecamatan 98 ribu jiwa di atas kecamatan 192 ribu jiwa.
+
+**Rumus, sesederhana mungkin agar bisa diperiksa dengan kalkulator:**
+
+```
+indeks_mentah = (skor_risiko ÷ 100) × populasi × pengali_kepadatan
+indeks        = indeks_mentah ÷ indeks_mentah_tertinggi × 100
+```
+
+`pengali_kepadatan` bernilai 1 pada mode populasi; pada mode kepadatan ia **akar** kepadatan relatif terhadap median kota. Akar, bukan nilai penuh: kepadatan Semarang Tengah 27× Mijen, dan pengali penuh akan mengunci puncak daftar apa pun risikonya.
+
+**Kriteria penerimaan.**
+- Dua peringkat ditampilkan **berdampingan** beserta pergeserannya. Mengganti diam-diam peringkat risiko dengan peringkat prioritas menyembunyikan justru bagian yang perlu dibaca: keduanya menjawab pertanyaan berbeda.
+- Faktor kerentanan yang **tidak** ada datanya ditulis sekeras yang ada — proporsi balita & lansia, cakupan jaminan kesehatan, sanitasi per kecamatan, dan kepadatan hunian di dalam kecamatan. Struktur umur tidak ada pada `dataset_raw/wilayah/kecamatan_semarang.csv`, dan mengarangnya adalah kelas kesalahan yang sudah dibersihkan dari sistem ini.
+- Kecamatan tanpa prediksi tidak diberi indeks dan tidak diberi peringkat.
+
+**Permukaan UI.** Rute publik `/prioritas`; `GET /api/districts/priority?disease=&bobot=populasi|kepadatan`.
+
+**Rubrik.** Impact Projection (20%), Originalitas (15%).
+
+### 5.14 Eskalasi Otomatis & Peragaan Lonjakan (S4)
+
+**Tujuan.** Antrean verifikasi mengurutkan laporan satu per satu; pada urutan itu sebuah **pola** hilang. Lima laporan genangan dari kecamatan yang sama dalam sepuluh hari tersebar di seluruh daftar dan terbaca sebagai lima keluhan lepas.
+
+**Tiga aturan, deterministik, tanpa model:**
+
+| Aturan | Ambang bawaan | Alasan angkanya |
+|---|---|---|
+| Volume | 5 laporan / kecamatan / 14 hari | Dengan batas kirim 3 laporan per perangkat per 24 jam, lima laporan dalam 14 hari tidak mungkin dari satu perangkat |
+| Pemusatan satu jenis | 4 laporan sejenis | Pemusatan jenis lebih informatif daripada volume campuran, jadi ambangnya lebih rendah |
+| Antrean tertahan | menunggu > 24 jam | Janji layanan, bukan temuan epidemiologis — dan dibedakan agar tidak terbaca sebagai sinyal penyakit |
+
+**Kriteria penerimaan.**
+- Laporan yang **ditolak** verifikator tidak pernah dihitung. Kalau tidak, satu orang yang mengirim berulang bisa menaikkan status kecamatannya sendiri.
+- Eskalasi **tidak** menerbitkan tindakan dan tidak menyentuh tabel `tindakan`. Menerbitkan instruksi fogging dari lima laporan yang belum diverifikasi adalah otomatisasi yang tidak boleh ada di sistem kesehatan.
+- Ambang yang dipakai ikut tercetak di UI. Petugas yang melihat kecamatannya naik berhak tahu ambang mana yang terlampaui — dan berhak tidak setuju.
+- Ambangnya dapat ditimpa lewat parameter permintaan tanpa mengubah kode.
+
+**Peragaan lonjakan.** Loop warga → verifikasi → eskalasi itu nyata, tapi memperagakannya butuh lonjakan yang tidak bisa ditunggu di depan penonton. Kendali injeksi tersedia untuk peran admin/dinas dengan tiga pagar yang tidak boleh dilepas:
+
+1. **Setiap baris ditandai di data**, bukan hanya di ingatan operatornya: deskripsi berawalan `[SIMULASI]` dan `device_hash` konstanta, ditampilkan sebagai lencana "Simulasi" di antrean.
+2. **Bisa dicabut utuh** lewat satu tombol; predikat penghapusannya `device_hash`, bukan awalan deskripsi yang bisa diedit.
+3. **Tercatat di jejak audit** atas nama penggunanya, penyisipan maupun pencabutan.
+
+Laporan simulasi masuk berstatus `menunggu` seperti laporan mana pun. Menyuntikkan laporan yang sudah terverifikasi berarti memperagakan loop dengan memotong bagian yang justru jadi intinya.
+
+**Permukaan UI.** `/verifikasi`; `GET /api/reports/escalations`, `POST|GET|DELETE /api/admin/demo/surge`.
+
+**Rubrik.** Progres & Validasi (20%), Originalitas (15%).
+
+### 5.15 Lapisan Pemicu Lingkungan di Peta (S1)
+
+**Tujuan.** Menjelaskan kenapa sebuah kecamatan diingatkan — terutama untuk leptospirosis, yang tenggatnya terikat genangan dan rob, bukan siklus vektor.
+
+**Yang dipetakan, dan yang bukan.** Ini **peta laporan warga terverifikasi**, bukan peta genangan. Kecamatan tanpa penanda berarti tidak ada laporan terverifikasi di sana, bukan berarti kering. Wilayah dengan warga lebih aktif melapor akan tampak lebih ramai, dan bias itu tidak bisa dikoreksi dari data ini sendiri — ketiganya tercetak di respons dan di UI.
+
+**Kriteria penerimaan.**
+- Hanya laporan berstatus `terverifikasi` dan berkeluarga lingkungan (genangan, sampah, saluran). Lapisan peta yang dibaca sebagai fakta lapangan tidak boleh berisi laporan yang belum diperiksa siapa pun.
+- **Mati secara bawaan.** Menumpuknya di atas kelas risiko resmi tanpa diminta membuat dua sumber yang berbeda derajat keandalannya terbaca sebagai satu.
+- Penanda memakai warna netral, bukan ramp risiko (DESIGN-SYSTEM §2.4).
+- Jari-jari mengikuti akar jumlah: luas lingkaran yang dibaca mata, dan jari-jari linear melebih-lebihkan kecamatan teramai berlipat-lipat.
+
+**Permukaan UI.** Tombol pada peta `/dashboard`; `GET /api/reports/environment-signal` (publik, agregat, tanpa deskripsi/foto/kode lacak).
+
+### 5.16 Kit Siaran & Biaya Tak-Bertindak
+
+**Kit siaran per kecamatan.** Notifikasi WhatsApp ada di daftar WON'T (§4), dan tetap di sana. Yang disediakan bukan integrasi pengiriman — tidak ada nomor tujuan, tidak ada tombol kirim, tidak ada yang keluar dari peramban — melainkan dua bahan yang bisa dibuat sistem dengan jujur: kalimat siaran siap tempel, dan satu kode QR per kecamatan sasaran menuju `/warga/lapor?kecamatan=…` dengan kecamatannya sudah terisi. QR dibuat di peramban dari URL yang sama dengan tautan biasanya: tidak ada pemendek tautan dan tidak ada pihak ketiga. Kode QR yang mengarah ke domain asing di poster dinas adalah cacat kepercayaan, bukan kemudahan.
+
+**Biaya tak-bertindak.** Kerangka proyeksi dampak yang mengikuti aturan penulisan §9: selalu dengan asumsi, sumber, dan rentang. Kalkulator ini **berangkat kosong** — tidak ada tarif bawaan dan tidak ada efektivitas bawaan.
+
+- Alasannya tertulis di §9 sendiri: baris "biaya penanganan per kasus" ditandai *"jika tersedia"*, dan repositori ini memang belum punya tarif yang bisa dirujuk. Menuliskan angka default berarti menaruh rupiah karangan di layar juri dengan tampilan hasil hitungan.
+- Basis perhitungan hanya kecamatan kelas tinggi — kelompok yang memang memicu terbitnya tindakan. Menghitung seluruh kota mengklaim bahwa setiap kasus di mana pun dapat dicegah oleh intervensi yang bahkan tidak diterbitkan untuk wilayah itu.
+- Rentang keluarannya berasal dari batas bawah–atas prakiraan model, dan itu dinyatakan — bukan dari ketidakpastian asumsi penggunanya.
+- Bila salah satu asumsi belum bersumber, hasilnya tetap dihitung **dan diberi tanda**. Menyembunyikannya hanya memindahkan angka tak-bersumber itu ke kepala orang.
+- Nilainya disimpan di `localStorage`: preferensi satu perangkat, bukan data sistem.
+
+**Rubrik.** Impact Projection (20%).
 
 ---
 

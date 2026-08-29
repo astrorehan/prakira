@@ -8,12 +8,13 @@ import {
   Bug,
   ShieldAlert,
   MapPin,
+  Droplets,
   TrendingUp,
   ArrowRight,
   CloudOff,
   RefreshCw,
 } from "lucide-react";
-import { aggregateCoverage, formatNumber, formatMaybeNumber } from "@/lib/utils";
+import { aggregateCoverage, cn, formatNumber, formatMaybeNumber } from "@/lib/utils";
 import { formatMonth } from "@/lib/period";
 import { LiquidGlassCard } from "@/components/ui/liquid-glass-card";
 import { AppleGlassDate } from "@/components/ui/apple-glass-date";
@@ -27,6 +28,7 @@ import {
   fetchActions,
   fetchDiseases,
   fetchDistricts,
+  fetchEnvironmentSignal,
   fetchGeoJson,
   fetchTrend,
 } from "@/lib/api";
@@ -56,6 +58,7 @@ const ChoroplethMap = dynamic(() => import("@/components/choropleth-map"), {
 export default function DashboardPrediksiPage() {
   const [selectedDisease, setSelectedDisease] = React.useState<DiseaseType | null>(null);
   const [selectedDistrictId, setSelectedDistrictId] = React.useState<string | null>(null);
+  const [showEnvironment, setShowEnvironment] = React.useState(false);
 
   const diseases = useApi(() => fetchDiseases(), []);
 
@@ -82,6 +85,7 @@ export default function DashboardPrediksiPage() {
   );
 
   const geo = useApi(() => fetchGeoJson(), []);
+  const environment = useApi(() => fetchEnvironmentSignal(), []);
 
   const actions = useApi(
     () => (selectedDisease ? fetchActions(selectedDisease) : Promise.resolve(null as never)),
@@ -296,10 +300,42 @@ export default function DashboardPrediksiPage() {
                 variant="default"
                 className="p-5 flex flex-col justify-between h-full space-y-3 min-h-[580px]"
               >
-                <h3 className="font-display text-lg font-semibold text-foreground flex items-center gap-2 shrink-0">
-                  <MapPin className="h-4 w-4 text-brand-700" />
-                  <span>Peta zona risiko</span>
-                </h3>
+                <div className="flex flex-wrap items-center justify-between gap-2 shrink-0">
+                  <h3 className="font-display text-lg font-semibold text-foreground flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-brand-700" />
+                    <span>Peta zona risiko</span>
+                  </h3>
+
+                  {/* Lapisan pemicu lingkungan (S1). Mati secara bawaan:
+                      isinya laporan warga, dan menumpuknya di atas kelas risiko
+                      resmi tanpa diminta akan membuat dua sumber yang berbeda
+                      derajat keandalannya terbaca sebagai satu. */}
+                  <button
+                    type="button"
+                    onClick={() => setShowEnvironment((v) => !v)}
+                    aria-pressed={showEnvironment}
+                    disabled={(environment.data?.data.length ?? 0) === 0}
+                    title={
+                      (environment.data?.data.length ?? 0) === 0
+                        ? "Belum ada laporan lingkungan terverifikasi."
+                        : "Tampilkan laporan genangan, sampah, dan saluran yang sudah diverifikasi petugas."
+                    }
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-3xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+                      showEnvironment
+                        ? "border-paper-700 bg-paper-800 text-white"
+                        : "border-paper-300 bg-white/70 text-paper-700 hover:border-brand-300 hover:text-brand-700",
+                    )}
+                  >
+                    <Droplets className="h-3.5 w-3.5" aria-hidden />
+                    Laporan lingkungan
+                    {(environment.data?.data.length ?? 0) > 0 && (
+                      <span className="tabular-nums opacity-75">
+                        {environment.data?.data.reduce((s, x) => s + x.total, 0)}
+                      </span>
+                    )}
+                  </button>
+                </div>
 
                 <div className="flex-1 min-h-[440px] relative w-full">
                   {geo.data ? (
@@ -310,6 +346,8 @@ export default function DashboardPrediksiPage() {
                       selectedId={selectedDistrictId}
                       onSelect={(id) => setSelectedDistrictId(id)}
                       height="100%"
+                      environmentSignals={environment.data?.data ?? []}
+                      showEnvironment={showEnvironment}
                     />
                   ) : (
                     <div className="flex h-full items-center justify-center rounded-2xl border border-paper-200 bg-paper-100 text-xs text-paper-600">

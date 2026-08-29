@@ -2,7 +2,7 @@
 PRAKIRA ML Service — FastAPI Entry Point
 
 Layanan prediksi risiko penyakit berbasis iklim untuk Kota Semarang.
-Endpoint: /predict, /predict/batch, /backtest, /retrain, /health
+Endpoint: /predict, /predict/batch, /explain, /simulate, /backtest, /retrain, /health
 Port default: 8001
 """
 import sys
@@ -19,6 +19,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.routes.predict import router as predict_router
 from app.routes.backtest import router as backtest_router
 from app.routes.retrain import router as retrain_router
+from app.routes.explain import router as explain_router
+from app.routes.simulate import router as simulate_router
 from app.schemas.response import HealthResponse
 from app.security import require_service_token
 from app.services.predictor import get_loaded_models_info
@@ -61,6 +63,8 @@ _guard = [Depends(require_service_token)]
 app.include_router(predict_router, prefix="/predict", tags=["Predict"], dependencies=_guard)
 app.include_router(backtest_router, prefix="/backtest", tags=["Backtest"], dependencies=_guard)
 app.include_router(retrain_router, prefix="/retrain", tags=["Retrain"], dependencies=_guard)
+app.include_router(explain_router, prefix="/explain", tags=["Explain"], dependencies=_guard)
+app.include_router(simulate_router, prefix="/simulate", tags=["Simulate"], dependencies=_guard)
 
 
 @app.get("/health", response_model=HealthResponse, tags=["Health"])

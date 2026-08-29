@@ -26,10 +26,12 @@ for directory in [
     directory.mkdir(parents=True, exist_ok=True)
 
 # ---------------------------------------------------------------------------
-# Disease configurations — hanya 2 penyakit aktif untuk fase ini (DBD + ISPA)
-# Diare & Leptospirosis ditambahkan setelah kedua model ini siap pakai backend.
+# Disease configurations — daftar penyakit yang modelnya benar-benar terlatih
+# dan berkas .pkl-nya ada di models/. Daftar ini yang dijawab /health sebagai
+# `diseases_available`, jadi menambah nama di sini tanpa modelnya membuat
+# gateway menjanjikan prediksi yang tidak pernah datang.
 # ---------------------------------------------------------------------------
-DISEASES = ["dbd", "ispa"]
+DISEASES = ["dbd", "ispa", "leptospirosis"]
 
 # ---------------------------------------------------------------------------
 # FEATURE COLUMNS — Monthly (berlaku untuk SEMUA penyakit)

@@ -1,10 +1,15 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
-import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
+import { MapContainer, TileLayer, GeoJSON, CircleMarker, Tooltip } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import type { Feature, GeoJsonObject } from "geojson";
-import type { KecamatanData, DiseaseType, GeoDistrictCollection } from "@/types";
+import type {
+  KecamatanData,
+  DiseaseType,
+  EnvironmentSignal,
+  GeoDistrictCollection,
+} from "@/types";
 import {
   formatMaybeIncidence,
   formatMaybeNumber,
@@ -23,6 +28,17 @@ type ChoroplethMapProps = {
   center?: [number, number];
   zoom?: number;
   height?: string;
+  /**
+   * Laporan lingkungan terverifikasi per kecamatan (PRD §4, S1).
+   *
+   * Lapisan ini **bukan** peta genangan. Ia memetakan laporan warga yang sudah
+   * diverifikasi petugas — genangan, sampah, saluran tersumbat. Kecamatan tanpa
+   * penanda berarti tidak ada laporan terverifikasi di sana, bukan berarti
+   * kering. Wilayah dengan warga lebih aktif melapor akan tampak lebih ramai,
+   * dan bias itu tidak bisa dikoreksi dari data ini sendiri.
+   */
+  environmentSignals?: EnvironmentSignal[];
+  showEnvironment?: boolean;
 };
 
 const SEMARANG_CENTER: [number, number] = [-7.005, 110.42];
@@ -42,12 +58,41 @@ export default function ChoroplethMap({
   center = SEMARANG_CENTER,
   zoom = 12,
   height = "520px",
+  environmentSignals = [],
+  showEnvironment = false,
 }: ChoroplethMapProps) {
   const byId = useMemo(() => {
     const map = new Map<string, KecamatanData>();
     for (const d of districts) map.set(d.id, d);
     return map;
   }, [districts]);
+
+  /* Sinyal dipasangkan ke kecamatan lewat namanya: tabel laporan warga
+     menyimpan nama kecamatan, bukan id peta. Sentroidnya diambil dari daftar
+     kecamatan yang sudah ada di properti `districts`. */
+  const signalMarkers = useMemo(() => {
+    if (!showEnvironment || environmentSignals.length === 0) return [];
+
+    const coordByName = new Map<string, [number, number]>();
+    for (const d of districts) coordByName.set(d.nama, d.koordinat);
+
+    const largest = environmentSignals.reduce(
+      (max, s) => Math.max(max, s.total),
+      0,
+    );
+
+    return environmentSignals
+      .map((signal) => {
+        const coord = coordByName.get(signal.kecamatan);
+        if (!coord) return null;
+        /* Jari-jari mengikuti akar jumlah, bukan jumlah itu sendiri: luas
+           lingkaranlah yang dibaca mata, dan jari-jari linear melebih-lebihkan
+           kecamatan teramai berlipat-lipat. */
+        const scale = largest > 0 ? Math.sqrt(signal.total / largest) : 0;
+        return { signal, coord, radius: 7 + scale * 13 };
+      })
+      .filter((m): m is { signal: EnvironmentSignal; coord: [number, number]; radius: number } => m !== null);
+  }, [districts, environmentSignals, showEnvironment]);
 
   useEffect(() => {
     // Fix default marker icon assets
@@ -215,6 +260,38 @@ export default function ChoroplethMap({
           style={styleFor}
           onEachFeature={onEachFeature}
         />
+
+        {/* Penanda memakai warna netral `paper`, bukan warna risiko: lapisan
+            ini menandai laporan warga, dan mewarnainya dengan ramp risiko akan
+            membuat dua sumber yang berbeda derajat keandalannya terbaca sama
+            (docs/DESIGN-SYSTEM.md §2.4). */}
+        {signalMarkers.map(({ signal, coord, radius }) => (
+          <CircleMarker
+            key={`env-${signal.kecamatan}`}
+            center={coord}
+            radius={radius}
+            pathOptions={{
+              color: "#24373A",
+              weight: 1.5,
+              fillColor: "#7C8D8F",
+              fillOpacity: 0.35,
+              dashArray: "3 3",
+            }}
+          >
+            <Tooltip direction="top" offset={[0, -4]} className="dsdc-map-tooltip">
+              <span style={{ fontSize: 12, color: "#0E2225" }}>
+                <strong>{signal.kecamatan}</strong>
+                <br />
+                {signal.total} laporan lingkungan terverifikasi
+                <br />
+                <span style={{ color: "#5A6C6E" }}>
+                  Genangan {signal.genangan} · Sampah {signal.sampah} · Saluran{" "}
+                  {signal.saluran}
+                </span>
+              </span>
+            </Tooltip>
+          </CircleMarker>
+        ))}
       </MapContainer>
     </div>
   );

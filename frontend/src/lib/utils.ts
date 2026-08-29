@@ -238,18 +238,6 @@ export const DISEASE_CONFIG: Record<string, DiseaseProfile> = {
     defaultIntervention:
       "Sanitasi pascagenangan, pengendalian tikus, buffer stock doksisiklin",
   },
-  Diare: {
-    name: "Penyakit Diare",
-    short: "Diare",
-    vector: "Patogen air dan kontaminasi sanitasi",
-    color: CAT_COLORS[4],
-    softColor: "#E9F1ED",
-    borderColor: "#CFE0D8",
-    iconName: "Droplets",
-    climateTriggers:
-      "Curah hujan ekstrem atau genangan banjir yang mencemari sumber air bersih",
-    defaultIntervention: "Klorinasi air, logistik oralit dan zinc, penyuluhan PHBS",
-  },
 };
 
 /* ── Formatting ─────────────────────────────────────────────────────────── */

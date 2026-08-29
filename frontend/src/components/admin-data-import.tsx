@@ -5,6 +5,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   Database,
+  Download,
   FileSpreadsheet,
   Info,
   RefreshCw,
@@ -20,10 +21,12 @@ import {
   fetchAuditLog,
   fetchDiseases,
   fetchIngestStatus,
+  fetchKecamatanList,
   previewImport,
   refreshPredictions,
   type ImportPreview,
 } from "@/lib/api";
+import { downloadCsv, toCsv } from "@/lib/export";
 import { useApi } from "@/lib/use-api";
 import { invalidatePeriod } from "@/lib/use-period";
 import { DataState } from "./data-state";
@@ -92,9 +95,42 @@ function CsvImportCard({
   const [state, setState] = React.useState<ImportState>({ kind: "idle" });
   const inputRef = React.useRef<HTMLInputElement>(null);
 
+  /* Berkas contoh dibentuk dari register kecamatan yang sedang berlaku, bukan
+     dari daftar nama yang ditulis di sini: satu kecamatan berganti nama dan
+     contoh statis akan mengajarkan format yang ditolak penguraiannya sendiri. */
+  const kecamatan = useApi(() => fetchKecamatanList(), []);
+
   React.useEffect(() => {
     if (!disease && diseases.length > 0) setDisease(diseases[0].disease);
   }, [diseases, disease]);
+
+  /**
+   * Unduh contoh berkas.
+   *
+   * Kolom `cases` sengaja dibiarkan kosong. Mengisinya dengan angka contoh
+   * berarti berkas ini bisa langsung diunggah dan menimpa kasus bulan berjalan
+   * dengan angka karangan — persis kecelakaan yang paling mungkin terjadi saat
+   * seseorang mencoba fitur ini untuk pertama kali. Dikosongkan, berkasnya
+   * mengajarkan bentuk kolomnya dan ditolak validator sampai benar-benar diisi.
+   */
+  const downloadTemplate = () => {
+    const rows = kecamatan.data ?? [];
+    if (rows.length === 0) return;
+
+    const now = new Date();
+    const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+
+    const csv = toCsv(rows, [
+      { header: "kecamatan_nama", value: (row) => row.nama },
+      { header: "month_start", value: () => month },
+      { header: "cases", value: () => "" },
+      { header: "rainfall_mm", value: () => "" },
+      { header: "temp_mean_c", value: () => "" },
+      { header: "humidity_pct", value: () => "" },
+    ]);
+
+    downloadCsv(`contoh-impor-kasus-${disease.toLowerCase() || "penyakit"}`, csv);
+  };
 
   const handleFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -175,6 +211,21 @@ function CsvImportCard({
               </option>
             ))}
           </select>
+
+          {/* Tanpa berkas contoh, satu-satunya cara mencoba fitur ini adalah
+              mengarang CSV dari nol — termasuk menebak ejaan enam belas nama
+              kecamatan yang harus cocok persis dengan register. */}
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={downloadTemplate}
+            disabled={(kecamatan.data ?? []).length === 0}
+            className="ml-auto gap-1.5"
+          >
+            <Download className="h-4 w-4" aria-hidden="true" />
+            <span>Contoh berkas</span>
+          </Button>
         </div>
 
         <label
@@ -197,6 +248,11 @@ function CsvImportCard({
           <span className="mt-1 text-caption text-paper-600">
             Kolom wajib: kecamatan_nama, month_start, cases. Opsional:
             rainfall_mm, temp_mean_c, humidity_pct.
+          </span>
+          <span className="mt-1 text-caption text-paper-600">
+            Berkas contoh sudah berisi seluruh nama kecamatan dengan kolom{" "}
+            <code className="font-mono">cases</code> dikosongkan — isi dulu, sebab
+            baris kosong akan ditolak validator.
           </span>
           <input
             ref={inputRef}
@@ -221,6 +277,31 @@ function CsvImportCard({
                 {state.preview.problems.length} baris ditolak
               </Badge>
             </div>
+
+            {/* Kolom yang benar-benar terbaca dari kepala berkas. Tanpa baris
+                ini, berkas yang lolos karena kolom opsionalnya salah eja masuk
+                diam-diam dengan iklim kosong, dan tidak ada yang tahu sampai
+                grafik iklimnya bolong. */}
+            <p className="mt-1.5 text-caption text-paper-600">
+              Kolom terbaca:{" "}
+              {state.preview.columns.found.map((col, index) => (
+                <React.Fragment key={col}>
+                  {index > 0 && ", "}
+                  <code
+                    className={cn(
+                      "font-mono",
+                      state.preview.columns.required.includes(col) ||
+                        state.preview.columns.optional.includes(col)
+                        ? "text-foreground"
+                        : "text-paper-600 line-through",
+                    )}
+                  >
+                    {col}
+                  </code>
+                </React.Fragment>
+              ))}
+              . Kolom bercoret tidak dikenali dan diabaikan.
+            </p>
 
             {state.preview.preview.length > 0 && (
               <div className="mt-2.5 overflow-x-auto">
