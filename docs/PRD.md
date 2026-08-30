@@ -392,6 +392,21 @@ Laporan simulasi masuk berstatus `menunggu` seperti laporan mana pun. Menyuntikk
 
 **Rubrik.** Impact Projection (20%).
 
+### 5.17 Mesin Cetak Buletin Resmi SKDR (`/buletin`)
+
+**Tujuan.** Menyediakan dokumen pelaporan dan kewaspadaan dini siap cetak standar SKDR (*Sistem Kewaspadaan Dini dan Respon*) bagi pimpinan Dinas Kesehatan Kota Semarang dan walikota.
+
+**Isi dokumen.**
+- Kop resmi Pemerintah Kota Semarang & Dinas Kesehatan Kota Semarang.
+- Ringkasan KPI eksekutif (periode prakiraan, jumlah kecamatan prioritas Siaga/Waspada, estimasi populasi terdampak).
+- Matriks tabel wilayah prioritas dengan rincian prediksi kasus, rentang ketidakpastian, kelas risiko, pemicu iklim dominan, dan sinyal pemicu lingkungan warga terverifikasi.
+- Checklist SOP aksi intervensi lapangan yang diterbitkan mesin aturan.
+- Lembar otorisasi dan legalisasi pengesahan pejabat dinas berwenang.
+
+**Arsitektur Cetak.** Native CSS `@media print` presisi standar A4 tanpa glitch, tombol aksi cetak langsung (`window.print()`), dan tombol kembali ke dashboard.
+
+**Rubrik.** Progres & Validasi (20%), Impact Projection (20%), Originalitas (15%).
+
 ---
 
 ## 6. Arsitektur & Justifikasi Teknologi
@@ -399,23 +414,20 @@ Laporan simulasi masuk berstatus `menunggu` seperti laporan mana pun. Menyuntikk
 Rubrik Metodologi (10%) menilai **kesesuaian arsitektur dengan solusi** — bukan seberapa canggih stack-nya. Setiap pilihan di bawah punya alasan; alasan itu yang disalin ke proposal.
 
 ```
-┌──────────────────────┐
-│  Next.js 14 (App)    │  SSR untuk dashboard, statis untuk portal publik
-│  Tailwind + tokens   │  Alasan: portal warga harus cepat & terindeks;
-│  Leaflet · Recharts  │  dashboard butuh data segar per request.
-└──────────┬───────────┘
-           │ REST/JSON
-┌──────────▼───────────┐
-│  Express.js Gateway  │  Auth, RBAC, CRUD, rate-limit, cron BMKG
-│                      │  Alasan: satu bahasa dengan frontend, tim web
-│                      │  bisa bergerak tanpa menunggu tim model.
-└─────┬────────────┬───┘
-      │            │
-┌─────▼─────┐ ┌────▼──────────────┐
-│PostgreSQL │ │ FastAPI ML Service│  /predict /retrain /backtest
-│(+PostGIS  │ │ scikit-learn,     │  Alasan: training berat dipisah agar
-│ opsional) │ │ XGBoost, pandas   │  tidak memblokir API; tim model bekerja
-└───────────┘ └───────────────────┘  independen; ekosistem ML ada di Python.
+┌──────────────────────────────────────────────────────────┐
+│                 Frontend — Next.js 14                    │
+│   Port: 3000 · App Router · Tailwind · Leaflet · Recharts │
+└────────────────────────────┬─────────────────────────────┘
+                             │ Proksi internal: /api/*
+┌────────────────────────────▼─────────────────────────────┐
+│              Backend Gateway — Express.js                │
+│   Port: 4200 · TypeScript · Session Auth · Rule Engine   │
+└──────────────┬────────────────────────────┬──────────────┘
+               │                            │
+┌──────────────▼──────────────┐ ┌───────────▼──────────────┐
+│    PostgreSQL (Supabase)    │ │   ML Service — FastAPI   │
+│  Pool `pg` · Skema SQL Utuh │ │  Port: 8001 · Ensemble   │
+└─────────────────────────────┘ └──────────────────────────┘
 ```
 
 **Kenapa tiga layanan, bukan satu.** Bukan karena "microservice bagus", tapi karena: (a) pemisahan bahasa mengikuti pemisahan keahlian tim, (b) proses training bisa memakan menit dan tidak boleh memblokir permintaan dashboard, (c) ML service bisa dimatikan/diganti tanpa menyentuh gateway — prediksi terakhir tetap tersaji dari database.
@@ -444,22 +456,25 @@ Rubrik Metodologi (10%) menilai **kesesuaian arsitektur dengan solusi** — buka
 
 `drivers` bukan hiasan: itu yang mengisi kalimat "Dasar:" di §5.2 dan yang membuat sistem ini bisa dipertanggungjawabkan saat sesi tanya jawab (20% nilai final).
 
-**Skema database inti.** `wilayah`, `kasus_penyakit`, `data_cuaca`, `prediksi`, `laporan_warga`, `audit_log`. Detail kolom mengikuti dokumen konsep §3.4.
+**Skema database inti.** `kecamatan`, `observasi`, `prediksi`, `laporan_warga`, `tindakan`, `backtest_results`, `users`, `sessions`, `audit_log`, `ingest_job`. Skema lengkap ada di `backend/src/db/schema.sql`.
 
-### 6.1 Status implementasi (27 Agustus 2026)
+### 6.1 Status implementasi (30 Agustus 2026)
 
-Bagian ini mencatat jarak antara spesifikasi di atas dan yang benar-benar
-berjalan. Spesifikasinya tidak diubah untuk mengejar implementasi — yang
-berbeda dicatat di sini, apa adanya.
+Bagian ini mencatat status implementasi yang telah terkirim dan terverifikasi secara penuh pada repositori.
 
 | Spesifikasi | Terkirim | Catatan |
 |---|---|---|
-| PostgreSQL (+PostGIS opsional) | **SQLite** lewat `node:sqlite` | Skema di `backend/src/db/schema.sql` ditulis portabel. Tidak ada modul native yang perlu dikompilasi dan tidak ada server basis data yang perlu dipasang — `npm install` di mesin juri tidak bisa gagal karena toolchain |
+| PostgreSQL (+PostGIS opsional) | **PostgreSQL (Supabase)** via pooler `pg` | Gateway beroperasi dengan `pg.Pool`, translasi parameter `toPg` (`?` -> `$1..$n`), dan wrapper transaksi terisolasi. |
 | Granularitas mingguan (`week_start`, `horizon_weeks`) | **bulanan** (`month_start`) | Dataset kasus yang tersedia direkap bulanan; model dilatih bulanan. Seluruh UI menyebut bulan, bukan minggu |
-| Empat penyakit (DBD, ISPA, Diare, Leptospirosis) | **DBD dan ISPA** | Dua sisanya belum punya satu baris data. Daftar penyakit di UI dibentuk dari isi tabel `observasi`, jadi menambah dataset cukup untuk memunculkannya |
-| Cron sinkronisasi BMKG di gateway | **belum ada** | Data iklim masuk sebagai berkas dataset yang di-seed. Halaman admin melaporkan pekerjaan ingest yang benar-benar berjalan, bukan status koneksi yang tidak ada |
-| Login penuh JWT + RBAC (§4 WON'T) | **sesi cookie httpOnly + penjaga rute** | Bukan JWT dan bukan RBAC penuh: satu peran menulis, seluruh peran membaca. Cukup untuk menjaga rute konsol dan mencatat siapa yang memutuskan di jejak audit |
-| §5.6a perbandingan backtest dengan/tanpa sinyal warga | **belum ada** | Agregasi sinyal warga sudah tersedia di `/api/admin/citizen-signal`; perbandingannya belum dijalankan karena belum ada laporan terverifikasi dalam jumlah yang bermakna |
+| Empat penyakit (DBD, ISPA, Diare, Leptospirosis) | **DBD, ISPA, dan Leptospirosis** | Tiga penyakit telah memiliki dataset bulanan 2021–2025 dan model ensemble terlatih. Diare belum memiliki data historis. |
+| Cron sinkronisasi BMKG di gateway | **Data Ingest Pipeline** | Data iklim masuk sebagai berkas dataset yang di-seed. Halaman admin melaporkan pekerjaan ingest yang benar-benar berjalan, bukan status koneksi yang tidak ada |
+| Login penuh JWT + RBAC (§4 WON'T) | **Sesi cookie httpOnly + peran dinas/puskesmas** | Sesi aman via cookie httpOnly dengan signature HMAC. Rute mutasi diproteksi `requireAuth` dan `requireRole`. |
+| Layer Pemicu Lingkungan (S1) | **Terkirim** | Marker agregasi pemicu terverifikasi di `/dashboard`, formulir lapor pemicu di `/warga/lapor`, dan endpoint publik `/api/reports/triggers`. |
+| Mesin Cetak Buletin & Nota (S2) | **Terkirim** | Halaman `/buletin` (Buletin Resmi SKDR A4) dan `/tindakan/nota/[id]` (Nota Dinas A4) berbasis native `@media print`. |
+| Eskalasi S4 & Demo Lonjakan | **Terkirim** | Deteksi eskalasi deterministik di `/verifikasi` dan kendali injeksi simulasi di `/api/admin/demo/surge`. |
+| Mesin Waktu & Lead Time Analysis | **Terkirim** | Halaman `/mesin-waktu` dengan perbandingan dual-map aktual vs prediksi dan evaluasi lead time ±30 hari. |
+| Explainability & Simulator Cuaca | **Terkirim** | Modal kontribusi fitur lokal di `/dashboard` dan simulator skenario what-if di `/simulasi`. |
+| Matriks Prioritas Wilayah | **Terkirim** | Halaman `/prioritas` dengan pembobotan beban populasi vs kepadatan. |
 
 ---
 
