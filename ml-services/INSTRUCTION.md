@@ -1,20 +1,22 @@
 # INSTRUKSI ML SERVICES — PRAKIRA
 
-**Layanan Prediksi Risiko Penyakit Berbasis Iklim**
-Dokumen ini adalah panduan teknis lengkap untuk membangun komponen ML Services PRAKIRA.
+**Layanan Prediksi Risiko Penyakit Berbasis Iklim (DBD, ISPA, Leptospirosis)**
+Dokumen ini adalah panduan teknis komponen ML Services PRAKIRA (DSDC ANFORCOM 2026).
 
 ---
 
 ## 0. Konteks & Peran ML Service
 
-ML Service adalah layanan **terpisah** dari backend gateway (Express.js). Ditulis dalam **Python + FastAPI**, bertugas:
+ML Service adalah layanan **terpisah** dari backend gateway (Express.js). Ditulis dalam **Python 3.12 + FastAPI**, bertugas:
 
-1. Melatih model prediksi jumlah kasus penyakit per kecamatan per minggu.
-2. Menyajikan endpoint `/predict` yang dipanggil oleh backend gateway.
-3. Menyajikan endpoint `/backtest` untuk evaluasi transparansi model.
-4. Menyajikan endpoint `/retrain` untuk melatih ulang model (fase 2: dengan sinyal warga).
+1. Melatih model ensemble prediksi jumlah kasus penyakit per kecamatan secara **bulanan** (`month_start`).
+2. Menyajikan endpoint `/predict` untuk menghasilkan estimasi kasus, rentang ketidakpastian (`lower_bound`–`upper_bound`), skor risiko (0–100), kelas risiko (`rendah`, `sedang`, `tinggi`), dan fitur pemicu iklim dominan (`drivers`).
+3. Menyajikan endpoint `/backtest` untuk evaluasi transparansi model (MAE, RMSE, $R^2$, akurasi kelas, rincian per kecamatan).
+4. Menyajikan endpoint `/retrain` untuk melatih ulang model (dengan opsi integrasi sinyal warga terverifikasi).
+5. Menyajikan endpoint `/explain` (atribusi kontribusi fitur lokal via metode substitusi median).
+6. Menyajikan endpoint `/simulate` (simulator skenario what-if perubahan iklim interaktif).
 
-**Prinsip utama:** ML Service bisa dimatikan/dihidupkan tanpa memengaruhi backend — prediksi terakhir tetap tersaji dari database.
+**Prinsip utama:** ML Service berjalan modular. Jika layanan ML mati atau tidak terjangkau, backend gateway menyajikan prediksi terakhir dari database dengan penanda `stale`.
 
 ---
 
@@ -22,63 +24,54 @@ ML Service adalah layanan **terpisah** dari backend gateway (Express.js). Dituli
 
 ```
 ml-services/
-├── INSTRUCTION.md              ← Dokumen ini
-├── requirements.txt            ← Dependensi Python
-├── config.py                   ← Konfigurasi (path, parameter, threshold)
+├── INSTRUCTION.md              ← Panduan teknis arsitektur & model
+├── requirements.txt            ← Dependensi Python (FastAPI, scikit-learn, XGBoost, pandas, dll.)
+├── config.py                   ← Konfigurasi path, daftar penyakit (DBD, ISPA, Leptospirosis), threshold
 │
-├── dataset_raw/                ← Data mentah sebelum diolah
-│   ├── kasus/                  ← CSV kasus penyakit per kecamatan dari Dinkes
-│   │   ├── kasus_dbd.csv
-│   │   ├── kasus_ispa.csv
-│   │   ├── kasus_diare.csv
-│   │   └── kasus_leptospirosis.csv
-│   ├── cuaca/                  ← CSV data cuaca harian/mingguan dari BMKG
-│   │   └── bmkg_semarang.csv
+├── dataset_raw/                ← Data mentah
+│   ├── kasus/                  ← Data kasus per kecamatan dari Dinkes
+│   ├── cuaca/                  ← Data iklim dari BMKG (hujan, suhu, kelembaban)
 │   └── wilayah/                ← Data kecamatan & populasi dari BPS
-│       └── kecamatan_semarang.csv
 │
-├── dataset_clean/              ← Data hasil ETL, siap untuk feature engineering
-│   └── merged_weekly.csv       ← Dataset gabungan (kasus + cuaca + wilayah) per minggu
+├── dataset_clean/              ← Data bersih bulanan siap latih
+│   ├── merged_monthly_dbd.csv
+│   ├── merged_monthly_ispa.csv
+│   ├── merged_monthly_leptospirosis.csv
+│   ├── features_dbd_monthly.csv
+│   ├── features_ispa_monthly.csv
+│   └── features_leptospirosis_monthly.csv
 │
-├── etl/                        ← Script Extract-Transform-Load
-│   ├── etl_kasus.py            ← Bersihkan & standardisasi data kasus
-│   ├── etl_cuaca.py            ← Bersihkan data BMKG, interpolasi ke kecamatan
-│   ├── etl_wilayah.py          ← Bersihkan data populasi & kode kecamatan
-│   └── merge_dataset.py        ← Gabungkan semua menjadi merged_weekly.csv
+├── training/                   ← Skrip pelatihan & ensemble
+│   ├── train.py                ← Runner pelatihan seluruh model (--disease all)
+│   ├── train_dbd.py            ← Pelatihan model ensemble DBD
+│   ├── train_ispa.py           ← Pelatihan model ensemble ISPA
+│   ├── train_leptospirosis.py  ← Pelatihan model ensemble Leptospirosis
+│   └── ensemble.py             ← Pipeline ensemble blending & evaluasi
 │
-├── features/                   ← Feature engineering
-│   └── build_features.py       ← Buat lag features, kalender, dll → dataset_final.csv
+├── models/                     ← Model terlatih & artefak
+│   ├── model_dbd.pkl           ← Artefak ensemble DBD
+│   ├── model_ispa.pkl          ← Artefak ensemble ISPA
+│   ├── model_leptospirosis.pkl ← Artefak ensemble Leptospirosis
+│   └── metadata.json           ← Metadata versi, tanggal latih, metrik MAE/RMSE/R², top features
 │
-├── training/                   ← Pelatihan model
-│   ├── train_model.py          ← Script utama training (1 model per penyakit)
-│   └── evaluate.py             ← Evaluasi MAE, RMSE, akurasi kelas
-│
-├── models/                     ← Model tersimpan (output training)
-│   ├── model_dbd.pkl
-│   ├── model_ispa.pkl
-│   ├── model_diare.pkl
-│   ├── model_leptospirosis.pkl
-│   └── metadata.json           ← Info versi, tanggal latih, metrik per model
-│
-├── backtest/                   ← Hasil backtesting
-│   └── backtest_results.json   ← Metrik & grafik data untuk halaman /model
-│
-├── app/                        ← FastAPI application
-│   ├── main.py                 ← Entry point FastAPI
-│   ├── routes/
-│   │   ├── predict.py          ← Endpoint /predict
-│   │   ├── retrain.py          ← Endpoint /retrain
-│   │   └── backtest.py         ← Endpoint /backtest
-│   ├── schemas/
-│   │   ├── request.py          ← Pydantic schema request
-│   │   └── response.py         ← Pydantic schema response
-│   └── services/
-│       ├── predictor.py        ← Logika load model & prediksi
-│       ├── risk_classifier.py  ← Konversi angka → skor risiko → kelas risiko
-│       └── driver_extractor.py ← Ekstraksi fitur pemicu dominan (drivers)
-│
-└── notebooks/                  ← Jupyter notebooks untuk eksplorasi (opsional)
-    └── eda.ipynb
+└── app/                        ← Aplikasi FastAPI
+    ├── main.py                 ← Entry point FastAPI & routing
+    ├── security.py             ← Verifikasi header autentikasi token (x-ml-token)
+    ├── routes/
+    │   ├── predict.py          ← Endpoint /predict
+    │   ├── backtest.py         ← Endpoint /backtest
+    │   ├── retrain.py          ← Endpoint /retrain
+    │   ├── explain.py          ← Endpoint /explain (atribusi fitur lokal)
+    │   └── simulate.py         ← Endpoint /simulate (what-if weather simulator)
+    ├── schemas/
+    │   ├── request.py          ← Schema Pydantic request
+    │   └── response.py         ← Schema Pydantic response
+    └── services/
+        ├── predictor.py        ← Pipeline prediksi ensemble & kalkulasi interval
+        ├── risk_classifier.py  ← Normalisasi persentil skor & kelas risiko
+        ├── driver_extractor.py ← Ekstraksi fitur iklim pemicu dominan
+        ├── explainer.py        ← Kontribusi fitur lokal via median substitution
+        └── scenario_service.py ← Kalkulasi skenario perubahan iklim
 ```
 
 ---
@@ -816,45 +809,35 @@ uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
 
 ---
 
-## 11. Checklist Pengembangan
+## 11. Checklist Pengembangan & Status Implementasi
 
-### Fase 1: Data & Model Baseline (Prioritas Tertinggi)
-- [ ] Kumpulkan data kasus dari Profil Kesehatan Semarang (minimal 3 tahun)
-- [ ] Kumpulkan data cuaca dari BMKG (periode sama)
-- [ ] Kumpulkan data populasi dari BPS
-- [ ] Buat script ETL untuk masing-masing sumber
-- [ ] Gabungkan dataset (`merge_dataset.py`)
-- [ ] Feature engineering (`build_features.py`)
-- [ ] Training 4 model baseline (`train_model.py`)
-- [ ] Evaluasi & simpan metrik (`evaluate.py`)
-- [ ] Buat endpoint `/predict` yang berfungsi
-- [ ] Buat endpoint `/backtest` yang berfungsi
+### Fase 1: Data & Model Ensemble Bulanan (Selesai & Terverifikasi)
+- [x] Kumpulkan data kasus dari Profil Kesehatan Semarang (DBD 2021–2025, ISPA 2025, Leptospirosis 2021–2025).
+- [x] Kumpulkan data iklim dari BMKG (curah hujan, suhu, kelembaban).
+- [x] Kumpulkan data populasi dan batas wilayah 16 kecamatan dari BPS.
+- [x] Standardisasi dataset bulanan (`merged_monthly_*.csv`).
+- [x] Feature engineering lag iklim, autoregresif kasus, rasio insidens, interaksi bioklimatik (`features_*_monthly.csv`).
+- [x] Pelatihan model ensemble (`training/ensemble.py`, `train_dbd.py`, `train_ispa.py`, `train_leptospirosis.py`).
+- [x] Evaluasi metrik MAE, RMSE, $R^2$, akurasi kelas, dan serialisasi `metadata.json`.
+- [x] Endpoint `/predict` berfungsi penuh dengan interval ketidakpastian (`lower_bound`–`upper_bound`) & drivers.
+- [x] Endpoint `/backtest` menyajikan metrik performa & rincian per kecamatan.
 
-### Fase 2: Integrasi & Transparansi
-- [ ] Buat endpoint `/predict/batch`
-- [ ] Simulasi backtest sinyal warga (§7)
-- [ ] Siapkan data untuk halaman `/model` (metrik, coverage, batasan)
-- [ ] Buat endpoint `/retrain` (bisa dipanggil, tersambung ke database)
-- [ ] Tulis `metadata.json` lengkap
-
-### Fase 3: Polish
-- [ ] Pastikan semua response mengikuti kontrak JSON di PRD §6
-- [ ] Handle edge case: kecamatan berdata insufficient
-- [ ] Dokumentasi kode (docstring setiap fungsi)
-- [ ] Test manual semua endpoint
+### Fase 2: Integrasi Lanjutan, Explainability & Transparansi (Selesai & Terverifikasi)
+- [x] Endpoint `/explain` menyajikan atribusi kontribusi fitur lokal via metode substitusi median.
+- [x] Endpoint `/simulate` mengkalkulasi skenario what-if pergeseran cuaca.
+- [x] Endpoint `/retrain` dengan proteksi token autentikasi (`x-ml-token`) dan dukungan sinyal warga.
+- [x] Integrasi penuh dengan Backend Gateway Express (`services/ml.ts`, `services/predictions.ts`, `services/backtest.ts`).
+- [x] Transparansi model di rute publik `/model` dan evaluasi lead time di `/mesin-waktu`.
 
 ---
 
 ## 12. Catatan Penting
 
-1. **Data coverage = kunci kejujuran.** Jika suatu kecamatan punya data historis < 25%, endpoint `/predict` HARUS mengembalikan `"data_coverage": "insufficient"` dan `"risk_class": null`. Frontend akan menampilkan "Data tidak memadai" — **BUKAN** "Risiko Rendah".
+1. **Data coverage = kunci kejujuran.** Jika suatu kecamatan punya data historis tidak memadai, sistem mengembalikan `"data_coverage": "insufficient"` dan `"risk_class": null`. Frontend akan menampilkan "Data tidak memadai" — **BUKAN** "Risiko Rendah".
 
 2. **Interval ketidakpastian wajib ada.** Tidak boleh ada `predicted_cases` yang muncul tanpa `lower_bound` dan `upper_bound` di response API.
 
-3. **Temporal split, bukan random split.** Ini sering jadi kesalahan fatal. Data deret waktu HARUS dipotong berdasarkan tanggal, bukan diacak.
+3. **Temporal split, bukan random split.** Data deret waktu dipotong berdasarkan tanggal temporal, bukan diacak.
 
-4. **Feature importance = bahan demo terkuat.** Simpan dan sajikan feature importance per model. Ini langsung menjawab pertanyaan juri: "Bagaimana model kalian bekerja?"
+4. **Transparansi & Batasan.** Seluruh batasan resmi model ditampilkan terbuka di antarmuka publik dan endpoint `/api/model/limitations`.
 
-5. **Leptospirosis mungkin gagal.** Data kasusnya sedikit. Siapkan fallback: jika model leptospirosis tidak konvergen atau MAE terlalu besar, tandai sebagai `insufficient` dan jelaskan di halaman `/model`. Lebih baik jujur daripada memaksakan model yang buruk.
-
-6. **Semua asumsi harus didokumentasikan.** Misal: "Data bulanan dibagi rata ke 4 minggu", "Cuaca menggunakan stasiun terdekat". Dokumentasi ini masuk ke halaman `/model` dan proposal.
