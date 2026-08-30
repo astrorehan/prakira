@@ -1,6 +1,12 @@
 import json
 from fastapi import APIRouter, HTTPException, Query
-from app.schemas.response import BacktestResponse, BacktestMetrics, BacktestWeeklyResult
+from app.schemas.response import (
+    BacktestResponse,
+    BacktestDistrictResult,
+    BacktestMetrics,
+    BacktestWeeklyResult,
+    TopFeature,
+)
 
 import sys
 from pathlib import Path
@@ -85,16 +91,62 @@ async def backtest(disease: str = Query(..., description="Nama penyakit sesuai D
         predicted=("predicted", "sum"),
     ).reset_index()
 
-    historical_cases = df["cases"].values.tolist()
+    train_df = df[df["month_start"] < split_date]
+
+    # Pembanding kelas risiko bulanan adalah total sekota per bulan pada periode
+    # latih — bukan `df["cases"]` yang isinya nilai per kecamatan. Angka sekota
+    # (median 34 kasus/bulan untuk DBD) selalu berada di atas persentil 67
+    # distribusi per kecamatan (maksimum 19), sehingga kedua kelas — aktual dan
+    # prediksi — selalu keluar "tinggi" dan akurasi kelas terbaca 100%. Metrik
+    # sempurna yang lahir dari salah pembanding lebih merugikan daripada metrik
+    # jelek: halaman transparansi menampilkannya sebagai capaian model.
+    city_monthly_train = (
+        train_df.groupby("month_start")["cases"].sum().values.tolist()
+        if not train_df.empty
+        else df.groupby("month_start")["cases"].sum().values.tolist()
+    )
+
     monthly_results = []
     for _, row in monthly_agg.iterrows():
-        actual_score = calculate_risk_score(row["actual"], historical_cases)
-        pred_score = calculate_risk_score(row["predicted"], historical_cases)
+        actual_score = calculate_risk_score(row["actual"], city_monthly_train)
+        pred_score = calculate_risk_score(row["predicted"], city_monthly_train)
         monthly_results.append(
             BacktestWeeklyResult(
                 month_start=row["month_start"].strftime("%Y-%m-%d"),
                 actual=int(row["actual"]),
                 predicted=int(round(row["predicted"])),
+                risk_class_actual=classify_risk(actual_score),
+                risk_class_predicted=classify_risk(pred_score),
+            )
+        )
+
+    # Rincian per bulan x kecamatan — dasar halaman Mesin Waktu (`/mesin-waktu`).
+    # Skor risiko dinilai terhadap riwayat kecamatan itu sendiri pada periode
+    # latih saja: memakai seluruh deret berarti bulan uji ikut menentukan ambang
+    # yang menilai dirinya sendiri.
+    train_cases_by_kec = {
+        kec_id: group["cases"].values.tolist()
+        for kec_id, group in train_df.groupby("kecamatan_id")
+    }
+
+    district_results = []
+    for _, row in test_df.sort_values(["month_start", "kecamatan_id"]).iterrows():
+        kec_id = str(row["kecamatan_id"])
+        baseline = train_cases_by_kec.get(kec_id)
+        if not baseline:
+            continue
+        actual_value = int(row["cases"])
+        predicted_value = int(round(row["predicted"]))
+        actual_score = calculate_risk_score(actual_value, baseline)
+        pred_score = calculate_risk_score(predicted_value, baseline)
+        district_results.append(
+            BacktestDistrictResult(
+                month_start=row["month_start"].strftime("%Y-%m-%d"),
+                kecamatan_id=kec_id,
+                actual=actual_value,
+                predicted=predicted_value,
+                risk_score_actual=actual_score,
+                risk_score_predicted=pred_score,
                 risk_class_actual=classify_risk(actual_score),
                 risk_class_predicted=classify_risk(pred_score),
             )
@@ -115,6 +167,12 @@ async def backtest(disease: str = Query(..., description="Nama penyakit sesuai D
         test_period=model_meta.get("test_period", "unknown"),
         metrics=BacktestMetrics(mae=round(mae, 4), rmse=round(rmse, 4), r2=round(r2, 4)),
         monthly_results=monthly_results,
+        district_results=district_results,
         citizen_signal_comparison=None,  # Fase 2
         coverage_per_kecamatan=coverage_dict,
+        top_features=[
+            TopFeature(feature=f["feature"], importance=float(f["importance"]))
+            for f in model_meta.get("top_features", [])
+            if isinstance(f, dict) and "feature" in f and "importance" in f
+        ],
     )

@@ -21,14 +21,27 @@ import type {
   ClimatePoint,
   DiseaseSummary,
   DistrictTriggerSummary,
+  Escalation,
+  EscalationMeta,
+  EscalationRules,
+  ExplainMeta,
+  ExplainPayload,
   GeoDistrictCollection,
   IngestStatus,
   KecamatanData,
+  PriorityMeta,
+  PriorityPayload,
+  PriorityWeighting,
   QueueSummary,
   RateLimitState,
   ReportKind,
   ReportingPeriod,
+  RewindMeta,
+  RewindPayload,
   Session,
+  SimulateMeta,
+  SimulatePayload,
+  SurgeResult,
   TrendPoint,
 } from "@/types";
 
@@ -182,6 +195,18 @@ export function fetchBacktests(
   return request(`/api/model/backtest${query}`);
 }
 
+/**
+ * Mesin Waktu: hasil periode uji dirinci per bulan x kecamatan.
+ *
+ * Terpisah dari `fetchBacktests` dengan sengaja — muatannya ratusan baris dan
+ * hanya satu halaman yang memerlukannya.
+ */
+export function fetchRewind(
+  disease: string,
+): Promise<Envelope<RewindPayload, RewindMeta>> {
+  return request(`/api/model/rewind?disease=${encodeURIComponent(disease)}`);
+}
+
 export function fetchLimitations(): Promise<{ data: string[] }> {
   return request("/api/model/limitations");
 }
@@ -193,6 +218,13 @@ export function fetchActions(
 ): Promise<Envelope<ActionRecommendation[], ReportingPeriod>> {
   const query = disease ? `?disease=${encodeURIComponent(disease)}` : "";
   return request(`/api/actions${query}`);
+}
+
+/** Satu tindakan berdasarkan id — dipakai halaman nota dinas. */
+export function fetchAction(
+  id: string,
+): Promise<Envelope<ActionRecommendation, ReportingPeriod>> {
+  return request(`/api/actions/${encodeURIComponent(id)}`);
 }
 
 export function updateActionStatus(
@@ -339,4 +371,87 @@ export function commitImport(disease: string, csv: string): Promise<ImportResult
 
 export function refreshPredictions(): Promise<{ data: unknown[] }> {
   return request("/api/admin/refresh", { method: "POST" });
+}
+
+/**
+ * "Kenapa angka ini?" — kontribusi fitur untuk satu kecamatan.
+ *
+ * Tidak punya cadangan tersimpan, dan itu disengaja di sisi gateway: penjelasan
+ * yang basi menerangkan angka yang sudah berganti. Kalau layanan ML mati,
+ * permukaan ini wajib menampilkan keadaan gagal.
+ */
+export function fetchExplain(
+  disease: string,
+  kecamatanId: string,
+): Promise<Envelope<ExplainPayload, ExplainMeta>> {
+  return request(
+    `/api/model/explain?disease=${encodeURIComponent(disease)}&kecamatan_id=${encodeURIComponent(kecamatanId)}`,
+  );
+}
+
+/** Simulator cuaca. POST karena tiga parameter geseran, bukan karena menulis. */
+export function runSimulation(input: {
+  disease: string;
+  rainfallPct: number;
+  tempDeltaC: number;
+  humidityDeltaPct: number;
+}): Promise<Envelope<SimulatePayload, SimulateMeta>> {
+  return request("/api/model/simulate", {
+    method: "POST",
+    body: JSON.stringify({
+      disease: input.disease,
+      rainfall_pct: input.rainfallPct,
+      temp_delta_c: input.tempDeltaC,
+      humidity_delta_pct: input.humidityDeltaPct,
+    }),
+  });
+}
+
+/** Prioritas terdampak — risiko dikalikan orang yang menanggungnya. */
+export function fetchPriority(
+  disease: string,
+  weighting: PriorityWeighting = "populasi",
+): Promise<Envelope<PriorityPayload, PriorityMeta>> {
+  return request(
+    `/api/districts/priority?disease=${encodeURIComponent(disease)}&bobot=${weighting}`,
+  );
+}
+
+/** Eskalasi "perlu perhatian" (S4). Butuh sesi. */
+export function fetchEscalations(): Promise<
+  Envelope<Escalation[], EscalationMeta>
+> {
+  return request("/api/reports/escalations");
+}
+
+/* ── Peragaan lonjakan (admin/dinas) ─────────────────────────────────────── */
+
+export function fetchSimulationStatus(): Promise<
+  Envelope<{ kecamatan: string; total: number }[], { totalSimulasi: number }>
+> {
+  return request("/api/admin/demo/surge");
+}
+
+export function injectSurge(input: {
+  kecamatan: string;
+  kind: ReportKind;
+  count: number;
+  spreadDays?: number;
+}): Promise<
+  Envelope<
+    SurgeResult,
+    { simulasi: true; totalSimulasi: number; rules: EscalationRules }
+  >
+> {
+  return request("/api/admin/demo/surge", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export function clearSurge(): Promise<{
+  meta: { removed: number };
+  data: { rules: EscalationRules; escalations: Escalation[]; scanned: number };
+}> {
+  return request("/api/admin/demo/surge", { method: "DELETE" });
 }

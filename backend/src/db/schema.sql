@@ -166,3 +166,10 @@ CREATE TABLE IF NOT EXISTS ingest_job (
   latency_ms  INTEGER,
   detail      TEXT NOT NULL DEFAULT ''
 );
+
+-- Kolom yang ditambahkan setelah basis data pertama kali dibuat. `CREATE TABLE
+-- IF NOT EXISTS` di atas tidak menyentuh tabel yang sudah ada, jadi tanpa blok
+-- ini basis data lama tetap kehilangan kolomnya dan setiap INSERT backtest
+-- gagal dengan "column does not exist".
+ALTER TABLE model_backtest ADD COLUMN IF NOT EXISTS top_features TEXT;
+ALTER TABLE model_backtest ADD COLUMN IF NOT EXISTS district_results TEXT;

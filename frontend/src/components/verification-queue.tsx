@@ -14,6 +14,7 @@ import {
   Info,
   RotateCcw,
   Recycle,
+  FlaskConical,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
@@ -22,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ConsoleToast, useConsoleToast } from "@/components/console/toast";
 import { DataState } from "@/components/data-state";
+import { EscalationPanel } from "@/components/escalation-panel";
 import {
   sortForQueue,
   REPORT_KIND,
@@ -158,6 +160,15 @@ function ReportRow({
             dan `shrink-0` membuat wadahnya menolak menyempit sehingga lencana
             status terdorong keluar layar alih-alih turun ke baris berikutnya. */}
         <div className="flex flex-wrap items-center gap-2">
+          {/* Baris hasil peragaan wajib terbaca sebagai peragaan di tempat ia
+              muncul. Petugas yang membuka antrean dan menemukan delapan laporan
+              baru berhak tahu mana yang datang dari warga. */}
+          {report.simulated && (
+            <Badge variant="citizen" className="gap-1">
+              <FlaskConical className="h-3 w-3" aria-hidden="true" />
+              Simulasi
+            </Badge>
+          )}
           {kind.family === "lingkungan" && (
             <Badge variant="outline" className="gap-1">
               <Recycle className="h-3 w-3" aria-hidden="true" />
@@ -357,6 +368,11 @@ export function VerificationQueue() {
           hint="Genangan, sampah, dan saluran — diteruskan ke Dinas Lingkungan Hidup."
         />
       </div>
+
+      {/* Pola sebelum satuan. Antrean di bawah tetap urut menunggu-terlama;
+          yang ditambahkan di sini adalah pembacaan yang tidak muncul dari
+          urutan itu — kecamatan mana yang sedang menumpuk. */}
+      <EscalationPanel onChanged={queue.reload} />
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
         <div className="flex flex-wrap gap-1.5" role="group" aria-label="Saring status">

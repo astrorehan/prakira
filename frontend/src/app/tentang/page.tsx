@@ -32,7 +32,7 @@ export default function TentangPage() {
           Mengapa kami membangun <span className="text-primary">Prakira</span>
         </h1>
         <p className="mt-5 text-base leading-relaxed text-muted-foreground md:text-lg">
-          Penanganan wabah DBD, lonjakan ISPA, dan diare di Indonesia selama ini bersifat <em>reaktif</em> — respons baru dimulai setelah bangsal rumah sakit penuh dan status KLB ditetapkan. 
+          Penanganan wabah DBD, lonjakan ISPA, dan leptospirosis di Indonesia selama ini bersifat <em>reaktif</em> — respons baru dimulai setelah bangsal rumah sakit penuh dan status KLB ditetapkan. 
           <strong> Prakira</strong> mengubah paradigma ini dengan memperkirakan lonjakan risiko satu bulan lebih awal, dari machine learning dan deret iklim historis per kecamatan.
         </p>
       </section>

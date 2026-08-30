@@ -44,3 +44,43 @@ class RetrainRequest(BaseModel):
         default=False,
         description="Apakah menyertakan sinyal warga terverifikasi sebagai fitur tambahan",
     )
+
+
+class ExplainRequest(BaseModel):
+    """Request untuk endpoint /explain (kontribusi fitur satu kecamatan)."""
+    kecamatan_id: str = Field(..., example="33.74.01", description="Kode BPS kecamatan")
+    disease: DiseaseName = Field(..., example=_EXAMPLE_DISEASE)
+    month: str = Field(
+        ...,
+        example="2026-09-01",
+        description="Bulan prakiraan yang sedang diterangkan, format YYYY-MM-01",
+    )
+
+
+class SimulateRequest(BaseModel):
+    """Request untuk endpoint /simulate (skenario cuaca what-if).
+
+    Batas nilainya ditegakkan dua kali dengan sengaja: di sini supaya penolakan
+    datang cepat dan terbaca sebagai 422, dan sekali lagi di `scenario.py`
+    supaya pemanggil lain — termasuk skrip — tidak bisa melewatinya.
+    """
+    disease: DiseaseName = Field(..., example=_EXAMPLE_DISEASE)
+    month: str = Field(..., example="2026-09-01", description="Bulan prakiraan, format YYYY-MM-01")
+    rainfall_pct: float = Field(
+        default=0.0,
+        ge=-100.0,
+        le=200.0,
+        description="Geseran curah hujan dalam persen terhadap nilai terakhir kecamatan",
+    )
+    temp_delta_c: float = Field(
+        default=0.0,
+        ge=-5.0,
+        le=5.0,
+        description="Geseran suhu rata-rata dalam derajat Celsius",
+    )
+    humidity_delta_pct: float = Field(
+        default=0.0,
+        ge=-30.0,
+        le=30.0,
+        description="Geseran kelembaban dalam poin persen",
+    )

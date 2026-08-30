@@ -122,40 +122,6 @@ const RULES: Record<string, Partial<Record<RiskClass, ActionTemplate[]>>> = {
     ],
   },
 
-  Diare: {
-    tinggi: [
-      {
-        actionType: "klorinasi",
-        title: "Klorinasi sumber air & distribusi oralit",
-        description:
-          "Kelas risiko tinggi pada penyakit yang ditularkan air menuntut intervensi di sumbernya. Distribusi oralit menyertainya agar kasus yang terlanjur terjadi tidak berubah jadi dehidrasi berat.",
-        picUnit: "Tim Kesehatan Lingkungan (Kesling)",
-        leadTimeDays: 7,
-        sopChecklist: [
-          "Ambil sampel mikrobiologis air pada titik rawan genangan",
-          "Klorinasi sumur gali dan tandon warga sesuai dosis kaporit",
-          "Distribusi oralit dan zinc ke posko kesehatan kelurahan",
-          "Edukasi memasak air hingga mendidih dan cuci tangan pakai sabun",
-        ],
-      },
-    ],
-    sedang: [
-      {
-        actionType: "penyuluhan",
-        title: "Pengawasan sanitasi air minum & PHBS",
-        description:
-          "Pemeriksaan berkala depot air minum dan sanitasi pangan sebelum kelas risiko naik.",
-        picUnit: "Tim Kesehatan Lingkungan (Kesling)",
-        leadTimeDays: 21,
-        sopChecklist: [
-          "Uji berkala mikrobiologi depot air minum isi ulang",
-          "Inspeksi sanitasi pangan pada sentra kuliner",
-          "Sosialisasi PHBS di sekolah dan posyandu",
-        ],
-      },
-    ],
-  },
-
   /* Leptospirosis menular lewat air dan lumpur yang tercemar urin tikus, jadi
      tenggatnya terikat banjir dan rob, bukan siklus vektor. Tujuh hari pada
      kelas tinggi dipilih karena masa inkubasinya 2–14 hari: intervensi yang
@@ -224,7 +190,6 @@ export function templatesFor(
 function normalizeDisease(disease: string): string {
   const upper = disease.toUpperCase();
   if (upper === "ISPA") return "ISPA";
-  if (upper === "DIARE") return "Diare";
   return upper;
 }
 

@@ -36,6 +36,34 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     {
+      /* Rute publik: transparansi model dapat dirujuk dari luar dinas. */
+      url: `${baseUrl}/model`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    {
+      /* Rute publik: hasil uji per kecamatan bisa dirujuk dari luar dinas. */
+      url: `${baseUrl}/mesin-waktu`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    {
+      /* Rute publik: simulator memakai model yang sama dengan dashboard. */
+      url: `${baseUrl}/simulasi`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    {
+      /* Rute publik: peringkat prioritas hanya memuat agregat wilayah. */
+      url: `${baseUrl}/prioritas`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    {
       url: `${baseUrl}/tentang`,
       lastModified: now,
       changeFrequency: "monthly",

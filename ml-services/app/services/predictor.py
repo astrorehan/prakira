@@ -28,6 +28,7 @@ from app.services.risk_classifier import (
     classify_risk,
 )
 from app.services.driver_extractor import extract_drivers
+from app.services.feature_frame import build_feature_row
 from training.ensemble import DBDEnsembleModel, ISPAEnsembleModel, LeptospirosisEnsembleModel
 
 logger = logging.getLogger(__name__)
@@ -133,14 +134,11 @@ def predict_single(
             "model_version": model_meta.get("version", "unknown"),
         }
 
-    # Ambil baris terakhir kecamatan ini sebagai basis fitur.
-    if df_kec.empty:
-        # Fallback: pakai rata-rata dari seluruh kecamatan
-        if df_hist.empty:
-            raise ValueError(f"Tidak ada data historis untuk prediksi.")
-        feature_row = pd.DataFrame([df_hist[FEATURE_COLUMNS].mean()], columns=FEATURE_COLUMNS)
-    else:
-        feature_row = df_kec[FEATURE_COLUMNS].iloc[[-1]].reset_index(drop=True)
+    # Ambil baris terakhir kecamatan ini sebagai basis fitur. Perakitannya
+    # dipindah ke `feature_frame` supaya `/explain` dan `/simulate` berangkat
+    # dari baris yang persis sama — penjelasan yang menerangkan angka berbeda
+    # dari yang tampil di dashboard lebih buruk daripada tidak ada penjelasan.
+    feature_row = build_feature_row(df_hist, df_kec)
 
     # Prediksi
     pred_raw = model.predict(feature_row)
@@ -189,6 +187,21 @@ def predict_single(
         "drivers": drivers,
         "model_version": model_meta.get("version", "unknown"),
     }
+
+
+def load_for_disease(disease: str):
+    """Model terlatih + fitur historisnya.
+
+    Pintu masuk publik untuk `/explain` dan `/simulate`, yang perlu memegang
+    model dan datanya sendiri alih-alih hanya menerima hasil prediksi. Cache-nya
+    sama dengan yang dipakai `/predict`, jadi tidak ada pemuatan ganda.
+    """
+    return _load_model(disease.lower())
+
+
+def district_history(df_hist: pd.DataFrame, kecamatan_id: str) -> pd.DataFrame:
+    """Potongan riwayat satu kecamatan, urut waktu sebagaimana tersimpan."""
+    return df_hist[df_hist["kecamatan_id"] == kecamatan_id].copy()
 
 
 def predict_batch(disease: str, month: str) -> list:

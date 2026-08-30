@@ -318,10 +318,13 @@ export default function DashboardPrediksiPage() {
                 variant="default"
                 className="p-5 flex flex-col justify-between h-full space-y-3 min-h-[580px]"
               >
-                <h3 className="font-display text-lg font-semibold text-foreground flex items-center gap-2 shrink-0">
-                  <MapPin className="h-4 w-4 text-brand-700" />
-                  <span>Peta zona risiko</span>
-                </h3>
+                <div className="flex flex-wrap items-center justify-between gap-2 shrink-0">
+                  <h3 className="font-display text-lg font-semibold text-foreground flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-brand-700" />
+                    <span>Peta zona risiko</span>
+                  </h3>
+
+                </div>
 
                 <div className="flex-1 min-h-[440px] relative w-full">
                   {geo.data ? (

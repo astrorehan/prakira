@@ -16,6 +16,17 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "./ui/sheet";
    ke sana sama sekali. */
 const MARKETING_ITEMS = [
   { href: "/warga", label: "Lapor" },
+  /* Halaman yang menyebut seberapa jauh angkanya boleh dipercaya harus bisa
+     dicapai dari mana saja — termasuk oleh orang yang tidak punya akun. */
+  { href: "/model", label: "Akurasi Model" },
+  /* Bukti bahwa prakiraannya pernah benar — dan pernah salah — berdiri sebagai
+     halaman sendiri, bukan lampiran di dalam halaman akurasi. */
+  { href: "/mesin-waktu", label: "Mesin Waktu" },
+  /* Dua permukaan yang menunjukkan model bekerja, bukan hanya melaporkan
+     hasilnya: geser cuacanya dan lihat peringkat berubah, atau lihat urutan
+     risiko diadu dengan urutan jumlah jiwa terdampak. */
+  { href: "/simulasi", label: "Simulator" },
+  { href: "/prioritas", label: "Prioritas" },
   { href: "/tentang", label: "Tentang" },
 ];
 

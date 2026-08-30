@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Download, ShieldAlert } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, Download } from "lucide-react";
 import { ConsolePageHeader } from "@/components/console/page-header";
 import { ConsoleToast, useConsoleToast } from "@/components/console/toast";
 import { Card } from "@/components/ui/card";
@@ -10,9 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { DiseaseSelector } from "@/components/disease-selector";
 import { ClimateCorrelationChart } from "@/components/climate-correlation-chart";
 import { ClimateRecapTable } from "@/components/climate-recap-table";
-import { BacktestCard } from "@/components/backtest-card";
 import { DataState } from "@/components/data-state";
-import { fetchBacktests, fetchClimateSeries, fetchDiseases } from "@/lib/api";
+import { fetchClimateSeries, fetchDiseases } from "@/lib/api";
 import { useApi } from "@/lib/use-api";
 import { formatMonth } from "@/lib/period";
 import { downloadCsv, slugify, toCsv } from "@/lib/export";
@@ -28,6 +28,11 @@ import type { DiseaseType } from "@/types";
  * pernah ada. Keduanya sekarang datang dari gateway. Ikutan yang ikut hilang:
  * lencana "156 minggu evaluasi" (data uji sebenarnya dihitung dalam bulan, dan
  * jumlahnya jauh lebih sedikit) dan tombol ekspor yang tidak mengunduh apa pun.
+ *
+ * Hasil uji model pindah ke `/model` (PRD §5.7). Ia dulu menumpang di sini,
+ * artinya halaman yang menjelaskan seberapa jauh angka prakiraan boleh
+ * dipercaya hanya bisa dibuka petugas yang punya akun. Yang tersisa di sini
+ * adalah yang memang pekerjaan analis: hubungan iklim–kasus dan rekap deretnya.
  */
 export default function AnalitikPage() {
   const [selectedDisease, setSelectedDisease] = React.useState<DiseaseType | null>(null);
@@ -35,7 +40,6 @@ export default function AnalitikPage() {
 
   const diseases = useApi(() => fetchDiseases(), []);
   const climate = useApi(() => fetchClimateSeries(60), []);
-  const backtests = useApi(() => fetchBacktests(), []);
 
   React.useEffect(() => {
     if (!selectedDisease && diseases.data && diseases.data.length > 0) {
@@ -112,7 +116,7 @@ export default function AnalitikPage() {
       <div className="container mx-auto max-w-7xl space-y-8">
         <ConsolePageHeader
           title="Analitik & Riwayat"
-          description="Hubungan antara data iklim dan kejadian penyakit, plus hasil uji model terhadap data historis. Semua angka di halaman ini dihitung dari deret yang sedang ditampilkan."
+          description="Hubungan antara data iklim dan kejadian penyakit per kecamatan. Semua angka di halaman ini dihitung dari deret yang sedang ditampilkan; hasil uji modelnya ada di halaman Transparansi Model."
           actions={
             <Button
               size="sm"
@@ -177,63 +181,30 @@ export default function AnalitikPage() {
           </DataState>
         </section>
 
-        {/* 2. Backtesting */}
-        <section className="space-y-4">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div className="min-w-0">
-              <h2 className="text-h2 text-foreground">Akurasi prediksi vs aktual</h2>
-              <p className="text-caption text-paper-600">
-                Pemisahan data berdasarkan waktu pada deret bulanan Kota Semarang.
+        {/* 2. Akurasi model — isinya di /model, bukan disalin ulang di sini.
+            Dua salinan metrik yang sama pada akhirnya akan berbeda, dan yang
+            keliru selalu yang tidak sedang dilihat penulisnya. */}
+        <section>
+          <Card className="flex flex-col justify-between gap-4 p-5 sm:flex-row sm:items-center">
+            <div className="min-w-0 space-y-1">
+              <h2 className="text-h3 text-foreground">Akurasi prediksi vs aktual</h2>
+              <p className="text-body-sm text-paper-600">
+                Metrik uji tiap model, grafik backtest, cakupan data per kecamatan, dan
+                daftar batasan tinggal di halaman Transparansi Model — terbuka tanpa
+                perlu masuk, supaya bisa dirujuk ke luar dinas.
               </p>
             </div>
-          </div>
 
-          {/* Kegagalan menarik backtest disebut, bukan disembunyikan di balik
-              grid kosong yang terbaca seperti "modelnya memang belum ada". */}
-          {backtests.data?.meta.errors && (
-            <div className="flex items-start gap-2.5 rounded-xl border border-risk-medium-br bg-risk-medium-bg px-4 py-3">
-              <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-risk-medium" aria-hidden />
-              <div className="text-body-sm text-paper-700">
-                {Object.entries(backtests.data.meta.errors).map(([disease, message]) => (
-                  <p key={disease}>
-                    <span className="font-semibold text-foreground">{diseaseLabel(disease)}:</span> {message}
-                  </p>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <DataState
-            loading={backtests.loading}
-            error={backtests.error}
-            empty={false}
-            onRetry={backtests.reload}
-          >
-            {selectedDisease && (
-              <BacktestCard
-                metrics={backtests.data?.data ?? []}
-                disease={selectedDisease}
-                onSelectDisease={setSelectedDisease}
-              />
-            )}
-          </DataState>
+            <Button asChild size="sm" variant="outline" className="shrink-0 gap-1.5">
+              <Link href="/model">
+                <span>Buka Transparansi Model</span>
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            </Button>
+          </Card>
         </section>
 
-        {/* 3. Batasan model — wajib tampil di UI, bukan hanya di proposal (§7) */}
-        {backtests.data?.meta.limitations && (
-          <section className="space-y-3">
-            <h2 className="text-h2 text-foreground">Batasan yang berlaku</h2>
-            <Card className="p-5">
-              <ul className="list-disc space-y-2 pl-5 text-body-sm text-paper-700">
-                {backtests.data.meta.limitations.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </Card>
-          </section>
-        )}
-
-        {/* 4. Rekapitulasi */}
+        {/* 3. Rekapitulasi */}
         <section className="space-y-4">
           <div className="min-w-0">
             <h2 className="text-h2 text-foreground">Rekapitulasi iklim & kejadian penyakit</h2>

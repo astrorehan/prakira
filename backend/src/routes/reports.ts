@@ -20,6 +20,11 @@ import {
   type ReportRow,
 } from "../services/reports.js";
 import { listKecamatan } from "../services/districts.js";
+import {
+  DEFAULT_RULES,
+  detectEscalations,
+} from "../services/escalation.js";
+import { isSimulated } from "../services/demo.js";
 import { requireAuth } from "../middleware/auth.js";
 import { asyncRoute, HttpError } from "../middleware/error.js";
 
@@ -47,9 +52,15 @@ function hashOf(req: Request): string {
   return deviceHash(ip, agent);
 }
 
-/** Tanpa `device_hash`: sidik jari perangkat tidak pernah keluar dari server. */
+/** Tanpa `device_hash`: sidik jari perangkat tidak pernah keluar dari server.
+ *
+ *  `simulated` diturunkan dari sidik jari itu sebelum ia dibuang. Baris hasil
+ *  peragaan wajib bisa dikenali di antrean verifikasi — petugas yang melihat
+ *  delapan laporan baru berhak tahu mana yang datang dari warga dan mana yang
+ *  disuntikkan untuk demo. */
 function publicView(row: ReportRow) {
   return {
+    simulated: isSimulated(row),
     id: row.id,
     kind: row.kind,
     kecamatan: row.kecamatan,
@@ -250,3 +261,51 @@ reportsRouter.patch(
     res.json({ meta: await summarizeQueue(), data: publicView(updated) });
   }),
 );
+
+/**
+ * Eskalasi "perlu perhatian" (S4).
+ *
+ * Butuh sesi. Isinya bukan deskripsi laporan — hanya nama kecamatan dan
+ * hitungan — tapi pola pengaduan per wilayah tetap informasi operasional
+ * dinas, bukan informasi publik. Yang publik adalah kelas risiko di
+ * `/api/districts`, dan itu berasal dari data resmi, bukan dari aduan.
+ */
+reportsRouter.get(
+  "/escalations",
+  requireAuth,
+  asyncRoute(async (req, res) => {
+    const num = (key: string): number | undefined => {
+      const raw = req.query[key];
+      if (typeof raw !== "string") return undefined;
+      const value = Number(raw);
+      return Number.isFinite(value) ? value : undefined;
+    };
+
+    const { rules, escalations, scanned } = await detectEscalations({
+      windowDays: num("windowDays"),
+      minReports: num("minReports"),
+      minSameKind: num("minSameKind"),
+      maxWaitHours: num("maxWaitHours"),
+    });
+
+    res.json({
+      meta: {
+        rules,
+        defaults: DEFAULT_RULES,
+        scanned,
+        /* Aturan ditulis di sini, bukan hanya di kode: halaman verifikasi
+           menampilkannya persis begini supaya petugas tahu kenapa sebuah
+           kecamatan naik — dan bisa membantahnya. */
+        explanation: [
+          `Jendela pengamatan ${rules.windowDays} hari terakhir. Laporan yang sudah ditolak verifikator tidak dihitung sama sekali.`,
+          `Ambang volume: ${rules.minReports} laporan dari satu kecamatan.`,
+          `Ambang pemusatan: ${rules.minSameKind} laporan berjenis sama dari satu kecamatan.`,
+          `Ambang antrean tertahan: laporan menunggu lebih dari ${rules.maxWaitHours} jam.`,
+          "Eskalasi menandai wilayah untuk dilihat manusia. Ia tidak menerbitkan tindakan dan tidak mengubah kelas risiko model.",
+        ],
+      },
+      data: escalations,
+    });
+  }),
+);
+
