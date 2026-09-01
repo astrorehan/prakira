@@ -41,6 +41,9 @@ async def retrain(req: RetrainRequest):
         elif disease_lower == "ispa":
             from training.train_ispa import train_ispa_model
             result = train_ispa_model()
+        elif disease_lower == "leptospirosis":
+            from training.train_leptospirosis import train_leptospirosis_model
+            result = train_leptospirosis_model()
         else:
             raise HTTPException(status_code=501, detail=f"Retrain for '{req.disease}' not implemented yet.")
 

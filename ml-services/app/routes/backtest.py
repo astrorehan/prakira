@@ -169,6 +169,9 @@ async def backtest(disease: str = Query(..., description="Nama penyakit sesuai D
         monthly_results=monthly_results,
         district_results=district_results,
         citizen_signal_comparison=None,  # Fase 2
+        baselines=model_meta.get("baselines", {}),
+        baseline_summary=model_meta.get("baseline_summary"),
+        conformal=model_meta.get("conformal"),
         coverage_per_kecamatan=coverage_dict,
         top_features=[
             TopFeature(feature=f["feature"], importance=float(f["importance"]))

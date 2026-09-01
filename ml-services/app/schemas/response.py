@@ -22,6 +22,13 @@ class PredictionResult(BaseModel):
     data_coverage: Literal["high", "medium", "low", "insufficient"]
     drivers: List[DriverInfo] = []
     model_version: str
+    # Asal-usul rentang, supaya UI bisa menjelaskan artinya alih-alih hanya
+    # menampilkan dua angka. `interval_empirical_coverage` adalah proporsi
+    # bulan pada periode uji yang kenyataannya benar-benar jatuh di dalam
+    # rentang — pembukti untuk label targetnya.
+    interval_method: Optional[str] = None
+    interval_target_coverage: Optional[float] = None
+    interval_empirical_coverage: Optional[float] = None
 
 
 class BatchPredictionResponse(BaseModel):
@@ -69,6 +76,45 @@ class CitizenSignalComparison(BaseModel):
     note: str
 
 
+class BaselineResult(BaseModel):
+    """Metrik satu pembanding naif pada periode uji yang sama dengan model."""
+    label: str
+    mae: float
+    rmse: float
+    r2: float
+
+
+class BaselineComparison(BaseModel):
+    """Putusan singkat model versus pembanding naif terbaik.
+
+    Ditampilkan apa adanya, termasuk saat modelnya kalah. Pertanyaan "kenapa
+    tidak pakai rata-rata saja" akan datang; halaman yang sudah menjawabnya
+    lebih kuat daripada halaman yang menghindarinya (PRD §7).
+    """
+    best_baseline: str
+    best_baseline_label: str
+    best_baseline_mae: float
+    model_mae: float
+    model_beats_all_baselines: bool
+    mae_improvement_pct: float
+
+
+class ConformalInfo(BaseModel):
+    """Bagaimana rentang prakiraan dikalibrasi, dan seberapa sering ia benar."""
+    method: str
+    alpha: float
+    q_hat: float
+    difficulty: str
+    n_calibration: int
+    n_folds: Optional[int] = None
+    calibration_period: str
+    target_coverage: float
+    empirical_coverage: float
+    mean_width: float
+    median_width: float
+    n_evaluated: int
+
+
 class TopFeature(BaseModel):
     """Satu fitur beserta bobot kepentingannya pada model terlatih."""
     feature: str = Field(..., example="cases_ma_3m")
@@ -91,6 +137,11 @@ class BacktestResponse(BaseModel):
     # untuk menghitung berapa lonjakan yang benar-benar tertandai lebih dulu.
     district_results: List[BacktestDistrictResult] = []
     citizen_signal_comparison: Optional[CitizenSignalComparison] = None
+    # Pembanding naif dan kalibrasi rentang — keduanya dihitung saat pelatihan
+    # pada periode uji yang sama, lalu disimpan di metadata.json.
+    baselines: dict = {}
+    baseline_summary: Optional[BaselineComparison] = None
+    conformal: Optional[ConformalInfo] = None
     coverage_per_kecamatan: dict = {}
     # Halaman transparansi model wajib menyebut fitur apa yang dipelajari model
     # (PRD §5.7, blok "Ringkasan model"). Nilainya sudah dihitung saat pelatihan
