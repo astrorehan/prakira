@@ -4,7 +4,7 @@
     "version": "ensemble-monthly-dbd-2026.09.01",
     "granularity": "monthly",
     "is_log_transformed": true,
-    "trained_at": "2026-09-01T13:34:46.970029",
+    "trained_at": "2026-09-01T13:41:28.695696",
     "train_period": "2021-04-01 to 2024-12-01",
     "test_period": "2025-01-01 to 2025-12-01",
     "n_train_samples": 720,
@@ -14,6 +14,7 @@
       "rmse": 1.5727,
       "r2": 0.4491
     },
+    "citizen_signal_comparison": null,
     "baselines": {
       "persistence": {
         "label": "Kasus bulan lalu",
@@ -84,7 +85,7 @@
     "version": "ensemble-monthly-ispa-2026.09.01",
     "granularity": "monthly",
     "is_log_transformed": false,
-    "trained_at": "2026-09-01T13:34:50.933118",
+    "trained_at": "2026-09-01T13:43:06.791684",
     "train_period": "2025-04-01 to 2025-09-01",
     "test_period": "2025-10-01 to 2025-12-01",
     "n_train_samples": 96,
@@ -94,6 +95,7 @@
       "rmse": 661.2239,
       "r2": 0.768
     },
+    "citizen_signal_comparison": null,
     "baselines": {
       "persistence": {
         "label": "Kasus bulan lalu",
@@ -164,7 +166,7 @@
     "version": "ensemble-monthly-leptospirosis-2026.09.01",
     "granularity": "monthly",
     "is_log_transformed": true,
-    "trained_at": "2026-09-01T13:34:58.185244",
+    "trained_at": "2026-09-01T13:43:13.618767",
     "train_period": "2021-04-01 to 2024-12-01",
     "test_period": "2025-01-01 to 2025-12-01",
     "n_train_samples": 720,
@@ -174,6 +176,7 @@
       "rmse": 0.5352,
       "r2": -0.2947
     },
+    "citizen_signal_comparison": null,
     "baselines": {
       "persistence": {
         "label": "Kasus bulan lalu",

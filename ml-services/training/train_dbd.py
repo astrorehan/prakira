@@ -19,6 +19,7 @@ from config import (
 )
 from training.ensemble import DBDEnsembleModel
 from training.baselines import compute_baselines, summarise
+from training.citizen_variant import compare as compare_citizen
 from training.conformal import calibrate as calibrate_conformal
 
 # Setup Logging
@@ -28,7 +29,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def train_dbd_model(split_date: str = "2025-01-01"):
+def train_dbd_model(split_date: str = "2025-01-01", citizen_signal=None):
     """Train DBD Monthly Model using Ensemble Blending."""
     logger.info("Starting DBD Model Training (Ensemble Blending)...")
 
@@ -103,6 +104,24 @@ def train_dbd_model(split_date: str = "2025-01-01"):
         conformal["n_calibration"],
     )
 
+    # Varian sinyal warga (PRD §5.6a). Hanya dihitung bila gateway benar-benar
+    # mengirim laporan terverifikasi yang menutupi periode latih; kelayakannya
+    # sudah diputuskan di `/retrain` sebelum sampai ke sini.
+    citizen_comparison = None
+    if citizen_signal is not None and not citizen_signal.empty:
+        citizen_comparison = compare_citizen(
+            DBDEnsembleModel,
+            df=df,
+            split_date=split_date,
+            signal=citizen_signal,
+            without_metrics={
+                "mae": round(float(mae), 4),
+                "rmse": round(float(rmse), 4),
+                "r2": round(float(r2), 4),
+            },
+            log_transform=True,
+        )
+
     version_str = f"ensemble-monthly-dbd-{datetime.now().strftime('%Y.%m.%d')}"
     model_path = MODELS_DIR / cfg["model_file"]
     joblib.dump(model, model_path)
@@ -146,6 +165,7 @@ def train_dbd_model(split_date: str = "2025-01-01"):
             "rmse": round(float(rmse), 4),
             "r2": round(float(r2), 4),
         },
+        "citizen_signal_comparison": citizen_comparison,
         "baselines": baselines,
         "baseline_summary": baseline_summary,
         "conformal": conformal,

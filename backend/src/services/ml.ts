@@ -138,6 +138,20 @@ async function call<T>(pathname: string, init?: RequestInit): Promise<T> {
 
     if (!response.ok) {
       const body = await response.text().catch(() => "");
+      /* 409 dari /retrain bukan kegagalan layanan melainkan penolakan
+         beralasan: sinyal warga belum menutupi periode latih. Meleburnya
+         menjadi "layanan ML tidak dapat dihubungi" akan menyembunyikan satu-
+         satunya keterangan yang berguna di dalamnya. */
+      if (response.status === 409) {
+        try {
+          const parsed = JSON.parse(body) as { detail?: CitizenSignalRefusal };
+          if (parsed.detail?.message) {
+            throw new CitizenSignalTooThinError(parsed.detail);
+          }
+        } catch (parseError) {
+          if (parseError instanceof CitizenSignalTooThinError) throw parseError;
+        }
+      }
       throw new MlUnavailableError(
         `Layanan ML menjawab ${response.status} untuk ${pathname}: ${body.slice(0, 300)}`,
       );
@@ -146,6 +160,7 @@ async function call<T>(pathname: string, init?: RequestInit): Promise<T> {
     return (await response.json()) as T;
   } catch (error) {
     if (error instanceof MlUnavailableError) throw error;
+    if (error instanceof CitizenSignalTooThinError) throw error;
     throw new MlUnavailableError(
       `Layanan ML tidak dapat dihubungi di ${url}. Jalankan ml-services lalu ulangi.`,
       error,
@@ -176,7 +191,40 @@ export function mlBacktest(disease: string): Promise<MlBacktest> {
   );
 }
 
-export function mlRetrain(disease: string, includeCitizen: boolean) {
+/** Satu agregat laporan terverifikasi. Tanpa identitas, deskripsi, atau foto. */
+export type CitizenSignalRow = {
+  kecamatan: string;
+  month: string;
+  verified: number;
+};
+
+/**
+ * Alasan layanan ML menolak menyertakan sinyal warga, beserta angkanya.
+ *
+ * Ditampilkan ke petugas apa adanya. Penolakan berangka — "baru 3 dari 27 bulan
+ * yang dibutuhkan" — memberi tahu apa yang harus terjadi supaya tombolnya
+ * berguna; penolakan tanpa angka hanya terbaca sebagai kerusakan.
+ */
+export type CitizenSignalRefusal = {
+  message: string;
+  months_covered: number;
+  months_required: number;
+  train_months: number;
+  total_verified: number;
+};
+
+export class CitizenSignalTooThinError extends Error {
+  constructor(readonly detail: CitizenSignalRefusal) {
+    super(detail.message);
+    this.name = "CitizenSignalTooThinError";
+  }
+}
+
+export function mlRetrain(
+  disease: string,
+  includeCitizen: boolean,
+  citizenSignal?: CitizenSignalRow[],
+) {
   return call<{
     status: string;
     disease: string;
@@ -190,6 +238,7 @@ export function mlRetrain(disease: string, includeCitizen: boolean) {
     body: JSON.stringify({
       disease: disease.toUpperCase(),
       include_citizen: includeCitizen,
+      citizen_signal: includeCitizen ? (citizenSignal ?? []) : undefined,
     }),
   });
 }

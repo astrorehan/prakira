@@ -168,7 +168,10 @@ async def backtest(disease: str = Query(..., description="Nama penyakit sesuai D
         metrics=BacktestMetrics(mae=round(mae, 4), rmse=round(rmse, 4), r2=round(r2, 4)),
         monthly_results=monthly_results,
         district_results=district_results,
-        citizen_signal_comparison=None,  # Fase 2
+        # Terisi hanya setelah /retrain dijalankan dengan sinyal warga yang
+        # cukup menutupi periode latih. `None` berarti belum pernah — bukan
+        # berarti sinyalnya tidak berpengaruh.
+        citizen_signal_comparison=model_meta.get("citizen_signal_comparison"),
         baselines=model_meta.get("baselines", {}),
         baseline_summary=model_meta.get("baseline_summary"),
         conformal=model_meta.get("conformal"),

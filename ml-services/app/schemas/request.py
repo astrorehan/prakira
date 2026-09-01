@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Literal
+from typing import List, Literal, Optional
 
 from config import DISEASE_CONFIG
 
@@ -37,12 +37,32 @@ class BatchPredictRequest(BaseModel):
     )
 
 
+class CitizenSignalRow(BaseModel):
+    """Satu agregat laporan warga terverifikasi: kecamatan x bulan."""
+    kecamatan: str = Field(..., example="Tembalang")
+    month: str = Field(..., example="2025-11-01", description="Awal bulan, YYYY-MM-01")
+    verified: int = Field(..., ge=0, example=4)
+
+
 class RetrainRequest(BaseModel):
-    """Request untuk endpoint /retrain."""
+    """Request untuk endpoint /retrain.
+
+    `citizen_signal` dikirim oleh gateway, yang memegang basis data laporan;
+    layanan ML tidak menyimpan laporan warga sama sekali dan tidak boleh
+    menyimpannya (PRD §8). Isinya sudah teragregasi per kecamatan per bulan,
+    tanpa identitas, deskripsi, maupun foto.
+    """
     disease: DiseaseName = Field(..., example=_EXAMPLE_DISEASE)
     include_citizen: bool = Field(
         default=False,
         description="Apakah menyertakan sinyal warga terverifikasi sebagai fitur tambahan",
+    )
+    citizen_signal: Optional[List[CitizenSignalRow]] = Field(
+        default=None,
+        description=(
+            "Agregat laporan terverifikasi per kecamatan per bulan. Wajib bila "
+            "include_citizen bernilai true."
+        ),
     )
 
 
