@@ -28,6 +28,12 @@ function run(name, command, args, options = {}) {
     shell: options.shell ?? isWindows,
     env: { ...process.env, ...options.env },
     stdio: ["ignore", "pipe", "pipe"],
+    /* Menjadikan anaknya pemimpin grup proses, supaya `process.kill(-pid)` di
+       `signalTree` benar-benar menjangkau cucu-cucunya: uvicorn menyalakan
+       worker, dan `next dev` menyalakan proses build sendiri. Tanpa ini
+       sinyalnya tidak sampai ke mana pun. Di Windows tidak ada grup proses
+       POSIX — di sana `taskkill /T` yang mengerjakannya. */
+    detached: !isWindows,
   });
 
   const prefix = `${COLORS[name] ?? ""}[${name}]${COLORS.reset} `;
@@ -116,27 +122,58 @@ async function main() {
   });
 }
 
-function killTree(pid) {
-  if (isWindows) {
-    try {
-      execSync(`taskkill /pid ${pid} /T /F`, { stdio: "ignore" });
-    } catch {}
-  } else {
-    try {
-      process.kill(-pid, "SIGKILL");
-    } catch {}
+function isAlive(child) {
+  return Boolean(child?.pid) && child.exitCode === null && child.signalCode === null;
+}
+
+/**
+ * Menghentikan satu anak beserta seluruh keturunannya.
+ *
+ * `process.kill(-pid, …)` mengirim sinyal ke *grup* proses, dan itu hanya
+ * bekerja bila anaknya pemimpin grup — yang menuntut `detached: true` saat
+ * `spawn`, dan sebelumnya tidak diset. Panggilannya karena itu selalu melempar
+ * ESRCH, galatnya ditelan `catch` kosong, dan uvicorn serta Next tetap hidup
+ * setelah Ctrl+C. Port 8001 dan 3000 tetap terpakai, lalu `npm run dev`
+ * berikutnya gagal dengan alasan yang tidak menyebut sebabnya — persis jenis
+ * kejadian yang menghabiskan waktu saat menyiapkan demo.
+ */
+function signalTree(child, signal) {
+  if (!isAlive(child)) return;
+  try {
+    if (isWindows) {
+      execSync(`taskkill /pid ${child.pid} /T /F`, { stdio: "ignore" });
+    } else {
+      process.kill(-child.pid, signal);
+    }
+  } catch (error) {
+    /* ESRCH berarti prosesnya memang sudah mati — itu keberhasilan. Sisanya
+       harus terlihat: `catch` kosong di sini justru yang membuat kebocoran
+       proses di atas hidup tanpa ketahuan. */
+    if (error?.code !== "ESRCH") {
+      process.stderr.write(
+        `[dev] gagal menghentikan pid ${child.pid}: ${error.message}\n`,
+      );
+    }
   }
 }
 
 let shuttingDown = false;
-function shutdown() {
+async function shutdown() {
   if (shuttingDown) return;
   shuttingDown = true;
-  for (const child of children) {
-    if (child && child.pid) {
-      killTree(child.pid);
-    }
+
+  for (const child of children) signalTree(child, "SIGTERM");
+
+  /* Beri kesempatan menutup diri sendiri sebelum dipaksa. Next menulis ke
+     `.next/` saat keluar, dan SIGKILL langsung meninggalkannya setengah
+     tertulis — yang muncul sebagai galat build membingungkan di sesi
+     berikutnya, bukan sebagai "tadi saya tekan Ctrl+C". */
+  const deadline = Date.now() + 3000;
+  while (Date.now() < deadline && children.some(isAlive)) {
+    await new Promise((r) => setTimeout(r, 100));
   }
+
+  for (const child of children) signalTree(child, "SIGKILL");
   process.exit(0);
 }
 
