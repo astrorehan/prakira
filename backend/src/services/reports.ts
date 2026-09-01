@@ -12,6 +12,7 @@ import { all, one, run } from "../db/index.js";
 import { env } from "../env.js";
 import { logAudit } from "./audit.js";
 import { listKecamatan } from "./districts.js";
+import { isSimulated } from "./demo.js";
 
 export type ReportKind =
   "gejala" | "jentik" | "genangan" | "sampah" | "saluran";
@@ -34,6 +35,20 @@ export const REPORT_FAMILY: Record<ReportKind, "kesehatan" | "lingkungan"> = {
   saluran: "lingkungan",
 };
 
+/**
+ * Satu laporan, tanpa fotonya.
+ *
+ * Ketiadaan `photo` di sini disengaja dan bukan kelalaian. Foto disimpan
+ * sebagai data URL base64 di kolom `laporan_warga.photo`, sampai 400.000
+ * karakter per baris; `SELECT *` pada antrean verifikasi karena itu menarik
+ * setiap foto dari setiap laporan sekaligus, termasuk yang sudah selesai
+ * diverifikasi berbulan-bulan lalu. Seratus laporan berfoto menjadi respons
+ * ±40 MB, dan di jaringan aula pameran halaman `/verifikasi` akan tampak
+ * menggantung.
+ *
+ * Yang dibawa daftar hanya `has_photo`. Gambarnya diambil satu per satu lewat
+ * `findReportPhoto`, saat petugas benar-benar melihatnya.
+ */
 export type ReportRow = {
   id: string;
   kind: ReportKind;
@@ -42,13 +57,21 @@ export type ReportRow = {
   occurred_at: string;
   description: string;
   submitted_at: string;
-  photo: string | null;
+  has_photo: boolean;
   status: ReportStatus;
   reviewed_at: string | null;
   reviewer: string | null;
   review_note: string | null;
   device_hash: string;
 };
+
+/* Proyeksi kolom yang dipakai setiap kueri baca laporan. Ditulis sekali di
+   sini, bukan `SELECT *` di lima tempat: satu kolom besar yang ikut terbawa
+   diam-diam adalah persis bentuk kesalahan yang menghasilkan respons 40 MB
+   tadi. `photo` hanya muncul sebagai uji keberadaan. */
+export const REPORT_COLUMNS = `id, kind, kecamatan, kelurahan, occurred_at,
+        description, submitted_at, status, reviewed_at, reviewer, review_note,
+        device_hash, (photo IS NOT NULL) AS has_photo`;
 
 /* Tanpa 0/O dan 1/I/L: kode ini diketik ulang orang dari layar ponsel, dan
    satu karakter ambigu mengubah "laporan saya hilang" jadi keluhan. */
@@ -153,7 +176,29 @@ export async function createReport(
 export async function findReport(code: string): Promise<ReportRow | null> {
   const id = normalizeTrackingCode(code);
   if (!id) return null;
-  return one<ReportRow>("SELECT * FROM laporan_warga WHERE id = ?", id);
+  return one<ReportRow>(
+    `SELECT ${REPORT_COLUMNS} FROM laporan_warga WHERE id = ?`,
+    id,
+  );
+}
+
+/**
+ * Foto satu laporan, diambil terpisah dari barisnya.
+ *
+ * Hanya dipanggil dari rute bersesi. Deskripsi dan foto ditulis warga dan
+ * hanya boleh dibaca verifikator (PRD §8) — jadi tidak ada jalan publik ke
+ * sini, termasuk lewat kode lacak: pemilik kode sudah tahu foto apa yang ia
+ * kirim, dan menyajikannya kembali hanya menambah permukaan tanpa menambah
+ * kegunaan.
+ */
+export async function findReportPhoto(code: string): Promise<string | null> {
+  const id = normalizeTrackingCode(code);
+  if (!id) return null;
+  const row = await one<{ photo: string | null }>(
+    "SELECT photo FROM laporan_warga WHERE id = ?",
+    id,
+  );
+  return row?.photo ?? null;
 }
 
 export function listReports(filter?: {
@@ -174,11 +219,43 @@ export function listReports(filter?: {
 
   const where = clauses.length > 0 ? `WHERE ${clauses.join(" AND ")}` : "";
   return all<ReportRow>(
-    `SELECT * FROM laporan_warga ${where}
+    `SELECT ${REPORT_COLUMNS} FROM laporan_warga ${where}
       ORDER BY CASE status WHEN 'menunggu' THEN 0 WHEN 'terverifikasi' THEN 1 ELSE 2 END,
                submitted_at ASC`,
     ...params,
   );
+}
+
+/**
+ * Bentuk laporan yang boleh keluar dari gateway.
+ *
+ * Tinggal di lapisan layanan, bukan di rutenya, supaya ada satu tempat yang
+ * menentukan apa yang terlihat dari luar — dan supaya bisa diuji tanpa
+ * menyalakan server. `device_hash` tidak pernah ikut: ia sidik jari perangkat
+ * untuk pembatas laju, bukan identitas, dan tidak ada alasan ia meninggalkan
+ * server.
+ *
+ * `simulated` diturunkan dari sidik jari itu sebelum ia dibuang. Baris hasil
+ * peragaan wajib bisa dikenali di antrean verifikasi — petugas yang melihat
+ * delapan laporan baru berhak tahu mana yang datang dari warga dan mana yang
+ * disuntikkan untuk demo.
+ */
+export function toPublicView(row: ReportRow) {
+  return {
+    simulated: isSimulated(row),
+    id: row.id,
+    kind: row.kind,
+    kecamatan: row.kecamatan,
+    kelurahan: row.kelurahan,
+    occurredAt: row.occurred_at,
+    description: row.description,
+    submittedAt: row.submitted_at,
+    hasPhoto: row.has_photo,
+    status: row.status,
+    reviewedAt: row.reviewed_at,
+    reviewer: row.reviewer,
+    reviewNote: row.review_note,
+  };
 }
 
 export async function reviewReport(
@@ -188,7 +265,7 @@ export async function reviewReport(
   role: string,
 ): Promise<ReportRow | null> {
   const existing = await one<ReportRow>(
-    "SELECT * FROM laporan_warga WHERE id = ?",
+    `SELECT ${REPORT_COLUMNS} FROM laporan_warga WHERE id = ?`,
     id,
   );
   if (!existing) return null;
@@ -212,7 +289,10 @@ export async function reviewReport(
     status: decision.status === "terverifikasi" ? "success" : "warning",
   });
 
-  return one<ReportRow>("SELECT * FROM laporan_warga WHERE id = ?", id);
+  return one<ReportRow>(
+    `SELECT ${REPORT_COLUMNS} FROM laporan_warga WHERE id = ?`,
+    id,
+  );
 }
 
 export type QueueSummary = {

@@ -387,7 +387,10 @@ export type CitizenReport = {
   occurredAt: string;
   description: string;
   submittedAt: string;
-  photo: string | null;
+  /* Fotonya sendiri tidak ikut di daftar — lihat `fetchReportPhoto`. Sebuah
+     data URL base64 bisa mencapai 400 KB, dan antrean menampilkan ratusan
+     baris sekaligus. */
+  hasPhoto: boolean;
   status: ReportStatus;
   reviewedAt: string | null;
   reviewer: string | null;
@@ -401,6 +404,10 @@ export type QueueSummary = {
   ditolak: number;
   lingkunganMenunggu: number;
   oldestWaitHours: number | null;
+  /** Jumlah baris yang benar-benar dikirim; ada batas atas per permintaan. */
+  shown?: number;
+  /** Benar bila masih ada baris yang tertinggal di luar batas itu. */
+  truncated?: boolean;
 };
 
 export type DistrictTriggerSummary = {
