@@ -415,7 +415,7 @@ Rubrik Metodologi (10%) menilai **kesesuaian arsitektur dengan solusi** — buka
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│                 Frontend — Next.js 14                    │
+│                 Frontend — Next.js 15                    │
 │   Port: 3000 · App Router · Tailwind · Leaflet · Recharts │
 └────────────────────────────┬─────────────────────────────┘
                              │ Proksi internal: /api/*
@@ -456,7 +456,7 @@ Rubrik Metodologi (10%) menilai **kesesuaian arsitektur dengan solusi** — buka
 
 `drivers` bukan hiasan: itu yang mengisi kalimat "Dasar:" di §5.2 dan yang membuat sistem ini bisa dipertanggungjawabkan saat sesi tanya jawab (20% nilai final).
 
-**Skema database inti.** `kecamatan`, `observasi`, `prediksi`, `laporan_warga`, `tindakan`, `backtest_results`, `users`, `sessions`, `audit_log`, `ingest_job`. Skema lengkap ada di `backend/src/db/schema.sql`.
+**Skema database inti.** `kecamatan`, `observasi`, `prediksi`, `laporan_warga`, `tindakan`, `model_backtest`, `users`, `sessions`, `audit_log`, `ingest_job`. Skema lengkap ada di `backend/src/db/schema.sql`.
 
 ### 6.1 Status implementasi (30 Agustus 2026)
 

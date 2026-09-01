@@ -58,7 +58,7 @@ yang benar-benar berjalan, bukan status koneksi yang tidak ada.
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│                 Frontend — Next.js 14                    │
+│                 Frontend — Next.js 15                    │
 │   Port: 3000 · App Router · Tailwind · Leaflet · Recharts │
 └────────────────────────────┬─────────────────────────────┘
                              │ Proksi internal: /api/*
@@ -83,7 +83,7 @@ ditandai `stale` supaya UI mengakuinya.
 (Supabase) menggunakan kolam koneksi `pg.Pool` dengan translasi parameter kueri
 otomatis `toPg` (`?` -> `$1..$n`) dan dukungan transaksi terisolasi (`transaction`).
 Skema terdefinisi di `backend/src/db/schema.sql` (tabel `kecamatan`, `observasi`,
-`prediksi`, `laporan_warga`, `tindakan`, `backtest_results`, `users`, `sessions`,
+`prediksi`, `laporan_warga`, `tindakan`, `model_backtest`, `users`, `sessions`,
 `audit_log`, `ingest_job`).
 
 Justifikasi lengkap tiap pilihan teknologi dan kontrak API ada di
@@ -99,7 +99,7 @@ prakira/
 │  ├─ src/db/schema.sql     # skema inti: wilayah, observasi, prediksi, laporan, tindakan, audit
 │  ├─ src/routes/           # endpoint HTTP (meta, districts, model, actions, reports, auth, admin)
 │  └─ src/services/         # mesin aturan tindakan, prioritas, eskalasi, klien ML, auth sesi
-├─ frontend/                # Next.js 14 (port 3000) — lihat frontend/README.md
+├─ frontend/                # Next.js 15 (port 3000) — lihat frontend/README.md
 │  ├─ src/app/              # 20 rute publik & konsol dinas (dashboard, buletin, model, dll.)
 │  └─ src/components/       # choropleth map, panel analisis, form laporan, draf dokumen
 ├─ ml-services/             # FastAPI + model ensemble terlatih (port 8001)
@@ -113,7 +113,7 @@ prakira/
 
 | Layanan | Folder | Port dev | Teknologi Utama |
 |---|---|---|---|
-| Frontend | [`frontend/`](./frontend) | `3000` | Next.js 14 App Router, React 18, Tailwind CSS, Leaflet, Recharts |
+| Frontend | [`frontend/`](./frontend) | `3000` | Next.js 15 App Router, React 18, Tailwind CSS, Leaflet, Recharts |
 | Express gateway | [`backend/`](./backend) | `4200` | Express, TypeScript, Node.js, PostgreSQL (`pg`) |
 | FastAPI ML service | [`ml-services/`](./ml-services) | `8001` | FastAPI, Uvicorn, Python 3.12, Scikit-Learn, XGBoost, Pandas |
 
@@ -241,7 +241,7 @@ disengaja — tidak ada jalur cadangan yang diam-diam mengisi angka palsu.
 
 ## Catatan Penempatan & Produksi
 
-- **Frontend (Next.js 14):** Dapat di-deploy ke Vercel dengan konfigurasi `API_PROXY_TARGET` atau `NEXT_PUBLIC_API_URL`.
+- **Frontend (Next.js 15):** Dapat di-deploy ke Vercel dengan konfigurasi `API_PROXY_TARGET` atau `NEXT_PUBLIC_API_URL`.
 - **Backend Gateway (Express):** Dijalankan pada Node.js runtime (misalnya Render Web Service atau Docker) terhubung ke PostgreSQL Supabase via pooler session (port `5432`).
 - **ML Services (FastAPI):** Dijalankan pada environment Python 3.12 dengan Uvicorn worker di Render / container compute instance.
 

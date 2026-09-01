@@ -17,6 +17,11 @@ export const metadata: Metadata = {
  * tercetak di kertas A4 bukan sekadar jelek, ia memakan satu kolom penuh dari
  * surat yang harus ditandatangani.
  */
-export default function NotaDinasPage({ params }: { params: { id: string } }) {
-  return <OfficialMemo id={params.id} />;
+export default async function NotaDinasPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  return <OfficialMemo id={id} />;
 }
