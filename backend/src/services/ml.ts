@@ -55,6 +55,39 @@ export type MlBacktestDistrict = {
   risk_class_predicted: string | null;
 };
 
+/** Metrik satu pembanding naif pada periode uji yang sama dengan model. */
+export type MlBaseline = {
+  label: string;
+  mae: number;
+  rmse: number;
+  r2: number;
+};
+
+export type MlBaselineSummary = {
+  best_baseline: string;
+  best_baseline_label: string;
+  best_baseline_mae: number;
+  model_mae: number;
+  model_beats_all_baselines: boolean;
+  mae_improvement_pct: number;
+};
+
+/** Kalibrasi rentang prakiraan, beserta cakupan yang benar-benar tercapai. */
+export type MlConformal = {
+  method: string;
+  alpha: number;
+  q_hat: number;
+  difficulty: string;
+  n_calibration: number;
+  n_folds?: number | null;
+  calibration_period: string;
+  target_coverage: number;
+  empirical_coverage: number;
+  mean_width: number;
+  median_width: number;
+  n_evaluated: number;
+};
+
 export type MlBacktest = {
   disease: string;
   model_version: string;
@@ -67,6 +100,9 @@ export type MlBacktest = {
   district_results?: MlBacktestDistrict[];
   coverage_per_kecamatan: Record<string, string>;
   top_features?: { feature: string; importance: number }[];
+  baselines?: Record<string, MlBaseline>;
+  baseline_summary?: MlBaselineSummary | null;
+  conformal?: MlConformal | null;
 };
 
 export type MlHealth = {

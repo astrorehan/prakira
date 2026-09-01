@@ -103,6 +103,14 @@ def rolling_origin_scores(
             "dikalibrasi secara bergulir."
         )
 
+    # Blok dipersempit bila sisa periodenya tidak cukup untuk beberapa lipatan.
+    # Tanpa ini ISPA — yang setelah jendela lag hanya menyisakan enam bulan
+    # latih — menghasilkan satu lipatan saja, yaitu kembali menjadi kalibrasi
+    # ekor yang justru hendak dihindari. Tiga lipatan satu bulan mencakup lebih
+    # banyak titik dalam siklus musim daripada satu lipatan tiga bulan.
+    remaining = len(months) - start
+    block_months = max(1, min(block_months, remaining // 3))
+
     scores, n_rows, folds = [], 0, 0
     for i in range(start, len(months), block_months):
         block = months[i : i + block_months]

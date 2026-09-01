@@ -108,6 +108,48 @@ export type BacktestMonth = {
   risk_class_predicted: string | null;
 };
 
+/** Metrik satu pembanding naif pada periode uji yang sama dengan model. */
+export type BaselineResult = {
+  label: string;
+  mae: number;
+  rmse: number;
+  r2: number;
+};
+
+export type BaselineComparison = {
+  baselines: Record<string, BaselineResult>;
+  summary: {
+    best_baseline: string;
+    best_baseline_label: string;
+    best_baseline_mae: number;
+    model_mae: number;
+    model_beats_all_baselines: boolean;
+    mae_improvement_pct: number;
+  } | null;
+};
+
+/**
+ * Kalibrasi rentang prakiraan.
+ *
+ * `target_coverage` adalah yang dijanjikan, `empirical_coverage` yang
+ * benar-benar tercapai pada periode uji. Keduanya ditampilkan berdampingan:
+ * label tanpa pembuktinya adalah bagian yang berbahaya.
+ */
+export type ConformalCalibration = {
+  method: string;
+  alpha: number;
+  q_hat: number;
+  difficulty: string;
+  n_calibration: number;
+  n_folds?: number | null;
+  calibration_period: string;
+  target_coverage: number;
+  empirical_coverage: number;
+  mean_width: number;
+  median_width: number;
+  n_evaluated: number;
+};
+
 export type BacktestMetric = {
   disease: DiseaseType;
   model_version: string;
@@ -125,6 +167,10 @@ export type BacktestMetric = {
   coverage_per_kecamatan: Record<string, DataCoverage>;
   /** Fitur paling berpengaruh saat pelatihan, terbesar lebih dulu. */
   top_features: ModelFeature[];
+  /** Pembanding naif. `null` pada baris uji yang tersimpan sebelum fitur ini ada. */
+  baselines: BaselineComparison | null;
+  /** Kalibrasi rentang. `null` bila modelnya belum dilatih ulang. */
+  conformal: ConformalCalibration | null;
   fetched_at: string;
 };
 
