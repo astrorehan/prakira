@@ -42,19 +42,39 @@ def train_leptospirosis_model(split_date: str = "2025-01-01"):
     df = pd.read_csv(feature_file)
     df["month_start"] = pd.to_datetime(df["month_start"])
 
-    X = df[FEATURE_COLUMNS]
-    y = df[TARGET_COLUMN]
-    y_log = np.log1p(y)
+    # Pisah latih/uji berdasarkan waktu — sama seperti `train_dbd.py`.
+    #
+    # Sebelumnya `split_date` diterima sebagai argumen lalu tidak pernah
+    # dipakai: model di-fit pada seluruh 912 baris, lalu MAE-nya diukur pada
+    # baris yang sama. Angka yang lahir dari situ adalah galat *in-sample*, dan
+    # ia ditulis ke `metadata.json` seolah setara dengan angka uji DBD dan ISPA
+    # yang memang ditahan. Dua akibatnya: metrik Leptospirosis tampak lebih
+    # baik daripada yang sebenarnya, dan `/backtest` mengevaluasi periode 2025
+    # yang sudah ikut dilatih — bocor, bukan sekadar optimistis.
+    train_df = df[df["month_start"] < split_date].copy()
+    test_df = df[df["month_start"] >= split_date].copy()
+
+    if train_df.empty or test_df.empty:
+        logger.error(
+            f"Split {split_date} menyisakan {len(train_df)} baris latih dan "
+            f"{len(test_df)} baris uji — tidak bisa dievaluasi."
+        )
+        return
+
+    X_train, y_train = train_df[FEATURE_COLUMNS], train_df[TARGET_COLUMN]
+    X_test, y_test = test_df[FEATURE_COLUMNS], test_df[TARGET_COLUMN]
+
+    y_train_log = np.log1p(y_train)
 
     model = LeptospirosisEnsembleModel()
-    model.fit(X, y_log)
+    model.fit(X_train, y_train_log)
 
-    y_pred = model.predict(X)
+    y_pred = model.predict(X_test)
     y_pred_clipped = np.clip(y_pred, 0, None)
 
-    mae = mean_absolute_error(y, y_pred_clipped)
-    rmse = np.sqrt(mean_squared_error(y, y_pred_clipped))
-    r2 = r2_score(y, y_pred_clipped)
+    mae = mean_absolute_error(y_test, y_pred_clipped)
+    rmse = np.sqrt(mean_squared_error(y_test, y_pred_clipped))
+    r2 = r2_score(y_test, y_pred_clipped)
 
     logger.info("Evaluation Results for Leptospirosis Ensemble Model:")
     logger.info(f"  - MAE : {mae:.4f} cases/month")
@@ -88,7 +108,10 @@ def train_leptospirosis_model(split_date: str = "2025-01-01"):
         "granularity": "monthly",
         "is_log_transformed": True,
         "trained_at": datetime.now().isoformat(),
-        "n_train_samples": len(df),
+        "train_period": f"{train_df['month_start'].min():%Y-%m-%d} to {train_df['month_start'].max():%Y-%m-%d}",
+        "test_period": f"{test_df['month_start'].min():%Y-%m-%d} to {test_df['month_start'].max():%Y-%m-%d}",
+        "n_train_samples": len(train_df),
+        "n_test_samples": len(test_df),
         "metrics": {
             "mae": round(float(mae), 4),
             "rmse": round(float(rmse), 4),

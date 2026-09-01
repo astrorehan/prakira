@@ -77,36 +77,39 @@
   },
   "leptospirosis": {
     "algorithm": "ensemble_rf_et_xgb_ridge",
-    "version": "ensemble-monthly-leptospirosis-2026.08.27",
+    "version": "ensemble-monthly-leptospirosis-2026.09.01",
     "granularity": "monthly",
     "is_log_transformed": true,
-    "trained_at": "2026-08-27T23:50:32.196021",
-    "n_train_samples": 912,
+    "trained_at": "2026-09-01T13:09:34.535786",
+    "train_period": "2021-04-01 to 2024-12-01",
+    "test_period": "2025-01-01 to 2025-12-01",
+    "n_train_samples": 720,
+    "n_test_samples": 192,
     "metrics": {
-      "mae": 0.1732,
-      "rmse": 0.3016,
-      "r2": 0.456
+      "mae": 0.362,
+      "rmse": 0.5352,
+      "r2": -0.2947
     },
     "top_features": [
       {
         "feature": "month",
-        "importance": 0.27895871220347895
-      },
-      {
-        "feature": "cases_lag2",
-        "importance": 0.09111456749629979
-      },
-      {
-        "feature": "population",
-        "importance": 0.0782825875305161
+        "importance": 0.35431042057776096
       },
       {
         "feature": "cases_lag1",
-        "importance": 0.06628211054391286
+        "importance": 0.1190875376125019
       },
       {
-        "feature": "rainfall_lag3",
-        "importance": 0.04469453994834772
+        "feature": "population",
+        "importance": 0.07903903302988236
+      },
+      {
+        "feature": "cases_per_10k_lag1",
+        "importance": 0.06877792481060306
+      },
+      {
+        "feature": "month_sin",
+        "importance": 0.06677162504238256
       }
     ]
   }
