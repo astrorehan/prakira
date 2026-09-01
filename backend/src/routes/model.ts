@@ -104,6 +104,12 @@ function serialize(
     /* Kolomnya boleh kosong: baris backtest yang tersimpan sebelum layanan ML
        mengirim `top_features` tetap harus bisa dibaca tanpa melempar. */
     top_features: row.top_features ? JSON.parse(row.top_features) : [],
+    /* Pembanding naif dan kalibrasi rentang. Dikirim apa adanya, termasuk saat
+       modelnya kalah dari pembanding: menyembunyikannya jauh lebih berisiko
+       daripada menyatakannya, karena pertanyaan tentang baseline pasti datang
+       dan halaman yang sudah menjawabnya lebih kuat (PRD §7-H5). */
+    baselines: row.baselines ? JSON.parse(row.baselines) : null,
+    conformal: row.conformal ? JSON.parse(row.conformal) : null,
     fetched_at: row.fetched_at,
   };
 }

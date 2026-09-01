@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { DiseaseSelector } from "@/components/disease-selector";
 import { BacktestCard } from "@/components/backtest-card";
 import { ModelSummary } from "@/components/model-summary";
+import { ModelBenchmark } from "@/components/model-benchmark";
 import { ModelCoverage } from "@/components/model-coverage";
 import { DataState } from "@/components/data-state";
 import {
@@ -194,6 +195,27 @@ export function ModelTransparency() {
           )}
         </DataState>
       </section>
+
+      {/* 3b. Pembanding naif + kalibrasi rentang.
+
+          Metrik di atas menjawab "seberapa meleset". Dua blok ini menjawab dua
+          pertanyaan yang selalu menyusul dan sebelumnya tidak terjawab di mana
+          pun: apakah melesetnya lebih kecil daripada tebakan tanpa model, dan
+          apakah rentang yang ditampilkan benar-benar menampung kenyataan
+          sesering yang diakuinya. */}
+      {activeMetric && (
+        <section className="space-y-4">
+          <div className="space-y-1">
+            <h2 className="h-section text-foreground">Uji yang lebih keras</h2>
+            <p className="text-body-sm text-paper-600">
+              Angka bagus belum tentu angka berguna. Di sini model diadu dengan
+              tebakan yang tidak butuh model, dan rentang prakiraannya
+              diperiksa terhadap kenyataan.
+            </p>
+          </div>
+          <ModelBenchmark metric={activeMetric} />
+        </section>
+      )}
 
       {/* Jembatan ke Mesin Waktu. Metrik agregat menjawab "seberapa meleset";
           rute itu menjawab "di kecamatan mana, bulan apa, dan seberapa awal". */}

@@ -294,6 +294,18 @@ export function fetchReportQueue(
   return request(`/api/reports${query}`);
 }
 
+/**
+ * Foto satu laporan, diambil terpisah dari barisnya.
+ *
+ * Antrean verifikasi dulu menerima setiap foto dari setiap laporan sekaligus,
+ * termasuk yang sudah selesai berbulan-bulan lalu — seratus laporan berfoto
+ * menjadi respons ±40 MB. Sekarang daftarnya hanya membawa `hasPhoto`, dan
+ * gambarnya diminta ketika kartunya benar-benar terlihat di layar.
+ */
+export function fetchReportPhoto(id: string): Promise<{ data: string }> {
+  return request(`/api/reports/${encodeURIComponent(id)}/photo`);
+}
+
 export function reviewReport(
   id: string,
   decision: { status: "terverifikasi" | "ditolak"; note?: string },

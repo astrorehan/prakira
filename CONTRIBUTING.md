@@ -18,7 +18,7 @@ Panduan berkontribusi pada **PRAKIRA** (*Sistem Peringatan Dini Risiko Penyakit 
    - [Langkah 4: Seeding Basis Data](#langkah-4-seeding-basis-data)
    - [Langkah 5: Menjalankan Aplikasi](#langkah-5-menjalankan-aplikasi)
 6. [Standar Penulisan Kode](#standar-penulisan-kode)
-   - [Frontend (Next.js 14 App Router)](#1-frontend-nextjs-14-app-router)
+   - [Frontend (Next.js 15 App Router)](#1-frontend-nextjs-15-app-router)
    - [Backend Gateway (Express & TypeScript)](#2-backend-gateway-express--typescript)
    - [ML Services (FastAPI & Python)](#3-ml-services-fastapi--python)
    - [Integritas Data & Privasi (PRD §8)](#4-integritas-data--privasi-prd-8)
@@ -43,7 +43,7 @@ PRAKIRA dirancang dengan arsitektur 3 layanan terpisah untuk memisahkan beban ko
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│                 Frontend — Next.js 14                    │
+│                 Frontend — Next.js 15                    │
 │   Port: 3000 · App Router · Tailwind · Leaflet · Recharts │
 └────────────────────────────┬─────────────────────────────┘
                              │ Proksi internal: /api/*
@@ -60,7 +60,7 @@ PRAKIRA dirancang dengan arsitektur 3 layanan terpisah untuk memisahkan beban ko
 
 | Direktori | Layanan | Port Dev | Teknologi Utama |
 |---|---|---|---|
-| [`frontend/`](./frontend) | Portal Warga & Konsol Dinas | `3000` | Next.js 14, React 18, Tailwind CSS, Lucide, Leaflet, Recharts |
+| [`frontend/`](./frontend) | Portal Warga & Konsol Dinas | `3000` | Next.js 15, React 18, Tailwind CSS, Lucide, Leaflet, Recharts |
 | [`backend/`](./backend) | API Gateway & Orchestrator | `4200` | Express, TypeScript, Node.js, PostgreSQL (Supabase `pg`) |
 | [`ml-services/`](./ml-services) | Engine Prediksi & Backtest | `8001` | FastAPI, Uvicorn, Python 3.12, Scikit-Learn, XGBoost, Pandas |
 
@@ -233,7 +233,7 @@ Bila ingin mengisolasi log atau mendebug layanan tertentu:
 
 ## Standar Penulisan Kode
 
-### 1. Frontend (Next.js 14 App Router)
+### 1. Frontend (Next.js 15 App Router)
 - **TypeScript Ketat:** Hindari tipe `any`. Seluruh struktur data wajib didefinisikan di [`frontend/src/types/`](./frontend/src/types).
 - **Pengambilan Data & State:** Gunakan hook `useApi` dan bungkus komponen data dengan `<DataState>` agar menangani 4 kondisi: `loading`, `error`, `empty`, dan `data` secara konsisten.
 - **Desain Semantik:** Rujuk [`docs/DESIGN-SYSTEM.md`](./docs/DESIGN-SYSTEM.md). Jangan gunakan nilai *hardcoded hex* di kelas Tailwind atau inline styles.

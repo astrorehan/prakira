@@ -12,19 +12,19 @@ import {
   createReport,
   deviceHash,
   findReport,
+  findReportPhoto,
   getTriggerSummaryByDistrict,
   listReports,
   reviewReport,
   summarizeQueue,
+  toPublicView as publicView,
   type ReportKind,
-  type ReportRow,
 } from "../services/reports.js";
 import { listKecamatan } from "../services/districts.js";
 import {
   DEFAULT_RULES,
   detectEscalations,
 } from "../services/escalation.js";
-import { isSimulated } from "../services/demo.js";
 import { requireAuth } from "../middleware/auth.js";
 import { asyncRoute, HttpError } from "../middleware/error.js";
 
@@ -50,30 +50,6 @@ function hashOf(req: Request): string {
   const ip = req.ip ?? req.socket?.remoteAddress ?? "unknown";
   const agent = req.get("user-agent") ?? "unknown";
   return deviceHash(ip, agent);
-}
-
-/** Tanpa `device_hash`: sidik jari perangkat tidak pernah keluar dari server.
- *
- *  `simulated` diturunkan dari sidik jari itu sebelum ia dibuang. Baris hasil
- *  peragaan wajib bisa dikenali di antrean verifikasi — petugas yang melihat
- *  delapan laporan baru berhak tahu mana yang datang dari warga dan mana yang
- *  disuntikkan untuk demo. */
-function publicView(row: ReportRow) {
-  return {
-    simulated: isSimulated(row),
-    id: row.id,
-    kind: row.kind,
-    kecamatan: row.kecamatan,
-    kelurahan: row.kelurahan,
-    occurredAt: row.occurred_at,
-    description: row.description,
-    submittedAt: row.submitted_at,
-    photo: row.photo,
-    status: row.status,
-    reviewedAt: row.reviewed_at,
-    reviewer: row.reviewer,
-    reviewNote: row.review_note,
-  };
 }
 
 reportsRouter.get(
@@ -211,6 +187,11 @@ reportsRouter.get(
   }),
 );
 
+/* Batas atas jumlah baris yang dikirim sekaligus. Tanpa foto satu baris hanya
+   beberapa ratus bita, jadi angka ini longgar — gunanya menjaga respons tetap
+   berhingga saat tabelnya tumbuh, bukan memaksa petugas membalik halaman. */
+const MAX_QUEUE_ROWS = 500;
+
 reportsRouter.get(
   "/",
   requireAuth,
@@ -218,10 +199,40 @@ reportsRouter.get(
     const kecamatan =
       typeof req.query.kecamatan === "string" ? req.query.kecamatan : undefined;
     const rows = await listReports({ kecamatan });
+    const page = rows.slice(0, MAX_QUEUE_ROWS);
+    const summary = await summarizeQueue();
+
     res.json({
-      meta: await summarizeQueue(),
-      data: rows.map(publicView),
+      meta: {
+        ...summary,
+        shown: page.length,
+        /* Dipotong dengan mengatakannya. Antrean yang diam-diam kehilangan
+           baris adalah antrean yang membuat petugas mengira pekerjaannya
+           sudah habis. */
+        truncated: rows.length > page.length,
+      },
+      data: page.map(publicView),
     });
+  }),
+);
+
+/**
+ * Foto satu laporan, diambil saat petugas benar-benar melihatnya.
+ *
+ * Terdaftar setelah `/track/:code` dan kerabatnya supaya tidak menaungi rute
+ * dua segmen yang lain.
+ */
+reportsRouter.get(
+  "/:id/photo",
+  requireAuth,
+  asyncRoute(async (req, res) => {
+    const photo = await findReportPhoto(req.params.id);
+    if (!photo) throw new HttpError(404, "Laporan ini tidak melampirkan foto.");
+    /* Tetap data URL, bukan bita mentah: nilainya langsung bisa dipasang ke
+       `src` sebuah `<img>`, dan pengambilannya lewat pembungkus `request()`
+       yang sudah membawa cookie sesi. Selisih ukurannya (base64 menambah
+       sepertiga) tidak berarti untuk satu gambar yang diminta sekali. */
+    res.json({ data: photo });
   }),
 );
 

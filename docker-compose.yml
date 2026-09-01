@@ -1,0 +1,107 @@
+# Mode luring — seluruh sistem berjalan tanpa internet.
+#
+# Alasannya operasional, bukan gaya. Tumpukan produksi PRAKIRA berjalan di tiga
+# paket gratis dengan tiga perilaku tidur yang berbeda: Supabase menjeda proyek
+# setelah sekitar tujuh hari tanpa aktivitas, Render mematikan layanan setelah
+# 15 menit menganggur, dan cakram Render bersifat sementara. Jaringan aula
+# pameran menambah risiko keempat yang sepenuhnya di luar kendali siapa pun.
+# Berkas ini menghapus keempatnya sekaligus: Postgres, layanan ML, gateway, dan
+# frontend berjalan di satu mesin, dan tidak ada satu pun permintaan yang
+# keluar dari laptop.
+#
+#   docker compose build      # sekali, di tempat yang ada internet
+#   docker compose up         # di mana saja, termasuk tanpa jaringan
+#
+# Urutan itu penting: membangun image tetap menarik base image dan dependensi
+# dari jaringan. Yang berjalan luring adalah `up`, bukan `build`.
+#
+# Penyemaian berjalan sendiri saat gateway pertama menyala — dataset kasus,
+# iklim, dan batas wilayah sudah ikut di dalam image gateway. Model `.pkl` ikut
+# di image layanan ML. Tidak ada langkah manual di antara `up` dan dashboard
+# yang hidup.
+#
+# Nilai rahasia di bawah adalah nilai peragaan dan ditulis apa adanya dengan
+# sengaja: tumpukan ini hanya mendengarkan di localhost dan tidak pernah
+# dipasang di internet. Untuk penempatan sungguhan, lihat docs/DEPLOY.md.
+
+name: prakira
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: prakira
+      POSTGRES_PASSWORD: prakira
+      POSTGRES_DB: prakira
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      # Gateway menolak start bila basis datanya belum siap, jadi `depends_on`
+      # saja tidak cukup — yang ditunggu adalah Postgres yang sudah menerima
+      # koneksi, bukan kontainer yang sudah berjalan.
+      test: ["CMD-SHELL", "pg_isready -U prakira -d prakira"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  ml:
+    build:
+      context: .
+      dockerfile: docker/ml.Dockerfile
+    environment:
+      ENVIRONMENT: development
+      ML_API_TOKEN: prakira-luring
+    healthcheck:
+      test:
+        ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/health')\""]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    ports:
+      - "127.0.0.1:8001:8001"
+
+  gateway:
+    build:
+      context: .
+      dockerfile: docker/gateway.Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+      ml:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: "4200"
+      DATABASE_URL: postgres://prakira:prakira@db:5432/prakira
+      # Postgres lokal tanpa sertifikat.
+      DATABASE_SSL: "false"
+      ML_SERVICE_URL: http://ml:8001
+      ML_API_TOKEN: prakira-luring
+      # Semuanya lokal, jadi tidak perlu menunggu layanan bangun dari tidur.
+      ML_TIMEOUT_MS: "20000"
+      SESSION_SECRET: prakira-luring-session-secret
+      SEED_ADMIN_EMAIL: dinkes@prakira.id
+      SEED_ADMIN_PASSWORD: prakira2026
+      CORS_ORIGINS: http://localhost:3000
+      # Tidak ada proksi di depan gateway di sini; membaca `X-Forwarded-For`
+      # berarti mempercayai header yang ditulis klien. Lihat `trustProxy`.
+      TRUST_PROXY: "0"
+    ports:
+      - "127.0.0.1:4200:4200"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+    depends_on:
+      - gateway
+    environment:
+      # Peramban tetap memanggil `/api/*` same-origin; Next yang meneruskannya
+      # ke gateway lewat jaringan internal compose.
+      API_PROXY_TARGET: http://gateway:4200
+      PORT: "3000"
+    ports:
+      - "3000:3000"
+
+volumes:
+  pgdata:

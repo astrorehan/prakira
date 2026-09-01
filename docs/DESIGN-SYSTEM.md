@@ -6,7 +6,7 @@ Pendamping [`PRD.md`](./PRD.md) · Versi 2.6 · 28 Agustus 2026
 > **Status dokumen.** Dokumen ini adalah **sumber kebenaran tunggal (ground truth)** representasi 100% frontend PRAKIRA (`frontend/src`).
 > Setiap token, permukaan, komponen, rute, aturan aksesibilitas, dan status drift yang tertulis di sini diverifikasi langsung terhadap kode: `frontend/tailwind.config.ts`, `frontend/src/app/globals.css`, `frontend/src/lib/`, dan seluruh komponen di `frontend/src/components/`.
 >
-> Urutan kebenaran: `tailwind.config.ts` → `globals.css` → `DESIGN-SYSTEM.md` / `design.md`.
+> Urutan kebenaran: `tailwind.config.ts` → `globals.css` → `DESIGN-SYSTEM.md`.
 
 ---
 

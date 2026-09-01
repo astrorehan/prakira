@@ -1,0 +1,11 @@
+/* Berkas uji ada di luar `rootDir` build supaya tidak ikut terkompilasi ke
+   `dist/`, tetapi tetap harus diperiksa tipenya — uji yang tidak dikompilasi
+   adalah uji yang bisa membusuk diam-diam. */
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "rootDir": "."
+  },
+  "include": ["src/**/*.ts", "tests/**/*.ts"]
+}

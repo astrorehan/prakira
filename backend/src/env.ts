@@ -128,4 +128,32 @@ export const env = {
     max: Number(process.env.REPORT_RATE_MAX ?? 3),
     windowHours: Number(process.env.REPORT_RATE_WINDOW_HOURS ?? 24),
   },
+
+  /* Batas percobaan masuk per alamat. Lima percobaan per seperempat jam
+     longgar untuk petugas yang salah ketik dan sempit untuk yang menebak:
+     ruang kata sandi apa pun yang layak disebut kata sandi tidak habis pada
+     laju 480 tebakan per hari. */
+  loginRateLimit: {
+    max: Number(process.env.LOGIN_RATE_MAX ?? 5),
+    windowMinutes: Number(process.env.LOGIN_RATE_WINDOW_MINUTES ?? 15),
+  },
+
+  /* Berapa lapis proksi yang boleh dipercaya saat membaca alamat pengirim.
+     Render menaruh proksinya sendiri di depan setiap layanan, jadi tanpa
+     nilai ini `req.ip` berisi alamat proksi itu — sama untuk semua orang.
+     Pembatas laju yang membaca alamat begitu akan mengunci seluruh dunia
+     dalam satu ember begitu ada satu penebak, dan batas laporan warga
+     kehilangan sebagian besar dayanya.
+
+     Angkanya sengaja tidak `true`. `true` berarti mempercayai seluruh rantai
+     `X-Forwarded-For`, dan rantai itu ditulis klien: siapa pun bisa
+     menambahkan alamat palsu di depannya lalu memakai alamat baru setiap
+     percobaan. Angka 1 mengambil satu lompatan terakhir — yang ditambahkan
+     proksi Render sendiri dan tidak bisa dipalsukan dari luar. Di
+     pengembangan tidak ada proksi, jadi bawaannya mati. */
+  trustProxy: process.env.TRUST_PROXY
+    ? Number(process.env.TRUST_PROXY)
+    : isProduction
+      ? 1
+      : 0,
 } as const;

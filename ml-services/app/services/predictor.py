@@ -29,6 +29,7 @@ from app.services.risk_classifier import (
 )
 from app.services.driver_extractor import extract_drivers
 from app.services.feature_frame import build_feature_row
+from training.conformal import difficulty, interval as conformal_interval
 from training.ensemble import DBDEnsembleModel, ISPAEnsembleModel, LeptospirosisEnsembleModel
 
 logger = logging.getLogger(__name__)
@@ -138,7 +139,7 @@ def predict_single(
     # dipindah ke `feature_frame` supaya `/explain` dan `/simulate` berangkat
     # dari baris yang persis sama — penjelasan yang menerangkan angka berbeda
     # dari yang tampil di dashboard lebih buruk daripada tidak ada penjelasan.
-    feature_row = build_feature_row(df_hist, df_kec)
+    feature_row = build_feature_row(df_hist, df_kec, month)
 
     # Prediksi
     pred_raw = model.predict(feature_row)
@@ -146,8 +147,10 @@ def predict_single(
     predicted = max(0, predicted)
     predicted_int = int(round(predicted))
 
-    # Confidence interval — estimasi dari variasi prediksi sub-model (ensemble)
-    lower, upper = _estimate_confidence(model, feature_row, cfg)
+    # Rentang prakiraan. Lebarnya berasal dari galat yang benar-benar teramati
+    # pada periode kalibrasi (`training/conformal.py`), bukan dari selisih
+    # jawaban antar sub-model ensemble seperti sebelumnya.
+    lower, upper = _estimate_confidence(model, feature_row, cfg, model_meta)
 
     # Risk score dari distribusi historis kecamatan.
     #
@@ -186,6 +189,19 @@ def predict_single(
         "data_coverage": coverage,
         "drivers": drivers,
         "model_version": model_meta.get("version", "unknown"),
+        **_interval_provenance(model_meta),
+    }
+
+
+def _interval_provenance(model_meta: dict) -> dict:
+    """Label untuk rentang, diambil dari metadata bila kalibrasinya ada."""
+    conformal = (model_meta or {}).get("conformal") or {}
+    if not conformal:
+        return {}
+    return {
+        "interval_method": conformal.get("method"),
+        "interval_target_coverage": conformal.get("target_coverage"),
+        "interval_empirical_coverage": conformal.get("empirical_coverage"),
     }
 
 
@@ -213,20 +229,44 @@ def predict_batch(disease: str, month: str) -> list:
     return results
 
 
-def _estimate_confidence(model, X: pd.DataFrame, cfg: dict) -> Tuple[int, int]:
-    """Estimasi lower/upper bound dari ensemble sub-models.
+def _estimate_confidence(
+    model, X: pd.DataFrame, cfg: dict, model_meta: Optional[dict] = None
+) -> Tuple[int, int]:
+    """Batas bawah dan atas prakiraan.
 
-    Untuk ensemble custom, prediksi tiap sub-model lalu ambil P10/P90.
+    Jalur utamanya konformal: `q_hat` yang tersimpan di `metadata.json` dikali
+    penaksir kesulitan baris ini, lalu dibulatkan ke luar. Angka itu dikalibrasi
+    saat pelatihan pada bagian periode latih yang belum pernah dilihat model,
+    dan cakupan empirisnya diukur pada periode uji — keduanya ikut tersimpan di
+    metadata dan dipajang halaman transparansi.
+
+    Cara lama disimpan sebagai cadangan: sebaran prediksi antar sub-model,
+    P10–P90. Ia dipakai hanya bila metadata belum memuat blok konformal —
+    misalnya model lama yang belum dilatih ulang. Perlu dicatat apa adanya
+    bahwa cara itu mengukur ketidaksepakatan anggota ensemble, bukan galat
+    terhadap kenyataan, sehingga tidak membawa jaminan cakupan apa pun.
 
     Interval selalu dilebarkan agar memuat prediksi titik. Sebaran sub-model
     bisa lebih sempit daripada hasil blending-nya, dan interval yang tidak
     memuat angkanya sendiri ("2 kasus, rentang 1-1") membatalkan seluruh guna
     interval itu di UI (PRD section 7-H1).
     """
-    predictions = []
-
     # Pastikan X ber-kolom DataFrame untuk mencegah UserWarning sklearn feature_names
     X_df = X if isinstance(X, pd.DataFrame) else pd.DataFrame(X, columns=FEATURE_COLUMNS)
+    base_pred = max(0.0, float(model.predict(X_df)[0]))
+
+    conformal = (model_meta or {}).get("conformal")
+    if conformal and "q_hat" in conformal:
+        sigma = difficulty(X_df)
+        lower, upper = conformal_interval(np.array([base_pred]), sigma, float(conformal["q_hat"]))
+        return _bracket(base_pred, float(lower[0]), float(upper[0]))
+
+    logger.warning(
+        "Metadata tanpa blok konformal — jatuh ke sebaran sub-model, yang tidak "
+        "membawa jaminan cakupan. Latih ulang model untuk memulihkannya."
+    )
+
+    predictions = []
 
     # Model DBD dilatih pada log1p(cases): sub-model-nya menjawab dalam ruang
     # log, sedangkan predict() ensemble sudah mengembalikannya ke skala kasus.
@@ -245,8 +285,6 @@ def _estimate_confidence(model, X: pd.DataFrame, cfg: dict) -> Tuple[int, int]:
             sub_model = getattr(model, attr)
             p = sub_model.predict(X_df)
             predictions.append(to_cases(float(p[0])))
-
-    base_pred = max(0.0, float(model.predict(X_df)[0]))
 
     # Jika model RandomForest biasa, gunakan prediksi per pohon
     if hasattr(model, "estimators_") and not predictions:

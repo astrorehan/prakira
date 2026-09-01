@@ -7,7 +7,11 @@ import sys
 import json
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
-from config import MODELS_DIR, DISEASE_CONFIG
+from config import DATASET_CLEAN_DIR, DISEASE_CONFIG, MODELS_DIR
+
+import pandas as pd
+
+from features.citizen_signal import assess, normalise
 
 router = APIRouter()
 
@@ -27,6 +31,18 @@ async def retrain(req: RetrainRequest):
     cfg = DISEASE_CONFIG[disease_lower]
     meta_path = MODELS_DIR / "metadata.json"
 
+    # Kelayakan sinyal warga diputuskan sebelum pelatihan dimulai, dan
+    # penolakannya membawa angka alasannya.
+    #
+    # Sebelumnya `include_citizen` diterima, tidak dipakai sama sekali, lalu
+    # dikembalikan di badan jawaban sebagai `true`. Petugas yang menekannya
+    # menerima konfirmasi bahwa sinyal warga sudah disertakan, padahal model
+    # yang dilatih persis sama dengan tanpa tombol itu — sekeluarga dengan C1:
+    # permukaan yang melaporkan skema selain yang dijalankan.
+    citizen_signal = None
+    if req.include_citizen:
+        citizen_signal = _eligible_signal(disease_lower, req)
+
     # Baca versi sebelumnya sebelum retrain
     previous_version = None
     if meta_path.exists():
@@ -37,10 +53,13 @@ async def retrain(req: RetrainRequest):
     try:
         if disease_lower == "dbd":
             from training.train_dbd import train_dbd_model
-            result = train_dbd_model()
+            result = train_dbd_model(citizen_signal=citizen_signal)
         elif disease_lower == "ispa":
             from training.train_ispa import train_ispa_model
-            result = train_ispa_model()
+            result = train_ispa_model(citizen_signal=citizen_signal)
+        elif disease_lower == "leptospirosis":
+            from training.train_leptospirosis import train_leptospirosis_model
+            result = train_leptospirosis_model(citizen_signal=citizen_signal)
         else:
             raise HTTPException(status_code=501, detail=f"Retrain for '{req.disease}' not implemented yet.")
 
@@ -75,3 +94,35 @@ async def retrain(req: RetrainRequest):
         previous_version=previous_version,
         improved=improved,
     )
+
+
+def _eligible_signal(disease: str, req: RetrainRequest):
+    """Sinyal warga yang layak dipakai, atau 409 beserta alasan angkanya.
+
+    Menolak dengan alasan yang jelas lebih berguna daripada menerima diam-diam.
+    Melatih pada kolom yang kosong di sebagian besar baris latih tidak
+    memberi model apa pun untuk dipelajari, tetapi membuat halaman transparansi
+    menyatakan sinyal warga sudah ikut menentukan prakiraan.
+    """
+    feature_path = DATASET_CLEAN_DIR / DISEASE_CONFIG[disease]["feature_file"]
+    if not feature_path.exists():
+        raise HTTPException(status_code=503, detail=f"Berkas fitur {feature_path.name} tidak ada.")
+
+    df = pd.read_csv(feature_path, usecols=["month_start"])
+    train_months = pd.to_datetime(df["month_start"])
+    train_months = train_months[train_months < DISEASE_CONFIG[disease]["split_date"]]
+
+    signal = normalise([row.model_dump() for row in (req.citizen_signal or [])])
+    verdict = assess(train_months, signal)
+    if not verdict.eligible:
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "message": verdict.reason,
+                "months_covered": verdict.months_covered,
+                "months_required": verdict.months_required,
+                "train_months": verdict.train_months,
+                "total_verified": verdict.total_verified,
+            },
+        )
+    return signal

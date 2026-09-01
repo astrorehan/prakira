@@ -1,6 +1,6 @@
 # PRAKIRA — Frontend
 
-Layanan frontend PRAKIRA. Next.js 14 (App Router) · TypeScript · Tailwind CSS ·
+Layanan frontend PRAKIRA. Next.js 15 (App Router) · TypeScript · Tailwind CSS ·
 Radix UI · react-leaflet · Recharts.
 
 Konteks produk dan arsitektur tiga layanan ada di [README utama](../README.md).
@@ -42,7 +42,7 @@ gateway dipasang di host lain tanpa proksi.
 ```
 frontend/
 └─ src/
-   ├─ app/                      # Next.js 14 App Router
+   ├─ app/                      # Next.js 15 App Router
    │  ├─ page.tsx               # landing publik & portal informasi
    │  ├─ dashboard/             # dashboard Dinkes — peta choropleth, KPI, ranking, trigger layer, quick action buletin
    │  ├─ buletin/               # mesin cetak buletin resmi SKDR A4 (kop Dinkes, matriks prioritas, SOP, otorisasi)

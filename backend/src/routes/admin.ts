@@ -22,7 +22,7 @@ import { detectEscalations } from "../services/escalation.js";
 import { REPORT_KINDS, type ReportKind } from "../services/reports.js";
 import { asyncRoute, HttpError } from "../middleware/error.js";
 import { finishIngestJob, startIngestJob } from "../db/seed.js";
-import { mlRetrain } from "../services/ml.js";
+import { CitizenSignalTooThinError, mlRetrain } from "../services/ml.js";
 import { refreshBacktest } from "../services/backtest.js";
 import { refreshPredictions } from "../services/predictions.js";
 import { regenerateActions } from "../services/actions.js";
@@ -340,7 +340,11 @@ adminRouter.post(
     }
 
     try {
-      const result = await mlRetrain(disease, includeCitizen);
+      /* Laporan warga hanya keluar dari gateway dalam bentuk agregat per
+         kecamatan per bulan — tanpa identitas, deskripsi, maupun foto (PRD §8).
+         Layanan ML tidak menyimpan laporan warga dan tidak boleh. */
+      const signal = includeCitizen ? await citizenSignal() : undefined;
+      const result = await mlRetrain(disease, includeCitizen, signal);
       await refreshPredictions(disease);
       await refreshBacktest(disease);
       await regenerateActions([disease]);
@@ -362,6 +366,13 @@ adminRouter.post(
         details: error instanceof Error ? error.message : String(error),
         status: "warning",
       });
+      /* Sinyal warga yang belum menutupi periode latih bukan kerusakan; ia
+         keadaan yang bisa berubah begitu verifikasi berjalan cukup lama.
+         Alasannya diteruskan berikut angkanya supaya petugas tahu apa yang
+         masih kurang, alih-alih menerima 503 yang menyesatkan. */
+      if (error instanceof CitizenSignalTooThinError) {
+        throw new HttpError(409, error.detail.message, { ...error.detail });
+      }
       throw new HttpError(
         503,
         "Layanan ML tidak dapat dihubungi untuk retraining. Jalankan ml-services lalu ulangi.",

@@ -1,0 +1,19 @@
+# Konteks build ketiga layanan adalah akar repositori, supaya gateway bisa
+# menyalin dataset dari ml-services dan GeoJSON dari frontend. Tanpa berkas
+# ini konteksnya ikut membawa node_modules dan .venv — ratusan megabita yang
+# dikirim ke daemon Docker pada setiap build.
+node_modules
+**/node_modules
+.next
+**/.next
+dist
+**/dist
+.venv
+**/.venv
+__pycache__
+**/__pycache__
+.git
+.github
+*.log
+**/.env
+**/.env.*

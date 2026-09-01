@@ -173,3 +173,7 @@ CREATE TABLE IF NOT EXISTS ingest_job (
 -- gagal dengan "column does not exist".
 ALTER TABLE model_backtest ADD COLUMN IF NOT EXISTS top_features TEXT;
 ALTER TABLE model_backtest ADD COLUMN IF NOT EXISTS district_results TEXT;
+-- Pembanding naif dan kalibrasi rentang. Keduanya JSON, keduanya boleh kosong
+-- pada baris yang tersimpan sebelum layanan ML mengirimkannya.
+ALTER TABLE model_backtest ADD COLUMN IF NOT EXISTS baselines TEXT;
+ALTER TABLE model_backtest ADD COLUMN IF NOT EXISTS conformal TEXT;

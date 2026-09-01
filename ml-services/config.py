@@ -73,6 +73,23 @@ FEATURE_COLUMNS = [
 TARGET_COLUMN = "cases"
 
 # ---------------------------------------------------------------------------
+# Sinyal warga sebagai fitur (PRD §5.6a)
+#
+# Loop warga -> verifikasi -> pelatihan ulang baru sah bila laporan
+# terverifikasi benar-benar menutupi periode latih. Ambang di bawah ini yang
+# memutuskan. Angkanya sengaja tinggi: fitur yang bernilai nol di 90% baris
+# latih tidak dipelajari model, tetapi tetap memberi kesan pada halaman
+# transparansi bahwa sinyal warga sudah ikut menentukan prakiraan.
+#
+# Selama ambang ini belum terlampaui, /retrain menolak permintaan
+# `include_citizen` dengan alasan yang disebutkan apa adanya — bukan
+# menerimanya lalu diam-diam mengabaikannya.
+# ---------------------------------------------------------------------------
+CITIZEN_FEATURE = "citizen_verified_lag1"
+MIN_CITIZEN_COVERAGE = 0.60  # porsi bulan latih yang wajib punya laporan
+MIN_CITIZEN_MONTHS = 12      # dan sekurang-kurangnya satu siklus musim penuh
+
+# ---------------------------------------------------------------------------
 # Per-disease training configuration
 # ---------------------------------------------------------------------------
 DISEASE_CONFIG = {

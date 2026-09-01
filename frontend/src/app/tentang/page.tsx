@@ -152,7 +152,7 @@ export default function TentangPage() {
 }
 
 const STACK = [
-  { icon: Globe, label: "Frontend", value: "Next.js 14 + Tailwind CSS + Leaflet + Recharts" },
+  { icon: Globe, label: "Frontend", value: "Next.js 15 + Tailwind CSS + Leaflet + Recharts" },
   { icon: Cpu, label: "Machine Learning", value: "XGBoost + Random Forest (Scikit-Learn / FastAPI)" },
   { icon: CloudRain, label: "Data iklim", value: "Deret bulanan per kecamatan (berkas dataset repositori)" },
   { icon: Activity, label: "Data Kasus", value: "Open Data Dinas Kesehatan Kota Semarang" },
