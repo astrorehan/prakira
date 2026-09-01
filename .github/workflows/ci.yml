@@ -46,14 +46,17 @@ jobs:
         run: python -m pytest tests/ -v
 
   backend:
-    name: backend (type-check)
+    name: backend (node:test, type-check)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
+      # Mengikuti `engines` di backend/package.json. Berkas uji memakai
+      # `t.mock.timers`, yang baru ada sejak Node 20.4, dan gateway sendiri
+      # menuntut >=22.5.
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: npm
           cache-dependency-path: backend/package-lock.json
 
@@ -61,6 +64,13 @@ jobs:
         working-directory: backend
 
       - run: npm run type-check
+        working-directory: backend
+
+      # Tidak butuh Postgres: yang diuji di sini murni logika dalam proses —
+      # pembatas laju masuk dan KDF kata sandi. Keduanya tidak menyentuh basis
+      # data, dan kolam koneksi `pg` baru dibuat saat `db()` dipanggil.
+      - name: Jalankan pengujian
+        run: npm test
         working-directory: backend
 
       - name: Pastikan gateway benar-benar terkompilasi

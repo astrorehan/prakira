@@ -32,6 +32,11 @@ import { regenerateActions } from "./services/actions.js";
 const app = express();
 
 app.disable("x-powered-by");
+/* Tanpa ini `req.ip` di Render berisi alamat proksi Render, sama untuk setiap
+   pengunjung — dan setiap pembatas laju per-alamat di gateway ini menjadi satu
+   ember bersama. Lihat `trustProxy` di `env.ts` untuk alasan angkanya bukan
+   `true`. */
+app.set("trust proxy", env.trustProxy);
 app.use(
   cors({
     origin: env.corsOrigins,

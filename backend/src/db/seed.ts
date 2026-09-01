@@ -292,7 +292,7 @@ async function seedAdminUser(tx: Tx): Promise<void> {
   );
   if (existing) return;
 
-  const { hash, salt } = hashPassword(env.seedAdminPassword);
+  const { hash, salt } = await hashPassword(env.seedAdminPassword);
   await tx.run(
     `INSERT INTO users (id, email, password_hash, salt, role, label, home, created_at)
      VALUES (?, ?, ?, ?, 'dinas', ?, '/dashboard', ?)`,

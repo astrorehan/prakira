@@ -12,7 +12,7 @@
 import crypto from "node:crypto";
 import { one, run } from "../db/index.js";
 import { env } from "../env.js";
-import { verifyPassword } from "./password.js";
+import { verifyDecoy, verifyPassword } from "./password.js";
 import { logAudit } from "./audit.js";
 
 export const SESSION_COOKIE = "prakira_session";
@@ -46,7 +46,14 @@ export async function signIn(
     normalized,
   );
 
-  if (!user || !verifyPassword(password, user.password_hash, user.salt)) {
+  /* KDF dijalankan juga saat emailnya tidak terdaftar. `verifyDecoy` selalu
+     gagal; gunanya hanya menghabiskan waktu yang sama, supaya lamanya jawaban
+     tidak memberi tahu penebak bahwa sebuah email ada. */
+  const matches = user
+    ? await verifyPassword(password, user.password_hash, user.salt)
+    : await verifyDecoy(password);
+
+  if (!user || !matches) {
     await logAudit({
       actor: normalized || "(kosong)",
       role: "Anonim",
