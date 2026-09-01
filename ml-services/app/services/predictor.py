@@ -138,7 +138,7 @@ def predict_single(
     # dipindah ke `feature_frame` supaya `/explain` dan `/simulate` berangkat
     # dari baris yang persis sama — penjelasan yang menerangkan angka berbeda
     # dari yang tampil di dashboard lebih buruk daripada tidak ada penjelasan.
-    feature_row = build_feature_row(df_hist, df_kec)
+    feature_row = build_feature_row(df_hist, df_kec, month)
 
     # Prediksi
     pred_raw = model.predict(feature_row)
