@@ -1,0 +1,4 @@
+# Dependensi pengujian. Sengaja dipisah dari requirements.txt: berkas itu yang
+# dipasang Render saat build, dan paket uji tidak perlu ikut ke produksi.
+-r requirements.txt
+pytest>=8.0.0

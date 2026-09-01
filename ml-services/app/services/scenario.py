@@ -142,7 +142,7 @@ def simulate_batch(
             continue
 
         try:
-            base_row = build_feature_row(df_hist, df_kec)
+            base_row = build_feature_row(df_hist, df_kec, month)
         except ValueError:
             rows.append(_empty_row(kecamatan_id, kec["name"], "insufficient"))
             continue

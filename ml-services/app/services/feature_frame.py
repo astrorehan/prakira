@@ -68,8 +68,96 @@ DERIVED_FEATURES: List[str] = [
 ]
 
 
-def build_feature_row(df_hist: pd.DataFrame, df_kec: pd.DataFrame) -> pd.DataFrame:
-    """Baris fitur terakhir kecamatan; rata-rata kota bila kecamatannya kosong.
+# Kolom sumber di berkas fitur yang menjadi asal tiap keluarga lag.
+# `build_features.py` membentuk `x_lag{k}` dengan `groupby(kecamatan).shift(k)`,
+# jadi arah baliknya: `x_lag{k}` baris bulan T = kolom sumber pada bulan T-k.
+LAG_SOURCES = {
+    "cases": "cases",
+    "rainfall": "rainfall_mm",
+    "temp": "temp_mean_c",
+    "humidity": "humidity_pct",
+}
+
+# Fitur yang tetap sepanjang riwayat satu kecamatan, jadi disalin apa adanya
+# dari baris terakhir alih-alih digulirkan.
+STATIC_FEATURES = ("population", "kecamatan_encoded")
+
+
+def _month_number(target_month) -> int:
+    """Nomor bulan 1–12 dari `YYYY-MM-DD`, `Timestamp`, atau angka biasa."""
+    if isinstance(target_month, (int, np.integer)):
+        return int(target_month)
+    return int(pd.Timestamp(target_month).month)
+
+
+def roll_forward(df_kec: pd.DataFrame, target_month) -> pd.DataFrame:
+    """Baris fitur untuk memprakirakan `target_month`, digulirkan dari riwayat.
+
+    Ini inti perbedaan antara *menjelaskan bulan terakhir* dan *memprakirakan
+    bulan berikutnya*. Baris terakhir di berkas fitur adalah baris **milik**
+    bulan terakhir: `month`-nya bulan itu, dan `cases_lag1`-nya kasus sebulan
+    sebelumnya. Menyerahkannya apa adanya ke model berarti meminta model
+    menghitung ulang bulan yang jumlah kasusnya sudah kita ketahui.
+
+    Untuk memprakirakan bulan T, seluruh jendela lag harus maju satu langkah —
+    `cases_lag1` menjadi kasus bulan T-1, yaitu observasi terakhir yang kita
+    punya — dan `month` menjadi T supaya penanda musim (`month_sin`,
+    `month_cos`, `is_pancaroba`) menunjuk bulan yang benar. Untuk penyakit
+    yang puncaknya musiman, dua hal itu bergerak ke arah yang sama; salah
+    keduanya sekaligus berarti meremehkan lonjakan justru pada bulan
+    lonjakannya.
+
+    Susunan hasilnya sengaja dibuat identik dengan baris latih bentukan
+    `features/build_features.py` untuk bulan yang sama. Kesamaan itu diuji
+    di `tests/test_feature_frame.py`: kalau ia lepas, metrik di `/model`
+    berhenti menggambarkan apa yang dihitung `/predict`.
+    """
+    history = df_kec.sort_values("month_start")
+    if len(history) < 3:
+        raise ValueError(
+            "Butuh minimal 3 bulan riwayat berturut-turut untuk menyusun fitur lag."
+        )
+
+    last_month = pd.Timestamp(history["month_start"].iloc[-1])
+    target = pd.Timestamp(target_month)
+
+    # Model ini dilatih satu langkah ke depan: `cases_lag1` selalu berarti
+    # "bulan tepat sebelum bulan yang diprakirakan". Bila jaraknya bukan satu
+    # bulan, jendela lag tidak lagi bermakna — dan menjawab tetap dengan angka
+    # lebih buruk daripada menolak menjawab (PRD §7).
+    gap = (target.year - last_month.year) * 12 + (target.month - last_month.month)
+    if gap != 1:
+        raise ValueError(
+            f"Prakiraan hanya sah untuk satu bulan setelah observasi terakhir "
+            f"({last_month:%Y-%m}), sedangkan yang diminta {target:%Y-%m}."
+        )
+
+    # Seluruh kolom dipaksa float64 sejak awal.
+    #
+    # `month`, `population`, `is_pancaroba`, dan `kecamatan_encoded` terbaca
+    # sebagai int64 dari CSV. Begitu simulator menaikkan hujan 30% atau
+    # penjelas mengganti sebuah kolom dengan median 7,5, pandas menolak menulis
+    # pecahan ke kolom bertipe bulat: "Invalid value '7.5' for dtype 'int64'".
+    # Model sendiri memperlakukan semuanya sebagai float, jadi tidak ada yang
+    # hilang — yang hilang justru kelas kesalahan ini.
+    row = pd.DataFrame(index=[0], columns=FEATURE_COLUMNS, dtype="float64")
+
+    for prefix, source in LAG_SOURCES.items():
+        for k in (1, 2, 3):
+            row.loc[0, f"{prefix}_lag{k}"] = float(history[source].iloc[-k])
+
+    for col in STATIC_FEATURES:
+        row.loc[0, col] = float(history[col].iloc[-1])
+
+    row.loc[0, "month"] = float(target.month)
+
+    return recompute_derived(row)
+
+
+def build_feature_row(
+    df_hist: pd.DataFrame, df_kec: pd.DataFrame, target_month
+) -> pd.DataFrame:
+    """Baris fitur untuk memprakirakan `target_month` di satu kecamatan.
 
     Logika yang sama dipakai `/predict`, `/explain`, dan `/simulate` supaya
     ketiganya berangkat dari titik awal yang identik. Kalau tidak, penjelasan
@@ -78,19 +166,15 @@ def build_feature_row(df_hist: pd.DataFrame, df_kec: pd.DataFrame) -> pd.DataFra
     if df_kec is None or df_kec.empty:
         if df_hist.empty:
             raise ValueError("Tidak ada data historis untuk prediksi.")
+        # Kecamatan tanpa riwayat sendiri: rata-rata kota sebagai titik awal.
+        # Lag-nya tidak bisa digulirkan — tidak ada deret untuk digulirkan —
+        # tetapi bulannya tetap wajib benar, karena musim berlaku sekota.
         row = pd.DataFrame([df_hist[FEATURE_COLUMNS].mean()], columns=FEATURE_COLUMNS)
-    else:
-        row = df_kec[FEATURE_COLUMNS].iloc[[-1]].reset_index(drop=True)
+        row = row.astype("float64")
+        row.loc[:, "month"] = float(_month_number(target_month))
+        return recompute_derived(row)
 
-    # Seluruh kolom dipaksa float64.
-    #
-    # `month`, `population`, `is_pancaroba`, dan `kecamatan_encoded` terbaca
-    # sebagai int64 dari CSV. Begitu simulator menaikkan hujan 30% atau
-    # penjelas mengganti sebuah kolom dengan median 7,5, pandas menolak menulis
-    # pecahan ke kolom bertipe bulat: "Invalid value '7.5' for dtype 'int64'".
-    # Model sendiri memperlakukan semuanya sebagai float, jadi tidak ada yang
-    # hilang — yang hilang justru kelas kesalahan ini.
-    return row.astype("float64")
+    return roll_forward(df_kec, target_month)
 
 
 def recompute_derived(row: pd.DataFrame) -> pd.DataFrame:
