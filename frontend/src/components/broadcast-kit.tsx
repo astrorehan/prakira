@@ -114,7 +114,7 @@ function DistrictCard({
   React.useEffect(() => {
     let alive = true;
     QRCode.toDataURL(url, QR_OPTIONS)
-      .then((data) => {
+      .then((data: string) => {
         if (alive) setQr(data);
       })
       .catch(() => {
