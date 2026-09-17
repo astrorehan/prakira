@@ -1,4 +1,4 @@
-# Penjaga tidur untuk tumpukan paket gratis.
+# Penjaga tidur untuk tumpukan paket gratis (Keepalive & Ping Services).
 #
 # Tiga layanan, tiga perilaku tidur yang berbeda, dan ketiganya menyerang pada
 # hari yang sama:
@@ -18,7 +18,7 @@
 # Alur ini tidak menggantikan mode luring di `docker-compose.yml`. Ia mengurangi
 # kemungkinan tumpukan daring tertidur; compose menghapus ketergantungan pada
 # jaringan sama sekali. Rencana pameran memakai keduanya.
-name: Penjaga tidur
+name: Ping & Keepalive (Backend Gateway & ML Service)
 
 on:
   schedule:
@@ -27,6 +27,15 @@ on:
     # yang lambat, bukan demo yang mati.
     - cron: "*/10 * * * *"
   workflow_dispatch:
+    inputs:
+      gateway_url:
+        description: "URL Backend Gateway (opsional, kosongkan untuk memakai default/vars)"
+        required: false
+        default: ""
+      ml_url:
+        description: "URL Layanan ML (opsional, kosongkan untuk memakai default/vars)"
+        required: false
+        default: ""
 
 # Alur terjadwal dinonaktifkan GitHub setelah 60 hari tanpa aktivitas di
 # repositori. Untuk rentang menuju 26 September itu tidak relevan, tetapi ia
@@ -37,59 +46,78 @@ concurrency:
 
 jobs:
   ping:
+    name: Ping Services
     runs-on: ubuntu-latest
     steps:
-      - name: Sentuh gateway dan layanan ML
+      - name: Ping Backend Gateway & ML Service
         env:
-          # Variabel repositori, bukan rahasia: keduanya URL publik.
-          # Settings -> Secrets and variables -> Actions -> Variables.
-          GATEWAY_URL: ${{ vars.GATEWAY_URL }}
-          ML_URL: ${{ vars.ML_SERVICE_URL }}
+          # Mengutamakan input manual > vars GitHub > secrets GitHub > default URL Render
+          GATEWAY_URL: ${{ inputs.gateway_url || vars.GATEWAY_URL || secrets.GATEWAY_URL || 'https://prakira-gateway.onrender.com' }}
+          ML_URL: ${{ inputs.ml_url || vars.ML_SERVICE_URL || secrets.ML_SERVICE_URL || 'https://prakira-ml.onrender.com' }}
         run: |
           set -u
-          if [ -z "${GATEWAY_URL}" ] && [ -z "${ML_URL}" ]; then
-            echo "GATEWAY_URL dan ML_SERVICE_URL belum diisi — tidak ada yang disentuh."
-            echo "Isi keduanya di Settings > Secrets and variables > Actions > Variables."
-            exit 0
+
+          if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+            {
+              echo "### 📡 Hasil Ping Layanan (Keepalive)"
+              echo ""
+              echo "| Layanan | URL | HTTP Status | Durasi | Keterangan |"
+              echo "|---|---|---|---|---|"
+            } >> "${GITHUB_STEP_SUMMARY}"
           fi
 
           status=0
 
-          # GitHub menjalankan langkah `run` dengan `bash -eo pipefail`, jadi
-          # `cond && { ...; }` yang bernilai salah akan menghentikan langkahnya.
-          # Percabangannya ditulis penuh supaya URL yang kosong benar-benar
-          # dilewati alih-alih mematikan alurnya.
-          # Basis dan jalur diteruskan terpisah. Bila keduanya sudah disatukan
-          # sebelum masuk ke sini, basis yang kosong menjadi "/health" — yang
-          # tidak kosong, lolos pemeriksaan, lalu gagal sebagai URL tak sah.
-          touch_service() {
-            name="$1"
-            base="$2"
-            path="$3"
+          ping_service() {
+            local name="$1"
+            local base="$2"
+            local path="$3"
+
             if [ -z "${base}" ]; then
-              echo "· ${name}: dilewati, URL kosong"
+              echo "::warning::[${name}] URL kosong, dilewati."
+              if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+                echo "| **${name}** | - | - | - | ⚠️ Dilewati (URL kosong) |" >> "${GITHUB_STEP_SUMMARY}"
+              fi
               return 0
             fi
-            url="${base%/}${path}"
-            echo "· ${name}: ${url}"
-            # --max-time longgar: instans Render yang baru bangun memang butuh
-            # ±50 detik untuk menjawab yang pertama, dan itu keberhasilan,
-            # bukan kegagalan.
-            if curl --silent --show-error --fail --location \
-                    --retry 3 --retry-delay 15 --retry-all-errors \
-                    --max-time 90 --output /dev/null --write-out "  HTTP %{http_code} dalam %{time_total}s\n" \
-                    "${url}"; then
-              :
+
+            local url="${base%/}${path}"
+            echo "📡 Memeriksa ${name}: ${url}"
+
+            local out_file
+            out_file=$(mktemp)
+            local http_metrics=""
+
+            # --max-time longgar (90s): instans Render yang baru bangun dari tidur butuh
+            # ±50 detik untuk menjawab permintaan pertama.
+            if http_metrics=$(curl --silent --show-error --fail --location \
+              --retry 3 --retry-delay 15 --retry-all-errors \
+              --max-time 90 --output "${out_file}" --write-out "%{http_code} %{time_total}" \
+              "${url}"); then
+              local http_code
+              local time_total
+              http_code=$(echo "${http_metrics}" | awk '{print $1}')
+              time_total=$(echo "${http_metrics}" | awk '{print $2}')
+              echo "  ✅ ${name} aktif (HTTP ${http_code}, durasi ${time_total}s)"
+              if [ -s "${out_file}" ]; then
+                head -c 160 "${out_file}"
+                echo ""
+              fi
+              if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+                echo "| **${name}** | \`${url}\` | \`${http_code}\` | \`${time_total}s\` | ✅ Berhasil |" >> "${GITHUB_STEP_SUMMARY}"
+              fi
             else
-              echo "  gagal dijangkau"
+              echo "  ❌ ${name} gagal dijangkau"
               status=1
+              if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+                echo "| **${name}** | \`${url}\` | Gagal | - | ❌ Gagal dijangkau |" >> "${GITHUB_STEP_SUMMARY}"
+              fi
             fi
+            rm -f "${out_file}"
           }
 
-          touch_service "gateway" "${GATEWAY_URL}" "/api/health"
-          touch_service "layanan ML" "${ML_URL}" "/health"
+          ping_service "Backend Gateway" "${GATEWAY_URL}" "/api/health"
+          ping_service "ML Service" "${ML_URL}" "/health"
 
-          # Kegagalan sengaja dibiarkan merah. Alur ini satu-satunya yang
-          # memeriksa tumpukan daring secara berkala; keheningan saat ia mati
-          # adalah persis keadaan yang hendak dicegah.
+          # Kegagalan sengaja dibiarkan non-zero (merah) agar tim mendapat notifikasi saat service mati.
           exit "${status}"

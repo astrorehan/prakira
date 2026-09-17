@@ -104,18 +104,18 @@ Sengaja bukan `NEXT_PUBLIC_`: nilainya hanya dipakai proses Next di server,
 sehingga peramban memanggil `/api/*` same-origin, cookie sesi ikut tanpa
 konfigurasi CORS, dan alamat internal gateway tidak ikut terkirim ke klien.
 
-### 2.4 Penjaga tidur
+### 2.4 Penjaga tidur (Keepalive)
 
-`.github/workflows/keepalive.yml` menyentuh kedua layanan tiap 10 menit. Ia
-perlu dua **variabel repositori** (Settings → Secrets and variables → Actions →
-Variables — bukan Secrets, keduanya URL publik):
+`.github/workflows/keepalive.yml` menyentuh kedua layanan tiap 10 menit agar tidak tertidur di Render. Secara bawaan sudah memakai URL produksi:
+- Gateway: `https://prakira-gateway.onrender.com/api/health`
+- ML Service: `https://prakira-ml.onrender.com/health`
 
-| Variabel | Isi |
-|---|---|
-| `GATEWAY_URL` | `https://prakira-gateway.onrender.com` |
-| `ML_SERVICE_URL` | `https://prakira-ml.onrender.com` |
+Bila memakai domain kustom atau URL berbeda, Anda dapat menimpanya lewat **variabel / secret repositori** (Settings → Secrets and variables → Actions) atau input manual saat memicu workflow (`workflow_dispatch`):
 
-Tanpa keduanya alur itu berjalan dan tidak melakukan apa-apa, bukan gagal.
+| Variabel | Bawaan | Keterangan |
+|---|---|---|
+| `GATEWAY_URL` | `https://prakira-gateway.onrender.com` | URL publik backend gateway |
+| `ML_SERVICE_URL` | `https://prakira-ml.onrender.com` | URL publik layanan ML |
 
 `/api/health` memanggil `isSeeded()`, yang menyentuh Postgres — jadi satu
 permintaan ke gateway sekaligus menjaga Supabase terjaga dan Render hangat.
