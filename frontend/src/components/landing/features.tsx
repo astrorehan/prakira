@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useState } from "react";
-import { Bug, Wind, Droplets, AlertCircle } from "lucide-react";
+import { Bug, Wind, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { DiseaseType } from "@/types";
 
@@ -82,35 +82,6 @@ const GUIDES: Guide[] = [
     ],
     seekCare:
       "Ke puskesmas bila batuk lebih dari 3 hari disertai sesak, napas berbunyi, atau demam yang tidak turun.",
-  },
-  {
-    key: "Diare",
-    tab: "Diare",
-    icon: Droplets,
-    headline: "Setelah banjir, air sumur belum tentu bersih",
-    standfirst:
-      "Genangan membawa cemaran ke sumber air rumah tangga. Kasus diare biasanya naik satu sampai dua minggu setelah hujan ekstrem.",
-    steps: [
-      {
-        title: "Rebus air sampai mendidih",
-        detail: "Biarkan mendidih penuh sekitar satu menit sebelum diangkat.",
-      },
-      {
-        title: "Cuci tangan pakai sabun",
-        detail: "Sebelum makan, sebelum menyiapkan makanan, dan setelah dari toilet.",
-      },
-      {
-        title: "Periksa sumur setelah genangan",
-        detail: "Air keruh atau berbau perlu diklorinasi sebelum dipakai.",
-      },
-      {
-        title: "Sediakan oralit di rumah",
-        detail:
-          "Dehidrasi jauh lebih berbahaya daripada diarenya sendiri, terutama pada balita.",
-      },
-    ],
-    seekCare:
-      "Ke puskesmas bila diare lebih dari 2 hari, ada darah pada tinja, atau muncul tanda dehidrasi seperti lemas dan jarang buang air kecil.",
   },
 ];
 

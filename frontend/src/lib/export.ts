@@ -8,9 +8,11 @@
  * berkas yang pernah dibuat. Tombol yang mengaku sudah mengunduh sesuatu
  * adalah kebohongan kecil yang mahal: petugas akan mencari berkas itu.
  *
- * Yang tersedia sekarang hanya CSV, dan itu memang batasnya — PDF berformat
- * dinas butuh pustaka penata halaman yang belum ada di repo ini, jadi
- * pilihannya dihapus alih-alih dipalsukan.
+ * Yang disediakan berkas ini hanya CSV. Dokumen berformat dinas tidak dibuat
+ * di sini dan tidak dipalsukan: `/tindakan/nota/[id]` menyusunnya sebagai satu
+ * lembar A4 yang benar di layar dan di kertas, lalu menyerahkan pencetakannya
+ * ke mesin cetak peramban — "Simpan sebagai PDF" sudah ada di dialog cetak,
+ * jadi repositori ini tidak perlu pustaka penata halaman sama sekali.
  */
 
 export type CsvColumn<T> = {

@@ -18,7 +18,7 @@ import {
   Info,
 } from "lucide-react";
 import type { BacktestMonth, DiseaseType, RiskLevel } from "@/types";
-import { cn, formatNumber, RISK_CONFIG, RISK_UNKNOWN } from "@/lib/utils";
+import { cn, diseaseLabel, formatNumber, RISK_CONFIG, RISK_UNKNOWN } from "@/lib/utils";
 import { formatMonth, formatMonthShort } from "@/lib/period";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
@@ -172,7 +172,7 @@ export function BacktestComparisonChart({
     return (
       <div className={cn("rounded-xl border border-dashed border-paper-300 p-6 text-center bg-paper-50/50", className)}>
         <p className="text-body-sm text-paper-600">
-          Rincian deret uji bulanan belum tersedia untuk model {disease}.
+          Rincian deret uji bulanan belum tersedia untuk model {diseaseLabel(disease)}.
         </p>
       </div>
     );

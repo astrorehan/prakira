@@ -59,6 +59,22 @@ actionsRouter.get(
   }),
 );
 
+/* Satu tindakan, untuk permukaan yang memang hanya butuh satu — halaman nota
+   dinas membuka satu id langsung dari tautan, tanpa perlu menarik seluruh
+   antrean lalu membuang sisanya. Tetap terbuka untuk dibaca: isinya instruksi
+   wilayah, bukan identitas pelapor. */
+actionsRouter.get(
+  "/:id",
+  asyncRoute(async (req, res) => {
+    const row = await getAction(req.params.id);
+    if (!row) throw new HttpError(404, "Tindakan tidak ditemukan.");
+    res.json({
+      meta: await reportingPeriod(row.disease),
+      data: serialize(row),
+    });
+  }),
+);
+
 actionsRouter.patch(
   "/:id",
   requireAuth,

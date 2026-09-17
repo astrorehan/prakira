@@ -43,6 +43,51 @@ export type MlBacktestMonth = {
   risk_class_predicted: string | null;
 };
 
+/** Satu pasangan bulan x kecamatan pada periode uji model. */
+export type MlBacktestDistrict = {
+  month_start: string;
+  kecamatan_id: string;
+  actual: number;
+  predicted: number;
+  risk_score_actual: number;
+  risk_score_predicted: number;
+  risk_class_actual: string | null;
+  risk_class_predicted: string | null;
+};
+
+/** Metrik satu pembanding naif pada periode uji yang sama dengan model. */
+export type MlBaseline = {
+  label: string;
+  mae: number;
+  rmse: number;
+  r2: number;
+};
+
+export type MlBaselineSummary = {
+  best_baseline: string;
+  best_baseline_label: string;
+  best_baseline_mae: number;
+  model_mae: number;
+  model_beats_all_baselines: boolean;
+  mae_improvement_pct: number;
+};
+
+/** Kalibrasi rentang prakiraan, beserta cakupan yang benar-benar tercapai. */
+export type MlConformal = {
+  method: string;
+  alpha: number;
+  q_hat: number;
+  difficulty: string;
+  n_calibration: number;
+  n_folds?: number | null;
+  calibration_period: string;
+  target_coverage: number;
+  empirical_coverage: number;
+  mean_width: number;
+  median_width: number;
+  n_evaluated: number;
+};
+
 export type MlBacktest = {
   disease: string;
   model_version: string;
@@ -52,7 +97,12 @@ export type MlBacktest = {
   test_period: string;
   metrics: { mae: number; rmse: number; r2: number };
   monthly_results: MlBacktestMonth[];
+  district_results?: MlBacktestDistrict[];
   coverage_per_kecamatan: Record<string, string>;
+  top_features?: { feature: string; importance: number }[];
+  baselines?: Record<string, MlBaseline>;
+  baseline_summary?: MlBaselineSummary | null;
+  conformal?: MlConformal | null;
 };
 
 export type MlHealth = {
@@ -88,6 +138,20 @@ async function call<T>(pathname: string, init?: RequestInit): Promise<T> {
 
     if (!response.ok) {
       const body = await response.text().catch(() => "");
+      /* 409 dari /retrain bukan kegagalan layanan melainkan penolakan
+         beralasan: sinyal warga belum menutupi periode latih. Meleburnya
+         menjadi "layanan ML tidak dapat dihubungi" akan menyembunyikan satu-
+         satunya keterangan yang berguna di dalamnya. */
+      if (response.status === 409) {
+        try {
+          const parsed = JSON.parse(body) as { detail?: CitizenSignalRefusal };
+          if (parsed.detail?.message) {
+            throw new CitizenSignalTooThinError(parsed.detail);
+          }
+        } catch (parseError) {
+          if (parseError instanceof CitizenSignalTooThinError) throw parseError;
+        }
+      }
       throw new MlUnavailableError(
         `Layanan ML menjawab ${response.status} untuk ${pathname}: ${body.slice(0, 300)}`,
       );
@@ -96,6 +160,7 @@ async function call<T>(pathname: string, init?: RequestInit): Promise<T> {
     return (await response.json()) as T;
   } catch (error) {
     if (error instanceof MlUnavailableError) throw error;
+    if (error instanceof CitizenSignalTooThinError) throw error;
     throw new MlUnavailableError(
       `Layanan ML tidak dapat dihubungi di ${url}. Jalankan ml-services lalu ulangi.`,
       error,
@@ -126,7 +191,40 @@ export function mlBacktest(disease: string): Promise<MlBacktest> {
   );
 }
 
-export function mlRetrain(disease: string, includeCitizen: boolean) {
+/** Satu agregat laporan terverifikasi. Tanpa identitas, deskripsi, atau foto. */
+export type CitizenSignalRow = {
+  kecamatan: string;
+  month: string;
+  verified: number;
+};
+
+/**
+ * Alasan layanan ML menolak menyertakan sinyal warga, beserta angkanya.
+ *
+ * Ditampilkan ke petugas apa adanya. Penolakan berangka — "baru 3 dari 27 bulan
+ * yang dibutuhkan" — memberi tahu apa yang harus terjadi supaya tombolnya
+ * berguna; penolakan tanpa angka hanya terbaca sebagai kerusakan.
+ */
+export type CitizenSignalRefusal = {
+  message: string;
+  months_covered: number;
+  months_required: number;
+  train_months: number;
+  total_verified: number;
+};
+
+export class CitizenSignalTooThinError extends Error {
+  constructor(readonly detail: CitizenSignalRefusal) {
+    super(detail.message);
+    this.name = "CitizenSignalTooThinError";
+  }
+}
+
+export function mlRetrain(
+  disease: string,
+  includeCitizen: boolean,
+  citizenSignal?: CitizenSignalRow[],
+) {
   return call<{
     status: string;
     disease: string;
@@ -140,6 +238,118 @@ export function mlRetrain(disease: string, includeCitizen: boolean) {
     body: JSON.stringify({
       disease: disease.toUpperCase(),
       include_citizen: includeCitizen,
+      citizen_signal: includeCitizen ? (citizenSignal ?? []) : undefined,
+    }),
+  });
+}
+
+/* ── Penjelasan kontribusi fitur & simulator cuaca ───────────────────────── */
+
+export type MlExplainFeature = {
+  feature: string;
+  label: string;
+  unit: string;
+  value: number;
+  reference: number | null;
+  percentile: number | null;
+};
+
+export type MlExplainFamily = {
+  key: string;
+  label: string;
+  unit: string;
+  note: string;
+  reference_scope: "kecamatan" | "kota";
+  delta: number;
+  counterfactual_cases: number;
+  share_pct: number | null;
+  features: MlExplainFeature[];
+};
+
+export type MlExplain = {
+  kecamatan_id: string;
+  disease: string;
+  month: string;
+  data_coverage: "high" | "medium" | "low" | "insufficient";
+  baseline_cases: number;
+  baseline_rounded: number;
+  reference_scope: "kecamatan" | "kota";
+  reference_months: number;
+  total_movement: number;
+  families: MlExplainFamily[];
+  global_importance: { feature: string; label?: string; importance: number }[];
+  method: string;
+  notes: string[];
+};
+
+export type MlSimulateDistrict = {
+  kecamatan_id: string;
+  kecamatan_nama: string;
+  data_coverage: "high" | "medium" | "low" | "insufficient";
+  baseline_cases: number | null;
+  baseline_risk_score: number | null;
+  baseline_risk_class: string | null;
+  baseline_rank: number | null;
+  scenario_cases: number | null;
+  scenario_risk_score: number | null;
+  scenario_risk_class: string | null;
+  scenario_rank: number | null;
+  rainfall_baseline: number | null;
+  rainfall_scenario: number | null;
+  beyond_training: string[];
+};
+
+export type MlSimulate = {
+  disease: string;
+  month: string;
+  adjustment: {
+    rainfall_pct: number;
+    temp_delta_c: number;
+    humidity_delta_pct: number;
+  };
+  districts: MlSimulateDistrict[];
+  summary: {
+    evaluated: number;
+    baseline_total: number;
+    scenario_total: number;
+    baseline_high: number;
+    scenario_high: number;
+    rank_changed: number;
+    beyond_training: number;
+  };
+  notes: string[];
+};
+
+export function mlExplain(
+  disease: string,
+  kecamatanId: string,
+  month: string,
+): Promise<MlExplain> {
+  return call<MlExplain>("/explain", {
+    method: "POST",
+    body: JSON.stringify({
+      disease: disease.toUpperCase(),
+      kecamatan_id: kecamatanId,
+      month,
+    }),
+  });
+}
+
+export function mlSimulate(input: {
+  disease: string;
+  month: string;
+  rainfallPct: number;
+  tempDeltaC: number;
+  humidityDeltaPct: number;
+}): Promise<MlSimulate> {
+  return call<MlSimulate>("/simulate", {
+    method: "POST",
+    body: JSON.stringify({
+      disease: input.disease.toUpperCase(),
+      month: input.month,
+      rainfall_pct: input.rainfallPct,
+      temp_delta_c: input.tempDeltaC,
+      humidity_delta_pct: input.humidityDeltaPct,
     }),
   });
 }

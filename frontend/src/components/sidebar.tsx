@@ -15,6 +15,10 @@ import {
   Siren,
   ClipboardCheck,
   ArrowUpRight,
+  History,
+  Microscope,
+  Scale,
+  SlidersHorizontal,
 } from "lucide-react";
 import { AccessibilityMenu } from "@/components/accessibility-menu";
 import { BrandLockup } from "@/components/brand-lockup";
@@ -177,6 +181,10 @@ export function Sidebar() {
     <>
       <span className="overline block px-3.5 pb-1 pt-4">Permukaan publik</span>
       {[
+        { href: "/model", label: "Transparansi Model", icon: Microscope },
+        { href: "/mesin-waktu", label: "Mesin Waktu", icon: History },
+        { href: "/simulasi", label: "Simulator Cuaca", icon: SlidersHorizontal },
+        { href: "/prioritas", label: "Prioritas Terdampak", icon: Scale },
         { href: "/warga", label: "Portal Warga", icon: Users },
         { href: "/sistem", label: "Halaman Layanan", icon: Home },
       ].map((item) => {

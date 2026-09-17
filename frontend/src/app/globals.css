@@ -427,3 +427,68 @@
     animation: grow-x 900ms var(--ease-out) both;
   }
 }
+
+/* ============================================================================
+   Cetak — halaman nota dinas (/tindakan/nota/[id])
+   ----------------------------------------------------------------------------
+   Repositori ini tidak memuat pustaka penata halaman PDF, dan `lib/export.ts`
+   menolak memalsukan tombol unduh yang tidak menghasilkan berkas. Yang dipakai
+   di sini adalah mesin cetak peramban itu sendiri: satu lembar A4 yang benar
+   di layar dan benar di kertas, dan "Simpan sebagai PDF" adalah pilihan yang
+   sudah ada di dialog cetak setiap peramban.
+
+   Semua kebutuhan cetak dijaga oleh dua kelas saja — `.print-hide` untuk
+   kendali layar, `.print-sheet` untuk lembar yang dicetak — supaya komponen
+   tidak perlu tahu apa pun soal cetak.
+   ========================================================================== */
+@media print {
+  @page {
+    size: A4;
+    margin: 16mm 15mm 18mm;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+  }
+
+  /* Kop instansi dan lencana risiko kehilangan artinya bila printer membuang
+     latar warnanya; keduanya tetap terbaca hitam-putih karena setiap lencana
+     membawa label teks (DESIGN-SYSTEM §2.3), tapi cetak berwarna dihormati. */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .print-hide {
+    display: none !important;
+  }
+
+  .print-sheet {
+    width: auto !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* Tanda tangan, baris tabel, dan butir SOP tidak boleh terbelah halaman. */
+  .print-keep,
+  tr,
+  li {
+    break-inside: avoid;
+  }
+
+  /* Tabel kecamatan sasaran bisa melewati batas halaman; kepalanya ikut. */
+  thead {
+    display: table-header-group;
+  }
+
+  /* URL di belakang tautan hanya berguna di dokumen web. */
+  a[href]::after {
+    content: "";
+  }
+}

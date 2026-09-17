@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useMemo, useState } from "react";
-import { ArrowRight, Bug, Droplets, FileText, MapPin, Wind } from "lucide-react";
+import { ArrowRight, Bug, FileText, MapPin, Rat, Wind } from "lucide-react";
 
 import { cn, formatNumber, diseaseProfile, riskConfigOf } from "@/lib/utils";
 import { useKecamatanDirectory } from "@/lib/kecamatan";
@@ -24,7 +24,7 @@ import { CountUp } from "@/components/landing/count-up";
 const DISEASE_ICON: Record<string, React.ElementType> = {
   DBD: Bug,
   ISPA: Wind,
-  Diare: Droplets,
+  LEPTOSPIROSIS: Rat,
 };
 
 /* Ordinal fills for the 16-cell district strip. Lightness descends with risk,

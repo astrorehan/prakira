@@ -9,7 +9,11 @@ import { SistemMasthead } from "./sistem/masthead";
 import { SistemFooter } from "./sistem/sistem-footer";
 import { SessionProvider } from "./session-provider";
 import { ConsoleGuard } from "./console-guard";
-import { BARE_ROUTES, CONSOLE_ROUTES, SISTEM_ROUTES } from "@/lib/routes";
+import {
+  isBareRoute,
+  isConsoleRoute,
+  SISTEM_ROUTES,
+} from "@/lib/routes";
 
 /* WCAG 2.4.1. The /sistem masthead alone puts a government strip, six service
    links and a status line ahead of the content — a keyboard or screen-reader
@@ -32,9 +36,9 @@ function SkipLink() {
 
 export function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isConsole = CONSOLE_ROUTES.some((r) => pathname?.startsWith(r));
+  const isBare = isBareRoute(pathname ?? "");
+  const isConsole = isConsoleRoute(pathname ?? "");
   const isSistem = SISTEM_ROUTES.some((r) => pathname?.startsWith(r));
-  const isBare = BARE_ROUTES.some((r) => pathname?.startsWith(r));
   const surface = isConsole ? "console" : "public";
 
   /* data-surface lives on <html> so body and every token override see it.

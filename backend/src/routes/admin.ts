@@ -12,14 +12,23 @@ import { all, one, run, transaction } from "../db/index.js";
 import { parseCsv, parseCsvHeader, toNumber } from "../db/csv.js";
 import { recentAudit, logAudit } from "../services/audit.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
+import {
+  clearSimulation,
+  countSimulation,
+  injectSurge,
+  listSimulationDistricts,
+} from "../services/demo.js";
+import { detectEscalations } from "../services/escalation.js";
+import { REPORT_KINDS, type ReportKind } from "../services/reports.js";
 import { asyncRoute, HttpError } from "../middleware/error.js";
 import { finishIngestJob, startIngestJob } from "../db/seed.js";
-import { mlRetrain } from "../services/ml.js";
+import { CitizenSignalTooThinError, mlRetrain } from "../services/ml.js";
 import { refreshBacktest } from "../services/backtest.js";
 import { refreshPredictions } from "../services/predictions.js";
 import { regenerateActions } from "../services/actions.js";
 import { availableDiseases, monthLabel } from "../services/period.js";
 import { citizenSignal } from "../services/reports.js";
+import { listKecamatan } from "../services/districts.js";
 
 export const adminRouter = Router();
 
@@ -331,7 +340,11 @@ adminRouter.post(
     }
 
     try {
-      const result = await mlRetrain(disease, includeCitizen);
+      /* Laporan warga hanya keluar dari gateway dalam bentuk agregat per
+         kecamatan per bulan — tanpa identitas, deskripsi, maupun foto (PRD §8).
+         Layanan ML tidak menyimpan laporan warga dan tidak boleh. */
+      const signal = includeCitizen ? await citizenSignal() : undefined;
+      const result = await mlRetrain(disease, includeCitizen, signal);
       await refreshPredictions(disease);
       await refreshBacktest(disease);
       await regenerateActions([disease]);
@@ -353,6 +366,13 @@ adminRouter.post(
         details: error instanceof Error ? error.message : String(error),
         status: "warning",
       });
+      /* Sinyal warga yang belum menutupi periode latih bukan kerusakan; ia
+         keadaan yang bisa berubah begitu verifikasi berjalan cukup lama.
+         Alasannya diteruskan berikut angkanya supaya petugas tahu apa yang
+         masih kurang, alih-alih menerima 503 yang menyesatkan. */
+      if (error instanceof CitizenSignalTooThinError) {
+        throw new HttpError(409, error.detail.message, { ...error.detail });
+      }
       throw new HttpError(
         503,
         "Layanan ML tidak dapat dihubungi untuk retraining. Jalankan ml-services lalu ulangi.",
@@ -374,5 +394,104 @@ adminRouter.post(
       "UPDATE ingest_job SET status = 'failed', detail = 'Proses terputus.' WHERE status = 'running' AND finished_at IS NULL",
     );
     res.status(204).end();
+  }),
+);
+
+/* ── Peragaan lonjakan laporan ───────────────────────────────────────────── */
+
+/**
+ * Menyuntikkan laporan bertanda `[SIMULASI]` untuk memperagakan eskalasi S4.
+ *
+ * Peran dibatasi admin/dinas — sama seperti retraining — karena keduanya
+ * menulis ke data bersama yang dilihat semua petugas. Baris yang disisipkan
+ * ditandai di kolom `device_hash` dan bisa dicabut utuh lewat `DELETE` di
+ * bawah. Lihat `services/demo.ts` untuk pagar selengkapnya.
+ */
+adminRouter.post(
+  "/demo/surge",
+  requireRole("admin", "dinas"),
+  asyncRoute(async (req, res) => {
+    const body = (req.body ?? {}) as Record<string, unknown>;
+
+    const kecamatan =
+      typeof body.kecamatan === "string" ? body.kecamatan.trim() : "";
+    if (!kecamatan) {
+      throw new HttpError(400, "Sertakan `kecamatan` pada badan permintaan.");
+    }
+
+    const known = await listKecamatan();
+    if (!known.some((k) => k.nama === kecamatan)) {
+      throw new HttpError(
+        400,
+        `Kecamatan '${kecamatan}' tidak dikenal. Pakai nama persis seperti di daftar wilayah.`,
+      );
+    }
+
+    const kind = typeof body.kind === "string" ? body.kind : "genangan";
+    if (!REPORT_KINDS.includes(kind as ReportKind)) {
+      throw new HttpError(
+        400,
+        `Jenis laporan '${kind}' tidak dikenal. Pilihan: ${REPORT_KINDS.join(", ")}.`,
+      );
+    }
+
+    const count = Number(body.count ?? 8);
+
+    const before = await detectEscalations();
+    const result = await injectSurge(
+      {
+        kecamatan,
+        kind: kind as ReportKind,
+        count: Number.isFinite(count) ? count : 8,
+        spreadDays: Number(body.spreadDays ?? 6),
+      },
+      req.session!.label,
+      req.session!.role,
+    );
+    const after = await detectEscalations();
+
+    /* Sebelum dan sesudah dikirim bersama supaya UI bisa menunjukkan
+       perubahannya sebagai perubahan, bukan sebagai keadaan yang tiba-tiba
+       sudah begitu. Inti peragaan ini justru pada selisihnya. */
+    res.status(201).json({
+      meta: {
+        simulasi: true,
+        totalSimulasi: await countSimulation(),
+        rules: after.rules,
+      },
+      data: {
+        ...result,
+        eskalasiSebelum: before.escalations,
+        eskalasiSesudah: after.escalations,
+        baru: after.escalations.filter(
+          (e) => !before.escalations.some((b) => b.kecamatan === e.kecamatan),
+        ),
+      },
+    });
+  }),
+);
+
+/** Status laporan simulasi yang sedang tertanam. */
+adminRouter.get(
+  "/demo/surge",
+  requireRole("admin", "dinas"),
+  asyncRoute(async (_req, res) => {
+    res.json({
+      meta: { totalSimulasi: await countSimulation() },
+      data: await listSimulationDistricts(),
+    });
+  }),
+);
+
+/** Mencabut seluruh laporan simulasi. Tidak menyentuh laporan warga. */
+adminRouter.delete(
+  "/demo/surge",
+  requireRole("admin", "dinas"),
+  asyncRoute(async (req, res) => {
+    const removed = await clearSimulation(
+      req.session!.label,
+      req.session!.role,
+    );
+    res.json({ meta: { removed }, data: await detectEscalations() });
   }),
 );

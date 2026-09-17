@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { LayoutWrapper } from "@/components/layout-wrapper";
-import { CONSOLE_ROUTES } from "@/lib/routes";
+import { BARE_ROUTES, CONSOLE_ROUTES } from "@/lib/routes";
 
 /* One typeface. Inter carries everything — UI, headings, and data alike; its
    tabular figures cover what a separate mono used to do. */
@@ -30,7 +30,6 @@ export const metadata: Metadata = {
     "Prediksi Penyakit",
     "DBD",
     "ISPA",
-    "Diare",
     "Leptospirosis",
     "BMKG",
     "Semarang",
@@ -52,8 +51,13 @@ export const metadata: Metadata = {
     description:
       "Platform prakiraan risiko penyakit berbasis iklim per kecamatan untuk bulan berikutnya, Kota Semarang.",
   },
-  /* Icons resolve from the App Router file conventions next to this file:
-     favicon.ico, icon.svg, apple-icon.png. Only the manifest needs naming. */
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico" },
+    ],
+    apple: "/apple-icon.png",
+  },
   manifest: "/manifest.webmanifest",
 };
 
@@ -65,10 +69,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             the canvas colour and text size never flash. The route list is the
             same CONSOLE_ROUTES the wrapper uses — inlining a second copy here
             is how /tindakan ended up painting warm and then flipping cold.
+            Rute polos menang lebih dulu: /tindakan/nota berawalan /tindakan
+            tapi lembarnya dicetak putih, bukan di atas kanvas konsol.
             LayoutWrapper keeps data-surface in sync on client-side navigation. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var d=document.documentElement;var p=location.pathname;var c=${JSON.stringify(
+            __html: `(function(){try{var d=document.documentElement;var p=location.pathname;var b=${JSON.stringify(
+              BARE_ROUTES,
+            )}.some(function(r){return p.indexOf(r)===0});var c=!b&&${JSON.stringify(
               CONSOLE_ROUTES,
             )}.some(function(r){return p.indexOf(r)===0});d.setAttribute('data-surface',c?'console':'public');if(localStorage.getItem('prakira.a11y.contrast')==='1')d.classList.add('a11y-contrast');var f=localStorage.getItem('prakira.a11y.font');if(f==='lg')d.classList.add('a11y-large-text');else if(f==='sm')d.classList.add('a11y-small-text');}catch(e){}})();`,
           }}

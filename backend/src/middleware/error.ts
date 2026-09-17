@@ -5,6 +5,11 @@ export class HttpError extends Error {
   constructor(
     readonly status: number,
     message: string,
+    /* Keterangan terstruktur yang menyertai pesan — angka-angka yang membuat
+       sebuah penolakan bisa ditindaklanjuti alih-alih hanya dibaca. Isinya
+       ikut dikirim ke klien, jadi hanya boleh berisi yang memang untuk dibaca
+       pengguna; jangan pernah jalur berkas atau potongan SQL. */
+    readonly detail?: Record<string, unknown>,
   ) {
     super(message);
     this.name = "HttpError";
@@ -22,7 +27,11 @@ export function errorHandler(
   _next: NextFunction,
 ): void {
   if (error instanceof HttpError) {
-    res.status(error.status).json({ error: error.message });
+    res.status(error.status).json(
+      error.detail
+        ? { error: error.message, detail: error.detail }
+        : { error: error.message },
+    );
     return;
   }
 

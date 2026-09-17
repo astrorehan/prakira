@@ -222,17 +222,21 @@ export const DISEASE_CONFIG: Record<string, DiseaseProfile> = {
     defaultIntervention:
       "Distribusi masker, edukasi ventilasi rumah, peringatan kualitas udara",
   },
-  Diare: {
-    name: "Penyakit Diare",
-    short: "Diare",
-    vector: "Patogen air dan kontaminasi sanitasi",
-    color: CAT_COLORS[4],
-    softColor: "#E9F1ED",
-    borderColor: "#CFE0D8",
-    iconName: "Droplets",
+  LEPTOSPIROSIS: {
+    name: "Leptospirosis",
+    /* Nama penyakit disimpan kapital semua di gateway karena setiap kueri
+       menyaringnya dengan `disease.toUpperCase()`. "LEPTOSPIROSIS" sebagai
+       teriakan di layar bukan maksudnya — bentuk bacanya diambil dari sini. */
+    short: "Leptospirosis",
+    vector: "Urin tikus pada air dan lumpur genangan",
+    color: CAT_COLORS[1],
+    softColor: "#F3EFE9",
+    borderColor: "#E3DACC",
+    iconName: "Rat",
     climateTriggers:
-      "Curah hujan ekstrem atau genangan banjir yang mencemari sumber air bersih",
-    defaultIntervention: "Klorinasi air, logistik oralit dan zinc, penyuluhan PHBS",
+      "Banjir dan rob yang menggenangi permukiman, curah hujan ekstrem, saluran tersumbat",
+    defaultIntervention:
+      "Sanitasi pascagenangan, pengendalian tikus, buffer stock doksisiklin",
   },
 };
 
@@ -270,6 +274,24 @@ export function aggregateCoverage(parts: DataCoverage[]): DataCoverage {
       COVERAGE_RANK.indexOf(c) > COVERAGE_RANK.indexOf(worst) ? c : worst,
     "high",
   );
+}
+
+/**
+ * Nama penyakit sebagaimana dibaca manusia.
+ *
+ * Gateway menyimpan dan mengirim nama penyakit kapital semua — bukan pilihan
+ * gaya, melainkan konsekuensi setiap kueri menyaring dengan
+ * `disease.toUpperCase()`. Akronim seperti DBD dan ISPA memang begitu bentuknya,
+ * tapi "LEPTOSPIROSIS" di tengah kalimat terbaca sebagai teriakan. Dipakai di
+ * setiap tempat nama penyakit muncul sebagai teks, bukan sebagai kunci.
+ */
+export function diseaseLabel(
+  disease: DiseaseType | null | undefined,
+): string {
+  /* Nullish jadi string kosong, bukan "—": pemanggilnya menyisipkan ini di
+     tengah kalimat, dan sebelum ada pembantu ini React memang tidak menuliskan
+     apa pun untuk `null`. */
+  return disease ? diseaseProfile(disease).short : "";
 }
 
 /** Profil penyakit, dengan cadangan seadanya untuk penyakit yang belum dikenal. */

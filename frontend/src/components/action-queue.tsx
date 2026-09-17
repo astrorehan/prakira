@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import {
   Activity,
   AlertTriangle,
@@ -9,11 +10,12 @@ import {
   CheckCircle2,
   Circle,
   Clock,
-  Droplets,
   FileText,
   HelpCircle,
   Loader,
   MapPin,
+  Printer,
+  Rat,
   Users,
   Wind,
 } from "lucide-react";
@@ -48,7 +50,7 @@ import { Button } from "./ui/button";
 const DISEASE_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
   DBD: Bug,
   ISPA: Wind,
-  Diare: Droplets,
+  LEPTOSPIROSIS: Rat,
 };
 
 /* Tenggat: warna diiringi ikon dan kalimat, tidak pernah warna saja (§2.3). */
@@ -241,15 +243,38 @@ function ActionRow({
               </span>
             )}
 
-            <Button
-              size="sm"
-              variant={action.status === "pending" ? "primary" : "outline"}
-              onClick={() => onOpen(action)}
-              className="w-full gap-1.5 lg:w-auto"
-            >
-              <span>{ACTION_LABEL[action.status]}</span>
-              <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-            </Button>
+            <div className="flex w-full items-center gap-2 lg:w-auto lg:justify-end">
+              <Button
+                size="sm"
+                variant={action.status === "pending" ? "primary" : "outline"}
+                onClick={() => onOpen(action)}
+                className="flex-1 gap-1.5 lg:flex-initial"
+              >
+                <span>{ACTION_LABEL[action.status]}</span>
+                <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+              </Button>
+
+              {/* Nota dinas dijangkau langsung dari baris antrean: petugas yang
+                  sudah tahu isi tindakannya tidak perlu membuka modal SOP lebih
+                  dulu hanya untuk mencetak suratnya. */}
+              <Button
+                asChild
+                size="icon-sm"
+                variant="ghost"
+                title="Buka draf nota dinas"
+              >
+                <Link
+                  href={`/tindakan/nota/${encodeURIComponent(action.id)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Printer className="h-4 w-4" aria-hidden="true" />
+                  <span className="sr-only">
+                    Buka draf nota dinas untuk {action.title}
+                  </span>
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
       </article>

@@ -23,8 +23,14 @@ export type BacktestRow = {
   class_accuracy_pct: number | null;
   sample_size: number | null;
   monthly_results: string;
+  /** JSON rincian per bulan x kecamatan. Kosong pada baris lama. */
+  district_results: string | null;
   coverage_per_kecamatan: string;
   top_features: string | null;
+  /** JSON pembanding naif + putusan singkatnya. Kosong pada baris lama. */
+  baselines: string | null;
+  /** JSON kalibrasi rentang beserta cakupan empirisnya. Kosong pada baris lama. */
+  conformal: string | null;
   fetched_at: string;
 };
 
@@ -39,8 +45,9 @@ export async function refreshBacktest(
       `INSERT INTO model_backtest
          (disease, model_version, algorithm, trained_at, train_period, test_period,
           mae, rmse, r2, class_accuracy_pct, sample_size, monthly_results,
-          coverage_per_kecamatan, fetched_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          district_results, coverage_per_kecamatan, top_features,
+          baselines, conformal, fetched_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT (disease) DO UPDATE SET
          model_version = excluded.model_version,
          algorithm = excluded.algorithm,
@@ -51,7 +58,11 @@ export async function refreshBacktest(
          class_accuracy_pct = excluded.class_accuracy_pct,
          sample_size = excluded.sample_size,
          monthly_results = excluded.monthly_results,
+         district_results = excluded.district_results,
          coverage_per_kecamatan = excluded.coverage_per_kecamatan,
+         top_features = excluded.top_features,
+         baselines = excluded.baselines,
+         conformal = excluded.conformal,
          fetched_at = excluded.fetched_at`,
       disease.toUpperCase(),
       result.model_version,
@@ -65,7 +76,14 @@ export async function refreshBacktest(
       classAccuracy(months),
       months.length,
       JSON.stringify(months),
+      JSON.stringify(result.district_results ?? []),
       JSON.stringify(result.coverage_per_kecamatan ?? {}),
+      JSON.stringify(result.top_features ?? []),
+      JSON.stringify({
+        baselines: result.baselines ?? {},
+        summary: result.baseline_summary ?? null,
+      }),
+      result.conformal ? JSON.stringify(result.conformal) : null,
       new Date().toISOString(),
     );
 

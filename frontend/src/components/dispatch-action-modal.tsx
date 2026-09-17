@@ -11,11 +11,14 @@ import {
   FileText,
   Info,
   MapPin,
+  Printer,
   Send,
   ShieldAlert,
   Users,
 } from "lucide-react";
+import Link from "next/link";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { BroadcastKit } from "@/components/broadcast-kit";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { ActionRecommendation } from "@/types";
@@ -400,6 +403,19 @@ export function DispatchActionModal({
                   statusnya tercatat di jejak audit.
                 </span>
               </div>
+
+              {/* Draf di atas ditujukan ke puskesmas; yang di bawah ditujukan ke
+                  warga, satu kartu per kecamatan sasaran, beserta kode QR menuju
+                  formulir laporan. Dipisah karena pembacanya berbeda dan
+                  kalimatnya harus berbeda. */}
+              <div className="border-t border-border pt-4">
+                <h3 className="text-body-sm font-semibold text-foreground">
+                  Kit siaran warga per kecamatan
+                </h3>
+                <div className="mt-3">
+                  <BroadcastKit action={recommendation} />
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -432,6 +448,25 @@ export function DispatchActionModal({
               className="flex-1 sm:flex-initial"
             >
               Tutup
+            </Button>
+
+            {/* Draf pesan menutup kanal cepat; nota dinas menutup kanal resmi.
+                Tab baru, karena petugas biasanya belum selesai dengan modal
+                ini saat menyiapkan suratnya. */}
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="flex-1 gap-1.5 sm:flex-initial"
+            >
+              <Link
+                href={`/tindakan/nota/${encodeURIComponent(recommendation.id)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Printer className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>Nota dinas</span>
+              </Link>
             </Button>
 
             <Button

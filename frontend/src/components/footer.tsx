@@ -12,7 +12,7 @@ export function Footer() {
             <BrandLockup size="sm" />
             <p className="text-xs text-muted-foreground leading-relaxed max-w-sm">
               Platform Prediksi Risiko Penyakit Berbasis Iklim (DBD, ISPA,
-              Diare) per Wilayah. Mengubah paradigma surveilans kesehatan dari
+              Leptospirosis) per Wilayah. Mengubah paradigma surveilans kesehatan dari
               reaktif menjadi tindakan preventif terarah.
             </p>
             <div className="text-2xs text-paper-600">

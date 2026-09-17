@@ -33,6 +33,11 @@ import { regenerateActions } from "./services/actions.js";
 const app = express();
 
 app.disable("x-powered-by");
+/* Tanpa ini `req.ip` di Render berisi alamat proksi Render, sama untuk setiap
+   pengunjung — dan setiap pembatas laju per-alamat di gateway ini menjadi satu
+   ember bersama. Lihat `trustProxy` di `env.ts` untuk alasan angkanya bukan
+   `true`. */
+app.set("trust proxy", env.trustProxy);
 app.use(
   cors({
     origin: env.corsOrigins,
@@ -69,20 +74,8 @@ app.use("/api/model", modelRouter);
 app.use(notFound);
 app.use(errorHandler);
 
-/** Menyiapkan database lalu, bila layanan ML hidup, mengisi cache prediksi. */
-async function bootstrap(): Promise<void> {
-  await db();
-
-  if (!(await isSeeded())) {
-    const result = await seedDatabase();
-    console.log(
-      `[gateway] Seed awal: ${result.kecamatan} kecamatan, ${result.observasi} observasi, ` +
-        `penyakit ${result.diseases.join(", ") || "—"}.`,
-    );
-  }
-
-  await purgeExpiredSessions();
-
+/** Menyiapkan database lalu, bila layanan ML hidup, memanaskan cache prediksi. */
+async function warmupPredictions(): Promise<void> {
   const diseases = await availableDiseases();
   const warmed: string[] = [];
   const failed: string[] = [];
@@ -108,13 +101,30 @@ async function bootstrap(): Promise<void> {
   }
 }
 
-bootstrap()
-  .catch((error) => {
-    console.error("[gateway] Gagal menyiapkan database:", error);
-    process.exitCode = 1;
-  })
-  .finally(() => {
-    app.listen(env.port, () => {
+async function startServer(): Promise<void> {
+  try {
+    await db();
+
+    if (!(await isSeeded())) {
+      const result = await seedDatabase();
+      console.log(
+        `[gateway] Seed awal: ${result.kecamatan} kecamatan, ${result.observasi} observasi, ` +
+          `penyakit ${result.diseases.join(", ") || "—"}.`,
+      );
+    }
+
+    await purgeExpiredSessions();
+
+    app.listen(env.port, "0.0.0.0", () => {
       console.log(`[gateway] PRAKIRA API siap di http://localhost:${env.port}`);
+      warmupPredictions().catch((error) => {
+        console.warn("[gateway] Gagal memanaskan cache prediksi:", error);
+      });
     });
-  });
+  } catch (error) {
+    console.error("[gateway] Gagal menyiapkan database:", error);
+    process.exit(1);
+  }
+}
+
+startServer();

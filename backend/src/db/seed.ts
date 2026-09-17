@@ -215,9 +215,16 @@ async function seedKecamatan(tx: Tx): Promise<number> {
   );
 }
 
+/* Kuncinya adalah nama penyakit sebagaimana disimpan di kolom
+   `observasi.disease`. Wajib kapital semua: setiap pembacaan di
+   `services/districts.ts` menyaring dengan `disease.toUpperCase()`, jadi baris
+   yang tersimpan sebagai "Leptospirosis" ada di tabel tetapi tak pernah
+   terambil satu pun. Nama tampilannya diurus frontend lewat `diseaseProfile()`,
+   bukan lewat bentuk yang disimpan. */
 const MERGED_FILES: Record<string, string> = {
   DBD: "merged_monthly_dbd.csv",
   ISPA: "merged_monthly_ispa.csv",
+  LEPTOSPIROSIS: "merged_monthly_leptospirosis.csv",
 };
 
 async function seedObservasiIfEmpty(tx: Tx): Promise<number> {
@@ -285,7 +292,7 @@ async function seedAdminUser(tx: Tx): Promise<void> {
   );
   if (existing) return;
 
-  const { hash, salt } = hashPassword(env.seedAdminPassword);
+  const { hash, salt } = await hashPassword(env.seedAdminPassword);
   await tx.run(
     `INSERT INTO users (id, email, password_hash, salt, role, label, home, created_at)
      VALUES (?, ?, ?, ?, 'dinas', ?, '/dashboard', ?)`,

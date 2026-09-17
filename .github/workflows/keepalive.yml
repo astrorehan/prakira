@@ -1,0 +1,95 @@
+# Penjaga tidur untuk tumpukan paket gratis.
+#
+# Tiga layanan, tiga perilaku tidur yang berbeda, dan ketiganya menyerang pada
+# hari yang sama:
+#
+#   Supabase  menjeda proyek gratis setelah sekitar tujuh hari tanpa aktivitas.
+#             Bila tidak ada yang menyentuh basis data antara penilaian
+#             penyisihan dan final, proyeknya tertidur dan gateway gagal start —
+#             bukan melambat, tetapi mati.
+#   Render    mematikan layanan gratis setelah 15 menit menganggur. Permintaan
+#             pertama sesudahnya butuh ±50 detik. Juri yang membuka dashboard
+#             pertama kali akan menunggu hampir satu menit.
+#
+# `/api/health` memanggil `isSeeded()`, yang menyentuh Postgres — jadi satu
+# permintaan ke gateway sekaligus menjaga Supabase terjaga dan Render hangat.
+# `/health` layanan ML dijaga terpisah karena ia instans Render sendiri.
+#
+# Alur ini tidak menggantikan mode luring di `docker-compose.yml`. Ia mengurangi
+# kemungkinan tumpukan daring tertidur; compose menghapus ketergantungan pada
+# jaringan sama sekali. Rencana pameran memakai keduanya.
+name: Penjaga tidur
+
+on:
+  schedule:
+    # Setiap 10 menit, di bawah ambang 15 menit Render. GitHub bisa menunda
+    # jadwal saat antreannya panjang; penundaan berarti satu permintaan pertama
+    # yang lambat, bukan demo yang mati.
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+# Alur terjadwal dinonaktifkan GitHub setelah 60 hari tanpa aktivitas di
+# repositori. Untuk rentang menuju 26 September itu tidak relevan, tetapi ia
+# alasan untuk tidak menganggap berkas ini abadi.
+concurrency:
+  group: keepalive
+  cancel-in-progress: true
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sentuh gateway dan layanan ML
+        env:
+          # Variabel repositori, bukan rahasia: keduanya URL publik.
+          # Settings -> Secrets and variables -> Actions -> Variables.
+          GATEWAY_URL: ${{ vars.GATEWAY_URL }}
+          ML_URL: ${{ vars.ML_SERVICE_URL }}
+        run: |
+          set -u
+          if [ -z "${GATEWAY_URL}" ] && [ -z "${ML_URL}" ]; then
+            echo "GATEWAY_URL dan ML_SERVICE_URL belum diisi — tidak ada yang disentuh."
+            echo "Isi keduanya di Settings > Secrets and variables > Actions > Variables."
+            exit 0
+          fi
+
+          status=0
+
+          # GitHub menjalankan langkah `run` dengan `bash -eo pipefail`, jadi
+          # `cond && { ...; }` yang bernilai salah akan menghentikan langkahnya.
+          # Percabangannya ditulis penuh supaya URL yang kosong benar-benar
+          # dilewati alih-alih mematikan alurnya.
+          # Basis dan jalur diteruskan terpisah. Bila keduanya sudah disatukan
+          # sebelum masuk ke sini, basis yang kosong menjadi "/health" — yang
+          # tidak kosong, lolos pemeriksaan, lalu gagal sebagai URL tak sah.
+          touch_service() {
+            name="$1"
+            base="$2"
+            path="$3"
+            if [ -z "${base}" ]; then
+              echo "· ${name}: dilewati, URL kosong"
+              return 0
+            fi
+            url="${base%/}${path}"
+            echo "· ${name}: ${url}"
+            # --max-time longgar: instans Render yang baru bangun memang butuh
+            # ±50 detik untuk menjawab yang pertama, dan itu keberhasilan,
+            # bukan kegagalan.
+            if curl --silent --show-error --fail --location \
+                    --retry 3 --retry-delay 15 --retry-all-errors \
+                    --max-time 90 --output /dev/null --write-out "  HTTP %{http_code} dalam %{time_total}s\n" \
+                    "${url}"; then
+              :
+            else
+              echo "  gagal dijangkau"
+              status=1
+            fi
+          }
+
+          touch_service "gateway" "${GATEWAY_URL}" "/api/health"
+          touch_service "layanan ML" "${ML_URL}" "/health"
+
+          # Kegagalan sengaja dibiarkan merah. Alur ini satu-satunya yang
+          # memeriksa tumpukan daring secara berkala; keheningan saat ia mati
+          # adalah persis keadaan yang hendak dicegah.
+          exit "${status}"

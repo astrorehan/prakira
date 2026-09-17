@@ -122,35 +122,54 @@ const RULES: Record<string, Partial<Record<RiskClass, ActionTemplate[]>>> = {
     ],
   },
 
-  Diare: {
+  /* Leptospirosis menular lewat air dan lumpur yang tercemar urin tikus, jadi
+     tenggatnya terikat banjir dan rob, bukan siklus vektor. Tujuh hari pada
+     kelas tinggi dipilih karena masa inkubasinya 2–14 hari: intervensi yang
+     datang tiga minggu setelah genangan surut sudah kehilangan gunanya. */
+  LEPTOSPIROSIS: {
     tinggi: [
       {
         actionType: "klorinasi",
-        title: "Klorinasi sumber air & distribusi oralit",
+        title: "Sanitasi pascagenangan & pengendalian tikus",
         description:
-          "Kelas risiko tinggi pada penyakit yang ditularkan air menuntut intervensi di sumbernya. Distribusi oralit menyertainya agar kasus yang terlanjur terjadi tidak berubah jadi dehidrasi berat.",
+          "Bakteri Leptospira bertahan berminggu-minggu di air dan lumpur yang tercemar urin tikus, dan pintu masuknya adalah luka lecet pada kaki yang menerjang genangan. Yang ditekan adalah dua-duanya: reservoirnya di populasi tikus, dan paparannya pada warga serta petugas kebersihan.",
         picUnit: "Tim Kesehatan Lingkungan (Kesling)",
         leadTimeDays: 7,
         sopChecklist: [
-          "Ambil sampel mikrobiologis air pada titik rawan genangan",
-          "Klorinasi sumur gali dan tandon warga sesuai dosis kaporit",
-          "Distribusi oralit dan zinc ke posko kesehatan kelurahan",
-          "Edukasi memasak air hingga mendidih dan cuci tangan pakai sabun",
+          "Pemetaan titik genangan dan tumpukan sampah sebagai sarang tikus",
+          "Pengendalian tikus terpadu bersama kelurahan pada titik terpetakan",
+          "Desinfeksi sumur gali dan tandon yang terendam banjir",
+          "Distribusi sepatu bot dan sarung tangan bagi petugas kebersihan saluran",
+          "Imbauan tidak menerjang genangan tanpa alas kaki tertutup",
+        ],
+      },
+      {
+        actionType: "logistik_obat",
+        title: "Buffer stock doksisiklin & penemuan kasus dini",
+        description:
+          "Gejala awalnya menyerupai demam biasa dan pasien baru datang setelah ikterik atau gagal ginjal muncul. Kesiapan obat dipasangkan dengan kewaspadaan diagnosis di puskesmas supaya jeda itu memendek.",
+        picUnit: "Instalasi Farmasi & Logistik Kesehatan",
+        leadTimeDays: 14,
+        sopChecklist: [
+          "Audit sisa stok doksisiklin dan rapid test leptospirosis",
+          "Alokasi ke puskesmas pada kecamatan target",
+          "Pengingat kewaspadaan diagnosis: demam disertai nyeri betis dan mata merah setelah paparan banjir",
+          "Aktifkan alur rujukan kasus berat ke rumah sakit rujukan",
         ],
       },
     ],
     sedang: [
       {
         actionType: "penyuluhan",
-        title: "Pengawasan sanitasi air minum & PHBS",
+        title: "Edukasi paparan banjir & kebersihan lingkungan",
         description:
-          "Pemeriksaan berkala depot air minum dan sanitasi pangan sebelum kelas risiko naik.",
-        picUnit: "Tim Kesehatan Lingkungan (Kesling)",
+          "Kelas risiko sedang belum menuntut pengendalian tikus serentak. Yang dikerjakan adalah memutus paparan: warga tahu kapan harus memakai alas kaki tertutup, dan sampah tidak dibiarkan jadi sarang.",
+        picUnit: "Puskesmas wilayah & kader kesehatan lingkungan",
         leadTimeDays: 21,
         sopChecklist: [
-          "Uji berkala mikrobiologi depot air minum isi ulang",
-          "Inspeksi sanitasi pangan pada sentra kuliner",
-          "Sosialisasi PHBS di sekolah dan posyandu",
+          "Penyuluhan risiko leptospirosis pada pertemuan RT/RW di kelurahan rawan rob",
+          "Kerja bakti pembersihan saluran dan pengangkutan tumpukan sampah",
+          "Imbauan menutup rapat tempat penyimpanan makanan dari tikus",
         ],
       },
     ],
@@ -171,7 +190,6 @@ export function templatesFor(
 function normalizeDisease(disease: string): string {
   const upper = disease.toUpperCase();
   if (upper === "ISPA") return "ISPA";
-  if (upper === "DIARE") return "Diare";
   return upper;
 }
 

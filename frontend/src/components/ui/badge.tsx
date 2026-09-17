@@ -33,9 +33,7 @@ const badgeVariants = cva(
         /* Legacy aliases. */
         glass: "border-paper-300 bg-surface text-paper-700",
         "glass-blue": "border-brand-300/40 bg-brand-100 text-brand-700",
-        "disease-dbd": "border-paper-300 bg-surface text-paper-700",
-        "disease-ispa": "border-paper-300 bg-surface text-paper-700",
-        "disease-diare": "border-paper-300 bg-surface text-paper-700",
+        disease: "border-paper-300 bg-surface text-paper-700",
       },
       size: {
         sm: "px-1.5 text-[0.6875rem]",

@@ -17,6 +17,12 @@ import {
   refreshPredictions,
 } from "../services/predictions.js";
 import { regenerateActions } from "../services/actions.js";
+import {
+  getPriority,
+  METHOD_NOTE,
+  MISSING_FACTORS,
+  type PriorityWeighting,
+} from "../services/priority.js";
 import { availableDiseases, reportingPeriod } from "../services/period.js";
 import { asyncRoute, HttpError } from "../middleware/error.js";
 
@@ -133,6 +139,44 @@ districtsRouter.get(
         diseases: await availableDiseases(),
       },
       data: await getClimateSeries(Number.isFinite(months) ? months : 60),
+    });
+  }),
+);
+
+/**
+ * Prioritas terdampak — peringkat risiko dikalikan orang yang menanggungnya.
+ *
+ * Rute terpisah, bukan kolom tambahan di `/districts`: perhitungannya butuh
+ * seluruh 16 kecamatan sekaligus untuk menormalkan indeks dan menyusun dua
+ * peringkat, sedangkan `/districts` dipakai permukaan yang hanya perlu satu
+ * kecamatan. Memaksakan keduanya jadi satu respons membuat setiap pemanggil
+ * membayar hitungan yang tidak dipakainya.
+ */
+districtsRouter.get(
+  "/districts/priority",
+  asyncRoute(async (req, res) => {
+    const disease = await assertDisease(
+      typeof req.query.disease === "string" ? req.query.disease : "DBD",
+    );
+    const weighting: PriorityWeighting =
+      req.query.bobot === "kepadatan" ? "kepadatan" : "populasi";
+
+    const status = await ensurePredictions(disease, false);
+    const { rows, summary } = await getPriority(disease, weighting);
+
+    res.json({
+      meta: {
+        disease,
+        ...(await reportingPeriod(disease)),
+        ...status,
+        weighting,
+        method: METHOD_NOTE,
+        /* Faktor kerentanan yang tidak ada datanya ikut dikirim. Indeks yang
+           diam soal apa yang tidak diukurnya mengundang pembacaan bahwa ia
+           sudah mengukur semuanya. */
+        missingFactors: MISSING_FACTORS,
+      },
+      data: { rows, summary },
     });
   }),
 );

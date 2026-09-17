@@ -1,0 +1,104 @@
+# Pemeriksaan otomatis untuk setiap dorongan dan setiap pull request.
+#
+# Ketiga layanan diperiksa terpisah supaya kegagalan langsung menunjuk tempatnya,
+# dan berjalan bersamaan supaya seluruhnya selesai secepat yang paling lambat.
+#
+# Yang dijaga pemeriksaan Python bukan sekadar "kodenya jalan". Berkas uji di
+# ml-services/tests/ mengunci tiga hal yang pernah lepas tanpa satu pun galat:
+# baris fitur yang dipakai /predict harus identik dengan baris latih untuk bulan
+# yang sama, metrik yang dipajang harus berasal dari periode uji yang benar-benar
+# ditahan, dan rentang prakiraan harus dikalibrasi dari galat yang teramati.
+# Ketiganya jenis kesalahan yang lolos dari pemeriksaan manual karena tidak
+# menghasilkan gejala apa pun — hanya angka yang salah.
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+# Dorongan baru ke cabang yang sama membatalkan pemeriksaan sebelumnya: hasil
+# dari commit yang sudah tertimpa tidak berguna dan hanya mengantre.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ml-services:
+    name: ml-services (pytest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ml-services
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: ml-services/requirements-dev.txt
+
+      - name: Pasang dependensi
+        run: pip install -r requirements-dev.txt
+
+      - name: Jalankan pengujian
+        run: python -m pytest tests/ -v
+
+  backend:
+    name: backend (node:test, type-check)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Mengikuti `engines` di backend/package.json. Berkas uji memakai
+      # `t.mock.timers`, yang baru ada sejak Node 20.4, dan gateway sendiri
+      # menuntut >=22.5.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - run: npm ci
+        working-directory: backend
+
+      - run: npm run type-check
+        working-directory: backend
+
+      # Tidak butuh Postgres: yang diuji di sini murni logika dalam proses —
+      # pembatas laju masuk dan KDF kata sandi. Keduanya tidak menyentuh basis
+      # data, dan kolam koneksi `pg` baru dibuat saat `db()` dipanggil.
+      - name: Jalankan pengujian
+        run: npm test
+        working-directory: backend
+
+      - name: Pastikan gateway benar-benar terkompilasi
+        run: npm run build
+        working-directory: backend
+
+  frontend:
+    name: frontend (lint, type-check, build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+        working-directory: frontend
+
+      - run: npm run lint
+        working-directory: frontend
+
+      - run: npm run type-check
+        working-directory: frontend
+
+      # Build ikut diperiksa karena galat prarender hanya muncul di sini —
+      # type-check tidak menjalankan komponennya.
+      - run: npm run build
+        working-directory: frontend

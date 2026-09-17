@@ -469,3 +469,49 @@ export function formatPeriodRange(periodStr: string | null | undefined): {
   };
 }
 
+
+/* ── Nama fitur model ───────────────────────────────────────────────────── */
+
+/**
+ * Menerjemahkan nama kolom fitur menjadi kalimat yang bisa dibaca petugas.
+ *
+ * Halaman transparansi hanya transparan kalau isinya terbaca. `cases_ma_3m`
+ * jujur bagi yang menulis pipeline-nya, tapi bagi kepala seksi surveilans ia
+ * sama gelapnya dengan tidak ditampilkan sama sekali. Nama aslinya tetap
+ * ditampilkan berdampingan supaya bisa dicocokkan dengan kode.
+ */
+const FEATURE_GLOSSARY: { pattern: RegExp; label: (m: RegExpMatchArray) => string }[] = [
+  { pattern: /^cases_lag(\d+)$/, label: (m) => `Kasus ${m[1]} bulan sebelumnya` },
+  { pattern: /^cases_ma_(\d+)m$/, label: (m) => `Rerata kasus ${m[1]} bulan terakhir` },
+  { pattern: /^rainfall_cumul_(\d+)m$/, label: (m) => `Curah hujan kumulatif ${m[1]} bulan` },
+  { pattern: /^rainfall_lag(\d+)$/, label: (m) => `Curah hujan ${m[1]} bulan sebelumnya` },
+  { pattern: /^rainfall_ma_(\d+)m$/, label: (m) => `Rerata curah hujan ${m[1]} bulan` },
+  { pattern: /^temp_lag(\d+)$/, label: (m) => `Suhu ${m[1]} bulan sebelumnya` },
+  { pattern: /^temp_ma_(\d+)m$/, label: (m) => `Rerata suhu ${m[1]} bulan` },
+  { pattern: /^humidity_lag(\d+)$/, label: (m) => `Kelembaban ${m[1]} bulan sebelumnya` },
+  { pattern: /^humidity_ma_(\d+)m$/, label: (m) => `Rerata kelembaban ${m[1]} bulan` },
+];
+
+const FEATURE_EXACT: Record<string, string> = {
+  population: "Jumlah penduduk kecamatan",
+  cases: "Kasus bulan berjalan",
+  rainfall_mm: "Curah hujan bulan berjalan",
+  temp_mean_c: "Suhu rata-rata bulan berjalan",
+  humidity_pct: "Kelembaban relatif bulan berjalan",
+  month: "Bulan dalam setahun (musim)",
+  month_sin: "Musim (komponen siklus)",
+  month_cos: "Musim (komponen siklus)",
+};
+
+export function formatFeatureName(raw: string): string {
+  if (FEATURE_EXACT[raw]) return FEATURE_EXACT[raw];
+
+  for (const entry of FEATURE_GLOSSARY) {
+    const match = raw.match(entry.pattern);
+    if (match) return entry.label(match);
+  }
+
+  /* Fitur yang belum masuk daftar tetap ditampilkan — dirapikan seadanya,
+     bukan disembunyikan. */
+  return raw.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
+}

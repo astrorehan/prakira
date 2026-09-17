@@ -10,7 +10,8 @@
     "build": "tsc -p tsconfig.json && node -e \"require('node:fs').copyFileSync('src/db/schema.sql','dist/db/schema.sql')\"",
     "start": "node dist/index.js",
     "seed": "tsx src/db/seed.ts",
-    "type-check": "tsc --noEmit -p tsconfig.json"
+    "test": "node --import ./tests/setup.mjs --import tsx --test \"tests/**/*.test.ts\"",
+    "type-check": "tsc --noEmit -p tsconfig.json && tsc -p tsconfig.test.json"
   },
   "dependencies": {
     "cookie-parser": "^1.4.7",

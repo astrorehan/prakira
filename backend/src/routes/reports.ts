@@ -12,13 +12,19 @@ import {
   createReport,
   deviceHash,
   findReport,
+  findReportPhoto,
+  getTriggerSummaryByDistrict,
   listReports,
   reviewReport,
   summarizeQueue,
+  toPublicView as publicView,
   type ReportKind,
-  type ReportRow,
 } from "../services/reports.js";
 import { listKecamatan } from "../services/districts.js";
+import {
+  DEFAULT_RULES,
+  detectEscalations,
+} from "../services/escalation.js";
 import { requireAuth } from "../middleware/auth.js";
 import { asyncRoute, HttpError } from "../middleware/error.js";
 
@@ -44,24 +50,6 @@ function hashOf(req: Request): string {
   const ip = req.ip ?? req.socket?.remoteAddress ?? "unknown";
   const agent = req.get("user-agent") ?? "unknown";
   return deviceHash(ip, agent);
-}
-
-/** Tanpa `device_hash`: sidik jari perangkat tidak pernah keluar dari server. */
-function publicView(row: ReportRow) {
-  return {
-    id: row.id,
-    kind: row.kind,
-    kecamatan: row.kecamatan,
-    kelurahan: row.kelurahan,
-    occurredAt: row.occurred_at,
-    description: row.description,
-    submittedAt: row.submitted_at,
-    photo: row.photo,
-    status: row.status,
-    reviewedAt: row.reviewed_at,
-    reviewer: row.reviewer,
-    reviewNote: row.review_note,
-  };
 }
 
 reportsRouter.get(
@@ -185,6 +173,25 @@ reportsRouter.get(
   }),
 );
 
+/**
+ * Ringkasan pemicu lingkungan & sinyal warga terverifikasi per kecamatan.
+ * Publik — mengembalikan metrik agregasi tanpa data PII, foto, atau deskripsi.
+ */
+reportsRouter.get(
+  "/triggers",
+  asyncRoute(async (req, res) => {
+    const kecamatan =
+      typeof req.query.kecamatan === "string" ? req.query.kecamatan : undefined;
+    const summary = await getTriggerSummaryByDistrict(kecamatan);
+    res.json({ data: summary });
+  }),
+);
+
+/* Batas atas jumlah baris yang dikirim sekaligus. Tanpa foto satu baris hanya
+   beberapa ratus bita, jadi angka ini longgar — gunanya menjaga respons tetap
+   berhingga saat tabelnya tumbuh, bukan memaksa petugas membalik halaman. */
+const MAX_QUEUE_ROWS = 500;
+
 reportsRouter.get(
   "/",
   requireAuth,
@@ -192,10 +199,40 @@ reportsRouter.get(
     const kecamatan =
       typeof req.query.kecamatan === "string" ? req.query.kecamatan : undefined;
     const rows = await listReports({ kecamatan });
+    const page = rows.slice(0, MAX_QUEUE_ROWS);
+    const summary = await summarizeQueue();
+
     res.json({
-      meta: await summarizeQueue(),
-      data: rows.map(publicView),
+      meta: {
+        ...summary,
+        shown: page.length,
+        /* Dipotong dengan mengatakannya. Antrean yang diam-diam kehilangan
+           baris adalah antrean yang membuat petugas mengira pekerjaannya
+           sudah habis. */
+        truncated: rows.length > page.length,
+      },
+      data: page.map(publicView),
     });
+  }),
+);
+
+/**
+ * Foto satu laporan, diambil saat petugas benar-benar melihatnya.
+ *
+ * Terdaftar setelah `/track/:code` dan kerabatnya supaya tidak menaungi rute
+ * dua segmen yang lain.
+ */
+reportsRouter.get(
+  "/:id/photo",
+  requireAuth,
+  asyncRoute(async (req, res) => {
+    const photo = await findReportPhoto(req.params.id);
+    if (!photo) throw new HttpError(404, "Laporan ini tidak melampirkan foto.");
+    /* Tetap data URL, bukan bita mentah: nilainya langsung bisa dipasang ke
+       `src` sebuah `<img>`, dan pengambilannya lewat pembungkus `request()`
+       yang sudah membawa cookie sesi. Selisih ukurannya (base64 menambah
+       sepertiga) tidak berarti untuk satu gambar yang diminta sekali. */
+    res.json({ data: photo });
   }),
 );
 
@@ -235,3 +272,51 @@ reportsRouter.patch(
     res.json({ meta: await summarizeQueue(), data: publicView(updated) });
   }),
 );
+
+/**
+ * Eskalasi "perlu perhatian" (S4).
+ *
+ * Butuh sesi. Isinya bukan deskripsi laporan — hanya nama kecamatan dan
+ * hitungan — tapi pola pengaduan per wilayah tetap informasi operasional
+ * dinas, bukan informasi publik. Yang publik adalah kelas risiko di
+ * `/api/districts`, dan itu berasal dari data resmi, bukan dari aduan.
+ */
+reportsRouter.get(
+  "/escalations",
+  requireAuth,
+  asyncRoute(async (req, res) => {
+    const num = (key: string): number | undefined => {
+      const raw = req.query[key];
+      if (typeof raw !== "string") return undefined;
+      const value = Number(raw);
+      return Number.isFinite(value) ? value : undefined;
+    };
+
+    const { rules, escalations, scanned } = await detectEscalations({
+      windowDays: num("windowDays"),
+      minReports: num("minReports"),
+      minSameKind: num("minSameKind"),
+      maxWaitHours: num("maxWaitHours"),
+    });
+
+    res.json({
+      meta: {
+        rules,
+        defaults: DEFAULT_RULES,
+        scanned,
+        /* Aturan ditulis di sini, bukan hanya di kode: halaman verifikasi
+           menampilkannya persis begini supaya petugas tahu kenapa sebuah
+           kecamatan naik — dan bisa membantahnya. */
+        explanation: [
+          `Jendela pengamatan ${rules.windowDays} hari terakhir. Laporan yang sudah ditolak verifikator tidak dihitung sama sekali.`,
+          `Ambang volume: ${rules.minReports} laporan dari satu kecamatan.`,
+          `Ambang pemusatan: ${rules.minSameKind} laporan berjenis sama dari satu kecamatan.`,
+          `Ambang antrean tertahan: laporan menunggu lebih dari ${rules.maxWaitHours} jam.`,
+          "Eskalasi menandai wilayah untuk dilihat manusia. Ia tidak menerbitkan tindakan dan tidak mengubah kelas risiko model.",
+        ],
+      },
+      data: escalations,
+    });
+  }),
+);
+

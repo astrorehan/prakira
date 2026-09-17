@@ -12,7 +12,7 @@ import {
   YAxis,
 } from "recharts";
 import type { ClimatePoint, DiseaseType } from "@/types";
-import { cn, CLIMATE_COLORS, diseaseProfile } from "@/lib/utils";
+import { cn, CLIMATE_COLORS, diseaseLabel, diseaseProfile } from "@/lib/utils";
 import { formatMonthShort } from "@/lib/period";
 import { climateCorrelations, type Correlation } from "@/lib/stats";
 
@@ -261,7 +261,7 @@ export function ClimateCorrelationChart({
                             className="h-2.5 w-2.5 rounded-full"
                             style={{ background: cfg.color }}
                           />
-                          Kasus {disease}
+                          Kasus {diseaseLabel(disease)}
                         </dt>
                         <dd className="tabular">{pt.kasus}</dd>
                       </div>
@@ -323,7 +323,7 @@ export function ClimateCorrelationChart({
               strokeWidth={3}
               dot={{ r: 4, fill: cfg.color, stroke: "#FFFFFF", strokeWidth: 2 }}
               activeDot={{ r: 6.5, fill: cfg.color, stroke: "#FFFFFF", strokeWidth: 2 }}
-              name={`Kasus ${disease}`}
+              name={`Kasus ${diseaseLabel(disease)}`}
               isAnimationActive={false}
             />
           </ComposedChart>
@@ -338,7 +338,7 @@ export function ClimateCorrelationChart({
               className="h-0.5 w-4 rounded-full"
               style={{ background: cfg.color }}
             />
-            <span className="font-medium text-foreground">Kasus {disease}</span>
+            <span className="font-medium text-foreground">Kasus {diseaseLabel(disease)}</span>
           </span>
           <span className="flex items-center gap-1.5">
             <span
@@ -356,7 +356,7 @@ export function ClimateCorrelationChart({
             tercetak: tanpa itu pembaca akan mengira `r` mengukur bulan yang
             sama, padahal ia mengukur pengaruh yang tertunda. */}
         <p className="tabular text-caption text-paper-600">
-          Pearson {variable.label.toLowerCase()} vs kasus {disease} (
+          Pearson {variable.label.toLowerCase()} vs kasus {diseaseLabel(disease)} (
           {activeCorrelation.lagLabel}):{" "}
           <strong className="text-foreground">r = {activeCorrelation.display}</strong> ·{" "}
           {activeCorrelation.strength} · {activeCorrelation.significance} · n ={" "}

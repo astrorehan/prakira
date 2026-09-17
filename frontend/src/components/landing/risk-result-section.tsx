@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useMemo } from "react";
-import { ArrowRight, Bug, Wind, Droplets, Check, MapPin } from "lucide-react";
+import { ArrowRight, Bug, Wind, Rat, Check, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { withKecamatan } from "@/lib/kecamatan-selection";
 import { districtAcrossDiseases, useCityData } from "@/lib/use-city-data";
@@ -68,7 +68,7 @@ const STATUS: Record<
 const DISEASE_ICON: Record<string, React.ElementType> = {
   DBD: Bug,
   ISPA: Wind,
-  Diare: Droplets,
+  LEPTOSPIROSIS: Rat,
 };
 
 /** Profil penyakit dari `lib/utils`, jadi nama panjang dan vektornya tidak
