@@ -23,6 +23,9 @@ import type {
   GeoDistrictCollection,
   IngestStatus,
   KecamatanData,
+  ManualCaseInput,
+  ManualCaseRecord,
+  ManualCaseResponse,
   QueueSummary,
   RateLimitState,
   ReportKind,
@@ -331,3 +334,19 @@ export function commitImport(disease: string, csv: string): Promise<ImportResult
 export function refreshPredictions(): Promise<{ data: unknown[] }> {
   return request("/api/admin/refresh", { method: "POST" });
 }
+
+/* ── Kasus Manual (Nakes) ────────────────────────────────────────────────── */
+
+export function submitManualCase(
+  payload: ManualCaseInput,
+): Promise<ManualCaseResponse> {
+  return request("/api/cases/manual", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function fetchRecentManualCases(): Promise<{ data: ManualCaseRecord[] }> {
+  return request("/api/cases/recent");
+}
+

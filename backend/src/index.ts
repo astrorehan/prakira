@@ -23,6 +23,7 @@ import { actionsRouter } from "./routes/actions.js";
 import { reportsRouter } from "./routes/reports.js";
 import { authRouter } from "./routes/auth.js";
 import { adminRouter } from "./routes/admin.js";
+import { casesRouter } from "./routes/cases.js";
 import { modelRouter } from "./routes/model.js";
 import { availableDiseases } from "./services/period.js";
 import { refreshPredictions } from "./services/predictions.js";
@@ -62,6 +63,7 @@ app.use("/api/actions", actionsRouter);
 app.use("/api/reports", reportsRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/admin", adminRouter);
+app.use("/api/cases", casesRouter);
 app.use("/api/model", modelRouter);
 
 app.use(notFound);

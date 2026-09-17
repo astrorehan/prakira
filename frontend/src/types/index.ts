@@ -275,3 +275,35 @@ export type Session = {
   home: string;
   signedInAt: string;
 };
+
+/* ── Kasus manual resmi (Nakes) ─────────────────────────────────────────── */
+
+export type ManualCaseInput = {
+  kecamatan_id: string;
+  disease: string;
+  month_start?: string;
+  date?: string;
+  cases: number;
+  rainfall_mm?: number | null;
+  temp_mean_c?: number | null;
+  humidity_pct?: number | null;
+};
+
+export type ManualCaseRecord = {
+  kecamatan_id: string;
+  kecamatan_nama: string;
+  disease: string;
+  month_start: string;
+  cases: number;
+  rainfall_mm: number | null;
+  temp_mean_c: number | null;
+  humidity_pct: number | null;
+  source: string;
+  recorded_at: string;
+};
+
+export type ManualCaseResponse = {
+  status: "success";
+  message: string;
+  data: ManualCaseRecord;
+};

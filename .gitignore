@@ -58,3 +58,7 @@ backend/.env
 
 #temporary files
 temp
+
+# presentation docs (internal)
+docs/MATERI-PRESENTASI.md
+docs/SLIDE-PROMPTS.md
