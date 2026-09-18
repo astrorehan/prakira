@@ -1,18 +1,18 @@
 {
   "dbd": {
     "algorithm": "ensemble_ridge_trees_xgboost",
-    "version": "ensemble-monthly-dbd-2026.09.01",
+    "version": "ensemble-monthly-dbd-2026.09.18",
     "granularity": "monthly",
     "is_log_transformed": true,
-    "trained_at": "2026-09-01T13:41:28.695696",
+    "trained_at": "2026-09-18T07:54:55.307600",
     "train_period": "2021-04-01 to 2024-12-01",
     "test_period": "2025-01-01 to 2025-12-01",
     "n_train_samples": 720,
     "n_test_samples": 192,
     "metrics": {
-      "mae": 1.2453,
-      "rmse": 1.5727,
-      "r2": 0.4491
+      "mae": 1.249,
+      "rmse": 1.5748,
+      "r2": 0.4476
     },
     "citizen_signal_comparison": null,
     "baselines": {
@@ -39,20 +39,20 @@
       "best_baseline": "persistence",
       "best_baseline_label": "Kasus bulan lalu",
       "best_baseline_mae": 1.2552,
-      "model_mae": 1.2453,
+      "model_mae": 1.249,
       "model_beats_all_baselines": true,
-      "mae_improvement_pct": 0.79
+      "mae_improvement_pct": 0.49
     },
     "conformal": {
       "empirical_coverage": 0.9479,
       "target_coverage": 0.8,
-      "mean_width": 4.0208,
+      "mean_width": 4.0417,
       "median_width": 3.0,
       "n_evaluated": 192,
       "method": "rolling_origin_conformal_normalized",
       "difficulty": "1 + cases_ma_3m",
       "alpha": 0.2,
-      "q_hat": 0.644813,
+      "q_hat": 0.650175,
       "n_calibration": 368,
       "n_folds": 8,
       "calibration_period": "2023-02-01 to 2024-12-01"
@@ -60,32 +60,32 @@
     "top_features": [
       {
         "feature": "cases_ma_3m",
-        "importance": 0.14420737688215413
+        "importance": 0.1535088793301827
       },
       {
         "feature": "cases_lag1",
-        "importance": 0.08702687700434193
+        "importance": 0.08336500726742507
       },
       {
         "feature": "population",
-        "importance": 0.04035328607596933
+        "importance": 0.03969267555754217
       },
       {
         "feature": "cases_lag2",
-        "importance": 0.03187268090233861
+        "importance": 0.03007562406858699
       },
       {
         "feature": "rainfall_cumul_2m",
-        "importance": 0.024824913313758475
+        "importance": 0.025559635864538396
       }
     ]
   },
   "ispa": {
     "algorithm": "ensemble_rf_xgboost_elasticnet",
-    "version": "ensemble-monthly-ispa-2026.09.01",
+    "version": "ensemble-monthly-ispa-2026.09.18",
     "granularity": "monthly",
     "is_log_transformed": false,
-    "trained_at": "2026-09-01T13:43:06.791684",
+    "trained_at": "2026-09-18T07:56:19.910345",
     "train_period": "2025-04-01 to 2025-09-01",
     "test_period": "2025-10-01 to 2025-12-01",
     "n_train_samples": 96,
@@ -163,18 +163,18 @@
   },
   "leptospirosis": {
     "algorithm": "ensemble_rf_et_xgb_ridge",
-    "version": "ensemble-monthly-leptospirosis-2026.09.01",
+    "version": "ensemble-monthly-leptospirosis-2026.09.18",
     "granularity": "monthly",
     "is_log_transformed": true,
-    "trained_at": "2026-09-01T13:43:13.618767",
+    "trained_at": "2026-09-18T07:56:29.134983",
     "train_period": "2021-04-01 to 2024-12-01",
     "test_period": "2025-01-01 to 2025-12-01",
     "n_train_samples": 720,
     "n_test_samples": 192,
     "metrics": {
       "mae": 0.362,
-      "rmse": 0.5352,
-      "r2": -0.2947
+      "rmse": 0.5353,
+      "r2": -0.2952
     },
     "citizen_signal_comparison": null,
     "baselines": {
@@ -214,7 +214,7 @@
       "method": "rolling_origin_conformal_normalized",
       "difficulty": "1 + cases_ma_3m",
       "alpha": 0.2,
-      "q_hat": 0.11646,
+      "q_hat": 0.110654,
       "n_calibration": 368,
       "n_folds": 8,
       "calibration_period": "2023-02-01 to 2024-12-01"
@@ -222,23 +222,23 @@
     "top_features": [
       {
         "feature": "month",
-        "importance": 0.35431042057776096
+        "importance": 0.3539866271117194
       },
       {
         "feature": "cases_lag1",
-        "importance": 0.1190875376125019
+        "importance": 0.11843943438277403
       },
       {
         "feature": "population",
-        "importance": 0.07903903302988236
+        "importance": 0.07907558427328866
       },
       {
         "feature": "cases_per_10k_lag1",
-        "importance": 0.06877792481060306
+        "importance": 0.06995081699326072
       },
       {
         "feature": "month_sin",
-        "importance": 0.06677162504238256
+        "importance": 0.06721714282965183
       }
     ]
   }
