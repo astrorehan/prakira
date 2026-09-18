@@ -51,6 +51,10 @@ async def retrain(req: RetrainRequest):
         previous_version = old_meta.get(disease_lower, {}).get("version")
 
     try:
+        # Rekalkulasi fitur deret waktu dan lag cuaca/kasus dari dataset observasi terkini
+        from features.build_features import build_features
+        build_features(disease=disease_lower)
+
         if disease_lower == "dbd":
             from training.train_dbd import train_dbd_model
             result = train_dbd_model(citizen_signal=citizen_signal)
