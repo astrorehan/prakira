@@ -14,6 +14,7 @@ export const CONSOLE_ROUTES = [
   "/dashboard",
   "/tindakan",
   "/analitik",
+  "/kasus",
   "/admin",
   "/verifikasi",
 ] as const;

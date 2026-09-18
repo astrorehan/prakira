@@ -8,7 +8,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: ["/", "/tentang", "/sistem", "/warga", "/hubungi-kami"],
-        disallow: ["/admin", "/verifikasi", "/masuk", "/dev", "/api/"],
+        disallow: ["/admin", "/kasus", "/verifikasi", "/masuk", "/dev", "/api/"],
       },
     ],
     sitemap: `${baseUrl}/sitemap.xml`,
