@@ -32,6 +32,8 @@ import { listKecamatan } from "../services/districts.js";
 
 export const adminRouter = Router();
 
+adminRouter.use(requireRole("admin", "dinas"));
+
 const REQUIRED_COLUMNS = ["kecamatan_nama", "month_start", "cases"];
 const OPTIONAL_COLUMNS = ["rainfall_mm", "temp_mean_c", "humidity_pct"];
 

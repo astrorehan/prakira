@@ -6,7 +6,6 @@ import {
   CheckCircle2,
   Database,
   Download,
-  FilePlus2,
   FileSpreadsheet,
   Info,
   RefreshCw,
@@ -34,7 +33,6 @@ import { DataState } from "./data-state";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
-import { ManualCaseEntryCard } from "./manual-case-entry";
 import { AdminModelRetrainCard } from "./admin-model-retrain";
 
 /**
@@ -689,71 +687,20 @@ function AuditTrailCard({
 /* ── Komposisi ──────────────────────────────────────────────────────────── */
 
 export function AdminDataImport({ className }: { className?: string }) {
-  const [inputMode, setInputMode] = React.useState<"manual" | "csv">("manual");
   const diseases = useApi(() => fetchDiseases(), []);
   const audit = useApi(() => fetchAuditLog(50), []);
 
   return (
     <div className={cn("flex flex-col gap-6", className)}>
-      {/* Mode Switcher */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/80 pb-3">
-        <div className="flex items-center gap-2">
-          <span className="text-caption font-semibold uppercase tracking-wider text-paper-600">
-            Metode Entri Kasus:
-          </span>
-          <div className="flex rounded-xl bg-paper-100 p-1 border border-border">
-            <button
-              type="button"
-              onClick={() => setInputMode("manual")}
-              className={cn(
-                "flex items-center gap-1.5 rounded-lg px-3 py-1 text-body-sm font-medium transition-colors",
-                inputMode === "manual"
-                  ? "bg-surface text-foreground shadow-xs font-semibold"
-                  : "text-paper-600 hover:text-foreground",
-              )}
-            >
-              <FilePlus2 className="h-3.5 w-3.5 text-brand-700" />
-              <span>Entri Manual (Nakes)</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setInputMode("csv")}
-              className={cn(
-                "flex items-center gap-1.5 rounded-lg px-3 py-1 text-body-sm font-medium transition-colors",
-                inputMode === "csv"
-                  ? "bg-surface text-foreground shadow-xs font-semibold"
-                  : "text-paper-600 hover:text-foreground",
-              )}
-            >
-              <FileSpreadsheet className="h-3.5 w-3.5 text-teal-700" />
-              <span>Unggah Berkas CSV</span>
-            </button>
-          </div>
-        </div>
-
-        <span className="text-caption text-paper-500 hidden sm:inline">
-          {inputMode === "manual"
-            ? "Mencatat kasus langsung per faskes/kecamatan"
-            : "Rekapitulasi massal seluruh kecamatan format CSV"}
-        </span>
-      </div>
-
       <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-2">
-        {inputMode === "manual" ? (
-          <ManualCaseEntryCard
-            diseases={diseases.data ?? []}
-            onSaved={audit.reload}
-          />
-        ) : (
+        <AdminModelRetrainCard
+          diseases={diseases.data ?? []}
+          onRetrained={audit.reload}
+        />
+        <div className="flex flex-col gap-5">
           <CsvImportCard
             diseases={diseases.data ?? []}
             onImported={audit.reload}
-          />
-        )}
-        <div className="flex flex-col gap-5">
-          <AdminModelRetrainCard
-            diseases={diseases.data ?? []}
-            onRetrained={audit.reload}
           />
           <IngestStatusCard onRefreshed={audit.reload} />
         </div>
