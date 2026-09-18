@@ -55,6 +55,7 @@ export default function VerifikasiPage() {
         <ConsolePageHeader
           title="Verifikasi Laporan"
           description="Laporan warga yang menunggu keputusan petugas. Laporan yang diterima diagregasikan per kecamatan-bulan untuk mengevaluasi varian model bersinyal warga setelah memenuhi syarat cakupan minimum."
+        />
 
         <VerificationQueue />
       </div>
