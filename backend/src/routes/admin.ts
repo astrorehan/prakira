@@ -22,7 +22,11 @@ import { detectEscalations } from "../services/escalation.js";
 import { REPORT_KINDS, type ReportKind } from "../services/reports.js";
 import { asyncRoute, HttpError } from "../middleware/error.js";
 import { finishIngestJob, startIngestJob } from "../db/seed.js";
-import { CitizenSignalTooThinError, mlRetrain } from "../services/ml.js";
+import {
+  CitizenSignalTooThinError,
+  MlUnavailableError,
+  mlRetrain,
+} from "../services/ml.js";
 import { refreshBacktest } from "../services/backtest.js";
 import { refreshPredictions } from "../services/predictions.js";
 import { regenerateActions } from "../services/actions.js";
@@ -347,6 +351,8 @@ adminRouter.post(
          Layanan ML tidak menyimpan laporan warga dan tidak boleh. */
       const signal = includeCitizen ? await citizenSignal() : undefined;
       const result = await mlRetrain(disease, includeCitizen, signal);
+
+      // Sinkronisasi data prediksi kota, evaluasi backtest, dan rekomendasi aksi
       await refreshPredictions(disease);
       await refreshBacktest(disease);
       await regenerateActions([disease]);
@@ -355,8 +361,8 @@ adminRouter.post(
         actor: req.session!.label,
         role: req.session!.role,
         action: `Retrain model ${disease.toUpperCase()}`,
-        details: `Versi ${result.previous_version ?? "—"} -> ${result.new_version}, MAE ${result.metrics.mae}. ${result.improved ? "Membaik." : "Tidak membaik."}`,
-        status: result.improved ? "success" : "warning",
+        details: `Versi ${result.previous_version ?? "—"} -> ${result.new_version}, MAE ${result.metrics?.mae ?? "—"}. ${result.improved ? "Metrik membaik." : "Metrik belum melampaui versi aktif."}`,
+        status: result.improved ? "success" : "info",
       });
 
       res.json({ data: result });
@@ -368,6 +374,10 @@ adminRouter.post(
         details: error instanceof Error ? error.message : String(error),
         status: "warning",
       });
+
+      if (error instanceof HttpError) {
+        throw error;
+      }
       /* Sinyal warga yang belum menutupi periode latih bukan kerusakan; ia
          keadaan yang bisa berubah begitu verifikasi berjalan cukup lama.
          Alasannya diteruskan berikut angkanya supaya petugas tahu apa yang
@@ -375,9 +385,14 @@ adminRouter.post(
       if (error instanceof CitizenSignalTooThinError) {
         throw new HttpError(409, error.detail.message, { ...error.detail });
       }
+      if (error instanceof MlUnavailableError) {
+        throw new HttpError(503, error.message);
+      }
       throw new HttpError(
-        503,
-        "Layanan ML tidak dapat dihubungi untuk retraining. Jalankan ml-services lalu ulangi.",
+        500,
+        error instanceof Error
+          ? error.message
+          : "Layanan ML mengalami galat saat retraining. Silakan periksa log ml-services.",
       );
     }
   }),

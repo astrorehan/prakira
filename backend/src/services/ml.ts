@@ -119,10 +119,14 @@ export type MlHealth = {
   >;
 };
 
-async function call<T>(pathname: string, init?: RequestInit): Promise<T> {
+async function call<T>(
+  pathname: string,
+  init?: RequestInit & { timeoutMs?: number },
+): Promise<T> {
   const url = `${env.mlServiceUrl.replace(/\/$/, "")}${pathname}`;
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), env.mlTimeoutMs);
+  const timeoutMs = init?.timeoutMs ?? env.mlTimeoutMs;
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     const response = await fetch(url, {
@@ -240,6 +244,7 @@ export function mlRetrain(
       include_citizen: includeCitizen,
       citizen_signal: includeCitizen ? (citizenSignal ?? []) : undefined,
     }),
+    timeoutMs: 120_000,
   });
 }
 
