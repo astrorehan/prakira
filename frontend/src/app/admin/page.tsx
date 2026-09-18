@@ -17,8 +17,8 @@ export default function AdminPage() {
     <div className="min-h-screen bg-background bg-mesh-blue px-4 py-8 sm:px-6 lg:px-8">
       <div className="container mx-auto max-w-7xl space-y-8">
         <ConsolePageHeader
-          title="Manajemen Data"
-          description="Unggah rekapitulasi kasus, periksa status pemuatan data dan model, serta telusuri jejak audit untuk akuntabilitas publik."
+          title="Manajemen Sistem & AI"
+          description="Latih ulang model prediksi ML, kelola impor rekapitulasi dinas, pantau status ingest, serta telusuri jejak audit sistem untuk akuntabilitas publik."
         />
 
         <AdminDataImport />

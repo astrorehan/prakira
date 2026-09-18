@@ -19,6 +19,7 @@ import {
   Microscope,
   Scale,
   SlidersHorizontal,
+  FilePlus2,
 } from "lucide-react";
 import { AccessibilityMenu } from "@/components/accessibility-menu";
 import { BrandLockup } from "@/components/brand-lockup";
@@ -35,7 +36,7 @@ import { useSessionContext } from "@/components/session-provider";
 import { fetchActions, fetchReportQueue } from "@/lib/api";
 
 /**
- * Sidebar konsol — chrome bersama seluruh rute nakes.
+ * Sidebar konsol — chrome bersama seluruh rute nakes dan administrator.
  *
  * Dua hal yang diperbaiki dari versi sebelumnya:
  *
@@ -50,6 +51,9 @@ import { fetchActions, fetchReportQueue } from "@/lib/api";
  * 3. Kedua lencana angka dulu menghitung array mock dan `localStorage`, jadi
  *    "3 laporan menunggu" adalah angka yang sama untuk setiap petugas di
  *    setiap perangkat. Sekarang keduanya ditarik dari gateway.
+ * 4. Pemisahan peran nakes & admin (PKR-GATE-02): Petugas Puskesmas hanya
+ *    melihat entri kasus (/kasus) dan menu /admin disembunyikan. Admin & Dinas
+ *    melihat keduanya untuk kontrol penuh sistem surveilans dan AI.
  */
 
 type NavItem = {
@@ -62,8 +66,14 @@ type NavItem = {
   badgeLabel?: string;
 };
 
-function Wordmark({ href = "/" }: { href?: string }) {
-  return <BrandLockup href={href} subline="Konsol Nakes" />;
+function Wordmark({
+  href = "/",
+  subline = "Konsol Nakes",
+}: {
+  href?: string;
+  subline?: string;
+}) {
+  return <BrandLockup href={href} subline={subline} />;
 }
 
 export function Sidebar() {
@@ -73,6 +83,11 @@ export function Sidebar() {
   const { session, signOut } = useSessionContext();
   const [pendingReports, setPendingReports] = React.useState<number | null>(null);
   const [pendingActions, setPendingActions] = React.useState<number | null>(null);
+
+  const userRole = session?.role;
+  const isPuskesmas = userRole === "puskesmas";
+  const isAdminOrDinas = userRole === "admin" || userRole === "dinas";
+  const consoleSubline = isPuskesmas ? "Konsol Nakes" : "Konsol Petugas";
 
   /* Kedua angka berubah saat petugas memutuskan sesuatu di /verifikasi atau
      /tindakan, dan sidebar tetap terpasang selama itu. Ditarik ulang tiap kali
@@ -104,25 +119,38 @@ export function Sidebar() {
     };
   }, [pathname, session]);
 
-  const consoleItems: NavItem[] = [
-    { href: "/dashboard", label: "Dashboard Prediksi", icon: Activity },
-    {
-      href: "/tindakan",
-      label: "Aksi Dini",
-      icon: Siren,
-      badge: pendingActions ?? undefined,
-      badgeLabel: "menunggu instruksi",
-    },
-    {
-      href: "/verifikasi",
-      label: "Verifikasi Laporan",
-      icon: ClipboardCheck,
-      badge: pendingReports ?? undefined,
-      badgeLabel: "laporan menunggu verifikasi",
-    },
-    { href: "/analitik", label: "Analitik & Riwayat", icon: BarChart3 },
-    { href: "/admin", label: "Manajemen Data", icon: ShieldCheck },
-  ];
+  const consoleItems: NavItem[] = React.useMemo(() => {
+    const items: NavItem[] = [
+      { href: "/dashboard", label: "Dashboard Prediksi", icon: Activity },
+      {
+        href: "/tindakan",
+        label: "Aksi Dini",
+        icon: Siren,
+        badge: pendingActions ?? undefined,
+        badgeLabel: "menunggu instruksi",
+      },
+      {
+        href: "/verifikasi",
+        label: "Verifikasi Laporan",
+        icon: ClipboardCheck,
+        badge: pendingReports ?? undefined,
+        badgeLabel: "laporan menunggu verifikasi",
+      },
+      { href: "/analitik", label: "Analitik & Riwayat", icon: BarChart3 },
+      { href: "/kasus", label: "Entri Kasus", icon: FilePlus2 },
+    ];
+
+    // Menu admin hanya untuk dinas dan administrator
+    if (isAdminOrDinas) {
+      items.push({
+        href: "/admin",
+        label: "Manajemen Sistem & AI",
+        icon: ShieldCheck,
+      });
+    }
+
+    return items;
+  }, [pendingActions, pendingReports, isAdminOrDinas]);
 
   async function handleSignOut() {
     try {
@@ -259,7 +287,7 @@ export function Sidebar() {
       {/* Desktop */}
       <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-border bg-surface md:flex">
         <div className="border-b border-border p-6">
-          <Wordmark href="/dashboard" />
+          <Wordmark href="/dashboard" subline={consoleSubline} />
         </div>
 
         <nav
@@ -275,7 +303,7 @@ export function Sidebar() {
 
       {/* Mobile */}
       <header className="sticky top-0 z-40 flex items-center justify-between border-b border-border bg-surface px-4 py-3 md:hidden">
-        <Wordmark href="/dashboard" />
+        <Wordmark href="/dashboard" subline={consoleSubline} />
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" aria-label="Buka menu">
@@ -285,7 +313,7 @@ export function Sidebar() {
           <SheetContent side="right" className="w-full max-w-xs">
             <SheetTitle className="sr-only">Menu navigasi konsol</SheetTitle>
             <div className="mb-4 border-b border-border p-2">
-              <Wordmark href="/dashboard" />
+              <Wordmark href="/dashboard" subline={consoleSubline} />
             </div>
             <nav aria-label="Navigasi konsol" className="flex flex-col gap-1">
               {navLinks(() => setMobileOpen(false))}

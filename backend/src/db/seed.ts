@@ -290,19 +290,37 @@ async function seedAdminUser(tx: Tx): Promise<void> {
     "SELECT id FROM users WHERE email = ?",
     env.seedAdminEmail,
   );
-  if (existing) return;
+  if (!existing) {
+    const { hash, salt } = await hashPassword(env.seedAdminPassword);
+    await tx.run(
+      `INSERT INTO users (id, email, password_hash, salt, role, label, home, created_at)
+       VALUES (?, ?, ?, ?, 'dinas', ?, '/dashboard', ?)`,
+      crypto.randomUUID(),
+      env.seedAdminEmail,
+      hash,
+      salt,
+      env.seedAdminLabel,
+      new Date().toISOString(),
+    );
+  }
 
-  const { hash, salt } = await hashPassword(env.seedAdminPassword);
-  await tx.run(
-    `INSERT INTO users (id, email, password_hash, salt, role, label, home, created_at)
-     VALUES (?, ?, ?, ?, 'dinas', ?, '/dashboard', ?)`,
-    crypto.randomUUID(),
-    env.seedAdminEmail,
-    hash,
-    salt,
-    env.seedAdminLabel,
-    new Date().toISOString(),
+  const puskesmasEmail = "puskesmas@prakira.id";
+  const existingPuskesmas = await tx.one<{ id: string }>(
+    "SELECT id FROM users WHERE email = ?",
+    puskesmasEmail,
   );
+  if (!existingPuskesmas) {
+    const { hash, salt } = await hashPassword(env.seedAdminPassword);
+    await tx.run(
+      `INSERT INTO users (id, email, password_hash, salt, role, label, home, created_at)
+       VALUES (?, ?, ?, ?, 'puskesmas', 'Puskesmas Pandanaran', '/kasus', ?)`,
+      crypto.randomUUID(),
+      puskesmasEmail,
+      hash,
+      salt,
+      new Date().toISOString(),
+    );
+  }
 }
 
 /* ── Riwayat ingest ──────────────────────────────────────────────────────── */
