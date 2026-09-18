@@ -440,7 +440,7 @@ export function VerificationQueue() {
         <SummaryTile
           label="Terverifikasi"
           value={String(summary.terverifikasi)}
-          hint="Masuk model sebagai sinyal warga, berbobot lebih rendah dari data dinas."
+          hint="Diagregasikan per bulan untuk evaluasi model bersinyal warga."
         />
         <SummaryTile
           label="Ditolak"
