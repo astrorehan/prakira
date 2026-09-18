@@ -35,6 +35,7 @@ import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { ManualCaseEntryCard } from "./manual-case-entry";
+import { AdminModelRetrainCard } from "./admin-model-retrain";
 
 /**
  * Tata kelola data: impor CSV, status ingest, dan jejak audit.
@@ -749,7 +750,13 @@ export function AdminDataImport({ className }: { className?: string }) {
             onImported={audit.reload}
           />
         )}
-        <IngestStatusCard onRefreshed={audit.reload} />
+        <div className="flex flex-col gap-5">
+          <AdminModelRetrainCard
+            diseases={diseases.data ?? []}
+            onRetrained={audit.reload}
+          />
+          <IngestStatusCard onRefreshed={audit.reload} />
+        </div>
       </div>
 
       <AuditTrailCard
