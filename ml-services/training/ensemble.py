@@ -1,8 +1,19 @@
+import sys
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import ExtraTreesRegressor, GradientBoostingRegressor, RandomForestRegressor
 from sklearn.linear_model import ElasticNet, Ridge
 from xgboost import XGBRegressor
+
+# Kompatibilitas unpickle scikit-learn: model yang dilatih pada scikit-learn 1.7.x
+# menyimpan objek loss Cython (CyHalfSquaredError) dengan modul internal '_loss'.
+# Mendaftarkan '_loss' ke sys.modules memastikan joblib.load tidak gagal dengan
+# ModuleNotFoundError: No module named '_loss'.
+try:
+    import sklearn._loss._loss as _sklearn_loss_loss
+    sys.modules.setdefault("_loss", _sklearn_loss_loss)
+except (ImportError, AttributeError):
+    pass
 
 
 class DBDEnsembleModel:
