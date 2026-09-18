@@ -534,7 +534,7 @@ function DistrictResult({ selectedKecamatan }: { selectedKecamatan: string }) {
       >
         <p className="max-w-lg text-body-sm text-paper-700">
           Melihat gejala atau genangan air di sekitar rumah? Laporan Anda
-          diverifikasi petugas dan tersedia sebagai sinyal untuk prakiraan bulan depan.
+          diverifikasi petugas dan diagregasikan sebagai sinyal evaluasi pemodelan wilayah.
         </p>
         {/* Kecamatan yang sedang dilihat ikut ke formulir. Pembaca sudah
             menjawab "di mana Anda tinggal" untuk sampai ke layar ini;

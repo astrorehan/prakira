@@ -182,7 +182,7 @@ export default function PortalWargaPage() {
   return (
     <WargaShell
       title="Yang Anda lihat di gang belum tentu terlihat di data"
-      lead="Rekapitulasi resmi datang bulanan. Laporan warga datang hari ini. Kirim temuan dari lingkungan Anda, petugas memverifikasinya, dan yang terverifikasi tersedia sebagai sinyal untuk prakiraan bulan berikutnya."
+      lead="Rekapitulasi resmi datang bulanan. Laporan warga datang hari ini. Kirim temuan dari lingkungan Anda, petugas memverifikasinya, dan data terverifikasi diagregasikan per bulan sebagai sinyal evaluasi pemodelan wilayah."
     >
       <div className="grid gap-4 md:grid-cols-2">
         {ENTRIES.map((entry) => {
