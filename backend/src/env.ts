@@ -117,11 +117,11 @@ export const env = {
   ),
   sessionTtlHours: Number(process.env.SESSION_TTL_HOURS ?? 12),
 
-  /** Akun awal dinas. Kata sandi wajib diganti lewat env di produksi. */
-  seedAdminEmail: process.env.SEED_ADMIN_EMAIL ?? "dinkes@prakira.id",
-  seedAdminPassword: requiredInProduction("SEED_ADMIN_PASSWORD", "prakira2026"),
+  /** Akun awal administrator. Kata sandi wajib diganti lewat env di produksi. */
+  seedAdminEmail: process.env.SEED_ADMIN_EMAIL ?? "admin@prakira.id",
+  seedAdminPassword: requiredInProduction("SEED_ADMIN_PASSWORD", "admin123"),
   seedAdminLabel:
-    process.env.SEED_ADMIN_LABEL ?? "Dinas Kesehatan Kota Semarang",
+    process.env.SEED_ADMIN_LABEL ?? "Administrator Sistem",
 
   /** §5.4 — batas laporan warga per perangkat. */
   reportRateLimit: {

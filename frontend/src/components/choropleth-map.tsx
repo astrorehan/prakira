@@ -74,6 +74,14 @@ export default function ChoroplethMap({
       iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
       shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
     });
+
+    return () => {
+      const container = document.getElementById("prakira-choropleth-map");
+      if (container) {
+        // @ts-expect-error private leaflet property
+        container._leaflet_id = null;
+      }
+    };
   }, []);
 
   const styleFor = (feature?: Feature) => {
@@ -305,6 +313,8 @@ export default function ChoroplethMap({
       </div>
 
       <MapContainer
+        id="prakira-choropleth-map"
+        key="prakira-choropleth-map"
         center={center}
         zoom={zoom}
         style={{ height, width: "100%" }}

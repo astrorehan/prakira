@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import type { Feature, GeoJsonObject } from "geojson";
@@ -62,9 +62,24 @@ export default function RewindMap({
 }: RewindMapProps) {
   const byId = useMemo(() => {
     const map = new Map<string, RewindMapCell>();
-    for (const cell of cells) map.set(cell.id, cell);
+    for (const c of cells) map.set(c.id, c);
     return map;
   }, [cells]);
+
+  const mapId = useMemo(
+    () => `prakira-rewind-${sourceLabel.toLowerCase().replace(/[^a-z0-9]/g, "-")}`,
+    [sourceLabel],
+  );
+
+  useEffect(() => {
+    return () => {
+      const container = document.getElementById(mapId);
+      if (container) {
+        // @ts-expect-error private leaflet property
+        container._leaflet_id = null;
+      }
+    };
+  }, [mapId]);
 
   const styleFor = (feature?: Feature) => {
     const id = (feature?.properties as { id?: string } | undefined)?.id;
@@ -132,6 +147,8 @@ export default function RewindMap({
   return (
     <div className="relative w-full overflow-hidden rounded-xl border border-border">
       <MapContainer
+        id={mapId}
+        key={mapId}
         center={SEMARANG_CENTER}
         zoom={11}
         style={{ height, width: "100%" }}

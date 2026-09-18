@@ -294,12 +294,30 @@ async function seedAdminUser(tx: Tx): Promise<void> {
     const { hash, salt } = await hashPassword(env.seedAdminPassword);
     await tx.run(
       `INSERT INTO users (id, email, password_hash, salt, role, label, home, created_at)
-       VALUES (?, ?, ?, ?, 'dinas', ?, '/dashboard', ?)`,
+       VALUES (?, ?, ?, ?, 'admin', ?, '/admin', ?)`,
       crypto.randomUUID(),
       env.seedAdminEmail,
       hash,
       salt,
       env.seedAdminLabel,
+      new Date().toISOString(),
+    );
+  }
+
+  const dinkesEmail = "dinkes@prakira.id";
+  const existingDinkes = await tx.one<{ id: string }>(
+    "SELECT id FROM users WHERE email = ?",
+    dinkesEmail,
+  );
+  if (!existingDinkes) {
+    const { hash, salt } = await hashPassword("dinkes123");
+    await tx.run(
+      `INSERT INTO users (id, email, password_hash, salt, role, label, home, created_at)
+       VALUES (?, ?, ?, ?, 'puskesmas', 'Petugas Nakes Dinkes', '/dashboard', ?)`,
+      crypto.randomUUID(),
+      dinkesEmail,
+      hash,
+      salt,
       new Date().toISOString(),
     );
   }
@@ -310,10 +328,10 @@ async function seedAdminUser(tx: Tx): Promise<void> {
     puskesmasEmail,
   );
   if (!existingPuskesmas) {
-    const { hash, salt } = await hashPassword(env.seedAdminPassword);
+    const { hash, salt } = await hashPassword("puskesmas123");
     await tx.run(
       `INSERT INTO users (id, email, password_hash, salt, role, label, home, created_at)
-       VALUES (?, ?, ?, ?, 'puskesmas', 'Puskesmas Pandanaran', '/kasus', ?)`,
+       VALUES (?, ?, ?, ?, 'puskesmas', 'Puskesmas Pandanaran', '/dashboard', ?)`,
       crypto.randomUUID(),
       puskesmasEmail,
       hash,

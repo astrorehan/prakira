@@ -374,14 +374,14 @@ export type ImportResult = {
 };
 
 export function previewImport(disease: string, csv: string): Promise<ImportPreview> {
-  return request("/api/admin/import", {
+  return request("/api/cases/import", {
     method: "POST",
     body: JSON.stringify({ disease, csv, dryRun: true }),
   });
 }
 
 export function commitImport(disease: string, csv: string): Promise<ImportResult> {
-  return request("/api/admin/import", {
+  return request("/api/cases/import", {
     method: "POST",
     body: JSON.stringify({ disease, csv, dryRun: false }),
   });

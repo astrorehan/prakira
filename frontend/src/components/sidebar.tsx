@@ -85,16 +85,15 @@ export function Sidebar() {
   const [pendingActions, setPendingActions] = React.useState<number | null>(null);
 
   const userRole = session?.role;
-  const isPuskesmas = userRole === "puskesmas";
-  const isAdminOrDinas = userRole === "admin" || userRole === "dinas";
-  const consoleSubline = isPuskesmas ? "Konsol Nakes" : "Konsol Petugas";
+  const isAdmin = userRole === "admin";
+  const consoleSubline = isAdmin ? "Konsol Administrator" : "Konsol Tenaga Kesehatan";
 
   /* Kedua angka berubah saat petugas memutuskan sesuatu di /verifikasi atau
      /tindakan, dan sidebar tetap terpasang selama itu. Ditarik ulang tiap kali
      rute berganti — cukup untuk lencana, tanpa menambah kanal antar-komponen.
-     Kegagalan berarti lencananya tidak muncul, bukan lencana bernilai nol. */
+     Hanya dijalankan untuk nakes/petugas lapangan, bukan admin IT. */
   React.useEffect(() => {
-    if (!session) {
+    if (!session || isAdmin) {
       setPendingReports(null);
       setPendingActions(null);
       return;
@@ -117,10 +116,24 @@ export function Sidebar() {
     return () => {
       alive = false;
     };
-  }, [pathname, session]);
+  }, [pathname, session, isAdmin]);
 
   const consoleItems: NavItem[] = React.useMemo(() => {
-    const items: NavItem[] = [
+    if (isAdmin) {
+      // Menu khusus Administrator IT: Sistem & AI, Dashboard Pemantauan, Analitik & Evaluasi
+      return [
+        {
+          href: "/admin",
+          label: "Manajemen Sistem & AI",
+          icon: ShieldCheck,
+        },
+        { href: "/dashboard", label: "Dashboard Pemantauan", icon: Activity },
+        { href: "/analitik", label: "Analitik & Evaluasi", icon: BarChart3 },
+      ];
+    }
+
+    // Menu Tenaga Kesehatan (Nakes): Surveilans klinis, verifikasi warga, dan aksi intervensi
+    return [
       { href: "/dashboard", label: "Dashboard Prediksi", icon: Activity },
       {
         href: "/tindakan",
@@ -139,18 +152,7 @@ export function Sidebar() {
       { href: "/analitik", label: "Analitik & Riwayat", icon: BarChart3 },
       { href: "/kasus", label: "Entri Kasus", icon: FilePlus2 },
     ];
-
-    // Menu admin hanya untuk dinas dan administrator
-    if (isAdminOrDinas) {
-      items.push({
-        href: "/admin",
-        label: "Manajemen Sistem & AI",
-        icon: ShieldCheck,
-      });
-    }
-
-    return items;
-  }, [pendingActions, pendingReports, isAdminOrDinas]);
+  }, [pendingActions, pendingReports, isAdmin]);
 
   async function handleSignOut() {
     try {

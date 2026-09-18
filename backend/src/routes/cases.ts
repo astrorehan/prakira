@@ -8,7 +8,9 @@
  * - Setiap entri tercatat secara transparan di `audit_log`.
  */
 import { Router } from "express";
-import { all, one, run } from "../db/index.js";
+import { all, one, run, transaction } from "../db/index.js";
+import { parseCsv, parseCsvHeader, toNumber } from "../db/csv.js";
+import { startIngestJob, finishIngestJob } from "../db/seed.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { asyncRoute, HttpError } from "../middleware/error.js";
 import { logAudit } from "../services/audit.js";
@@ -16,6 +18,8 @@ import { logAudit } from "../services/audit.js";
 export const casesRouter = Router();
 
 const VALID_DISEASES = ["DBD", "ISPA", "LEPTOSPIROSIS", "DIARE"];
+const REQUIRED_COLUMNS = ["kecamatan_nama", "month_start", "cases"];
+const OPTIONAL_COLUMNS = ["rainfall_mm", "temp_mean_c", "humidity_pct"];
 
 /**
  * Normalisasi format bulan/tanggal ke YYYY-MM-01.
@@ -197,3 +201,175 @@ casesRouter.get(
     res.json({ data: rows });
   }),
 );
+
+/**
+ * POST /api/cases/import
+ * Impor rekapitulasi data kasus dari berkas CSV oleh Nakes (Puskesmas / Dinas / Admin).
+ */
+casesRouter.post(
+  "/import",
+  requireAuth,
+  requireRole("puskesmas", "dinas", "admin"),
+  asyncRoute(async (req, res) => {
+    const body = req.body ?? {};
+    const csv = typeof body.csv === "string" ? body.csv : "";
+    const disease =
+      typeof body.disease === "string" ? body.disease.toUpperCase() : "";
+    const dryRun = body.dryRun !== false;
+
+    if (!csv.trim()) throw new HttpError(400, "Isi berkas CSV kosong.");
+    if (!disease)
+      throw new HttpError(400, "Penyakit wajib dipilih sebelum impor.");
+
+    const header = parseCsvHeader(csv);
+    const missing = REQUIRED_COLUMNS.filter((c) => !header.includes(c));
+    if (missing.length > 0) {
+      throw new HttpError(
+        400,
+        `Kolom wajib tidak ditemukan: ${missing.join(", ")}. Kolom terbaca: ${header.join(", ") || "(kosong)"}.`,
+      );
+    }
+
+    const kecamatanRows = await all<{ id: string; nama: string }>(
+      "SELECT id, nama FROM kecamatan",
+    );
+    const namaToId = new Map(
+      kecamatanRows.map((r) => [r.nama.toLowerCase(), r.id]),
+    );
+
+    const rows = parseCsv(csv);
+    const valid: {
+      kecamatanId: string;
+      nama: string;
+      month: string;
+      cases: number;
+      rainfall: number | null;
+      temp: number | null;
+      humidity: number | null;
+    }[] = [];
+    const problems: { line: number; message: string }[] = [];
+
+    rows.forEach((row, index) => {
+      const line = index + 2; // +1 header, +1 basis-1
+      const kecamatanId = namaToId.get(
+        (row.kecamatan_nama ?? "").toLowerCase(),
+      );
+      if (!kecamatanId) {
+        problems.push({
+          line,
+          message: `Kecamatan '${row.kecamatan_nama}' tidak dikenal.`,
+        });
+        return;
+      }
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(row.month_start ?? "")) {
+        problems.push({
+          line,
+          message: `month_start '${row.month_start}' bukan format YYYY-MM-DD.`,
+        });
+        return;
+      }
+      const cases = toNumber(row.cases);
+      if (cases === null || cases < 0) {
+        problems.push({
+          line,
+          message: `cases '${row.cases}' bukan bilangan tak negatif.`,
+        });
+        return;
+      }
+
+      valid.push({
+        kecamatanId,
+        nama: row.kecamatan_nama,
+        month: `${row.month_start.slice(0, 7)}-01`,
+        cases: Math.round(cases),
+        rainfall: toNumber(row.rainfall_mm),
+        temp: toNumber(row.temp_mean_c),
+        humidity: toNumber(row.humidity_pct),
+      });
+    });
+
+    const preview = valid.slice(0, 10);
+
+    if (dryRun) {
+      res.json({
+        dryRun: true,
+        disease,
+        columns: {
+          required: REQUIRED_COLUMNS,
+          optional: OPTIONAL_COLUMNS,
+          found: header,
+        },
+        totalRows: rows.length,
+        validRows: valid.length,
+        problems,
+        preview,
+      });
+      return;
+    }
+
+    if (valid.length === 0) {
+      throw new HttpError(
+        400,
+        "Tidak ada baris yang lolos validasi. Impor dibatalkan.",
+      );
+    }
+
+    const jobId = await startIngestJob(`impor-csv-${disease.toLowerCase()}`);
+    const startedAt = Date.now();
+    const recordedAt = new Date().toISOString();
+
+    try {
+      await transaction(async (tx) => {
+        for (const row of valid) {
+          await tx.run(
+            `INSERT INTO observasi
+               (kecamatan_id, disease, month_start, cases, rainfall_mm, temp_mean_c,
+                humidity_pct, source, recorded_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, 'import', ?)
+             ON CONFLICT (kecamatan_id, disease, month_start) DO UPDATE SET
+               cases = excluded.cases,
+               rainfall_mm = COALESCE(excluded.rainfall_mm, observasi.rainfall_mm),
+               temp_mean_c = COALESCE(excluded.temp_mean_c, observasi.temp_mean_c),
+               humidity_pct = COALESCE(excluded.humidity_pct, observasi.humidity_pct),
+               source = 'import',
+               recorded_at = excluded.recorded_at`,
+            row.kecamatanId,
+            disease,
+            row.month,
+            row.cases,
+            row.rainfall,
+            row.temp,
+            row.humidity,
+            recordedAt,
+          );
+        }
+      });
+    } catch (error) {
+      await finishIngestJob(jobId, {
+        status: "failed",
+        rows: 0,
+        latencyMs: Date.now() - startedAt,
+        detail: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+
+    await finishIngestJob(jobId, {
+      status: "success",
+      rows: valid.length,
+      latencyMs: Date.now() - startedAt,
+      detail: `Impor ${disease}: ${valid.length} baris diterima, ${problems.length} baris ditolak.`,
+    });
+
+    await logAudit({
+      actor: req.session!.label,
+      role: req.session!.role,
+      action: `Impor CSV kasus ${disease}`,
+      details: `${valid.length} baris masuk, ${problems.length} ditolak.`,
+      status: problems.length > 0 ? "warning" : "success",
+    });
+
+    res.json({ dryRun: false, disease, imported: valid.length, problems });
+  }),
+);
+

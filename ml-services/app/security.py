@@ -13,8 +13,30 @@ token wajib ada: layanan menolak start dengan diam-diam terbuka.
 """
 import hmac
 import os
+from pathlib import Path
 
 from fastapi import Header, HTTPException
+
+
+def _load_dotenv() -> None:
+    for candidate in [Path(__file__).resolve().parent.parent / ".env", Path(".env")]:
+        if candidate.exists():
+            try:
+                with open(candidate, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if not line or line.startswith("#") or "=" not in line:
+                            continue
+                        k, v = line.split("=", 1)
+                        k, v = k.strip(), v.strip().strip("'\"")
+                        if k not in os.environ:
+                            os.environ[k] = v
+            except Exception:
+                pass
+            break
+
+
+_load_dotenv()
 
 _TOKEN = os.getenv("ML_API_TOKEN", "").strip()
 _IS_PRODUCTION = os.getenv("ENVIRONMENT", "").lower() == "production"

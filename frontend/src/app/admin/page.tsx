@@ -13,11 +13,12 @@ import { Button } from "@/components/ui/button";
  * Manajemen Sistem & AI (Admin & Dinas).
  *
  * Ruang kendali khusus Administrator dan Dinas Kesehatan untuk melatih ulang
- * model ML, mengimpor rekapitulasi data massal, memantau integritas ingest,
- * serta memeriksa jejak audit akuntabilitas publik.
+ * model ML, memantau integritas ingest data, serta memeriksa jejak audit
+ * akuntabilitas publik.
  *
- * Petugas Puskesmas (Nakes) yang mencoba mengakses halaman ini secara manual
- * dialihkan otomatis ke ruang kerja faskes di /kasus.
+ * Impor data kasus (manual & CSV) dilakukan oleh Nakes di halaman /kasus.
+ * Petugas Puskesmas yang mencoba mengakses halaman ini secara manual
+ * dialihkan otomatis ke ruang kerja faskes di /dashboard.
  */
 export default function AdminPage() {
   const { session, loading } = useSessionContext();
@@ -28,7 +29,7 @@ export default function AdminPage() {
 
   React.useEffect(() => {
     if (!loading && session && !isAuthorized) {
-      router.replace("/kasus");
+      router.replace("/dashboard");
     }
   }, [loading, session, isAuthorized, router]);
 
@@ -39,11 +40,11 @@ export default function AdminPage() {
           <ShieldAlert className="mx-auto h-10 w-10 text-risk-high" aria-hidden />
           <h1 className="text-h2 text-foreground">Akses Terbatas</h1>
           <p className="text-body-sm text-paper-600">
-            Halaman Manajemen Sistem & AI dikhususkan untuk Administrator dan Dinas
-            Kesehatan. Anda sedang dialihkan ke ruang kerja Entri Kasus Faskes…
+            Halaman Manajemen Sistem & AI dikhususkan untuk Administrator Sistem.
+            Anda sedang dialihkan ke Dashboard Prediksi…
           </p>
           <Button asChild size="sm">
-            <Link href="/kasus">Buka Halaman Entri Kasus</Link>
+            <Link href="/dashboard">Buka Dashboard Prediksi</Link>
           </Button>
         </div>
       </div>
@@ -55,7 +56,7 @@ export default function AdminPage() {
       <div className="container mx-auto max-w-7xl space-y-8">
         <ConsolePageHeader
           title="Manajemen Sistem & AI"
-          description="Latih ulang model prediksi ML, kelola impor rekapitulasi dinas, pantau status ingest, serta telusuri jejak audit sistem untuk akuntabilitas publik."
+          description="Latih ulang model prediksi ML, pantau status ingest data, serta telusuri jejak audit sistem untuk akuntabilitas publik."
         />
 
         <AdminDataImport />

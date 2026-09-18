@@ -5,30 +5,21 @@ import {
   AlertTriangle,
   CheckCircle2,
   Database,
-  Download,
-  FileSpreadsheet,
   Info,
   RefreshCw,
   Search,
   Shield,
-  UploadCloud,
 } from "lucide-react";
-import { cn, diseaseLabel, formatNumber } from "@/lib/utils";
-import { formatDateTime, formatMonth } from "@/lib/period";
-import type { AuditLog, DiseaseSummary } from "@/types";
+import { cn, formatNumber } from "@/lib/utils";
+import { formatDateTime } from "@/lib/period";
+import type { AuditLog } from "@/types";
 import {
-  commitImport,
   fetchAuditLog,
   fetchDiseases,
   fetchIngestStatus,
-  fetchKecamatanList,
-  previewImport,
   refreshPredictions,
-  type ImportPreview,
 } from "@/lib/api";
-import { downloadCsv, toCsv } from "@/lib/export";
 import { useApi } from "@/lib/use-api";
-import { invalidatePeriod } from "@/lib/use-period";
 import { DataState } from "./data-state";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
@@ -36,25 +27,11 @@ import { Badge } from "./ui/badge";
 import { AdminModelRetrainCard } from "./admin-model-retrain";
 
 /**
- * Tata kelola data: impor CSV, status ingest, dan jejak audit.
+ * Tata kelola sistem: retraining model AI, status ingest, dan jejak audit.
  *
- * Yang berubah bersamaan dengan masuknya gateway:
- *
- * 1. **Panel "Konektor BMKG Open Data" hilang.** Ia melaporkan 4 stasiun aktif,
- *    latensi 184 ms, "sinkronisasi berikutnya 15 menit lagi", dan lima variabel
- *    iklim termasuk radiasi matahari dan kecepatan angin. Tidak ada satu pun
- *    yang berasal dari pekerjaan yang benar-benar berjalan, dan dua variabel
- *    terakhir tidak punya kolom di dataset mana pun. Penggantinya melaporkan
- *    pekerjaan ingest yang sungguh tercatat: kapan, berapa lama, berapa baris.
- * 2. **Unggah CSV benar-benar mengunggah.** Sebelumnya berkasnya hanya diperiksa
- *    ekstensinya, lalu `setTimeout(1500)` menampilkan "16 record kecamatan
- *    terverifikasi" — angka yang sama untuk berkas apa pun, termasuk berkas
- *    kosong. Sekarang isinya diurai gateway, sepuluh baris pertama ditampilkan
- *    sebagai pratinjau, dan barisnya baru masuk basis data setelah dikonfirmasi.
- * 3. **Jejak audit dibaca, bukan ditulis.** `AUDIT_LOGS` berisi empat entri
- *    beserta nama petugasnya; entri baru dibuat di peramban dengan id acak dan
- *    hilang saat halaman disegarkan. Sekarang isinya peristiwa yang terjadi di
- *    server.
+ * Fitur impor CSV sudah dipindahkan ke ruang kerja Tenaga Kesehatan
+ * di halaman /kasus (komponen CaseCsvImportCard). Admin cukup memantau
+ * integritas data yang masuk dan menjalankan retraining model.
  */
 
 const AUDIT_STATUS: Record<
@@ -72,316 +49,6 @@ function DataRow({ label, children }: { label: string; children: React.ReactNode
       <dt className="text-caption text-paper-600">{label}</dt>
       <dd className="text-caption font-semibold text-foreground">{children}</dd>
     </div>
-  );
-}
-
-/* ── Impor CSV ──────────────────────────────────────────────────────────── */
-
-type ImportState =
-  | { kind: "idle" }
-  | { kind: "reading"; fileName: string }
-  | { kind: "preview"; fileName: string; csv: string; preview: ImportPreview }
-  | { kind: "committing"; fileName: string }
-  | { kind: "done"; fileName: string; imported: number; rejected: number }
-  | { kind: "error"; fileName: string; reason: string };
-
-function CsvImportCard({
-  diseases,
-  onImported,
-}: {
-  diseases: DiseaseSummary[];
-  onImported: () => void;
-}) {
-  const [disease, setDisease] = React.useState<string>("");
-  const [state, setState] = React.useState<ImportState>({ kind: "idle" });
-  const inputRef = React.useRef<HTMLInputElement>(null);
-
-  /* Berkas contoh dibentuk dari register kecamatan yang sedang berlaku, bukan
-     dari daftar nama yang ditulis di sini: satu kecamatan berganti nama dan
-     contoh statis akan mengajarkan format yang ditolak penguraiannya sendiri. */
-  const kecamatan = useApi(() => fetchKecamatanList(), []);
-
-  React.useEffect(() => {
-    if (!disease && diseases.length > 0) setDisease(diseases[0].disease);
-  }, [diseases, disease]);
-
-  /**
-   * Unduh contoh berkas.
-   *
-   * Kolom `cases` sengaja dibiarkan kosong. Mengisinya dengan angka contoh
-   * berarti berkas ini bisa langsung diunggah dan menimpa kasus bulan berjalan
-   * dengan angka karangan — persis kecelakaan yang paling mungkin terjadi saat
-   * seseorang mencoba fitur ini untuk pertama kali. Dikosongkan, berkasnya
-   * mengajarkan bentuk kolomnya dan ditolak validator sampai benar-benar diisi.
-   */
-  const downloadTemplate = () => {
-    const rows = kecamatan.data ?? [];
-    if (rows.length === 0) return;
-
-    const now = new Date();
-    const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
-
-    const csv = toCsv(rows, [
-      { header: "kecamatan_nama", value: (row) => row.nama },
-      { header: "month_start", value: () => month },
-      { header: "cases", value: () => "" },
-      { header: "rainfall_mm", value: () => "" },
-      { header: "temp_mean_c", value: () => "" },
-      { header: "humidity_pct", value: () => "" },
-    ]);
-
-    downloadCsv(`contoh-impor-kasus-${disease.toLowerCase() || "penyakit"}`, csv);
-  };
-
-  const handleFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-    if (!file || !disease) return;
-
-    setState({ kind: "reading", fileName: file.name });
-
-    try {
-      const csv = await file.text();
-      const preview = await previewImport(disease, csv);
-      setState({ kind: "preview", fileName: file.name, csv, preview });
-    } catch (caught) {
-      setState({
-        kind: "error",
-        fileName: file.name,
-        reason: caught instanceof Error ? caught.message : String(caught),
-      });
-    }
-  };
-
-  const commit = async () => {
-    if (state.kind !== "preview") return;
-    const { fileName, csv, preview } = state;
-    setState({ kind: "committing", fileName });
-
-    try {
-      const result = await commitImport(preview.disease, csv);
-      setState({
-        kind: "done",
-        fileName,
-        imported: result.imported,
-        rejected: result.problems.length,
-      });
-      /* Bulan terakhir bisa berubah setelah impor; chip periode di seluruh
-         konsol membaca nilai yang di-memo, jadi memonya harus dibuang. */
-      invalidatePeriod();
-      onImported();
-    } catch (caught) {
-      setState({
-        kind: "error",
-        fileName,
-        reason: caught instanceof Error ? caught.message : String(caught),
-      });
-    }
-  };
-
-  return (
-    <Card className="flex flex-col justify-between p-5">
-      <div>
-        <div className="flex items-start justify-between gap-3">
-          <span className="flex items-center gap-1.5">
-            <FileSpreadsheet className="h-4 w-4 text-brand-700" aria-hidden="true" />
-            <span className="overline">Impor dataset kasus</span>
-          </span>
-          <Badge variant="outline">CSV</Badge>
-        </div>
-
-        <h3 className="mt-2 text-h3 text-foreground">Unggah rekapitulasi kasus</h3>
-        <p className="mt-1 text-caption leading-relaxed text-paper-600">
-          Satu baris per kecamatan per bulan. Berkas diurai dan divalidasi lebih
-          dulu; tidak ada baris yang masuk sebelum Anda mengonfirmasi pratinjaunya.
-        </p>
-
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          <label htmlFor="import-disease" className="text-caption text-paper-600">
-            Penyakit
-          </label>
-          <select
-            id="import-disease"
-            value={disease}
-            onChange={(e) => setDisease(e.target.value)}
-            className="h-9 rounded-lg border border-border bg-surface px-3 text-body-sm text-foreground"
-          >
-            {diseases.map((d) => (
-              <option key={d.disease} value={d.disease}>
-                {diseaseLabel(d.disease)}
-              </option>
-            ))}
-          </select>
-
-          {/* Tanpa berkas contoh, satu-satunya cara mencoba fitur ini adalah
-              mengarang CSV dari nol — termasuk menebak ejaan enam belas nama
-              kecamatan yang harus cocok persis dengan register. */}
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={downloadTemplate}
-            disabled={(kecamatan.data ?? []).length === 0}
-            className="ml-auto gap-1.5"
-          >
-            <Download className="h-4 w-4" aria-hidden="true" />
-            <span>Contoh berkas</span>
-          </Button>
-        </div>
-
-        <label
-          className={cn(
-            "mt-3 flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-6 text-center transition-colors",
-            state.kind === "error"
-              ? "border-risk-medium-br bg-risk-medium-bg"
-              : "border-brand-300 bg-brand-50/50 hover:bg-brand-50",
-          )}
-        >
-          <UploadCloud className="mb-2 h-8 w-8 text-brand-700" aria-hidden="true" />
-          <span className="text-body-sm font-medium text-foreground">
-            {state.kind === "reading"
-              ? `Memvalidasi ${state.fileName}…`
-              : "Klik untuk memilih berkas CSV"}
-          </span>
-          {/* Kolom yang benar-benar dibaca gateway, bukan daftar karangan.
-              Versi sebelumnya menyebut `periode_minggu` dan `jumlah_diare`,
-              dua kolom yang tidak pernah ada di pengurai mana pun. */}
-          <span className="mt-1 text-caption text-paper-600">
-            Kolom wajib: kecamatan_nama, month_start, cases. Opsional:
-            rainfall_mm, temp_mean_c, humidity_pct.
-          </span>
-          <span className="mt-1 text-caption text-paper-600">
-            Berkas contoh sudah berisi seluruh nama kecamatan dengan kolom{" "}
-            <code className="font-mono">cases</code> dikosongkan — isi dulu, sebab
-            baris kosong akan ditolak validator.
-          </span>
-          <input
-            ref={inputRef}
-            type="file"
-            accept=".csv,text/csv"
-            className="sr-only"
-            onChange={handleFile}
-            disabled={state.kind === "reading" || state.kind === "committing" || !disease}
-          />
-        </label>
-      </div>
-
-      <div aria-live="polite" className="mt-3 space-y-3 empty:mt-0">
-        {state.kind === "preview" && (
-          <div className="rounded-xl border border-border bg-paper-50 p-3.5">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-body-sm font-semibold text-foreground">
-                {state.preview.validRows} dari {state.preview.totalRows} baris lolos
-                validasi
-              </span>
-              <Badge variant={state.preview.problems.length > 0 ? "risk-medium" : "risk-low"}>
-                {state.preview.problems.length} baris ditolak
-              </Badge>
-            </div>
-
-            {/* Kolom yang benar-benar terbaca dari kepala berkas. Tanpa baris
-                ini, berkas yang lolos karena kolom opsionalnya salah eja masuk
-                diam-diam dengan iklim kosong, dan tidak ada yang tahu sampai
-                grafik iklimnya bolong. */}
-            <p className="mt-1.5 text-caption text-paper-600">
-              Kolom terbaca:{" "}
-              {state.preview.columns.found.map((col, index) => (
-                <React.Fragment key={col}>
-                  {index > 0 && ", "}
-                  <code
-                    className={cn(
-                      "font-mono",
-                      state.preview.columns.required.includes(col) ||
-                        state.preview.columns.optional.includes(col)
-                        ? "text-foreground"
-                        : "text-paper-600 line-through",
-                    )}
-                  >
-                    {col}
-                  </code>
-                </React.Fragment>
-              ))}
-              . Kolom bercoret tidak dikenali dan diabaikan.
-            </p>
-
-            {state.preview.preview.length > 0 && (
-              <div className="mt-2.5 overflow-x-auto">
-                <table className="w-full text-left text-caption">
-                  <thead className="text-overline uppercase text-paper-600">
-                    <tr>
-                      <th className="py-1 pr-3">Kecamatan</th>
-                      <th className="py-1 pr-3">Bulan</th>
-                      <th className="py-1 pr-3 text-right">Kasus</th>
-                      <th className="py-1 pr-3 text-right">Hujan</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {state.preview.preview.map((row) => (
-                      <tr key={`${row.nama}-${row.month}`}>
-                        <td className="py-1 pr-3 text-foreground">{row.nama}</td>
-                        <td className="py-1 pr-3 text-paper-700">{formatMonth(row.month)}</td>
-                        <td className="tabular py-1 pr-3 text-right text-foreground">
-                          {row.cases}
-                        </td>
-                        <td className="tabular py-1 pr-3 text-right text-paper-700">
-                          {row.rainfall === null ? "—" : `${row.rainfall} mm`}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            {state.preview.problems.length > 0 && (
-              <ul className="mt-2.5 max-h-28 space-y-0.5 overflow-y-auto text-caption text-risk-medium">
-                {state.preview.problems.slice(0, 8).map((p) => (
-                  <li key={`${p.line}-${p.message}`}>Baris {p.line}: {p.message}</li>
-                ))}
-                {state.preview.problems.length > 8 && (
-                  <li>…dan {state.preview.problems.length - 8} baris lain.</li>
-                )}
-              </ul>
-            )}
-
-            <div className="mt-3 flex flex-wrap gap-2 border-t border-border pt-2.5">
-              <Button
-                size="sm"
-                onClick={commit}
-                disabled={state.preview.validRows === 0}
-                className="gap-1.5"
-              >
-                Impor {state.preview.validRows} baris
-              </Button>
-              <Button size="sm" variant="ghost" onClick={() => setState({ kind: "idle" })}>
-                Batal
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {state.kind === "committing" && (
-          <p className="text-caption text-paper-600">Menyimpan {state.fileName}…</p>
-        )}
-
-        {state.kind === "done" && (
-          <p className="flex items-start gap-2 rounded-xl border border-risk-low-br bg-risk-low-bg p-2.5 text-caption font-medium text-risk-low">
-            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-            <span>
-              {state.imported} baris dari {state.fileName} masuk basis data
-              {state.rejected > 0 ? `, ${state.rejected} baris ditolak` : ""}.
-            </span>
-          </p>
-        )}
-
-        {state.kind === "error" && (
-          <p className="flex items-start gap-2 rounded-xl border border-risk-medium-br bg-risk-medium-bg p-2.5 text-caption font-medium text-risk-medium">
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-            <span>{state.reason}</span>
-          </p>
-        )}
-      </div>
-    </Card>
   );
 }
 
@@ -697,13 +364,7 @@ export function AdminDataImport({ className }: { className?: string }) {
           diseases={diseases.data ?? []}
           onRetrained={audit.reload}
         />
-        <div className="flex flex-col gap-5">
-          <CsvImportCard
-            diseases={diseases.data ?? []}
-            onImported={audit.reload}
-          />
-          <IngestStatusCard onRefreshed={audit.reload} />
-        </div>
+        <IngestStatusCard onRefreshed={audit.reload} />
       </div>
 
       <AuditTrailCard
