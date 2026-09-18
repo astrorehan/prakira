@@ -39,6 +39,9 @@ import type {
   RateLimitState,
   ReportKind,
   ReportingPeriod,
+  RetrainMetrics,
+  RetrainResponse,
+  RetrainResult,
   RewindMeta,
   RewindPayload,
   Session,
@@ -485,4 +488,20 @@ export function clearSurge(): Promise<{
 }> {
   return request("/api/admin/demo/surge", { method: "DELETE" });
 }
+
+/* ── Retraining Model (Admin) ────────────────────────────────────────────── */
+
+export function retrainModel(
+  disease: string,
+  includeCitizen = false,
+): Promise<RetrainResponse> {
+  return request("/api/admin/retrain", {
+    method: "POST",
+    body: JSON.stringify({
+      disease: disease.toUpperCase(),
+      includeCitizen,
+    }),
+  });
+}
+
 

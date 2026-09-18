@@ -668,3 +668,26 @@ export type SurgeResult = {
   /** Kecamatan yang baru naik status akibat penyuntikan ini. */
   baru: Escalation[];
 };
+
+/* ── Retraining Model Machine Learning (Admin) ─────────────────────────── */
+
+export type RetrainMetrics = {
+  mae: number;
+  rmse: number;
+  r2: number;
+};
+
+export type RetrainResult = {
+  status: string;
+  disease: string;
+  new_version: string;
+  include_citizen: boolean;
+  metrics: RetrainMetrics;
+  previous_version: string | null;
+  improved: boolean;
+};
+
+export type RetrainResponse = {
+  data: RetrainResult;
+};
+
