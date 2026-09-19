@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, TriangleAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePeriod } from "@/lib/use-period";
 
@@ -26,6 +26,10 @@ import { usePeriod } from "@/lib/use-period";
  * sekarang menyebut dua hal yang benar-benar berbeda: bulan data terakhir dan
  * bulan yang diprakirakan. Petugas harus bisa melihat keduanya tanpa membuka
  * halaman lain.
+ *
+ * Bila kalender nyata sudah jauh melewati bulan prakiraan, chip berubah nada
+ * dan menyebut jaraknya. "Prakiraan Januari 2026" di bulan September tanpa
+ * keterangan itu terbaca sebagai prakiraan bulan depan.
  */
 export function PeriodChip({ className }: { className?: string }) {
   const { period, loading } = usePeriod();
@@ -44,25 +48,49 @@ export function PeriodChip({ className }: { className?: string }) {
     );
   }
 
+  const behind = period.forecastBehindCalendar;
+
   return (
     <span
       role="status"
-      aria-label={`Data terakhir ${period.monthYear}, prakiraan ${period.predictionLabel}`}
+      title={period.lagNotice ?? undefined}
+      aria-label={
+        behind && period.lagNotice
+          ? period.lagNotice
+          : `Data terakhir ${period.monthYear}, prakiraan ${period.predictionLabel}`
+      }
       className={cn(
-        "inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1.5 shadow-hairline",
+        "inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-0.5 rounded-full border px-3 py-1.5 shadow-hairline",
+        behind
+          ? "border-risk-medium-br bg-risk-medium-bg"
+          : "border-border bg-surface",
         className,
       )}
     >
-      <CalendarDays className="h-3.5 w-3.5 shrink-0 text-brand-700" aria-hidden="true" />
-      <span className="tabular text-caption font-medium text-foreground">
+      {behind ? (
+        <TriangleAlert className="h-3.5 w-3.5 shrink-0 text-risk-medium" aria-hidden="true" />
+      ) : (
+        <CalendarDays className="h-3.5 w-3.5 shrink-0 text-brand-700" aria-hidden="true" />
+      )}
+      <span className="tabular whitespace-nowrap text-caption font-medium text-foreground">
         Data {period.monthYear}
       </span>
       <span aria-hidden="true" className="text-paper-300">
         ·
       </span>
-      <span className="text-caption text-paper-600">
+      <span className="whitespace-nowrap text-caption text-paper-600">
         Prakiraan {period.predictionLabel}
       </span>
+      {behind && period.dataLagMonths !== null && (
+        <>
+          <span aria-hidden="true" className="text-paper-300">
+            ·
+          </span>
+          <span className="whitespace-nowrap text-caption font-medium text-risk-medium">
+            tertinggal {period.dataLagMonths} bulan
+          </span>
+        </>
+      )}
     </span>
   );
 }

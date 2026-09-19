@@ -40,7 +40,7 @@ export function DistrictBoard({
   selectedKecamatan,
   onSelectKecamatan,
 }: DistrictBoardProps) {
-  const { byDisease, diseases, loading, error } = useCityData();
+  const { byDisease, diseases, loading, error, meta } = useCityData();
   const [disease, setDisease] = useState<DiseaseType | null>(null);
 
   React.useEffect(() => {
@@ -174,8 +174,8 @@ export function DistrictBoard({
             sendiri, bukan gabungan tiga faktor seperti yang tertulis
             sebelumnya - kepadatan penduduk tidak pernah masuk perhitungannya. */}
         <p className="mt-6 border-t border-sand-200 pt-4 font-mono text-3xs uppercase tracking-wider text-paper-600">
-          Skor 0–100 · posisi prakiraan bulan depan terhadap riwayat kasus kecamatan
-          itu sendiri
+          Skor 0–100 · posisi prakiraan {meta?.predictionLabel ?? "bulan berikutnya"} terhadap
+          riwayat kasus kecamatan itu sendiri
         </p>
       </div>
     </section>

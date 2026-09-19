@@ -239,7 +239,11 @@ export function Hero({ selectedKecamatan, onSelectKecamatan }: HeroProps) {
   /* Shortcuts are the four highest-scoring kecamatan this week, not a fixed
      list. A hardcoded row is an editorial choice about which districts matter;
      the ranking is a fact the data already carries. */
-  const { rows: cityRows, diseases } = useCityData();
+  const { rows: cityRows, diseases, meta } = useCityData();
+  /* Bulan yang benar-benar diprakirakan, bukan "bulan depan": dataset bisa
+     berhenti jauh sebelum kalender nyata, dan judul yang menjanjikan bulan
+     depan sambil menampilkan Januari 2026 adalah judul yang berbohong. */
+  const forecastLabel = meta?.predictionLabel ?? "bulan depan";
 
   /* Daftar penyakit di kalimat pembuka mengikuti isi dataset. Versi sebelumnya
      menulis "DBD, ISPA, dan Diare" sebagai teks tetap — dan Diare tidak punya
@@ -314,7 +318,7 @@ export function Hero({ selectedKecamatan, onSelectKecamatan }: HeroProps) {
                   className="absolute inset-x-0 bottom-[0.08em] -z-0 h-[0.2em] rounded-full bg-[linear-gradient(90deg,rgba(229,170,82,.38)_0%,rgba(201,94,66,.34)_100%)]"
                 />
               </span>{" "}
-              bulan depan?
+              {forecastLabel}?
             </h1>
 
             <p className="animate-fade-in-up stagger-2 mt-6 max-w-xl text-body-lg text-paper-600">

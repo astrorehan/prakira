@@ -24,6 +24,7 @@ import { DiseaseSelector } from "@/components/disease-selector";
 import { DistrictDetailPanel } from "@/components/district-detail-panel";
 import { DistrictRankingTable } from "@/components/district-ranking-table";
 import { DataState } from "@/components/data-state";
+import { DataLagNotice } from "@/components/data-lag-notice";
 import {
   fetchActions,
   fetchDiseases,
@@ -229,6 +230,9 @@ export default function DashboardPrediksiPage() {
             </Button>
           </div>
         </div>
+
+        {/* Data yang tertinggal dari kalender harus tertulis, bukan disembunyikan. */}
+        <DataLagNotice period={meta} />
 
         {/* Prediksi basi harus tertulis, bukan disembunyikan. */}
         {meta?.stale && (

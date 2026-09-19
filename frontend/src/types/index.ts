@@ -342,6 +342,14 @@ export type ReportingPeriod = {
   diseases: DiseaseType[];
   /** Hari terakhir bulan observasi — acuan tenggat konsol, `YYYY-MM-DD`. */
   systemToday: string | null;
+  /** Bulan kalender berjalan menurut server (WIB), `YYYY-MM-01`. */
+  calendarMonth: string;
+  /** Jarak bulan kalender dari observasi terakhir; `1` = mutakhir. */
+  dataLagMonths: number | null;
+  /** Benar bila prakiraan bulan berjalan tidak bisa dibuat dari data yang ada. */
+  forecastBehindCalendar: boolean;
+  /** Kalimat siap tampil yang menjelaskan keterlambatan; `null` bila mutakhir. */
+  lagNotice: string | null;
 };
 
 export type DiseaseSummary = {

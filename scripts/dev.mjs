@@ -108,9 +108,14 @@ async function main() {
 
   const npmCmd = isWindows ? "npm.cmd" : "npm";
 
+  /* Gateway harus mendarat di port yang dituju `frontend/.env.local`
+     (`API_PROXY_TARGET`). Kalau lingkungan pemanggil sudah membawa `PORT`
+     — pratinjau IDE mengisinya dengan port frontend — gateway dan Next
+     berebut 3000 dan seluruh `/api` menjawab 500. */
   run("gateway", npmCmd, ["run", "dev"], {
     cwd: path.join(root, "backend"),
     shell: isWindows,
+    env: { PORT: process.env.GATEWAY_PORT ?? "4200" },
   });
 
   // Beri jeda singkat agar gateway mulai listen sebelum frontend menyala

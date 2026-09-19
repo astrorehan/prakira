@@ -36,6 +36,8 @@ import { EarlyActionCenter } from "@/components/early-action-center";
 import { RecommendationCard } from "@/components/recommendation-card";
 import { DispatchActionModal } from "@/components/dispatch-action-modal";
 import { DataState } from "@/components/data-state";
+import { DataLagNotice } from "@/components/data-lag-notice";
+import { PeriodChip } from "@/components/console/page-header";
 import {
   fetchActions,
   fetchBacktests,
@@ -458,6 +460,15 @@ export default function DesignSystemPage() {
                     />
                   </div>
                   <p className="text-2xs text-muted-foreground">Ukuran large dengan padding 18px dan font lebih besar untuk highlight dashboard eksekutif.</p>
+                </div>
+
+                <div className="p-4 rounded-xl bg-mesh-blue border border-paper-200/80 space-y-3">
+                  <span className="text-xs font-semibold text-paper-700 uppercase tracking-wider block">5. Chip Konsol & Pemberitahuan Data Tertinggal</span>
+                  <div className="flex flex-wrap gap-2 items-center">
+                    <PeriodChip />
+                  </div>
+                  <DataLagNotice period={period} />
+                  <p className="text-2xs text-muted-foreground">Chip berubah nada dan pemberitahuan muncul hanya bila kalender sudah melewati bulan prakiraan.</p>
                 </div>
               </div>
             </LiquidGlassCard>

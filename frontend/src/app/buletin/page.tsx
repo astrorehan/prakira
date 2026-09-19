@@ -258,6 +258,11 @@ function BuletinContent() {
               <span className="font-bold text-rose-800">Instruksi Kesiapsiagaan</span>
             </div>
           </div>
+          {meta?.forecastBehindCalendar && meta.lagNotice && (
+            <p className="print-keep mt-2 rounded-md border border-amber-300 bg-amber-50 px-2.5 py-1.5 text-2xs text-amber-900">
+              <strong>Catatan periode:</strong> {meta.lagNotice}
+            </p>
+          )}
           {/* ── Bagian I: Ringkasan Situasi & Peringatan Dini Kota ─────────────── */}
           <section className="print-keep mt-6">
             <div className="flex items-center gap-2 border-b border-slate-300 pb-1 mb-2.5">
