@@ -114,7 +114,17 @@ def process_raw_dbd_files():
 
     yearly_data = []
 
-    for year in range(2021, 2026):
+    years = sorted(
+        [
+            int(f.stem.split("_")[1])
+            for f in DATASET_RAW_KASUS.glob("dbd_*.csv")
+            if f.stem.split("_")[1].isdigit()
+        ]
+    )
+    if not years:
+        years = list(range(2021, 2027))
+
+    for year in years:
         file_path = DATASET_RAW_KASUS / f"dbd_{year}.csv"
         if not file_path.exists():
             logger.warning(f"File not found: {file_path}")
@@ -165,7 +175,7 @@ def process_raw_dbd_files():
     weekly_records = []
     np.random.seed(42)
 
-    for year in range(2021, 2026):
+    for year in years:
         real_weights = load_real_weekly_weights(year)
         logger.info(f"Loaded REAL weekly weights for Year {year} (Total citywide cases: {real_weights.sum():.2f})")
 
@@ -174,10 +184,11 @@ def process_raw_dbd_files():
 
         year_group = annual_kecamatan[annual_kecamatan["year"] == year]
 
-        for _, row in year_group.iterrows():
-            kec_id = row["kecamatan_id"]
-            kec_nama = row["kecamatan_nama"]
-            annual_total = row["total_cases"]
+        for k_item in KECAMATAN_SEMARANG:
+            kec_id = k_item["id"]
+            kec_nama = k_item["name"]
+            match = year_group[year_group["kecamatan_id"] == kec_id]
+            annual_total = int(match["total_cases"].values[0]) if not match.empty else 0
 
             if annual_total > 0:
                 weekly_cases = np.random.multinomial(annual_total, real_weights)

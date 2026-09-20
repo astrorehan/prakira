@@ -16,9 +16,23 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# DNS fallback for environments where outbound UDP port 53 is blocked/filtered
+import socket
+_orig_getaddrinfo = socket.getaddrinfo
+
+def _patched_getaddrinfo(host, port, *args, **kwargs):
+    if host == "archive-api.open-meteo.com":
+        try:
+            return _orig_getaddrinfo(host, port, *args, **kwargs)
+        except socket.gaierror:
+            return _orig_getaddrinfo("5.9.98.12", port, *args, **kwargs)
+    return _orig_getaddrinfo(host, port, *args, **kwargs)
+
+socket.getaddrinfo = _patched_getaddrinfo
+
 
 def fetch_open_meteo_weather(lat: float, lon: float, start_date: str, end_date: str) -> pd.DataFrame:
-    """Fetch daily weather data from Open-Meteo Historical API for a specific coordinate."""
+    """Fetch daily weather data from Open-Meteo Historical API for a specific coordinate with retry."""
     url = "https://archive-api.open-meteo.com/v1/archive"
     params = {
         "latitude": lat,
@@ -33,30 +47,40 @@ def fetch_open_meteo_weather(lat: float, lon: float, start_date: str, end_date: 
         "timezone": "Asia/Jakarta",
     }
 
-    try:
-        response = requests.get(url, params=params, timeout=30)
-        response.raise_for_status()
-        data = response.json()
+    for attempt in range(1, 4):
+        try:
+            response = requests.get(url, params=params, timeout=30)
+            if response.status_code == 429:
+                logger.warning(f"Rate limited (429) for ({lat}, {lon}). Retrying in {attempt * 2}s (attempt {attempt}/3)...")
+                time.sleep(attempt * 2)
+                continue
+            response.raise_for_status()
+            data = response.json()
 
-        if "daily" not in data:
-            logger.error(f"Response error for ({lat}, {lon}): {data}")
-            return pd.DataFrame()
+            if "daily" not in data:
+                logger.error(f"Response error for ({lat}, {lon}): {data}")
+                return pd.DataFrame()
 
-        df_daily = pd.DataFrame(data["daily"])
-        df_daily.rename(
-            columns={
-                "time": "date",
-                "rain_sum": "rainfall_mm",
-                "temperature_2m_mean": "temp_mean_c",
-                "relative_humidity_2m_mean": "humidity_pct",
-            },
-            inplace=True,
-        )
-        return df_daily
+            df_daily = pd.DataFrame(data["daily"])
+            df_daily.rename(
+                columns={
+                    "time": "date",
+                    "rain_sum": "rainfall_mm",
+                    "temperature_2m_mean": "temp_mean_c",
+                    "relative_humidity_2m_mean": "humidity_pct",
+                },
+                inplace=True,
+            )
+            return df_daily
 
-    except Exception as e:
-        logger.error(f"Error fetching data for coordinates ({lat}, {lon}): {e}")
-        return pd.DataFrame()
+        except Exception as e:
+            if attempt < 3:
+                time.sleep(attempt * 2)
+            else:
+                logger.error(f"Error fetching data for coordinates ({lat}, {lon}): {e}")
+                return pd.DataFrame()
+
+    return pd.DataFrame()
 
 
 def aggregate_daily_to_weekly(df_daily_all: pd.DataFrame) -> pd.DataFrame:
@@ -111,7 +135,7 @@ def run_cuaca_etl(start_date: str, end_date: str):
             all_daily_records.append(df_kec_daily)
 
         # Politeness delay to avoid rate limiting
-        time.sleep(0.3)
+        time.sleep(1.0)
 
     if not all_daily_records:
         logger.error("No weather data was retrieved!")

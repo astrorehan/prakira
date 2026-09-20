@@ -96,13 +96,23 @@ def process_leptospirosis_files():
     """
     logger.info("Starting processing Leptospirosis raw data (2021-2025)...")
 
+    years = sorted(
+        [
+            int(f.stem.split("_")[1])
+            for f in DATASET_RAW_KASUS.glob("leptospirosis_*.csv")
+            if f.stem.split("_")[1].isdigit()
+        ]
+    )
+    if not years:
+        years = list(range(2021, 2027))
+
     # 1. Read monthly distribution weights per year
     monthly_weights = {}
-    for year in range(2021, 2026):
+    for year in years:
         m_file = DATASET_RAW_KASUS / f"jumlah-pasien-leptospirosis-bulanan_{year}.csv"
         if m_file.exists():
-            df_m = pd.read_csv(m_file, sep=";")
-            df_m.columns = [c.replace('"', "").strip() for c in df_m.columns]
+            df_m = pd.read_csv(m_file, sep=None, engine="python", encoding="utf-8-sig")
+            df_m.columns = [c.replace('"', "").replace("\ufeff", "").strip() for c in df_m.columns]
             df_m["Category"] = (
                 df_m["Category"]
                 .astype(str)
@@ -129,11 +139,11 @@ def process_leptospirosis_files():
 
     # 2. Read yearly totals per kecamatan
     yearly_kecamatan_rows = []
-    for year in range(2021, 2026):
+    for year in years:
         y_file = DATASET_RAW_KASUS / f"leptospirosis_{year}.csv"
         if y_file.exists():
-            df_y = pd.read_csv(y_file, sep=";")
-            df_y.columns = [c.replace('"', "").strip() for c in df_y.columns]
+            df_y = pd.read_csv(y_file, sep=None, engine="python", encoding="utf-8-sig")
+            df_y.columns = [c.replace('"', "").replace("\ufeff", "").strip() for c in df_y.columns]
             df_y["puskesmas"] = (
                 df_y["Category"]
                 .astype(str)
@@ -167,10 +177,10 @@ def process_leptospirosis_files():
         .reset_index()
     )
 
-    # 3. Create full grid for 16 Kecamatan x 5 Years x 12 Months using Largest Remainder Method
+    # 3. Create full grid for 16 Kecamatan x Years x 12 Months using Largest Remainder Method
     grid_rows = []
 
-    for year in range(2021, 2026):
+    for year in years:
         weights = monthly_weights.get(year, {m: 1 / 12.0 for m in range(1, 13)})
 
         for k_item in KECAMATAN_SEMARANG:
