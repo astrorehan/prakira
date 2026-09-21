@@ -29,30 +29,30 @@ const GUIDES: Guide[] = [
     icon: Bug,
     headline: "Nyamuk bertelur di air yang diam",
     standfirst:
-      "Aedes aegypti butuh air bersih yang tenang selama seminggu untuk menetas. Memutus satu minggu itu memutus seluruh siklusnya.",
+      "Air tergenang selama seminggu cukup untuk memutus atau memulai siklus nyamuk.",
     steps: [
       {
         title: "Kuras seminggu sekali",
         detail:
-          "Bak mandi, ember, dan tampungan dispenser. Sikat dindingnya — telur menempel di sana, bukan mengapung.",
+          "Bak mandi, ember, dan tampungan dispenser. Sikat dindingnya.",
       },
       {
         title: "Tutup rapat tampungan air",
-        detail: "Tandon, gentong, dan drum. Tutup yang longgar sama saja terbuka.",
+        detail: "Tandon, gentong, dan drum. Pastikan tidak ada celah.",
       },
       {
         title: "Daur ulang barang bekas",
         detail:
-          "Ban, kaleng, dan pot bekas menampung air hujan tanpa terlihat. Kubur atau singkirkan.",
+          "Singkirkan ban, kaleng, dan pot yang bisa menampung hujan.",
       },
       {
         title: "Lindungi jam menggigit",
         detail:
-          "Aedes aktif pagi dan sore. Pakai lotion dan kelambu, terutama untuk anak dan lansia.",
+          "Gunakan lotion atau kelambu saat nyamuk paling aktif, pagi dan sore.",
       },
     ],
     seekCare:
-      "Ke puskesmas bila demam tinggi mendadak lebih dari 2 hari, apalagi disertai nyeri sendi, mimisan, atau bintik merah.",
+      "Periksa ke puskesmas bila demam tinggi lebih dari 2 hari atau muncul bintik merah.",
   },
   {
     key: "ISPA",
@@ -60,7 +60,7 @@ const GUIDES: Guide[] = [
     icon: Wind,
     headline: "Udara kering dan berdebu melukai saluran napas",
     standfirst:
-      "Saat kelembaban turun dan suhu berayun tajam antara siang dan malam, lapisan pelindung saluran napas menipis dan infeksi lebih mudah masuk.",
+      "Udara kering, debu, dan ruang tertutup membuat saluran napas lebih mudah teriritasi.",
     steps: [
       {
         title: "Masker di kawasan berdebu",
@@ -68,20 +68,19 @@ const GUIDES: Guide[] = [
       },
       {
         title: "Buka ventilasi tiap pagi",
-        detail:
-          "Udara yang berputar mengurangi penumpukan partikel dan uap air di dalam rumah.",
+        detail: "Udara yang berputar mengurangi penumpukan partikel di dalam rumah.",
       },
       {
         title: "Cukupi cairan",
-        detail: "Air putih menjaga lendir tetap encer sehingga lebih mudah dikeluarkan.",
+        detail: "Air putih membantu tubuh menjaga saluran napas tetap lembap.",
       },
       {
         title: "Jaga jarak saat bergejala",
-        detail: "Batuk dan pilek menyebar paling cepat di ruang tertutup dan ramai.",
+        detail: "Batuk dan pilek lebih mudah menyebar di ruang tertutup dan ramai.",
       },
     ],
     seekCare:
-      "Ke puskesmas bila batuk lebih dari 3 hari disertai sesak, napas berbunyi, atau demam yang tidak turun.",
+      "Periksa bila batuk lebih dari 3 hari, disertai sesak, atau demam tak turun.",
   },
   {
     key: "LEPTOSPIROSIS",
@@ -89,31 +88,27 @@ const GUIDES: Guide[] = [
     icon: Rat,
     headline: "Jaga jarak dari air yang tercemar",
     standfirst:
-      "Bakteri leptospirosis dapat terbawa urine tikus dan masuk melalui luka kecil atau selaput lendir, terutama setelah banjir atau hujan lebat.",
+      "Air banjir atau lumpur dapat membawa bakteri dari urine tikus ke luka kecil.",
     steps: [
       {
         title: "Hindari genangan dan air banjir",
-        detail:
-          "Jangan berjalan tanpa alas kaki. Bila harus membersihkan rumah, pakai sepatu bot dan sarung tangan tahan air.",
+        detail: "Jangan berjalan tanpa alas kaki. Gunakan sepatu bot dan sarung tangan.",
       },
       {
         title: "Tutup luka sebelum beraktivitas",
-        detail:
-          "Lindungi luka atau lecet dengan penutup yang kedap air, lalu cuci tangan dan kaki dengan sabun setelah selesai.",
+        detail: "Tutup luka dengan rapat, lalu cuci tangan dan kaki dengan sabun.",
       },
       {
         title: "Bersihkan rumah dengan aman",
-        detail:
-          "Buang sisa air banjir, cuci permukaan yang terkena genangan, dan gunakan disinfektan sesuai petunjuk pada label.",
+        detail: "Buang sisa genangan dan bersihkan permukaan dengan disinfektan.",
       },
       {
         title: "Kurangi tempat tikus",
-        detail:
-          "Simpan makanan dan sampah dalam wadah tertutup, rapikan barang menumpuk, dan tutup celah masuk ke rumah.",
+        detail: "Tutup makanan dan sampah, rapikan barang, dan tutup celah rumah.",
       },
     ],
     seekCare:
-      "Ke puskesmas bila demam, sakit kepala, nyeri otot terutama betis, mata merah, atau muntah setelah kontak dengan genangan atau air banjir.",
+      "Periksa bila demam atau nyeri otot muncul setelah kontak dengan genangan.",
   },
 ];
 
@@ -128,7 +123,7 @@ export function EducationSection() {
         <SectionHeading
           kicker="Pencegahan"
           title="Yang bisa dilakukan dari rumah"
-          lead="Peringatan hanya berguna kalau ada yang bisa dikerjakan setelahnya. Pilih penyakit yang sedang jadi perhatian di wilayah Anda."
+          lead="Pilih satu penyakit untuk melihat langkah pencegahan yang paling penting."
           aside={
             <div
               role="tablist"

@@ -62,11 +62,10 @@ export function WargaShell({
           <Stethoscope className="mt-0.5 h-5 w-5 shrink-0 text-paper-600" aria-hidden="true" />
           <p className="text-body-sm leading-relaxed text-paper-700">
             <strong className="font-semibold text-foreground">
-              Ini perkiraan risiko wilayah, bukan diagnosis.
+              Bukan diagnosis.
             </strong>{" "}
-            Prakira memperkirakan kemungkinan lonjakan kasus di satu kecamatan, bukan
-            kondisi satu orang. Jika Anda atau keluarga sakit, periksakan ke puskesmas
-            atau fasilitas kesehatan terdekat. Keadaan darurat: hubungi 119.
+            Prakira membaca risiko wilayah, bukan kondisi satu orang. Jika sakit,
+            periksa ke puskesmas. Darurat: 119.
           </p>
         </aside>
       </div>

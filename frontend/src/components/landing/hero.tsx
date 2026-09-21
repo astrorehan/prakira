@@ -304,16 +304,16 @@ export function Hero({ selectedKecamatan, onSelectKecamatan }: HeroProps) {
               <span className="block sm:inline">Kota Semarang</span>
             </p>
 
-            {/* Two lines by construction: the break is explicit so the accent
-                rule under "aman" can never collide with a wrapped third line. */}
+            {/* The first screen should name the job before it explains the
+                machinery: choose a district, then read the result. */}
             <h1 className="animate-fade-in-up mt-5 text-display leading-[1.06] text-foreground">
-              Apakah wilayah Anda
-              <br className="hidden md:block" />{" "}
+              Cek risiko di
+              <br />{" "}
               <span className="relative inline-block">
                 <span
                   className="relative z-10 bg-grad-risk-signal bg-clip-text text-transparent"
                 >
-                  aman
+                  wilayah Anda
                 </span>
                 <span
                   aria-hidden
@@ -323,12 +323,8 @@ export function Hero({ selectedKecamatan, onSelectKecamatan }: HeroProps) {
             </h1>
 
             <p className="animate-fade-in-up stagger-2 mt-6 max-w-xl text-body-lg text-paper-600">
-              Prakira membaca deret iklim dan riwayat kasus per kecamatan untuk
-              memperkirakan lonjakan{" "}
-              <strong className="font-semibold text-foreground">
-                {diseaseList}
-              </strong>{" "}
-              satu bulan sebelum terjadi.
+              Pilih wilayah untuk melihat status {diseaseList} bulan
+              depan, faktor pemicunya, dan langkah yang bisa dilakukan.
             </p>
 
             <div className="animate-fade-in-up stagger-3 mt-9">
@@ -379,7 +375,7 @@ export function Hero({ selectedKecamatan, onSelectKecamatan }: HeroProps) {
             </div>
 
             <p className="animate-fade-in-up stagger-4 mt-6 text-caption text-paper-600">
-              Gratis · tanpa login · bukan alat diagnosis medis
+              Tanpa akun · untuk kewaspadaan awal · bukan diagnosis medis
             </p>
           </div>
 

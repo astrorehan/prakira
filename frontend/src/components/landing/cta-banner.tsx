@@ -33,11 +33,10 @@ export function CtaBanner({ selectedKecamatan }: { selectedKecamatan: string | n
                 Lacak laporan
               </span>
               <h2 className="mt-5 text-h1 text-balance text-foreground">
-                Sudah melapor? Lihat keputusan petugasnya
+                Cek keputusan laporan
               </h2>
               <p className="mt-4 max-w-md text-body text-paper-600">
-                Setiap laporan menerbitkan satu kode lacak. Masukkan kodenya untuk
-                melihat apakah petugas sudah memutuskan, dan alasannya bila ditolak.
+                Masukkan kode lacak untuk melihat status dan alasan keputusan petugas.
               </p>
 
               <Button asChild size="lg" variant="outline" className="group mt-8">
@@ -49,8 +48,7 @@ export function CtaBanner({ selectedKecamatan }: { selectedKecamatan: string | n
               </Button>
 
               <p className="mt-3 text-caption text-paper-600">
-                Kami tidak meminta nama maupun nomor telepon, jadi kode itulah
-                satu-satunya identitas laporan Anda.
+                Tanpa akun dan tanpa nomor telepon.
               </p>
             </div>
 
@@ -60,12 +58,11 @@ export function CtaBanner({ selectedKecamatan }: { selectedKecamatan: string | n
                 Lapor
               </span>
               <h2 className="mt-5 text-h1 text-balance text-foreground">
-                Yang Anda lihat di gang belum tentu terlihat di data
+                Temuan Anda membantu melengkapi data
               </h2>
               <p className="mt-4 max-w-md text-body text-paper-600">
-                Genangan yang bertahan berhari-hari, tetangga yang demam bersamaan,
-                sampah yang menampung hujan. Laporan Anda diverifikasi petugas
-                sebelum masuk hitungan.
+                Laporkan genangan, jentik, gejala, atau kondisi lingkungan. Petugas
+                memverifikasi laporan sebelum memakainya.
               </p>
 
               <Button asChild size="lg" className="group mt-8">

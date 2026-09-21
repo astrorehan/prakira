@@ -14,17 +14,15 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "./ui/sheet";
    ini, dan sebelumnya hanya bisa dicapai dari halaman depan atau kaki halaman.
    Pembaca yang sedang berada di /tentang atau /warga/status tidak punya jalan
    ke sana sama sekali. */
+/* The header is a wayfinding aid, not a directory of every route. The first
+   three items answer the questions most visitors actually have: check risk,
+   report something, and understand the number. Secondary explorations remain
+   available from the footer and their own pages without competing with the
+   primary task above the fold. */
 const MARKETING_ITEMS = [
+  { href: "/#risk-check", label: "Cek Risiko" },
   { href: "/warga", label: "Lapor" },
-  /* Halaman yang menyebut seberapa jauh angkanya boleh dipercaya harus bisa
-     dicapai dari mana saja — termasuk oleh orang yang tidak punya akun. */
   { href: "/model", label: "Akurasi Model" },
-  /* Bukti bahwa prakiraannya pernah benar — dan pernah salah — berdiri sebagai
-     halaman sendiri, bukan lampiran di dalam halaman akurasi. */
-  { href: "/mesin-waktu", label: "Mesin Waktu" },
-  /* Simulator tetap menjadi permukaan publik untuk menunjukkan model bekerja;
-     matriks prioritas operasional hanya tersedia di konsol administrator. */
-  { href: "/simulasi", label: "Simulator" },
   { href: "/tentang", label: "Tentang" },
 ];
 
@@ -72,15 +70,21 @@ export function Navbar() {
               key={item.href}
               href={item.href}
               aria-current={
-                pathname === item.href || pathname?.startsWith(`${item.href}/`)
-                  ? "page"
-                  : undefined
+                item.href === "/#risk-check"
+                  ? pathname === "/"
+                    ? "page"
+                    : undefined
+                  : pathname === item.href || pathname?.startsWith(`${item.href}/`)
+                    ? "page"
+                    : undefined
               }
               className={cn(
                 "rounded-full px-3.5 py-2 text-sm font-medium transition-[background-color,color] duration-fast active:bg-brand-100",
                 inverted
                   ? "text-white/65 hover:bg-white/10 hover:text-white"
-                  : pathname === item.href || pathname?.startsWith(`${item.href}/`)
+                  : (item.href === "/#risk-check" && pathname === "/") ||
+                      pathname === item.href ||
+                      pathname?.startsWith(`${item.href}/`)
                     ? "bg-brand-50 text-brand-700"
                     : "text-paper-600 hover:bg-paper-100 hover:text-foreground",
               )}

@@ -20,6 +20,7 @@ import {
   Scale,
   SlidersHorizontal,
   FilePlus2,
+  ChevronDown,
 } from "lucide-react";
 import { AccessibilityMenu } from "@/components/accessibility-menu";
 import { BrandLockup } from "@/components/brand-lockup";
@@ -214,33 +215,38 @@ export function Sidebar() {
   /* Permukaan publik hidup di luar konsol: chrome-nya berbeda dan tidak ada
      sidebar di sana. Ditandai panah keluar supaya kepindahannya disengaja. */
   const crossSurfaceLinks = (onClick?: () => void) => (
-    <>
-      <span className="overline block px-3.5 pb-1 pt-4">Permukaan publik</span>
-      {[
-        { href: "/model", label: "Transparansi Model", icon: Microscope },
-        { href: "/mesin-waktu", label: "Mesin Waktu", icon: History },
-        { href: "/simulasi", label: "Simulator Cuaca", icon: SlidersHorizontal },
-        { href: "/warga", label: "Portal Warga", icon: Users },
-        { href: "/sistem", label: "Halaman Layanan", icon: Home },
-      ].map((item) => {
-        const Icon = item.icon;
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            onClick={onClick}
-            className="flex items-center gap-3 rounded-xl px-3.5 py-2 text-body-sm text-paper-600 transition-colors duration-fast ease-out hover:bg-paper-100 hover:text-foreground"
-          >
-            <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-            <span className="min-w-0 flex-1 truncate">{item.label}</span>
-            <ArrowUpRight
-              className="h-3.5 w-3.5 shrink-0 text-paper-600"
-              aria-hidden="true"
-            />
-          </Link>
-        );
-      })}
-    </>
+    <details className="group mt-2">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3.5 pb-1 pt-4 overline marker:hidden">
+        <span>Halaman publik</span>
+        <ChevronDown className="h-3.5 w-3.5 transition-transform duration-fast group-open:rotate-180" aria-hidden="true" />
+      </summary>
+      <div className="space-y-0.5">
+        {[
+          { href: "/model", label: "Transparansi Model", icon: Microscope },
+          { href: "/mesin-waktu", label: "Mesin Waktu", icon: History },
+          { href: "/simulasi", label: "Simulator Cuaca", icon: SlidersHorizontal },
+          { href: "/warga", label: "Portal Warga", icon: Users },
+          { href: "/sistem", label: "Halaman Layanan", icon: Home },
+        ].map((item) => {
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={onClick}
+              className="flex items-center gap-3 rounded-xl px-3.5 py-2 text-body-sm text-paper-600 transition-colors duration-fast ease-out hover:bg-paper-100 hover:text-foreground"
+            >
+              <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span className="min-w-0 flex-1 truncate">{item.label}</span>
+              <ArrowUpRight
+                className="h-3.5 w-3.5 shrink-0 text-paper-600"
+                aria-hidden="true"
+              />
+            </Link>
+          );
+        })}
+      </div>
+    </details>
   );
 
   const accountBlock = (onClick?: () => void) => (

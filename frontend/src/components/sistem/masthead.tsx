@@ -13,13 +13,14 @@ import { formatMonth } from "@/lib/period";
 /* The service menu is the spine of a public system site: it names services,
    not marketing sections. Order follows how a citizen actually arrives —
    status first, then the notices, then the things they can do. */
+/* Keep the sticky bar focused on the four tasks that change a resident's
+   decision. Announcements and legal/method notes remain on the page and in the
+   footer, but do not compete with live status and available services. */
 const SERVICE_NAV = [
   { href: "#status", label: "Status Kota", code: "01" },
-  { href: "#peringatan", label: "Peringatan Resmi", code: "02" },
+  { href: "#peringatan", label: "Peringatan", code: "02" },
   { href: "#register", label: "Data Kecamatan", code: "03" },
-  { href: "#layanan", label: "Layanan Publik", code: "04" },
-  { href: "#pengumuman", label: "Pengumuman", code: "05" },
-  { href: "#informasi", label: "Informasi Publik", code: "06" },
+  { href: "#layanan", label: "Layanan", code: "04" },
 ];
 
 /** Scrollspy over the section ids above. Purely presentational. */

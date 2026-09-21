@@ -14,19 +14,19 @@ const COLUMNS: Array<{
   links: Array<{ label: string; href: string }>;
 }> = [
   {
-    title: "Layanan publik",
-    links: [
-      { label: "Cek status wilayah", href: "#status" },
-      { label: "Peringatan resmi", href: "#peringatan" },
-      { label: "Lapor kasus & jentik", href: "/warga/lapor" },
-      { label: "Langganan peringatan dini", href: "/hubungi-kami" },
-      { label: "Unduh data terbuka", href: "#register" },
-    ],
+      title: "Layanan publik",
+      links: [
+        { label: "Cek status wilayah", href: "#status" },
+        { label: "Peringatan resmi", href: "#peringatan" },
+        { label: "Lapor kasus & jentik", href: "/warga/lapor" },
+        { label: "Unduh data terbuka", href: "#register" },
+      ],
   },
   {
-    title: "Informasi publik",
-    links: [
-      { label: "Cara sistem bekerja", href: "#informasi" },
+      title: "Informasi publik",
+      links: [
+        { label: "Pengumuman", href: "#pengumuman" },
+        { label: "Cara sistem bekerja", href: "#informasi" },
       { label: "Akurasi & uji ulang model", href: "#informasi" },
       { label: "Batasan penggunaan", href: "#informasi" },
       { label: "PPID Dinas Kesehatan", href: "#informasi" },
@@ -57,9 +57,8 @@ export function SistemFooter() {
             <BrandLockup subline="Sistem Peringatan Dini Risiko Iklim" />
 
             <p className="mt-5 max-w-sm text-caption text-paper-600">
-              Diselenggarakan oleh Dinas Kesehatan Kota Semarang bersama Badan
-              Meteorologi, Klimatologi, dan Geofisika untuk kewaspadaan dini
-              penyakit terkait iklim.
+              Portal Dinas Kesehatan Kota Semarang untuk kewaspadaan dini penyakit
+              terkait iklim.
             </p>
 
             <dl className="mt-6 space-y-3 text-caption">

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useMemo, useState } from "react";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowDown, ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCityData } from "@/lib/use-city-data";
 import { formatMonth } from "@/lib/period";
@@ -43,6 +43,7 @@ export function DistrictBoard({
 }: DistrictBoardProps) {
   const { byDisease, diseases, loading, error, meta } = useCityData();
   const [disease, setDisease] = useState<DiseaseType | null>(null);
+  const [showAll, setShowAll] = useState(false);
 
   React.useEffect(() => {
     if (!disease && diseases.length > 0) setDisease(diseases[0]);
@@ -56,8 +57,20 @@ export function DistrictBoard({
     return [...list].sort((a, b) => (b.skor_risiko ?? -1) - (a.skor_risiko ?? -1));
   }, [byDisease, disease]);
 
-  const half = Math.ceil(ranked.length / 2);
-  const columns = [ranked.slice(0, half), ranked.slice(half)];
+  const visibleRanked = showAll ? ranked : ranked.slice(0, 8);
+  const visibleHalf = Math.ceil(visibleRanked.length / 2);
+  const visibleColumns = [
+    visibleRanked.slice(0, visibleHalf),
+    visibleRanked.slice(visibleHalf),
+  ];
+
+  /* A selection from the hero must remain visible even when it is outside the
+     compact first view. The board opens just enough to keep that context. */
+  React.useEffect(() => {
+    if (selectedKecamatan && ranked.findIndex((kec) => kec.nama === selectedKecamatan) >= 8) {
+      setShowAll(true);
+    }
+  }, [ranked, selectedKecamatan]);
   const predictionMonth = ranked[0]?.periode_prediksi ?? meta?.predictionMonth;
   const predictionLabel = formatMonth(predictionMonth);
 
@@ -66,8 +79,8 @@ export function DistrictBoard({
       <div className="container">
         <SectionHeading
           kicker="Peta risiko"
-          title="16 kecamatan, satu papan peringkat"
-          lead="Urut dari skor tertinggi. Pilih satu untuk melihat rincian dan langkah pencegahannya."
+          title="Mulai dari wilayah yang paling perlu diperhatikan"
+          lead="Delapan wilayah teratas tampil lebih dulu. Buka daftar lengkap bila Anda ingin membandingkan semuanya."
           aside={
             <div
               role="tablist"
@@ -96,10 +109,10 @@ export function DistrictBoard({
         />
 
         <Reveal delay={80} className="mt-10 grid gap-x-10 md:grid-cols-2">
-          {columns.map((col, ci) => (
+          {visibleColumns.map((col, ci) => (
             <ul key={ci} className="divide-y divide-sand-200 border-t border-sand-200">
               {col.map((kec, i) => {
-                const rank = ci * half + i + 1;
+                const rank = ci * visibleHalf + i + 1;
                 const risk = kec.tingkat_risiko ? RISK[kec.tingkat_risiko] : RISK_UNKNOWN;
                 const active = kec.nama === selectedKecamatan;
 
@@ -162,6 +175,18 @@ export function DistrictBoard({
             </ul>
           ))}
         </Reveal>
+
+        {ranked.length > 8 && (
+          <button
+            type="button"
+            onClick={() => setShowAll((value) => !value)}
+            className="mt-6 inline-flex items-center gap-2 rounded-full border border-sand-300 bg-white px-4 py-2.5 text-caption font-medium text-brand-700 transition-colors duration-fast hover:border-brand-300 hover:bg-brand-50"
+            aria-expanded={showAll}
+          >
+            {showAll ? "Sembunyikan wilayah lain" : `Lihat semua ${ranked.length} kecamatan`}
+            <ArrowDown className={cn("h-4 w-4 transition-transform duration-fast", showAll && "rotate-180")} />
+          </button>
+        )}
 
         {(loading || error || ranked.length === 0) && (
           <p className="mt-6 text-body-sm text-paper-600">

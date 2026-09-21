@@ -233,9 +233,9 @@ function DiseaseCard({
    opening state reports the whole city and treats every district equally. */
 
 const CITY_LEVEL_META: { level: RiskLevel; blurb: string }[] = [
-  { level: "tinggi", blurb: "potensi lonjakan pada bulan yang diprakirakan" },
-  { level: "sedang", blurb: "cuaca mulai mendukung penularan" },
-  { level: "rendah", blurb: "tidak ada indikasi lonjakan" },
+  { level: "tinggi", blurb: "potensi lonjakan" },
+  { level: "sedang", blurb: "mulai mendukung" },
+  { level: "rendah", blurb: "tidak terindikasi" },
 ];
 
 function CitySummary({
@@ -307,8 +307,8 @@ function CitySummary({
               </p>
               <p className="mt-5 max-w-md text-body-lg text-paper-700">
                 {headlineLevel === "rendah"
-                  ? "Seluruh kecamatan tenang. Tidak ada indikasi lonjakan di kota ini."
-                  : `${headlineCount} dari ${total} kecamatan berstatus ${status.word} untuk setidaknya satu penyakit. Cari kecamatan Anda di atas untuk hasil yang spesifik.`}
+                  ? "Tidak ada kecamatan yang perlu perhatian khusus bulan ini."
+                  : `${headlineCount} kecamatan perlu perhatian bulan depan. Pilih wilayah Anda di atas untuk melihat rincian.`}
               </p>
               <p className="mt-6 border-t border-white/70 pt-4 text-caption text-paper-600">
                 Dihitung dari data iklim dan riwayat kasus sampai{" "}

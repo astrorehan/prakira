@@ -288,21 +288,21 @@ export function HowItWorks() {
     {
       n: "01",
       title: "Baca cuacanya",
-      body: "Curah hujan, suhu, dan kelembaban per kecamatan masuk sebagai deret bulanan, sejajar dengan rekapitulasi kasus.",
+      body: "Curah hujan, suhu, dan kelembaban dibaca bersama riwayat kasus per kecamatan.",
       legend: `Curah hujan bulanan · ${months} bulan terakhir`,
       chart: RainfallBars,
     },
     {
       n: "02",
       title: "Temukan polanya",
-      body: `Model belajar dari riwayat kasus dan iklim yang sudah terjadi. Kurva kasus ${disease || "penyakit"} bergerak mengikuti kurva hujan dengan jeda beberapa minggu.`,
+      body: `Model mencari pola berulang antara cuaca dan kasus ${disease || "penyakit"}, termasuk jeda waktunya.`,
       legend: `Curah hujan (putus-putus) vs kasus ${disease || "—"}`,
       chart: LagLines,
     },
     {
       n: "03",
       title: "Terbitkan prakiraan",
-      body: `Hasilnya: prakiraan untuk ${meta?.predictionLabel ?? "bulan berikutnya"} lengkap dengan rentang ketidakpastiannya — bukan satu angka yang berpura-pura pasti.`,
+      body: `Hasilnya adalah rentang prakiraan untuk ${meta?.predictionLabel ?? "bulan berikutnya"}, bukan satu angka pasti.`,
       legend: "Tercatat · prakiraan · rentang",
       chart: ForecastBand,
     },
@@ -314,7 +314,7 @@ export function HowItWorks() {
         <SectionHeading
           kicker="Cara kerja"
           title="Cuaca berubah lebih dulu. Kasus menyusul."
-          lead="Prakira tidak menebak. Ia membaca hubungan yang sudah terjadi berulang di Semarang, lalu memproyeksikannya ke depan."
+          lead="Tiga langkah: baca cuaca, cari pola, lalu terbitkan rentang prakiraan."
         />
 
         <div ref={ref} className="mt-12 grid gap-px overflow-hidden rounded-3xl border border-sand-200 bg-sand-200 md:grid-cols-3">

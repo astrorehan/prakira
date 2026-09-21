@@ -348,7 +348,7 @@ export function CityStatus() {
               <h1 className="mt-4 text-h1 text-balance text-foreground md:text-display">
                 Status risiko penyakit iklim Kota Semarang
               </h1>
-              <p className="mt-5 text-body-lg text-paper-600">
+              <p className="mt-5 max-w-xl text-body-lg text-paper-600">
                 {loading
                   ? "Memuat ringkasan status kota…"
                   : error
@@ -356,17 +356,15 @@ export function CityStatus() {
                     : null}
                 {!loading && !error && (
                   <>
-                    Ringkasan kondisi risiko {diseases.join(", ") || "penyakit"} di{" "}
-                    {totalKecamatan} kecamatan untuk prakiraan{" "}
+                    {diseases.length || "—"} penyakit · {totalKecamatan} kecamatan ·
+                    prakiraan{" "}
                     <strong className="font-semibold text-foreground">
                       {formatMonth(meta?.predictionMonth)}
-                    </strong>
-                    , disusun dari data iklim dan rekapitulasi kasus sampai{" "}
-                    {formatMonth(meta?.latestObserved)}. Saat ini{" "}
-                    <strong className="font-semibold text-risk-high">
-                      {totalSiaga} status siaga
                     </strong>{" "}
-                    aktif di seluruh kota.
+                    dari data sampai {formatMonth(meta?.latestObserved)}. Saat ini{" "}
+                    <strong className="font-semibold text-risk-high">
+                      {totalSiaga} wilayah siaga.
+                    </strong>
                   </>
                 )}
               </p>

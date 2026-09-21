@@ -42,25 +42,25 @@ export function TrustSection() {
           value: headline.r2,
           decimals: 3,
           label: `R² pada backtest ${headline.disease}`,
-          note: "Seberapa dekat prakiraan dengan kasus yang benar-benar terjadi",
+          note: "Kedekatan prakiraan dengan kasus aktual",
         },
         {
           value: headline.mae,
           decimals: 2,
           label: "Rata-rata meleset",
-          note: `Selisih kasus per kecamatan per bulan (MAE), model ${headline.disease}`,
+          note: `Selisih kasus per kecamatan tiap bulan · ${headline.disease}`,
         },
         {
           value: headline.sample_size ?? 0,
           decimals: 0,
           label: "Bulan diuji",
-          note: `Periode uji ${formatPeriodRange(headline.test_period).formatted}, di luar data latih`,
+          note: `Di luar data latih · ${formatPeriodRange(headline.test_period).formatted}`,
         },
         {
           value: rows.length,
           decimals: 0,
           label: "Kecamatan",
-          note: `Seluruh Kota Semarang, data terakhir ${meta?.monthYear ?? "—"}`,
+          note: `Data terakhir ${meta?.monthYear ?? "—"}`,
         },
       ]
     : [];
@@ -90,7 +90,7 @@ export function TrustSection() {
         <SectionHeading
           kicker="Akurasi & sumber"
           title="Diuji ke belakang sebelum dipakai ke depan"
-          lead="Model dilatih hanya pada bulan-bulan sebelum tanggal pemisah, lalu diminta memprediksi bulan-bulan sesudahnya. Angka di bawah ini berasal dari uji itu, apa adanya."
+          lead="Angka ini berasal dari uji pada periode yang tidak dipakai untuk melatih model."
         />
 
         {METRICS.length === 0 && (
@@ -117,32 +117,40 @@ export function TrustSection() {
         </div>
 
         {/* Sources */}
-        <Reveal
-          delay={120}
-          className="mt-16 grid gap-10 rounded-3xl border border-sand-200 bg-sand-50 p-7 md:grid-cols-12 md:p-10"
-        >
-          <div className="md:col-span-4">
-            <h3 className="text-h2 text-foreground">Dari mana datanya</h3>
-            <p className="mt-3 text-body text-paper-600">
-              Tiga sumber, semuanya resmi atau terverifikasi. Tidak ada angka yang
-              dikarang oleh model sendiri.
-            </p>
-          </div>
+        <Reveal delay={120} className="mt-12">
+          <details className="group rounded-2xl border border-sand-200 bg-sand-50">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 text-body-sm font-medium text-foreground marker:hidden">
+              <span>Dari mana data ini berasal?</span>
+              <span className="text-brand-700 transition-transform duration-fast group-open:rotate-45" aria-hidden>
+                +
+              </span>
+            </summary>
 
-          <ul className="md:col-span-8">
-            {SOURCES.map(({ icon: Icon, name, detail }) => (
-              <li
-                key={name}
-                className="flex gap-4 border-t border-sand-200 py-5 first:border-t-0 first:pt-0"
-              >
-                <Icon className="mt-0.5 h-5 w-5 shrink-0 text-brand-500" aria-hidden />
-                <div>
-                  <p className="text-body font-medium text-foreground">{name}</p>
-                  <p className="mt-1 text-body-sm text-paper-600">{detail}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
+            <div className="grid gap-8 border-t border-sand-200 px-5 py-5 md:grid-cols-12 md:px-7 md:py-7">
+              <div className="md:col-span-4">
+                <h3 className="text-h3 text-foreground">Sumber data</h3>
+                <p className="mt-2 text-body-sm text-paper-600">
+                  Tiga sumber resmi atau terverifikasi. Detail ini tersedia saat Anda
+                  ingin memeriksa dasar angkanya.
+                </p>
+              </div>
+
+              <ul className="md:col-span-8">
+                {SOURCES.map(({ icon: Icon, name, detail }) => (
+                  <li
+                    key={name}
+                    className="flex gap-4 border-t border-sand-200 py-4 first:border-t-0 first:pt-0"
+                  >
+                    <Icon className="mt-0.5 h-5 w-5 shrink-0 text-brand-500" aria-hidden />
+                    <div>
+                      <p className="text-body-sm font-medium text-foreground">{name}</p>
+                      <p className="mt-1 text-caption text-paper-600">{detail}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </details>
         </Reveal>
 
         {/* The honest caveat, stated plainly rather than buried in a footer. */}
@@ -151,14 +159,13 @@ export function TrustSection() {
           className="mt-6 flex flex-col items-start justify-between gap-5 border-t border-sand-200 pt-6 md:flex-row md:items-center"
         >
           <p className="max-w-2xl text-body-sm leading-relaxed text-paper-600">
-            Prakira adalah alat bantu keputusan, bukan alat diagnosis. Prakiraan
-            selalu disertai rentang ketidakpastian, dan kecamatan dengan riwayat data
-            tipis ditandai secara terpisah — data yang sedikit bukan berarti aman.
+            Alat bantu keputusan, bukan diagnosis. Rentang prakiraan dan data tipis
+            selalu ditandai — data sedikit bukan berarti aman.
           </p>
 
           <Button asChild variant="outline" size="lg" className="group shrink-0">
-            <Link href="/masuk">
-              Buka dashboard petugas
+            <Link href="/model">
+              Lihat detail model
               <ArrowRight className="transition-transform duration-fast group-hover:translate-x-0.5" />
             </Link>
           </Button>

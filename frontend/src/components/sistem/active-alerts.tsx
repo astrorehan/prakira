@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useMemo, useState } from "react";
-import { CalendarClock, Megaphone, Siren, Users } from "lucide-react";
+import { CalendarClock, Megaphone, Siren } from "lucide-react";
 
 import { cn, formatNumber } from "@/lib/utils";
 import { fetchActions } from "@/lib/api";
@@ -90,6 +90,9 @@ function NoticeCard({ rec }: { rec: ActionRecommendation }) {
   const level = LEVEL_BY_PRIORITY[rec.priority];
   const style = LEVEL_STYLE[level];
   const done = rec.status === "completed";
+  const citizenActions = CITIZEN_ACTION[rec.action_type] ?? [];
+  const visibleDistricts = rec.target_kecamatan.slice(0, 3);
+  const extraDistricts = rec.target_kecamatan.length - visibleDistricts.length;
 
   return (
     <article
@@ -120,17 +123,17 @@ function NoticeCard({ rec }: { rec: ActionRecommendation }) {
         </div>
 
         <h3 className="mt-3 text-h3 text-balance text-foreground">{rec.title}</h3>
-        <p className="mt-2 max-w-3xl text-body text-paper-600">{rec.description}</p>
 
-        <dl className="mt-5 grid grid-cols-1 gap-x-8 gap-y-3 border-t border-sand-200 pt-4 sm:grid-cols-3">
+        <dl className="mt-4 grid grid-cols-1 gap-x-8 gap-y-3 border-t border-sand-200 pt-4 sm:grid-cols-2">
           <div className="flex items-start gap-2.5">
             <Siren className="mt-0.5 h-3.5 w-3.5 shrink-0 text-paper-600" aria-hidden />
             <div className="min-w-0">
               <dt className="font-mono text-3xs uppercase tracking-[0.08em] text-paper-600">
-                Wilayah terdampak
+                Wilayah
               </dt>
               <dd className="mt-0.5 text-caption font-medium text-foreground">
-                {rec.target_kecamatan.join(", ")}
+                {visibleDistricts.join(", ")}
+                {extraDistricts > 0 ? ` +${extraDistricts} lainnya` : ""}
               </dd>
             </div>
           </div>
@@ -145,17 +148,6 @@ function NoticeCard({ rec }: { rec: ActionRecommendation }) {
               </dd>
             </div>
           </div>
-          <div className="flex items-start gap-2.5">
-            <Users className="mt-0.5 h-3.5 w-3.5 shrink-0 text-paper-600" aria-hidden />
-            <div className="min-w-0">
-              <dt className="font-mono text-3xs uppercase tracking-[0.08em] text-paper-600">
-                Populasi wilayah target
-              </dt>
-              <dd className="mt-0.5 text-caption font-medium text-foreground">
-                {formatNumber(rec.target_population)} jiwa
-              </dd>
-            </div>
-          </div>
         </dl>
 
         <div className="mt-5 rounded-xl border border-sand-200 bg-sand-50/70 p-4">
@@ -163,20 +155,45 @@ function NoticeCard({ rec }: { rec: ActionRecommendation }) {
             Yang perlu dilakukan warga
           </p>
           <ul className="mt-2.5 space-y-1.5">
-            {(CITIZEN_ACTION[rec.action_type] ?? []).map((line) => (
+            {citizenActions.slice(0, 2).map((line) => (
               <li key={line} className="flex gap-2.5 text-caption text-paper-700">
                 <span aria-hidden className="mt-[0.55em] h-1 w-1 shrink-0 rounded-full bg-brand-500" />
                 {line}
               </li>
             ))}
           </ul>
+          {citizenActions.length > 2 && (
+            <details className="mt-3 border-t border-sand-200 pt-3">
+              <summary className="cursor-pointer list-none text-caption font-medium text-brand-700 marker:hidden">
+                Lihat {citizenActions.length - 2} langkah lain
+              </summary>
+              <ul className="mt-2.5 space-y-1.5">
+                {citizenActions.slice(2).map((line) => (
+                  <li key={line} className="flex gap-2.5 text-caption text-paper-700">
+                    <span aria-hidden className="mt-[0.55em] h-1 w-1 shrink-0 rounded-full bg-brand-500" />
+                    {line}
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
         </div>
 
-        {/* Kalimat "Dasar:" dari mesin aturan — sama persis dengan yang dibaca
-            petugas di konsol, sehingga warga dan dinas melihat alasan yang sama. */}
-        <p className="mt-4 max-w-3xl text-2xs leading-relaxed text-paper-600">
-          {rec.basis}
-        </p>
+        <details className="mt-4 border-t border-sand-200 pt-3">
+          <summary className="cursor-pointer list-none text-caption font-medium text-brand-700 marker:hidden">
+            Lihat dasar prakiraan &amp; rincian wilayah
+          </summary>
+          <div className="mt-3 space-y-2 text-caption text-paper-600">
+            <p>
+              <span className="font-medium text-paper-700">Konteks: </span>
+              {rec.description}
+            </p>
+            <p>{rec.basis}</p>
+            <p>
+              Populasi sasaran: <span className="font-medium text-paper-700">{formatNumber(rec.target_population)} jiwa</span>
+            </p>
+          </div>
+        </details>
       </div>
     </article>
   );
@@ -213,9 +230,8 @@ export function ActiveAlerts() {
                 <span className="tabular">{aktif}</span> peringatan sedang berlaku
               </h2>
               <p className="mt-4 max-w-xl text-body-lg text-paper-600">
-                Setiap peringatan disusun mesin aturan dari prakiraan model, lengkap
-                dengan wilayah terdampak, batas waktu, dan langkah yang bisa dilakukan
-                warga. Statusnya diubah petugas dinas lewat konsol.
+                Pilih penyakit untuk melihat apa yang sedang berlaku dan langkah
+                pertama yang perlu dilakukan warga.
               </p>
             </div>
 
