@@ -12,7 +12,7 @@ import cookieParser from "cookie-parser";
 
 import { env } from "./env.js";
 import { db, isSeeded } from "./db/index.js";
-import { seedDatabase } from "./db/seed.js";
+import { datasetNeedsRefresh, seedDatabase } from "./db/seed.js";
 import { purgeExpiredSessions } from "./services/auth.js";
 import { attachSession } from "./middleware/auth.js";
 import { asyncRoute, errorHandler, notFound } from "./middleware/error.js";
@@ -110,6 +110,12 @@ async function startServer(): Promise<void> {
       console.log(
         `[gateway] Seed awal: ${result.kecamatan} kecamatan, ${result.observasi} observasi, ` +
           `penyakit ${result.diseases.join(", ") || "—"}.`,
+      );
+    } else if (await datasetNeedsRefresh()) {
+      const result = await seedDatabase({ force: true });
+      console.log(
+        `[gateway] Sinkronisasi dataset: ${result.observasi} observasi, ` +
+          `bulan terakhir ${result.latestMonth ?? "—"}.`,
       );
     }
 

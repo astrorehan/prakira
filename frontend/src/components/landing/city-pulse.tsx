@@ -127,7 +127,7 @@ export function CityPulse({ onSelectKecamatan }: CityPulseProps) {
             Ringkasan kota · {diseases.join(" & ") || "—"}
           </p>
           <h2 className="mt-1.5 text-h3 text-foreground">
-            Semarang, prakiraan {formatMonth(meta?.predictionMonth)}
+            Semarang, status risiko
           </h2>
         </div>
         <span className="shrink-0 rounded-md bg-sand-100 px-2 py-1 font-mono text-3xs uppercase tracking-wider text-paper-600">

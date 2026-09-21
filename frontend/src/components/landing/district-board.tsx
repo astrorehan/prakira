@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCityData } from "@/lib/use-city-data";
+import { formatMonth } from "@/lib/period";
 import type { DiseaseType, RiskLevel } from "@/types";
 
 import { Reveal } from "./reveal";
@@ -57,6 +58,8 @@ export function DistrictBoard({
 
   const half = Math.ceil(ranked.length / 2);
   const columns = [ranked.slice(0, half), ranked.slice(half)];
+  const predictionMonth = ranked[0]?.periode_prediksi ?? meta?.predictionMonth;
+  const predictionLabel = formatMonth(predictionMonth);
 
   return (
     <section id="peta" className="scroll-mt-24 bg-grad-paper py-16 md:py-24">
@@ -174,7 +177,7 @@ export function DistrictBoard({
             sendiri, bukan gabungan tiga faktor seperti yang tertulis
             sebelumnya - kepadatan penduduk tidak pernah masuk perhitungannya. */}
         <p className="mt-6 border-t border-sand-200 pt-4 font-mono text-3xs uppercase tracking-wider text-paper-600">
-          Skor 0–100 · posisi prakiraan {meta?.predictionLabel ?? "bulan berikutnya"} terhadap
+          Skor 0–100 · posisi prakiraan {predictionLabel === "—" ? "bulan berikutnya" : predictionLabel} terhadap
           riwayat kasus kecamatan itu sendiri
         </p>
       </div>

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useState } from "react";
-import { Bug, Wind, AlertCircle } from "lucide-react";
+import { AlertCircle, Bug, Rat, Wind } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { DiseaseType } from "@/types";
 
@@ -82,6 +82,38 @@ const GUIDES: Guide[] = [
     ],
     seekCare:
       "Ke puskesmas bila batuk lebih dari 3 hari disertai sesak, napas berbunyi, atau demam yang tidak turun.",
+  },
+  {
+    key: "LEPTOSPIROSIS",
+    tab: "Leptospirosis",
+    icon: Rat,
+    headline: "Jaga jarak dari air yang tercemar",
+    standfirst:
+      "Bakteri leptospirosis dapat terbawa urine tikus dan masuk melalui luka kecil atau selaput lendir, terutama setelah banjir atau hujan lebat.",
+    steps: [
+      {
+        title: "Hindari genangan dan air banjir",
+        detail:
+          "Jangan berjalan tanpa alas kaki. Bila harus membersihkan rumah, pakai sepatu bot dan sarung tangan tahan air.",
+      },
+      {
+        title: "Tutup luka sebelum beraktivitas",
+        detail:
+          "Lindungi luka atau lecet dengan penutup yang kedap air, lalu cuci tangan dan kaki dengan sabun setelah selesai.",
+      },
+      {
+        title: "Bersihkan rumah dengan aman",
+        detail:
+          "Buang sisa air banjir, cuci permukaan yang terkena genangan, dan gunakan disinfektan sesuai petunjuk pada label.",
+      },
+      {
+        title: "Kurangi tempat tikus",
+        detail:
+          "Simpan makanan dan sampah dalam wadah tertutup, rapikan barang menumpuk, dan tutup celah masuk ke rumah.",
+      },
+    ],
+    seekCare:
+      "Ke puskesmas bila demam, sakit kepala, nyeri otot terutama betis, mata merah, atau muntah setelah kontak dengan genangan atau air banjir.",
   },
 ];
 

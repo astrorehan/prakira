@@ -227,6 +227,49 @@ const MERGED_FILES: Record<string, string> = {
   LEPTOSPIROSIS: "merged_monthly_leptospirosis.csv",
 };
 
+/** Bulan terakhir yang tersedia di setiap berkas dataset versi aplikasi. */
+export async function latestDatasetMonths(): Promise<Record<string, string>> {
+  const latest: Record<string, string> = {};
+
+  for (const [disease, filename] of Object.entries(MERGED_FILES)) {
+    const file = path.join(env.datasetRoot, "dataset_clean", filename);
+    if (!fs.existsSync(file)) continue;
+
+    for (const row of parseCsv(fs.readFileSync(file, "utf8"))) {
+      const month = row.month_start?.trim();
+      if (month && (!latest[disease] || month > latest[disease])) {
+        latest[disease] = month;
+      }
+    }
+  }
+
+  return latest;
+}
+
+/**
+ * Menentukan apakah database masih memakai dataset versi lama.
+ *
+ * Dataset ikut dikirim bersama image baru, sedangkan Supabase/volume Postgres
+ * tetap hidup melewati deploy. Tanpa pemeriksaan ini, `isSeeded()` akan selalu
+ * menganggap database sudah siap dan bulan baru tidak pernah masuk.
+ */
+export async function datasetNeedsRefresh(): Promise<boolean> {
+  const expected = await latestDatasetMonths();
+  if (Object.keys(expected).length === 0) return false;
+
+  const currentRows = await all<{ disease: string; latest: string | null }>(
+    `SELECT disease, MAX(month_start) AS latest
+       FROM observasi
+      WHERE source = 'dataset'
+      GROUP BY disease`,
+  );
+  const current = new Map(currentRows.map((row) => [row.disease, row.latest]));
+
+  return Object.entries(expected).some(
+    ([disease, latest]) => (current.get(disease) ?? "") < latest,
+  );
+}
+
 async function seedObservasiIfEmpty(tx: Tx): Promise<number> {
   const existing = await tx.one<{ n: number }>(
     "SELECT COUNT(*) AS n FROM observasi",

@@ -292,7 +292,7 @@ function CitySummary({
           <div className="grid gap-10 p-8 md:grid-cols-12 md:items-stretch md:p-12">
             <div className="md:col-span-7">
               <p className="text-overline uppercase tracking-[0.1em] text-paper-600">
-                Status kota, prakiraan {formatMonth(meta?.predictionMonth)}
+                Status kota
               </p>
               <p
                 className="tabular mt-3 text-display leading-[0.95] tracking-[-0.03em]"
