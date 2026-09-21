@@ -25,6 +25,7 @@ import {
 } from "../services/priority.js";
 import { availableDiseases, reportingPeriod } from "../services/period.js";
 import { asyncRoute, HttpError } from "../middleware/error.js";
+import { requireRole } from "../middleware/auth.js";
 
 export const districtsRouter = Router();
 
@@ -150,10 +151,12 @@ districtsRouter.get(
  * seluruh 16 kecamatan sekaligus untuk menormalkan indeks dan menyusun dua
  * peringkat, sedangkan `/districts` dipakai permukaan yang hanya perlu satu
  * kecamatan. Memaksakan keduanya jadi satu respons membuat setiap pemanggil
- * membayar hitungan yang tidak dipakainya.
+ * membayar hitungan yang tidak dipakainya. Matriks ini adalah alat kerja
+ * konsol admin/dinas, bukan lagi data yang disajikan ke halaman publik.
  */
 districtsRouter.get(
   "/districts/priority",
+  requireRole("admin", "dinas"),
   asyncRoute(async (req, res) => {
     const disease = await assertDisease(
       typeof req.query.disease === "string" ? req.query.disease : "DBD",

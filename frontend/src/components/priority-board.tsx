@@ -24,7 +24,7 @@ import type { DiseaseType, PriorityRow, PriorityWeighting } from "@/types";
 /**
  * Prioritas terdampak — risiko dikalikan orang yang menanggungnya.
  *
- * Halaman ini ada karena satu kelemahan yang jujur dari skor risiko sistem
+ * Modul ini ada karena satu kelemahan yang jujur dari skor risiko sistem
  * ini: skornya adalah persentil terhadap sejarah kecamatan itu sendiri. Untuk
  * pertanyaan "seberapa tidak biasa bulan ini", itu benar. Untuk pertanyaan
  * "kecamatan mana yang harus dijaga lebih dulu", ia bisa menaruh kecamatan

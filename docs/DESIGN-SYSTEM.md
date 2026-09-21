@@ -188,7 +188,7 @@ Root font-size ditetapkan pada `112.5%` (1rem = 18px).
 | 15 | `/dev` | Publik | `public` | Terbuka | `Navbar` + `Footer` | **Showcase Komponen & Token**: Halaman pengujian visual komponen UI Buletin |
 | 16 | `/mesin-waktu` | Publik | `public` | Terbuka | `Navbar` + `Footer` | **Mesin Waktu**: Putar ulang periode uji model — penggeser bulan, dua peta choropleth berdampingan (prakiraan vs rekap resmi), tabel putusan per kecamatan, rekap sensitivitas & alarm palsu |
 | 17 | `/simulasi` | Publik | `public` | Terbuka | `Navbar` + `Footer` | **Simulator Cuaca**: Tiga penggeser iklim (hujan/suhu/kelembaban) yang menghitung ulang prakiraan dan peringkat 16 kecamatan; baris di luar rentang data latih diberi tanda, kalimat pembatas berada di atas penggeser (PRD §5.12) |
-| 18 | `/prioritas` | Publik | `public` | Terbuka | `Navbar` + `Footer` | **Prioritas Terdampak**: Peringkat risiko berdampingan dengan peringkat berbobot populasi/kepadatan, kartu "yang belum masuk indeks ini", dan kalkulator biaya tak-bertindak berbasis asumsi pengguna (PRD §5.13, §5.16) |
+| 18 | `/admin/prioritas` | `CONSOLE_ROUTES` | `console` | Admin & Dinas | `Sidebar` | **Prioritas Terdampak**: Peringkat risiko berdampingan dengan peringkat berbobot populasi/kepadatan, kartu "yang belum masuk indeks ini", dan kalkulator biaya tak-bertindak berbasis asumsi pengguna (PRD §5.13, §5.16) |
 | 19 | `/tindakan/nota/[id]` | `BARE_ROUTES` | `public` | Terbuka | Bare | **Draf Nota Dinas**: Satu tindakan aksi dini sebagai lembar A4 siap tanda tangan; dicetak lewat mesin cetak peramban (`@media print`, lihat §11.1) |
 | 20 | `/buletin` | `BARE_ROUTES` | `public` | Terbuka | Bare | **Buletin Resmi SKDR**: Prakiraan, peringatan, dan rekomendasi satu periode sebagai lembar buletin bernomor; dicetak lewat mesin cetak peramban |
 
@@ -458,7 +458,7 @@ Aturan yang berlaku:
 6. **Rute Verifikasi & Transparansi Model:** Rute `/verifikasi` (antrean laporan nakes) dan `/model` (transparansi performa model) beroperasi penuh sesuai spesifikasi PRD.
 7. **Mesin Waktu:** Rute publik `/mesin-waktu` menampilkan periode uji per bulan × kecamatan — sensitivitas, alarm palsu, dan peringatan yang terlewat ditampilkan sekeras angka yang bagus.
 8. **Permukaan Cetak Dokumen:** `/tindakan/nota/[id]` (Nota Dinas) dan `/buletin` (Buletin Resmi SKDR) beroperasi penuh dengan layout A4 siap cetak berbasis CSS native `@media print` (§11.1).
-9. **Simulator & Prioritas:** Dua rute publik baru (`/simulasi`, `/prioritas`) memakai token yang sama tanpa satu pun hex mentah; keduanya menampilkan batas pembacaannya sebagai bagian permanen tata letak, bukan sebagai catatan kaki yang bisa dilewati.
+9. **Simulator & Prioritas:** Simulator publik (`/simulasi`) dan modul konsol admin (`/admin/prioritas`) memakai token yang sama tanpa satu pun hex mentah; keduanya menampilkan batas pembacaannya sebagai bagian permanen tata letak, bukan sebagai catatan kaki yang bisa dilewati.
 10. **Lapisan Pemicu Lingkungan:** Penanda agregasi laporan warga terverifikasi pada `choropleth-map` terhubung dinamis ke `/api/reports/triggers` dengan kontrol toggle layer dan tooltip rincian jenis pemicu.
 11. **Kontribusi Fitur:** Batang dua arah pada dialog "Kenapa angka ini?" memakai `risk-low-fill` untuk pergeseran turun dan `risk-high-fill` untuk naik — satu-satunya tempat ramp risiko dipakai untuk arah, dan sah karena arahnya memang arah risiko. Setiap batang tetap membawa ikon panah dan angka: warna tidak pernah sendirian.
 

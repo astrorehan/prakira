@@ -202,7 +202,7 @@ disengaja — tidak ada jalur cadangan yang diam-diam mengisi angka palsu.
 | `GET` | `/api/meta/ml-status` | — | status keterjangkauan & model pada layanan ML |
 | `GET` | `/api/districts?disease=` | — | data observasi & prediksi 16 kecamatan |
 | `GET` | `/api/districts/all` | — | ringkasan risiko seluruh penyakit sekaligus |
-| `GET` | `/api/districts/priority?disease=&bobot=` | — | peringkat prioritas dampak & beban populasi |
+| `GET` | `/api/districts/priority?disease=&bobot=` | Admin/Dinas | peringkat prioritas dampak & beban populasi |
 | `GET` | `/api/trend?disease=&months=` | — | deret tren bulanan kota + prakiraan |
 | `GET` | `/api/climate?months=` | — | deret iklim (hujan, suhu, kelembaban) vs kasus |
 | `GET` | `/api/model/backtest?disease=` | — | metrik evaluasi model (MAE, RMSE, R²) & batasan |
