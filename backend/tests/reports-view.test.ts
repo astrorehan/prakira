@@ -14,6 +14,10 @@ import {
   toPublicView,
   type ReportRow,
 } from "../src/services/reports.js";
+import {
+  toPublicEnvironmentTicket,
+  type EnvironmentTicket,
+} from "../src/services/tickets.js";
 import { SIMULATION_DEVICE, SIMULATION_PREFIX } from "../src/services/demo.js";
 
 function row(overrides: Partial<ReportRow> = {}): ReportRow {
@@ -30,6 +34,7 @@ function row(overrides: Partial<ReportRow> = {}): ReportRow {
     reviewed_at: null,
     reviewer: null,
     review_note: null,
+    handling_mode: null,
     device_hash: "0123456789abcdef0123456789abcdef",
     ...overrides,
   };
@@ -47,6 +52,81 @@ test("bentuk publik tidak membawa foto maupun sidik jari perangkat", () => {
 test("hasPhoto mengikuti kenyataan barisnya", () => {
   assert.equal(toPublicView(row({ has_photo: false })).hasPhoto, false);
   assert.equal(toPublicView(row({ has_photo: true })).hasPhoto, true);
+});
+
+test("keputusan publik menyertakan jalur dan arahan yang dapat ditindaklanjuti", () => {
+  const view = toPublicView(
+    row({ kind: "genangan", status: "terverifikasi", handling_mode: "dlh" }),
+  );
+
+  assert.deepEqual(view.routing, {
+    family: "lingkungan",
+    destination: "Dinas Lingkungan Hidup",
+    handlingMode: "dlh",
+    workflow: "tiket_lingkungan",
+  });
+  assert.ok(view.guidance.steps.length >= 3);
+  assert.match(view.guidance.caution, /Jangan/);
+  assert.equal(view.ticket, null);
+});
+
+test("keputusan mandiri warga tidak mengisyaratkan tiket DLH", () => {
+  const view = toPublicView(
+    row({
+      kind: "genangan",
+      status: "terverifikasi",
+      handling_mode: "mandiri_warga",
+      review_note: "Bersihkan sumbatan kecil dari tempat yang aman.",
+    }),
+  );
+
+  assert.equal(view.routing.handlingMode, "mandiri_warga");
+  assert.equal(view.routing.destination, "Warga/pelapor");
+  assert.equal(view.routing.workflow, "arahan_warga");
+  assert.equal(view.reviewNote, "Bersihkan sumbatan kecil dari tempat yang aman.");
+  assert.doesNotMatch(view.guidance.steps.join(" "), /kode tiket/i);
+  assert.equal(view.ticket, null);
+});
+
+test("laporan lingkungan yang belum diputuskan menunggu pilihan tindak lanjut", () => {
+  const view = toPublicView(row({ kind: "sampah" }));
+
+  assert.equal(view.routing.handlingMode, null);
+  assert.equal(view.routing.workflow, "pilih_tindak_lanjut");
+});
+
+test("proyeksi tiket warga tidak membocorkan lokasi internal atau PIC", () => {
+  const ticket: EnvironmentTicket = {
+    id: "DLH-20260921-A1B2C3",
+    report_id: "PKR-A2B3C4",
+    kind: "genangan",
+    destination_unit: "Dinas Lingkungan Hidup",
+    status: "dikerjakan",
+    priority: "tinggi",
+    kecamatan: "Tembalang",
+    kelurahan: "Bulusan",
+    summary: "Genangan bertahan tiga hari.",
+    created_at: "2026-09-21T01:00:00.000Z",
+    updated_at: "2026-09-21T02:00:00.000Z",
+    acknowledged_at: "2026-09-21T01:30:00.000Z",
+    assigned_to: "UPT internal",
+    resolved_at: null,
+    resolution_note: null,
+  };
+
+  const view = toPublicEnvironmentTicket(ticket);
+  assert.deepEqual(view, {
+    id: "DLH-20260921-A1B2C3",
+    destinationUnit: "Dinas Lingkungan Hidup",
+    status: "dikerjakan",
+    priority: "tinggi",
+    createdAt: "2026-09-21T01:00:00.000Z",
+    updatedAt: "2026-09-21T02:00:00.000Z",
+    resolvedAt: null,
+    resolutionNote: null,
+  });
+  assert.ok(!Object.hasOwn(view ?? {}, "assigned_to"));
+  assert.ok(!Object.hasOwn(view ?? {}, "report_id"));
 });
 
 test("baris peragaan tetap bisa dikenali di antrean", () => {

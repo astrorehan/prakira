@@ -136,6 +136,7 @@ class BacktestResponse(BaseModel):
     # Rincian per kecamatan pada periode uji. Dipakai rute `/api/model/rewind`
     # untuk menghitung berapa lonjakan yang benar-benar tertandai lebih dulu.
     district_results: List[BacktestDistrictResult] = []
+    citizen_signal_family: Optional[str] = None
     citizen_signal_comparison: Optional[CitizenSignalComparison] = None
     # Pembanding naif dan kalibrasi rentang — keduanya dihitung saat pelatihan
     # pada periode uji yang sama, lalu disimpan di metadata.json.
@@ -156,6 +157,8 @@ class RetrainResponse(BaseModel):
     disease: str
     new_version: str
     include_citizen: bool
+    citizen_family: Optional[str] = None
+    citizen_signal_comparison: Optional[dict] = None
     metrics: BacktestMetrics
     previous_version: Optional[str] = None
     improved: bool

@@ -24,6 +24,7 @@ import { Label } from "@/components/ui/label";
 import { ConsoleToast, useConsoleToast } from "@/components/console/toast";
 import { DataState } from "@/components/data-state";
 import { EscalationPanel } from "@/components/escalation-panel";
+import { EnvironmentTicketQueue } from "@/components/environment-ticket-queue";
 import {
   sortForQueue,
   REPORT_KIND,
@@ -36,6 +37,7 @@ import {
 import { formatDate, formatDateTime, relativeAge } from "@/lib/period";
 import { ApiError, fetchReportPhoto, fetchReportQueue, reviewReport } from "@/lib/api";
 import { useApi } from "@/lib/use-api";
+import type { EnvironmentHandlingMode } from "@/types";
 
 /**
  * Antrean verifikasi petugas — PRD §5.5 (M7).
@@ -46,15 +48,15 @@ import { useApi } from "@/lib/use-api";
  *
  * Dua keputusan bentuk:
  *
- * 1. **Terima satu klik, tolak butuh alasan.** §5.4 mewajibkan penolakan
- *    disertai alasan yang terlihat pelapor, jadi Tolak membuka satu bidang
- *    catatan dan Terima tidak. Asimetri ini disengaja: menyetujui laporan yang
- *    benar harus lebih murah daripada menolaknya, kalau tidak antrean akan
- *    diselesaikan dengan tombol yang paling sedikit gesekannya.
- * 2. **Laporan pemicu lingkungan diberi tujuan tiket yang berbeda.** §5.6b:
- *    genangan, sampah, dan saluran tersumbat pergi ke unit lingkungan, bukan ke
- *    puskesmas. Petugas kesehatan yang membuka antrean ini perlu tahu mana yang
- *    bukan pekerjaannya sebelum ia membacanya.
+ * 1. **Laporan kesehatan diterima satu klik, saran opsional, tolak butuh alasan.**
+ *    §5.4 mewajibkan penolakan disertai alasan yang terlihat pelapor. Saran
+ *    untuk warga boleh ditambahkan bila petugas punya konteks lokal, tetapi
+ *    tidak menghalangi penerimaan laporan yang sudah jelas.
+ * 2. **Laporan pemicu lingkungan diberi pilihan tindak lanjut.** §5.6b:
+ *    genangan, sampah, dan saluran tersumbat bisa diberi arahan aman untuk warga
+ *    atau diteruskan ke unit lingkungan, bukan otomatis semuanya menjadi tiket.
+ *    Petugas kesehatan yang membuka antrean ini perlu melihat pilihan itu sebelum
+ *    memutuskan laporan.
  *
  * Yang berubah setelah ada gateway: antrean tidak lagi hidup di `localStorage`
  * perangkat ini. Laporan yang dikirim warga dari ponselnya benar-benar sampai
@@ -204,21 +206,29 @@ function ReportRow({
     id: string,
     status: "terverifikasi" | "ditolak",
     note?: string,
+    handlingMode?: EnvironmentHandlingMode,
   ) => void | Promise<void>;
 }) {
   const [rejecting, setRejecting] = React.useState(false);
-  const [note, setNote] = React.useState("");
-  const noteRef = React.useRef<HTMLTextAreaElement>(null);
+  const [addingAdvice, setAddingAdvice] = React.useState(false);
+  const [rejectionNote, setRejectionNote] = React.useState("");
+  const [advice, setAdvice] = React.useState("");
+  const [handlingMode, setHandlingMode] = React.useState<EnvironmentHandlingMode | null>(null);
+  const rejectionNoteRef = React.useRef<HTMLTextAreaElement>(null);
+  const adviceRef = React.useRef<HTMLTextAreaElement>(null);
 
   const kind = REPORT_KIND[report.kind];
   const status = REPORT_STATUS[report.status];
   const Icon = KIND_ICON[report.kind];
   const pending = report.status === "menunggu";
-  const noteId = `tolak-${report.id}`;
+  const environmental = kind.family === "lingkungan";
+  const rejectionNoteId = `tolak-${report.id}`;
+  const adviceId = `saran-${report.id}`;
 
   React.useEffect(() => {
-    if (rejecting) noteRef.current?.focus();
-  }, [rejecting]);
+    if (rejecting) rejectionNoteRef.current?.focus();
+    if (addingAdvice || handlingMode === "mandiri_warga") adviceRef.current?.focus();
+  }, [addingAdvice, handlingMode, rejecting]);
 
   return (
     <Card className={cn("p-4", pending && "border-border-strong")}>
@@ -284,14 +294,14 @@ function ReportRow({
         <div className="mt-4 border-t border-border pt-3">
           {rejecting ? (
             <div className="space-y-2">
-              <Label htmlFor={noteId} className="text-caption">
+              <Label htmlFor={rejectionNoteId} className="text-caption">
                 Alasan penolakan — dibaca pelapor
               </Label>
               <textarea
-                id={noteId}
-                ref={noteRef}
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
+                id={rejectionNoteId}
+                ref={rejectionNoteRef}
+                value={rejectionNote}
+                onChange={(e) => setRejectionNote(e.target.value)}
                 rows={2}
                 placeholder="Mis. lokasi tidak bisa ditelusuri, atau sudah tercakup laporan lain."
                 className="w-full rounded-xl border border-border bg-surface px-3.5 py-2.5 text-body-sm text-foreground shadow-sm placeholder:text-paper-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -300,8 +310,8 @@ function ReportRow({
                 <Button
                   size="sm"
                   variant="danger"
-                  disabled={note.trim().length < 8}
-                  onClick={() => onDecide(report.id, "ditolak", note)}
+                  disabled={rejectionNote.trim().length < 8}
+                  onClick={() => onDecide(report.id, "ditolak", rejectionNote)}
                 >
                   Kirim penolakan
                 </Button>
@@ -310,16 +320,169 @@ function ReportRow({
                   variant="ghost"
                   onClick={() => {
                     setRejecting(false);
-                    setNote("");
+                    setRejectionNote("");
                   }}
                 >
                   Batal
                 </Button>
-                {note.trim().length < 8 && (
+                {rejectionNote.trim().length < 8 && (
                   <span className="self-center text-caption text-paper-600">
                     Alasan minimal 8 karakter.
                   </span>
                 )}
+              </div>
+            </div>
+          ) : environmental ? (
+            <div className="space-y-3">
+              <div>
+                <p className="text-caption font-medium text-paper-700">
+                  Pilih tindak lanjut setelah laporan diterima
+                </p>
+                <div
+                  className="mt-2 grid gap-2 sm:grid-cols-2"
+                  role="radiogroup"
+                  aria-label="Pilihan tindak lanjut laporan lingkungan"
+                >
+                  <label
+                    className={cn(
+                      "flex cursor-pointer items-start gap-2.5 rounded-xl border p-3 transition-colors",
+                      handlingMode === "mandiri_warga"
+                        ? "border-brand-500 bg-brand-50"
+                        : "border-border bg-surface hover:border-brand-300",
+                    )}
+                  >
+                    <input
+                      type="radio"
+                      name={`tindak-lanjut-${report.id}`}
+                      value="mandiri_warga"
+                      checked={handlingMode === "mandiri_warga"}
+                      onChange={() => setHandlingMode("mandiri_warga")}
+                      className="mt-0.5 accent-brand-700"
+                    />
+                    <span>
+                      <span className="block text-body-sm font-medium text-foreground">
+                        Arahan mandiri warga
+                      </span>
+                      <span className="mt-0.5 block text-caption leading-relaxed text-paper-600">
+                        Tidak membuat tiket DLH; warga mendapat langkah yang aman dilakukan sendiri.
+                      </span>
+                    </span>
+                  </label>
+                  <label
+                    className={cn(
+                      "flex cursor-pointer items-start gap-2.5 rounded-xl border p-3 transition-colors",
+                      handlingMode === "dlh"
+                        ? "border-teal-500 bg-teal-50"
+                        : "border-border bg-surface hover:border-teal-300",
+                    )}
+                  >
+                    <input
+                      type="radio"
+                      name={`tindak-lanjut-${report.id}`}
+                      value="dlh"
+                      checked={handlingMode === "dlh"}
+                      onChange={() => setHandlingMode("dlh")}
+                      className="mt-0.5 accent-teal-700"
+                    />
+                    <span>
+                      <span className="block text-body-sm font-medium text-foreground">
+                        Teruskan ke DLH
+                      </span>
+                      <span className="mt-0.5 block text-caption leading-relaxed text-paper-600">
+                        Terima laporan sekaligus buat tiket operasional untuk DLH.
+                      </span>
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              {handlingMode === "mandiri_warga" && (
+                <div className="space-y-2">
+                  <Label htmlFor={adviceId} className="text-caption">
+                    Saran/arahan untuk warga <span className="font-normal text-paper-600">(opsional)</span>
+                  </Label>
+                  <textarea
+                    id={adviceId}
+                    ref={adviceRef}
+                    value={advice}
+                    onChange={(e) => setAdvice(e.target.value)}
+                    rows={2}
+                    placeholder="Mis. bersihkan wadah penampung air dan periksa jentik setiap minggu."
+                    className="w-full rounded-xl border border-border bg-surface px-3.5 py-2.5 text-body-sm text-foreground shadow-sm placeholder:text-paper-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  />
+                  <p className="text-caption leading-relaxed text-paper-600">
+                    Arahan otomatis tetap ditampilkan jika kolom ini dikosongkan.
+                  </p>
+                </div>
+              )}
+
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  size="sm"
+                  disabled={!handlingMode}
+                  onClick={() =>
+                    onDecide(
+                      report.id,
+                      "terverifikasi",
+                      handlingMode === "mandiri_warga" ? advice.trim() || undefined : undefined,
+                      handlingMode ?? undefined,
+                    )
+                  }
+                  className="gap-1.5"
+                >
+                  <Check className="h-4 w-4" aria-hidden="true" />
+                  {handlingMode === "dlh" ? "Terima & buat tiket DLH" : "Terima & kirim arahan"}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setRejecting(true)}
+                  className="gap-1.5"
+                >
+                  <X className="h-4 w-4" aria-hidden="true" />
+                  Tolak
+                </Button>
+                {!handlingMode && (
+                  <span className="text-caption text-paper-600">
+                    Pilih salah satu rute sebelum menerima laporan.
+                  </span>
+                )}
+              </div>
+            </div>
+          ) : addingAdvice ? (
+            <div className="space-y-2">
+              <Label htmlFor={adviceId} className="text-caption">
+                Saran/arahan untuk warga <span className="font-normal text-paper-600">(opsional)</span>
+              </Label>
+              <textarea
+                id={adviceId}
+                ref={adviceRef}
+                value={advice}
+                onChange={(e) => setAdvice(e.target.value)}
+                rows={2}
+                placeholder="Mis. bersihkan wadah penampung air dan periksa jentik setiap minggu."
+                className="w-full rounded-xl border border-border bg-surface px-3.5 py-2.5 text-body-sm text-foreground shadow-sm placeholder:text-paper-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              />
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => onDecide(report.id, "terverifikasi", advice)}
+                >
+                  Terima & kirim arahan
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    setAddingAdvice(false);
+                    setAdvice("");
+                  }}
+                >
+                  Batal
+                </Button>
+                <span className="self-center text-caption text-paper-600">
+                  Arahan otomatis tetap dikirim jika dikosongkan.
+                </span>
               </div>
             </div>
           ) : (
@@ -335,6 +498,14 @@ function ReportRow({
               <Button
                 size="sm"
                 variant="outline"
+                onClick={() => setAddingAdvice(true)}
+                className="gap-1.5"
+              >
+                Tambah saran
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
                 onClick={() => setRejecting(true)}
                 className="gap-1.5"
               >
@@ -342,7 +513,7 @@ function ReportRow({
                 Tolak
               </Button>
               <span className="ml-auto text-caption text-paper-600">
-                Terima tanpa catatan; penolakan wajib beralasan.
+                Saran opsional; penolakan wajib beralasan.
               </span>
             </div>
           )}
@@ -354,6 +525,8 @@ function ReportRow({
           </span>{" "}
           oleh {report.reviewer ?? "petugas"}
           {report.reviewedAt ? ` · ${formatDateTime(report.reviewedAt)}` : ""}
+          {report.routing.handlingMode === "mandiri_warga" ? " · Arahan mandiri warga" : ""}
+          {report.routing.handlingMode === "dlh" ? " · Diteruskan ke DLH" : ""}
           {report.reviewNote ? ` · ${report.reviewNote}` : ""}
         </div>
       )}
@@ -368,6 +541,7 @@ export function VerificationQueue() {
   const [status, setStatus] = React.useState<ReportStatus | "semua">("menunggu");
   const [wilayah, setWilayah] = React.useState("semua");
   const [decideError, setDecideError] = React.useState<string | null>(null);
+  const [ticketRefresh, setTicketRefresh] = React.useState(0);
   const toast = useConsoleToast();
 
   const reports = queue.data?.data ?? null;
@@ -407,14 +581,24 @@ export function VerificationQueue() {
   }, [reports, wilayah]);
 
   const decide = React.useCallback(
-    async (id: string, next: "terverifikasi" | "ditolak", note?: string) => {
+        async (
+          id: string,
+          next: "terverifikasi" | "ditolak",
+          note?: string,
+          handlingMode?: EnvironmentHandlingMode,
+        ) => {
       setDecideError(null);
       try {
-        await reviewReport(id, { status: next, note });
+        await reviewReport(id, { status: next, note, handlingMode });
         queue.reload();
+        if (handlingMode === "dlh") setTicketRefresh((value) => value + 1);
         toast.show(
           next === "terverifikasi"
-            ? `${id} diterima. Pelapor bisa melihat perubahan ini di halaman lacak.`
+            ? handlingMode === "dlh"
+              ? `${id} diterima dan tiket DLH dibuat.`
+              : handlingMode === "mandiri_warga"
+                ? `${id} diterima dengan arahan mandiri warga.`
+                : `${id} diterima. Pelapor bisa melihat perubahan ini di halaman lacak.`
             : `${id} ditolak. Alasannya terlihat pelapor.`,
         );
       } catch (caught) {
@@ -448,11 +632,13 @@ export function VerificationQueue() {
           hint="Alasannya terlihat pelapor di halaman lacak."
         />
         <SummaryTile
-          label="Tiket lingkungan"
+          label="Laporan lingkungan menunggu"
           value={String(summary.lingkunganMenunggu)}
-          hint="Genangan, sampah, dan saluran — diteruskan ke Dinas Lingkungan Hidup."
+          hint="Petugas memilih arahan mandiri warga atau meneruskannya ke Dinas Lingkungan Hidup."
         />
       </div>
+
+      <EnvironmentTicketQueue refreshToken={ticketRefresh} />
 
       {/* Pola sebelum satuan. Antrean di bawah tetap urut menunggu-terlama;
           yang ditambahkan di sini adalah pembacaan yang tidak muncul dari

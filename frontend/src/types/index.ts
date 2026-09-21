@@ -150,6 +150,12 @@ export type ConformalCalibration = {
   n_evaluated: number;
 };
 
+export type CitizenSignalComparison = {
+  without: { mae: number; rmse: number; r2: number };
+  with_signal: { mae: number; rmse: number; r2: number };
+  note: string;
+};
+
 export type BacktestMetric = {
   disease: DiseaseType;
   model_version: string;
@@ -171,6 +177,9 @@ export type BacktestMetric = {
   baselines: BaselineComparison | null;
   /** Kalibrasi rentang. `null` bila modelnya belum dilatih ulang. */
   conformal: ConformalCalibration | null;
+  /** Perbandingan varian dengan sinyal warga; kosong sebelum evaluasi dijalankan. */
+  citizen_signal_family?: "semua" | "kesehatan" | "lingkungan" | null;
+  citizen_signal_comparison?: CitizenSignalComparison | null;
   fetched_at: string;
 };
 
@@ -384,6 +393,60 @@ export type GeoDistrictCollection = {
 export type ReportKind = "gejala" | "jentik" | "genangan" | "sampah" | "saluran";
 export type ReportStatus = "menunggu" | "terverifikasi" | "ditolak";
 export type ReportFamily = "kesehatan" | "lingkungan";
+export type EnvironmentTicketStatus =
+  | "baru"
+  | "diterima"
+  | "dikerjakan"
+  | "selesai"
+  | "ditutup";
+export type EnvironmentTicketPriority = "normal" | "tinggi";
+export type EnvironmentHandlingMode = "mandiri_warga" | "dlh";
+
+export type CitizenGuidance = {
+  title: string;
+  steps: string[];
+  caution: string;
+};
+
+export type CitizenRouting = {
+  family: ReportFamily;
+  destination: string;
+  handlingMode: EnvironmentHandlingMode | null;
+  workflow:
+    | "rekap_evaluasi"
+    | "pilih_tindak_lanjut"
+    | "arahan_warga"
+    | "tiket_lingkungan";
+};
+
+export type PublicEnvironmentTicket = {
+  id: string;
+  destinationUnit: string;
+  status: EnvironmentTicketStatus;
+  priority: EnvironmentTicketPriority;
+  createdAt: string;
+  updatedAt: string;
+  resolvedAt: string | null;
+  resolutionNote: string | null;
+};
+
+export type EnvironmentTicket = {
+  id: string;
+  report_id: string;
+  kind: "genangan" | "sampah" | "saluran";
+  destination_unit: string;
+  status: EnvironmentTicketStatus;
+  priority: EnvironmentTicketPriority;
+  kecamatan: string;
+  kelurahan: string | null;
+  summary: string;
+  created_at: string;
+  updated_at: string;
+  acknowledged_at: string | null;
+  assigned_to: string | null;
+  resolved_at: string | null;
+  resolution_note: string | null;
+};
 
 export type CitizenReport = {
   id: string;
@@ -403,6 +466,9 @@ export type CitizenReport = {
   reviewedAt: string | null;
   reviewer: string | null;
   reviewNote: string | null;
+  routing: CitizenRouting;
+  guidance: CitizenGuidance;
+  ticket: PublicEnvironmentTicket | null;
 };
 
 export type QueueSummary = {
@@ -690,6 +756,12 @@ export type RetrainResult = {
   disease: string;
   new_version: string;
   include_citizen: boolean;
+  citizen_family?: "semua" | "kesehatan" | "lingkungan" | null;
+  citizen_signal_comparison?: {
+    without: { mae: number; rmse: number; r2: number };
+    with_signal: { mae: number; rmse: number; r2: number };
+    note: string;
+  } | null;
   metrics: RetrainMetrics;
   previous_version: string | null;
   improved: boolean;

@@ -90,7 +90,9 @@ TARGET_COLUMN = "cases"
 # terverifikasi benar-benar menutupi periode latih. Ambang di bawah ini yang
 # memutuskan. Angkanya sengaja tinggi: fitur yang bernilai nol di 90% baris
 # latih tidak dipelajari model, tetapi tetap memberi kesan pada halaman
-# transparansi bahwa sinyal warga sudah ikut menentukan prakiraan.
+# transparansi bahwa sinyal warga sudah ikut menentukan prakiraan aktif.
+# Saat ini sinyal tersebut dilatih sebagai varian pembanding yang diaudit,
+# bukan dipromosikan otomatis ke model yang melayani prakiraan.
 #
 # Selama ambang ini belum terlampaui, /retrain menolak permintaan
 # `include_citizen` dengan alasan yang disebutkan apa adanya — bukan

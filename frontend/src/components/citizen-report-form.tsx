@@ -147,12 +147,12 @@ function SubmittedCard({
           </dd>
         </div>
         <div>
-          <dt className="text-overline uppercase tracking-[0.1em] text-paper-600">
-            Diteruskan ke
-          </dt>
-          <dd className="mt-1 text-body-sm font-medium text-foreground">
-            {FAMILY_ROUTING[family]}
-          </dd>
+            <dt className="text-overline uppercase tracking-[0.1em] text-paper-600">
+              Jalur tindak lanjut
+            </dt>
+            <dd className="mt-1 text-body-sm font-medium text-foreground">
+              Setelah diverifikasi: {FAMILY_ROUTING[family]}
+            </dd>
         </div>
       </dl>
 

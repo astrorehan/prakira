@@ -210,6 +210,15 @@ export async function clearSimulation(
   /* Predikat penghapusan memakai `device_hash`, bukan awalan deskripsi:
      deskripsi bisa diedit, kolom sidik jari tidak pernah tersentuh alur mana
      pun setelah penyisipan. */
+  /* Laporan simulasi tidak membuat tiket baru, tetapi hapus dulu tiket lama
+     bila basis data pernah menjalankan versi gateway sebelum pagar itu ada. */
+  await run(
+    `DELETE FROM tiket_lingkungan
+      WHERE laporan_id IN (
+        SELECT id FROM laporan_warga WHERE device_hash = ?
+      )`,
+    SIMULATION_DEVICE,
+  );
   await run("DELETE FROM laporan_warga WHERE device_hash = ?", SIMULATION_DEVICE);
 
   await logAudit({

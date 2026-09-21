@@ -44,6 +44,9 @@ class CitizenSignalRow(BaseModel):
     verified: int = Field(..., ge=0, example=4)
 
 
+CitizenSignalFamily = Literal["semua", "kesehatan", "lingkungan"]
+
+
 class RetrainRequest(BaseModel):
     """Request untuk endpoint /retrain.
 
@@ -56,6 +59,10 @@ class RetrainRequest(BaseModel):
     include_citizen: bool = Field(
         default=False,
         description="Apakah menyertakan sinyal warga terverifikasi sebagai fitur tambahan",
+    )
+    citizen_family: CitizenSignalFamily = Field(
+        default="lingkungan",
+        description="Keluarga laporan yang dipakai sebagai sinyal tambahan",
     )
     citizen_signal: Optional[List[CitizenSignalRow]] = Field(
         default=None,

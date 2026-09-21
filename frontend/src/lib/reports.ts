@@ -57,7 +57,7 @@ export const REPORT_STATUS: Record<
     label: "Terverifikasi",
     badge: "risk-low",
     blurb:
-      "Petugas membenarkan laporan ini. Laporan ikut memperkaya prakiraan bulan berikutnya dengan bobot lebih rendah daripada data resmi.",
+      "Petugas membenarkan laporan ini. Arahan tindak lanjut dan, bila diteruskan, status tiketnya tercantum di bawah.",
   },
   ditolak: {
     label: "Ditolak",

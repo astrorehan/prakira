@@ -110,6 +110,10 @@ function serialize(
        dan halaman yang sudah menjawabnya lebih kuat (PRD §7-H5). */
     baselines: row.baselines ? JSON.parse(row.baselines) : null,
     conformal: row.conformal ? JSON.parse(row.conformal) : null,
+    citizen_signal_family: row.citizen_signal_family,
+    citizen_signal_comparison: row.citizen_signal_comparison
+      ? JSON.parse(row.citizen_signal_comparison)
+      : null,
     fetched_at: row.fetched_at,
   };
 }

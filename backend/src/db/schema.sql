@@ -117,11 +117,39 @@ CREATE TABLE IF NOT EXISTS laporan_warga (
   reviewed_at  TEXT,
   reviewer     TEXT,
   review_note  TEXT,
+  handling_mode TEXT,                    -- NULL | mandiri_warga | dlh
   device_hash  TEXT NOT NULL             -- untuk rate limit; bukan identitas
 );
 
 CREATE INDEX IF NOT EXISTS idx_laporan_status ON laporan_warga (status, submitted_at);
 CREATE INDEX IF NOT EXISTS idx_laporan_device ON laporan_warga (device_hash, submitted_at);
+
+-- Tiket tindak lanjut laporan lingkungan. Satu laporan terverifikasi dapat
+-- menghasilkan paling banyak satu tiket; status tiket berjalan terpisah dari
+-- keputusan verifikasi supaya warga bisa melihat laporan sudah diterima tanpa
+-- menganggapnya sebagai bukti pekerjaan lapangan yang sudah selesai.
+CREATE TABLE IF NOT EXISTS tiket_lingkungan (
+  id                TEXT PRIMARY KEY,       -- DLH-YYYYMMDD-XXXXXX
+  laporan_id        TEXT NOT NULL UNIQUE REFERENCES laporan_warga(id),
+  jenis             TEXT NOT NULL,          -- genangan | sampah | saluran
+  tujuan_unit       TEXT NOT NULL,
+  status            TEXT NOT NULL,          -- baru | diterima | dikerjakan | selesai | ditutup
+  prioritas         TEXT NOT NULL DEFAULT 'normal', -- normal | tinggi
+  kecamatan         TEXT NOT NULL,
+  kelurahan         TEXT,
+  ringkasan         TEXT NOT NULL,
+  created_at        TEXT NOT NULL,
+  updated_at        TEXT NOT NULL,
+  acknowledged_at   TEXT,
+  assigned_to       TEXT,
+  resolved_at       TEXT,
+  resolution_note   TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_tiket_lingkungan_status
+  ON tiket_lingkungan (status, updated_at);
+CREATE INDEX IF NOT EXISTS idx_tiket_lingkungan_kecamatan
+  ON tiket_lingkungan (kecamatan, status);
 
 CREATE TABLE IF NOT EXISTS audit_log (
   id      BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -177,3 +205,17 @@ ALTER TABLE model_backtest ADD COLUMN IF NOT EXISTS district_results TEXT;
 -- pada baris yang tersimpan sebelum layanan ML mengirimkannya.
 ALTER TABLE model_backtest ADD COLUMN IF NOT EXISTS baselines TEXT;
 ALTER TABLE model_backtest ADD COLUMN IF NOT EXISTS conformal TEXT;
+ALTER TABLE model_backtest ADD COLUMN IF NOT EXISTS citizen_signal_family TEXT;
+ALTER TABLE model_backtest ADD COLUMN IF NOT EXISTS citizen_signal_comparison TEXT;
+
+-- Pilihan triase baru untuk laporan lingkungan. Laporan terverifikasi lama
+-- dipertahankan sebagai rute DLH agar tiket yang sudah berjalan tidak berubah
+-- makna ketika gateway diperbarui.
+ALTER TABLE laporan_warga ADD COLUMN IF NOT EXISTS handling_mode TEXT;
+UPDATE laporan_warga
+   SET handling_mode = 'dlh'
+ WHERE handling_mode IS NULL
+   AND status = 'terverifikasi'
+   AND kind IN ('genangan', 'sampah', 'saluran')
+   AND device_hash <> 'simulasi-peragaan'
+   AND description NOT LIKE '[SIMULASI]%';

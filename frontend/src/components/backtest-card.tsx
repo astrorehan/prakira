@@ -320,6 +320,14 @@ export function BacktestCard({
   const activeAlgo = activeMetric ? formatAlgorithmName(activeMetric.algorithm) : null;
   const activeTrainPeriod = activeMetric ? formatPeriodRange(activeMetric.train_period) : null;
   const activeTestPeriod = activeMetric ? formatPeriodRange(activeMetric.test_period) : null;
+  const citizenFamilyLabel =
+    activeMetric?.citizen_signal_family === "kesehatan"
+      ? "kesehatan"
+      : activeMetric?.citizen_signal_family === "semua"
+        ? "semua jenis laporan"
+        : activeMetric?.citizen_signal_family === "lingkungan"
+          ? "lingkungan"
+          : "keluarga laporan yang tercatat";
 
   return (
     <div className={cn("space-y-6", className)}>
@@ -461,6 +469,46 @@ export function BacktestCard({
                   ))}
                 </div>
               </div>
+            </div>
+          )}
+
+          {activeMetric.citizen_signal_comparison && (
+            <div className="rounded-xl border border-teal-200 bg-teal-50/60 p-4">
+              <div className="flex items-start gap-2">
+                <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-teal-700" aria-hidden />
+                <div>
+                  <h4 className="text-body-sm font-semibold text-teal-950">
+                    Evaluasi sinyal warga — {citizenFamilyLabel}
+                  </h4>
+                  <p className="mt-1 text-caption leading-relaxed text-paper-700">
+                    Dua varian diuji pada periode dan pemisahan data yang sama. Ini
+                    evaluasi pembanding, bukan penggantian otomatis model aktif.
+                  </p>
+                </div>
+              </div>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                <div className="rounded-lg border border-teal-200 bg-white/80 p-3">
+                  <p className="text-overline uppercase text-paper-600">Tanpa sinyal warga</p>
+                  <p className="mt-1 text-body-sm font-semibold text-foreground">
+                    MAE {formatNumber(activeMetric.citizen_signal_comparison.without.mae, { maximumFractionDigits: 2 })}
+                    <span className="ml-2 text-caption font-normal text-paper-600">
+                      · RMSE {formatNumber(activeMetric.citizen_signal_comparison.without.rmse, { maximumFractionDigits: 2 })}
+                    </span>
+                  </p>
+                </div>
+                <div className="rounded-lg border border-teal-200 bg-white/80 p-3">
+                  <p className="text-overline uppercase text-paper-600">Dengan sinyal warga</p>
+                  <p className="mt-1 text-body-sm font-semibold text-foreground">
+                    MAE {formatNumber(activeMetric.citizen_signal_comparison.with_signal.mae, { maximumFractionDigits: 2 })}
+                    <span className="ml-2 text-caption font-normal text-paper-600">
+                      · RMSE {formatNumber(activeMetric.citizen_signal_comparison.with_signal.rmse, { maximumFractionDigits: 2 })}
+                    </span>
+                  </p>
+                </div>
+              </div>
+              <p className="mt-3 border-t border-teal-200 pt-3 text-caption leading-relaxed text-paper-700">
+                {activeMetric.citizen_signal_comparison.note}
+              </p>
             </div>
           )}
         </Card>

@@ -41,6 +41,30 @@ type Step = {
 function buildSteps(report: CitizenReport): Step[] {
   const decided = report.status !== "menunggu";
   const rejected = report.status === "ditolak";
+  const followUpLabel =
+    !decided
+      ? report.routing.family === "lingkungan"
+        ? "Pilihan tindak lanjut"
+        : "Rekap kesehatan"
+      : report.routing.workflow === "tiket_lingkungan"
+      ? "Diteruskan ke DLH"
+      : report.routing.workflow === "arahan_warga"
+        ? "Arahan mandiri warga"
+        : report.routing.workflow === "rekap_evaluasi"
+          ? "Masuk rekap kesehatan"
+          : "Pilihan tindak lanjut";
+  const followUpDetail =
+    !decided
+      ? report.routing.family === "lingkungan"
+        ? "Petugas akan memilih apakah laporan perlu arahan warga atau diteruskan ke DLH."
+        : "Setelah diterima, laporan masuk rekap evaluasi kesehatan."
+      : report.routing.workflow === "tiket_lingkungan"
+      ? "Laporan diteruskan ke DLH dan status tiketnya dapat dipantau di bawah."
+      : report.routing.workflow === "arahan_warga"
+        ? "Petugas memilih tindak lanjut melalui arahan yang aman dilakukan warga."
+        : report.routing.workflow === "rekap_evaluasi"
+          ? "Laporan terverifikasi masuk rekap evaluasi kesehatan."
+          : "Petugas akan memilih apakah laporan perlu arahan warga atau diteruskan ke DLH.";
 
   return [
     {
@@ -66,11 +90,8 @@ function buildSteps(report: CitizenReport): Step[] {
           state: "rejected",
         }
       : {
-          label: "Masuk hitungan prakiraan",
-          detail:
-            report.status === "terverifikasi"
-              ? `Laporan terverifikasi ikut memperkaya prakiraan ${report.kecamatan} dengan bobot lebih rendah daripada data resmi dinas.`
-              : "Hanya laporan yang diterima petugas yang ikut dihitung.",
+          label: followUpLabel,
+          detail: followUpDetail,
           state: report.status === "terverifikasi" ? "done" : "idle",
         },
   ];
@@ -83,6 +104,14 @@ const STEP_STYLE: Record<Step["state"], string> = {
   current: "border-risk-medium-br bg-risk-medium-bg text-risk-medium",
   idle: "border-sand-200 bg-sand-50 text-paper-600",
   rejected: "border-risk-none-br bg-risk-none-bg text-risk-none",
+};
+
+const TICKET_STATUS_LABEL: Record<NonNullable<CitizenReport["ticket"]>["status"], string> = {
+  baru: "Tiket baru",
+  diterima: "Diterima unit lingkungan",
+  dikerjakan: "Sedang dikerjakan",
+  selesai: "Penanganan selesai",
+  ditutup: "Tiket ditutup",
 };
 
 function ReportDetail({ report }: { report: CitizenReport }) {
@@ -171,14 +200,66 @@ function ReportDetail({ report }: { report: CitizenReport }) {
       </ol>
 
       {report.status === "terverifikasi" && (
-        <p className="mt-7 flex items-start gap-2.5 rounded-2xl border border-brand-300/45 bg-grad-brand-soft p-4 text-body-sm leading-relaxed text-paper-700">
-          <Info className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />
-          <span>
-            Laporan bertipe {kind.family === "lingkungan" ? "pemicu lingkungan" : "kesehatan"}{" "}
-            diteruskan ke {FAMILY_ROUTING[kind.family]}. Terima kasih — yang Anda lihat di
-            gang memang tidak selalu terlihat di rekapitulasi bulanan.
-          </span>
-        </p>
+        <>
+          <div className="mt-7 flex items-start gap-2.5 rounded-2xl border border-brand-300/45 bg-grad-brand-soft p-4 text-body-sm leading-relaxed text-paper-700">
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />
+            <span>
+              {report.simulated
+                ? "Ini laporan peragaan; tidak membuat tiket operasional."
+                : report.routing.workflow === "tiket_lingkungan"
+                  ? report.ticket
+                    ? `Laporan bertipe pemicu lingkungan sudah dibuatkan tiket untuk ${FAMILY_ROUTING.lingkungan}.`
+                    : "Laporan lingkungan sudah diterima dan sedang disiapkan untuk tindak lanjut."
+                  : report.routing.workflow === "arahan_warga"
+                    ? "Petugas memilih arahan mandiri warga; laporan ini tidak dibuatkan tiket DLH."
+                    : report.routing.workflow === "rekap_evaluasi"
+                      ? `Laporan kesehatan masuk rekap evaluasi dan menjadi perhatian ${FAMILY_ROUTING.kesehatan}.`
+                      : "Petugas belum menetapkan jalur tindak lanjut laporan ini."}{" "}
+              Terima kasih — yang Anda lihat di gang memang tidak selalu terlihat di rekapitulasi bulanan.
+            </span>
+          </div>
+
+          {report.ticket && (
+            <div className="mt-4 rounded-2xl border border-teal-200 bg-teal-50/70 p-4 text-body-sm text-teal-950">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="font-semibold">Tiket {report.ticket.id}</span>
+                <span className="rounded-full border border-teal-300 bg-white/70 px-2.5 py-1 text-caption font-medium">
+                  {TICKET_STATUS_LABEL[report.ticket.status]}
+                </span>
+              </div>
+              <p className="mt-2 leading-relaxed">
+                Tujuan: {report.ticket.destinationUnit}. Status terakhir diperbarui pada{" "}
+                {formatDateTime(report.ticket.updatedAt)}.
+              </p>
+              {report.ticket.resolutionNote && (
+                <p className="mt-2 border-t border-teal-200 pt-2 leading-relaxed">
+                  Catatan penanganan: {report.ticket.resolutionNote}
+                </p>
+              )}
+            </div>
+          )}
+
+          <div className="mt-4 rounded-2xl border border-sand-200 bg-sand-50 p-5">
+            <h3 className="text-body-sm font-semibold text-foreground">{report.guidance.title}</h3>
+            <ol className="mt-3 list-decimal space-y-2 pl-5 text-body-sm leading-relaxed text-paper-700">
+              {report.guidance.steps.map((step) => <li key={step}>{step}</li>)}
+            </ol>
+            <p className="mt-3 border-t border-sand-200 pt-3 text-caption leading-relaxed text-paper-600">
+              {report.guidance.caution}
+            </p>
+          </div>
+
+          {report.reviewNote && (
+            <div className="mt-4 rounded-2xl border border-brand-200 bg-brand-50 p-5">
+              <h3 className="text-body-sm font-semibold text-foreground">
+                Saran/arahan dari petugas
+              </h3>
+              <p className="mt-2 text-body-sm leading-relaxed text-paper-700">
+                {report.reviewNote}
+              </p>
+            </div>
+          )}
+        </>
       )}
 
       {report.status === "ditolak" && (

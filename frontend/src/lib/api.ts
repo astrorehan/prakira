@@ -21,6 +21,10 @@ import type {
   ClimatePoint,
   DiseaseSummary,
   DistrictTriggerSummary,
+  EnvironmentTicket,
+  EnvironmentHandlingMode,
+  EnvironmentTicketPriority,
+  EnvironmentTicketStatus,
   Escalation,
   EscalationMeta,
   EscalationRules,
@@ -300,6 +304,41 @@ export function fetchReportQueue(
   return request(`/api/reports${query}`);
 }
 
+export type EnvironmentTicketMeta = {
+  total: number;
+  baru: number;
+  diterima: number;
+  dikerjakan: number;
+  selesai: number;
+  ditutup: number;
+};
+
+export function fetchEnvironmentTickets(options: {
+  status?: EnvironmentTicketStatus;
+  kecamatan?: string;
+} = {}): Promise<{ data: EnvironmentTicket[]; meta: EnvironmentTicketMeta }> {
+  const params = new URLSearchParams();
+  if (options.status) params.set("status", options.status);
+  if (options.kecamatan) params.set("kecamatan", options.kecamatan);
+  const query = params.toString() ? `?${params.toString()}` : "";
+  return request(`/api/reports/environment-tickets${query}`);
+}
+
+export function updateEnvironmentTicket(
+  id: string,
+  patch: {
+    status?: EnvironmentTicketStatus;
+    priority?: EnvironmentTicketPriority;
+    assignedTo?: string;
+    resolutionNote?: string;
+  },
+): Promise<{ data: EnvironmentTicket }> {
+  return request(`/api/reports/environment-tickets/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    body: JSON.stringify(patch),
+  });
+}
+
 /**
  * Foto satu laporan, diambil terpisah dari barisnya.
  *
@@ -314,7 +353,11 @@ export function fetchReportPhoto(id: string): Promise<{ data: string }> {
 
 export function reviewReport(
   id: string,
-  decision: { status: "terverifikasi" | "ditolak"; note?: string },
+  decision: {
+    status: "terverifikasi" | "ditolak";
+    note?: string;
+    handlingMode?: EnvironmentHandlingMode;
+  },
 ): Promise<Envelope<CitizenReport, QueueSummary>> {
   return request(`/api/reports/${encodeURIComponent(id)}/review`, {
     method: "PATCH",
@@ -494,12 +537,14 @@ export function clearSurge(): Promise<{
 export function retrainModel(
   disease: string,
   includeCitizen = false,
+  citizenFamily: "semua" | "kesehatan" | "lingkungan" = "lingkungan",
 ): Promise<RetrainResponse> {
   return request("/api/admin/retrain", {
     method: "POST",
     body: JSON.stringify({
       disease: disease.toUpperCase(),
       includeCitizen,
+      citizenFamily,
     }),
   });
 }

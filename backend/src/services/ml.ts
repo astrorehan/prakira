@@ -103,6 +103,8 @@ export type MlBacktest = {
   baselines?: Record<string, MlBaseline>;
   baseline_summary?: MlBaselineSummary | null;
   conformal?: MlConformal | null;
+  citizen_signal_family?: "semua" | "kesehatan" | "lingkungan" | null;
+  citizen_signal_comparison?: MlCitizenSignalComparison | null;
 };
 
 export type MlHealth = {
@@ -202,6 +204,8 @@ export type CitizenSignalRow = {
   verified: number;
 };
 
+export type CitizenSignalFamily = "semua" | "kesehatan" | "lingkungan";
+
 /**
  * Alasan layanan ML menolak menyertakan sinyal warga, beserta angkanya.
  *
@@ -217,6 +221,12 @@ export type CitizenSignalRefusal = {
   total_verified: number;
 };
 
+export type MlCitizenSignalComparison = {
+  without: { mae: number; rmse: number; r2: number };
+  with_signal: { mae: number; rmse: number; r2: number };
+  note: string;
+};
+
 export class CitizenSignalTooThinError extends Error {
   constructor(readonly detail: CitizenSignalRefusal) {
     super(detail.message);
@@ -228,12 +238,15 @@ export function mlRetrain(
   disease: string,
   includeCitizen: boolean,
   citizenSignal?: CitizenSignalRow[],
+  citizenFamily: CitizenSignalFamily = "lingkungan",
 ) {
   return call<{
     status: string;
     disease: string;
     new_version: string;
     include_citizen: boolean;
+    citizen_family?: CitizenSignalFamily | null;
+    citizen_signal_comparison?: MlCitizenSignalComparison | null;
     metrics: { mae: number; rmse: number; r2: number };
     previous_version: string | null;
     improved: boolean;
@@ -242,6 +255,7 @@ export function mlRetrain(
     body: JSON.stringify({
       disease: disease.toUpperCase(),
       include_citizen: includeCitizen,
+      citizen_family: citizenFamily,
       citizen_signal: includeCitizen ? (citizenSignal ?? []) : undefined,
     }),
     timeoutMs: 120_000,

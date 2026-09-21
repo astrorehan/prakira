@@ -8,15 +8,27 @@
  * state benar-benar berpindah antar-pengguna.
  */
 import crypto from "node:crypto";
-import { all, one, run } from "../db/index.js";
+import { all, one, run, transaction } from "../db/index.js";
 import { env } from "../env.js";
 import { logAudit } from "./audit.js";
 import { listKecamatan } from "./districts.js";
 import { isSimulated } from "./demo.js";
+import {
+  ensureEnvironmentTicketTx,
+  toPublicEnvironmentTicket,
+  type EnvironmentTicket,
+  type PublicEnvironmentTicket,
+} from "./tickets.js";
 
 export type ReportKind =
   "gejala" | "jentik" | "genangan" | "sampah" | "saluran";
 export type ReportStatus = "menunggu" | "terverifikasi" | "ditolak";
+export type ReportHandlingMode = "mandiri_warga" | "dlh";
+
+export const REPORT_HANDLING_MODES: ReportHandlingMode[] = [
+  "mandiri_warga",
+  "dlh",
+];
 
 export const REPORT_KINDS: ReportKind[] = [
   "gejala",
@@ -26,13 +38,113 @@ export const REPORT_KINDS: ReportKind[] = [
   "saluran",
 ];
 
-/** Keluarga laporan menentukan unit tujuan tiketnya (PRD §5.6b). */
+/** Keluarga laporan menentukan jalur tindak lanjut yang tersedia. */
 export const REPORT_FAMILY: Record<ReportKind, "kesehatan" | "lingkungan"> = {
   gejala: "kesehatan",
   jentik: "kesehatan",
   genangan: "lingkungan",
   sampah: "lingkungan",
   saluran: "lingkungan",
+};
+
+export const REPORT_DESTINATION: Record<
+  "kesehatan" | "lingkungan",
+  string
+> = {
+  kesehatan: "Puskesmas wilayah",
+  lingkungan: "Dinas Lingkungan Hidup",
+};
+
+export type CitizenGuidance = {
+  title: string;
+  steps: string[];
+  caution: string;
+};
+
+/**
+ * Arahan langsung setelah warga menerima keputusan. Ini sengaja deterministik
+ * dan tidak mendiagnosis: petugas memberi keputusan atas laporan, bukan
+ * menggantikan pemeriksaan lapangan atau pemeriksaan klinis.
+ */
+const GUIDANCE: Record<ReportKind, CitizenGuidance> = {
+  gejala: {
+    title: "Yang bisa dilakukan sekarang",
+    steps: [
+      "Pantau perubahan gejala dan catat kapan mulai memburuk.",
+      "Istirahat, cukup minum, dan gunakan masker bila sedang batuk atau demam.",
+      "Periksa ke fasilitas kesehatan bila gejala berat, menetap, atau kondisi memburuk.",
+    ],
+    caution: "Laporan ini bukan diagnosis dan tidak menggantikan pemeriksaan tenaga kesehatan.",
+  },
+  jentik: {
+    title: "Putus siklus jentik di sekitar rumah",
+    steps: [
+      "Kuras dan sikat wadah penampung air secara rutin.",
+      "Tutup rapat wadah air dan singkirkan barang bekas yang dapat menampung hujan.",
+      "Minta bantuan kader atau puskesmas bila temuan menyebar di lingkungan sekitar.",
+    ],
+    caution: "Jangan memakai bahan kimia atau larvasida tanpa mengikuti petunjuk petugas.",
+  },
+  genangan: {
+    title: "Sambil menunggu penanganan genangan",
+    steps: [
+      "Jauhkan anak-anak dan hewan dari genangan, terutama bila air berbau atau mengalir deras.",
+      "Hindari menyentuh air dengan tangan kosong; gunakan alas kaki dan pelindung bila harus melintas.",
+      "Simpan kode tiket dan perbarui laporan bila genangan meluas atau tidak surut.",
+    ],
+    caution: "Jangan masuk ke saluran, membuka penutup jalan, atau menangani kabel/limbah di dalam air.",
+  },
+  sampah: {
+    title: "Sambil menunggu pengangkutan sampah",
+    steps: [
+      "Jauhkan anak-anak dan hewan dari tumpukan sampah.",
+      "Jangan membakar, membongkar, atau memindahkan limbah yang tidak dikenal.",
+      "Simpan kode tiket dan gunakan status tiket untuk melihat pembaruan penanganan.",
+    ],
+    caution: "Jika terlihat benda tajam, bahan kimia, atau limbah medis, jangan menyentuhnya dan beri tahu petugas.",
+  },
+  saluran: {
+    title: "Sambil menunggu pemeriksaan saluran",
+    steps: [
+      "Amankan anak-anak dan kendaraan dari area yang airnya meluap.",
+      "Bersihkan hanya sumbatan kecil dari tempat yang aman dan tidak berada di dalam saluran.",
+      "Simpan kode tiket dan laporkan perubahan tinggi air melalui laporan baru bila kondisi memburuk.",
+    ],
+    caution: "Jangan masuk ke saluran atau membuka manhole; air deras dapat menyeret orang tanpa terlihat.",
+  },
+};
+
+/* Rute mandiri tidak boleh menampilkan langkah yang mengandaikan ada tiket
+   DLH. Arahan tetap konservatif: warga hanya diminta melakukan hal yang aman,
+   dan kondisi yang memburuk diarahkan menjadi laporan baru. */
+const MANDIRI_GUIDANCE: Partial<Record<ReportKind, CitizenGuidance>> = {
+  genangan: {
+    title: "Langkah aman untuk warga",
+    steps: [
+      "Jauhkan anak-anak dan hewan dari genangan, terutama bila air berbau atau mengalir deras.",
+      "Jika aman, singkirkan benda kecil yang menghambat aliran dari tepi genangan tanpa masuk ke air.",
+      "Kirim laporan baru bila genangan meluas, berulang, atau mulai membahayakan akses warga.",
+    ],
+    caution: "Jangan masuk ke saluran, membuka penutup jalan, atau menangani kabel/limbah di dalam air.",
+  },
+  sampah: {
+    title: "Penanganan aman di sekitar rumah",
+    steps: [
+      "Jauhkan anak-anak dan hewan dari tumpukan sampah.",
+      "Rapikan hanya sampah rumah tangga biasa dari tempat yang aman; jangan menyentuh benda tajam atau limbah yang tidak dikenal.",
+      "Kirim laporan baru bila tumpukan meluas, menutup akses umum, atau menimbulkan asap dan bau menyengat.",
+    ],
+    caution: "Jangan membakar, membongkar, atau memindahkan limbah berbahaya, medis, atau bahan kimia.",
+  },
+  saluran: {
+    title: "Langkah aman untuk saluran kecil",
+    steps: [
+      "Amankan anak-anak dan kendaraan dari area yang airnya meluap.",
+      "Bersihkan hanya sumbatan kecil dari tempat yang aman dan tidak berada di dalam saluran.",
+      "Kirim laporan baru bila saluran utama tersumbat, air terus meluap, atau kondisi membahayakan warga.",
+    ],
+    caution: "Jangan masuk ke saluran atau membuka manhole; air deras dapat menyeret orang tanpa terlihat.",
+  },
 };
 
 /**
@@ -62,6 +174,7 @@ export type ReportRow = {
   reviewed_at: string | null;
   reviewer: string | null;
   review_note: string | null;
+  handling_mode: ReportHandlingMode | null;
   device_hash: string;
 };
 
@@ -71,7 +184,7 @@ export type ReportRow = {
    tadi. `photo` hanya muncul sebagai uji keberadaan. */
 export const REPORT_COLUMNS = `id, kind, kecamatan, kelurahan, occurred_at,
         description, submitted_at, status, reviewed_at, reviewer, review_note,
-        device_hash, (photo IS NOT NULL) AS has_photo`;
+        handling_mode, device_hash, (photo IS NOT NULL) AS has_photo`;
 
 /* Tanpa 0/O dan 1/I/L: kode ini diketik ulang orang dari layar ponsel, dan
    satu karakter ambigu mengubah "laporan saya hilang" jadi keluhan. */
@@ -240,7 +353,59 @@ export function listReports(filter?: {
  * delapan laporan baru berhak tahu mana yang datang dari warga dan mana yang
  * disuntikkan untuk demo.
  */
-export function toPublicView(row: ReportRow) {
+export function toPublicView(
+  row: ReportRow,
+  ticket?: EnvironmentTicket | null,
+): {
+  simulated: boolean;
+  id: string;
+  kind: ReportKind;
+  kecamatan: string;
+  kelurahan: string | null;
+  occurredAt: string;
+  description: string;
+  submittedAt: string;
+  hasPhoto: boolean;
+  status: ReportStatus;
+  reviewedAt: string | null;
+  reviewer: string | null;
+  reviewNote: string | null;
+  routing: {
+    family: "kesehatan" | "lingkungan";
+    destination: string;
+    handlingMode: ReportHandlingMode | null;
+    workflow:
+      | "rekap_evaluasi"
+      | "pilih_tindak_lanjut"
+      | "arahan_warga"
+      | "tiket_lingkungan";
+  };
+  guidance: CitizenGuidance;
+  ticket: PublicEnvironmentTicket | null;
+} {
+  const family = REPORT_FAMILY[row.kind];
+  /* Baris lama yang sudah memiliki tiket dianggap sudah memilih DLH, bahkan
+     bila kolom pilihan belum sempat terisi sebelum migrasi. */
+  const handlingMode =
+    family === "lingkungan"
+      ? row.handling_mode ?? (ticket ? "dlh" : null)
+      : null;
+  const workflow =
+    family === "kesehatan"
+      ? "rekap_evaluasi"
+      : handlingMode === "mandiri_warga"
+        ? "arahan_warga"
+        : handlingMode === "dlh"
+          ? "tiket_lingkungan"
+          : "pilih_tindak_lanjut";
+  const destination =
+    family === "kesehatan"
+      ? REPORT_DESTINATION.kesehatan
+      : handlingMode === "mandiri_warga"
+        ? "Warga/pelapor"
+        : handlingMode === "dlh"
+          ? REPORT_DESTINATION.lingkungan
+          : "Menunggu pilihan tindak lanjut";
   return {
     simulated: isSimulated(row),
     id: row.id,
@@ -255,44 +420,127 @@ export function toPublicView(row: ReportRow) {
     reviewedAt: row.reviewed_at,
     reviewer: row.reviewer,
     reviewNote: row.review_note,
+    routing: {
+      family,
+      destination,
+      handlingMode,
+      workflow,
+    },
+    guidance:
+      handlingMode === "mandiri_warga"
+        ? MANDIRI_GUIDANCE[row.kind] ?? GUIDANCE[row.kind]
+        : GUIDANCE[row.kind],
+    ticket: toPublicEnvironmentTicket(ticket),
   };
+}
+
+export class ReportAlreadyReviewedError extends Error {
+  constructor(readonly status: ReportStatus) {
+    super(`Laporan sudah diputuskan dengan status ${status}.`);
+    this.name = "ReportAlreadyReviewedError";
+  }
+}
+
+export class ReportHandlingModeRequiredError extends Error {
+  constructor() {
+    super("Laporan lingkungan yang diterima harus memilih arahan warga atau DLH.");
+    this.name = "ReportHandlingModeRequiredError";
+  }
+}
+
+export class InvalidReportHandlingModeError extends Error {
+  constructor() {
+    super("Pilihan tindak lanjut hanya berlaku untuk laporan lingkungan.");
+    this.name = "InvalidReportHandlingModeError";
+  }
 }
 
 export async function reviewReport(
   id: string,
-  decision: { status: "terverifikasi" | "ditolak"; note?: string },
+  decision: {
+    status: "terverifikasi" | "ditolak";
+    note?: string;
+    handlingMode?: ReportHandlingMode;
+  },
   reviewer: string,
   role: string,
 ): Promise<ReportRow | null> {
-  const existing = await one<ReportRow>(
-    `SELECT ${REPORT_COLUMNS} FROM laporan_warga WHERE id = ?`,
-    id,
-  );
-  if (!existing) return null;
+  let updated: ReportRow | null = null;
+  let selectedHandlingMode: ReportHandlingMode | null = null;
+  const reviewedAt = new Date().toISOString();
+  const note = decision.note?.trim() || null;
 
-  await run(
-    `UPDATE laporan_warga
-        SET status = ?, reviewed_at = ?, reviewer = ?, review_note = ?
-      WHERE id = ?`,
-    decision.status,
-    new Date().toISOString(),
-    reviewer,
-    decision.note?.trim() || null,
-    id,
-  );
+  await transaction(async (tx) => {
+    const existing = await tx.one<ReportRow>(
+      `SELECT ${REPORT_COLUMNS} FROM laporan_warga WHERE id = ? FOR UPDATE`,
+      id,
+    );
+    if (!existing) return;
+    if (existing.status !== "menunggu") {
+      throw new ReportAlreadyReviewedError(existing.status);
+    }
+
+    const family = REPORT_FAMILY[existing.kind];
+    if (
+      decision.status === "terverifikasi" &&
+      family === "lingkungan" &&
+      !decision.handlingMode
+    ) {
+      throw new ReportHandlingModeRequiredError();
+    }
+    if (decision.handlingMode && family !== "lingkungan") {
+      throw new InvalidReportHandlingModeError();
+    }
+    const handlingMode =
+      decision.status === "terverifikasi" && family === "lingkungan"
+        ? decision.handlingMode ?? null
+        : null;
+    selectedHandlingMode = handlingMode;
+
+    await tx.run(
+      `UPDATE laporan_warga
+          SET status = ?, reviewed_at = ?, reviewer = ?, review_note = ?, handling_mode = ?
+        WHERE id = ?`,
+      decision.status,
+      reviewedAt,
+      reviewer,
+      note,
+      handlingMode,
+      id,
+    );
+
+    updated = await tx.one<ReportRow>(
+      `SELECT ${REPORT_COLUMNS} FROM laporan_warga WHERE id = ?`,
+      id,
+    );
+
+    if (
+      updated &&
+      decision.status === "terverifikasi" &&
+      handlingMode === "dlh"
+    ) {
+      await ensureEnvironmentTicketTx(tx, {
+        id: updated.id,
+        kind: updated.kind,
+        kecamatan: updated.kecamatan,
+        kelurahan: updated.kelurahan,
+        description: updated.description,
+        simulated: isSimulated(updated),
+      }, reviewedAt);
+    }
+  });
+
+  if (!updated) return null;
 
   await logAudit({
     actor: reviewer,
     role,
     action: `Verifikasi laporan ${id}`,
-    details: `Diputuskan ${decision.status}${decision.note ? ` — ${decision.note.trim()}` : ""}.`,
+    details: `Diputuskan ${decision.status}${selectedHandlingMode ? ` — rute ${selectedHandlingMode}` : ""}${note ? ` — ${note}` : ""}.`,
     status: decision.status === "terverifikasi" ? "success" : "warning",
   });
 
-  return one<ReportRow>(
-    `SELECT ${REPORT_COLUMNS} FROM laporan_warga WHERE id = ?`,
-    id,
-  );
+  return updated;
 }
 
 export type QueueSummary = {
@@ -331,21 +579,42 @@ export async function summarizeQueue(): Promise<QueueSummary> {
   };
 }
 
+export type CitizenSignalFamily = "semua" | "kesehatan" | "lingkungan";
+
 /**
  * Sinyal warga per kecamatan per bulan — masukan `include_citizen` untuk
  * retraining (PRD §5.6a). Hanya laporan terverifikasi yang dihitung.
+ *
+ * Keluarga dipisahkan supaya checkbox "sinyal lingkungan" tidak diam-diam
+ * memasukkan gejala kesehatan ke dalam eksperimen model yang sama.
  */
 export function citizenSignal(): Promise<
   { kecamatan: string; month: string; verified: number }[]
 > {
+  return citizenSignalByFamily("semua");
+}
+
+export function citizenSignalByFamily(
+  family: CitizenSignalFamily,
+): Promise<{ kecamatan: string; month: string; verified: number }[]> {
+  const kinds =
+    family === "lingkungan"
+      ? ["genangan", "sampah", "saluran"]
+      : family === "kesehatan"
+        ? ["gejala", "jentik"]
+        : [];
+  const familyWhere = kinds.length
+    ? ` AND kind IN (${kinds.map(() => "?").join(", ")})`
+    : "";
   return all<{ kecamatan: string; month: string; verified: number }>(
     `SELECT kecamatan,
             substr(occurred_at, 1, 7) || '-01' AS month,
             COUNT(*)                           AS verified
        FROM laporan_warga
-      WHERE status = 'terverifikasi'
+      WHERE status = 'terverifikasi'${familyWhere}
       GROUP BY kecamatan, month
       ORDER BY month DESC, kecamatan`,
+    ...kinds,
   );
 }
 

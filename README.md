@@ -21,8 +21,10 @@ Tiga lapis solusi:
 2. **Aksi** — skor risiko diterjemahkan mesin aturan deterministik jadi
    rekomendasi intervensi berprioritas, bukan sekadar angka di dashboard.
 3. **Umpan balik warga** — warga melaporkan gejala dan pemicu lingkungan,
-   petugas memverifikasi, laporan terverifikasi tersedia sebagai sinyal
-   berbobot rendah untuk retraining.
+   petugas memverifikasi, laporan yang diterima mendapat arahan keselamatan,
+   dan laporan lingkungan dipilih tindak lanjutnya: arahan mandiri warga atau
+   tiket Dinas Lingkungan Hidup. Data terverifikasi juga tersedia sebagai sinyal
+   evaluasi retraining.
 
 > PRAKIRA bukan alat diagnosis, bukan rekam medis, dan bukan pengganti
 > surveilans resmi. Outputnya adalah estimasi risiko statistik untuk
@@ -84,7 +86,7 @@ ditandai `stale` supaya UI mengakuinya.
 otomatis `toPg` (`?` -> `$1..$n`) dan dukungan transaksi terisolasi (`transaction`).
 Skema terdefinisi di `backend/src/db/schema.sql` (tabel `kecamatan`, `observasi`,
 `prediksi`, `laporan_warga`, `tindakan`, `model_backtest`, `users`, `sessions`,
-`audit_log`, `ingest_job`).
+`audit_log`, `ingest_job`, dan `tiket_lingkungan`).
 
 Justifikasi lengkap tiap pilihan teknologi dan kontrak API ada di
 [`docs/PRD.md` §6](./docs/PRD.md).
@@ -221,7 +223,9 @@ disengaja — tidak ada jalur cadangan yang diam-diam mengisi angka palsu.
 | `GET` | `/api/reports/verified` | — | sinyal publik laporan terverifikasi (tanpa PII) |
 | `GET` | `/api/reports/triggers` | — | agregasi pemicu lingkungan terverifikasi per kecamatan |
 | `GET` | `/api/reports` | ✓ | antrean verifikasi laporan warga lengkap |
-| `PATCH` | `/api/reports/:id/review` | ✓ | putuskan verifikasi (`terverifikasi` / `ditolak` + alasan) |
+| `PATCH` | `/api/reports/:id/review` | ✓ | putuskan verifikasi; laporan lingkungan memilih `mandiri_warga` atau `dlh` |
+| `GET` | `/api/reports/environment-tickets` | ✓ | antrean tiket DLH untuk laporan lingkungan yang dipilih diteruskan |
+| `PATCH` | `/api/reports/environment-tickets/:id` | ✓ | tetapkan PIC dan majukan status tiket sampai ditutup |
 | `GET` | `/api/reports/escalations` | ✓ | deteksi eskalasi S4 (volume, konsentrasi, antrean) |
 | `POST` | `/api/auth/login` | — | masuk sesi petugas via cookie `httpOnly` |
 | `POST` | `/api/auth/logout` | — | keluar & hapus sesi cookie |

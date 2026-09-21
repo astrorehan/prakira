@@ -31,7 +31,10 @@ import { refreshBacktest } from "../services/backtest.js";
 import { refreshPredictions } from "../services/predictions.js";
 import { regenerateActions } from "../services/actions.js";
 import { availableDiseases, monthLabel } from "../services/period.js";
-import { citizenSignal } from "../services/reports.js";
+import {
+  citizenSignalByFamily,
+  type CitizenSignalFamily,
+} from "../services/reports.js";
 import { listKecamatan } from "../services/districts.js";
 
 export const adminRouter = Router();
@@ -114,8 +117,12 @@ adminRouter.get(
 adminRouter.get(
   "/citizen-signal",
   requireAuth,
-  asyncRoute(async (_req, res) => {
-    res.json({ data: await citizenSignal() });
+  asyncRoute(async (req, res) => {
+    const family =
+      req.query.family === "lingkungan" || req.query.family === "kesehatan"
+        ? (req.query.family as CitizenSignalFamily)
+        : "semua";
+    res.json({ data: await citizenSignalByFamily(family) });
   }),
 );
 
@@ -339,6 +346,10 @@ adminRouter.post(
     const disease =
       typeof req.body?.disease === "string" ? req.body.disease : "";
     const includeCitizen = req.body?.includeCitizen === true;
+    const citizenFamily: CitizenSignalFamily =
+      req.body?.citizenFamily === "kesehatan" || req.body?.citizenFamily === "semua"
+        ? req.body.citizenFamily
+        : "lingkungan";
 
     const known = await availableDiseases();
     if (!known.some((d) => d.toUpperCase() === disease.toUpperCase())) {
@@ -349,8 +360,10 @@ adminRouter.post(
       /* Laporan warga hanya keluar dari gateway dalam bentuk agregat per
          kecamatan per bulan — tanpa identitas, deskripsi, maupun foto (PRD §8).
          Layanan ML tidak menyimpan laporan warga dan tidak boleh. */
-      const signal = includeCitizen ? await citizenSignal() : undefined;
-      const result = await mlRetrain(disease, includeCitizen, signal);
+      const signal = includeCitizen
+        ? await citizenSignalByFamily(citizenFamily)
+        : undefined;
+      const result = await mlRetrain(disease, includeCitizen, signal, citizenFamily);
 
       // Sinkronisasi data prediksi kota, evaluasi backtest, dan rekomendasi aksi
       await refreshPredictions(disease);

@@ -31,6 +31,8 @@ export type BacktestRow = {
   baselines: string | null;
   /** JSON kalibrasi rentang beserta cakupan empirisnya. Kosong pada baris lama. */
   conformal: string | null;
+  citizen_signal_family: "semua" | "kesehatan" | "lingkungan" | null;
+  citizen_signal_comparison: string | null;
   fetched_at: string;
 };
 
@@ -46,8 +48,9 @@ export async function refreshBacktest(
          (disease, model_version, algorithm, trained_at, train_period, test_period,
           mae, rmse, r2, class_accuracy_pct, sample_size, monthly_results,
           district_results, coverage_per_kecamatan, top_features,
-          baselines, conformal, fetched_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          baselines, conformal, citizen_signal_family,
+          citizen_signal_comparison, fetched_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT (disease) DO UPDATE SET
          model_version = excluded.model_version,
          algorithm = excluded.algorithm,
@@ -63,6 +66,8 @@ export async function refreshBacktest(
          top_features = excluded.top_features,
          baselines = excluded.baselines,
          conformal = excluded.conformal,
+         citizen_signal_family = excluded.citizen_signal_family,
+         citizen_signal_comparison = excluded.citizen_signal_comparison,
          fetched_at = excluded.fetched_at`,
       disease.toUpperCase(),
       result.model_version,
@@ -84,6 +89,10 @@ export async function refreshBacktest(
         summary: result.baseline_summary ?? null,
       }),
       result.conformal ? JSON.stringify(result.conformal) : null,
+      result.citizen_signal_family ?? null,
+      result.citizen_signal_comparison
+        ? JSON.stringify(result.citizen_signal_comparison)
+        : null,
       new Date().toISOString(),
     );
 

@@ -32,7 +32,11 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def train_leptospirosis_model(split_date: str = "2025-01-01", citizen_signal=None):
+def train_leptospirosis_model(
+    split_date: str = "2025-01-01",
+    citizen_signal=None,
+    citizen_family: str | None = None,
+):
     """Train Leptospirosis Monthly Model using Ensemble Blending."""
     logger.info("Starting Leptospirosis Model Training (Ensemble Blending)...")
 
@@ -175,6 +179,7 @@ def train_leptospirosis_model(split_date: str = "2025-01-01", citizen_signal=Non
             "r2": round(float(r2), 4),
         },
         "citizen_signal_comparison": citizen_comparison,
+        "citizen_signal_family": citizen_family if citizen_comparison else None,
         "baselines": baselines,
         "baseline_summary": baseline_summary,
         "conformal": conformal,

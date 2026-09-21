@@ -22,7 +22,9 @@ async def retrain(req: RetrainRequest):
     """Memicu retraining model untuk penyakit tertentu.
 
     Endpoint ini memanggil training script yang sudah ada.
-    include_citizen=True akan menyertakan sinyal warga (fase 2 — saat ini disimulasikan).
+    include_citizen=True akan melatih varian pembanding dengan sinyal warga.
+    Model aktif tetap diperbarui dari pelatihan dasar; varian bersinyal hanya
+    dilaporkan berdampingan sampai ada keputusan promosi yang diaudit.
     """
     disease_lower = req.disease.lower()
     if disease_lower not in DISEASE_CONFIG:
@@ -57,13 +59,22 @@ async def retrain(req: RetrainRequest):
 
         if disease_lower == "dbd":
             from training.train_dbd import train_dbd_model
-            result = train_dbd_model(citizen_signal=citizen_signal)
+            result = train_dbd_model(
+                citizen_signal=citizen_signal,
+                citizen_family=req.citizen_family,
+            )
         elif disease_lower == "ispa":
             from training.train_ispa import train_ispa_model
-            result = train_ispa_model(citizen_signal=citizen_signal)
+            result = train_ispa_model(
+                citizen_signal=citizen_signal,
+                citizen_family=req.citizen_family,
+            )
         elif disease_lower == "leptospirosis":
             from training.train_leptospirosis import train_leptospirosis_model
-            result = train_leptospirosis_model(citizen_signal=citizen_signal)
+            result = train_leptospirosis_model(
+                citizen_signal=citizen_signal,
+                citizen_family=req.citizen_family,
+            )
         else:
             raise HTTPException(status_code=501, detail=f"Retrain for '{req.disease}' not implemented yet.")
 
@@ -90,6 +101,8 @@ async def retrain(req: RetrainRequest):
         disease=req.disease.upper(),
         new_version=new_meta.get("version", "unknown"),
         include_citizen=req.include_citizen,
+        citizen_family=req.citizen_family if req.include_citizen else None,
+        citizen_signal_comparison=new_meta.get("citizen_signal_comparison"),
         metrics=BacktestMetrics(
             mae=new_meta["metrics"]["mae"],
             rmse=new_meta["metrics"]["rmse"],

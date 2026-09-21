@@ -82,7 +82,7 @@ export function AdminModelRetrainCard({
     setRetrainResult(null);
 
     try {
-      const response = await retrainModel(selectedDisease, includeCitizen);
+      const response = await retrainModel(selectedDisease, includeCitizen, "lingkungan");
       setRetrainResult(response.data);
       invalidatePeriod();
       backtests.reload();
@@ -223,10 +223,10 @@ export function AdminModelRetrainCard({
           />
           <div className="flex flex-col">
             <span className="text-body-sm font-medium text-foreground group-hover:text-brand-800 transition-colors">
-              Sertakan Sinyal Lingkungan Warga Terverifikasi
+              Evaluasi Sinyal Lingkungan Warga Terverifikasi
             </span>
             <span className="text-caption text-paper-600">
-              Menguji apakah laporan warga terverifikasi (genangan air, sampah, saluran) meningkatkan performa prediksi risiko untuk {selectedDisease}.
+              Membandingkan varian dengan genangan, sampah, dan saluran terverifikasi terhadap model dasar untuk {selectedDisease}. Varian warga tidak diaktifkan diam-diam.
             </span>
           </div>
         </label>
@@ -276,7 +276,9 @@ export function AdminModelRetrainCard({
             <div className="flex items-center gap-2">
               <CheckCircle2 className="h-5 w-5 text-teal-700" />
               <span className="font-display font-semibold text-body-base text-teal-950">
-                Pelatihan Model {retrainResult.disease} Selesai!
+                {retrainResult.citizen_signal_comparison
+                  ? `Evaluasi Sinyal Warga ${retrainResult.disease} Selesai!`
+                  : `Pelatihan Model ${retrainResult.disease} Selesai!`}
               </span>
             </div>
 
@@ -311,11 +313,24 @@ export function AdminModelRetrainCard({
             </div>
           </div>
 
+          {retrainResult.citizen_signal_comparison && (
+            <div className="rounded-lg border border-teal-200/60 bg-white/70 p-3 text-caption leading-relaxed">
+              <p className="font-semibold text-foreground">Perbandingan sinyal warga</p>
+              <p className="mt-1 text-paper-700">
+                MAE model dasar {retrainResult.citizen_signal_comparison.without.mae.toFixed(2)} ·{" "}
+                MAE dengan sinyal {retrainResult.citizen_signal_comparison.with_signal.mae.toFixed(2)}.
+              </p>
+              <p className="mt-1 text-paper-600">{retrainResult.citizen_signal_comparison.note}</p>
+            </div>
+          )}
+
           <div className="flex items-center justify-between pt-1 text-caption text-teal-900">
             <span>
-              {retrainResult.improved
-                ? "Model baru berhasil dimuat ke memori (hot-reload) dan otomatis melayani prakiraan dashboard."
-                : "Akurasi model tetap dicatat secara transparan untuk audit mutu kecerdasan buatan."}
+              {retrainResult.citizen_signal_comparison
+                ? "Varian dengan sinyal warga hanya dievaluasi berdampingan; prakiraan aktif tetap memakai model yang sudah disetujui."
+                : retrainResult.improved
+                  ? "Model dasar baru berhasil dimuat ke memori dan melayani prakiraan dashboard."
+                  : "Akurasi model tetap dicatat secara transparan untuk audit mutu kecerdasan buatan."}
             </span>
 
             <Button

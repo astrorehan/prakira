@@ -232,7 +232,7 @@ function BuletinContent() {
               Buletin Sistem Kewaspadaan Dini & Respon Cepat (SKDR)
             </h1>
             <p className="text-xs font-semibold text-slate-800 mt-1 uppercase">
-              Prakiraan Risiko Penyakit {activeDisease} Berbasis Iklim & Sinyal Lingkungan
+              Prakiraan Risiko Penyakit {activeDisease} Berbasis Iklim & Konteks Lapangan
             </p>
             <p className="text-2xs font-mono text-slate-600 mt-0.5">
               Nomor: {documentNumber}
@@ -275,7 +275,7 @@ function BuletinContent() {
             </div>
 
             <p className="text-[11px] text-slate-700 leading-relaxed text-justify">
-              Berdasarkan permodelan prediktif berbasis lag variabel iklim (curah hujan, suhu, kelembaban udara) dan integrasi laporan sinyal pemicu lingkungan terverifikasi warga, diprakirakan total kasus <strong>{activeDisease}</strong> di Kota Semarang pada bulan <strong>{formatMonth(meta?.predictionMonth)}</strong> mencapai <strong>{formatNumber(totals.pred)} kasus</strong> (interval ketidakpastian 95%: {formatNumber(totals.lower)}–{formatNumber(totals.upper)} kasus). Terdapat <strong>{totals.highCount} kecamatan siaga tinggi</strong> dan <strong>{totals.mediumCount} kecamatan waspada sedang</strong> yang membutuhkan mobilisasi sumber daya intervensi pencegahan dini sebelum lonjakan kurva kasus terjadi.
+              Model prediktif berbasis lag variabel iklim (curah hujan, suhu, kelembaban udara) memperkirakan total kasus <strong>{activeDisease}</strong> di Kota Semarang pada bulan <strong>{formatMonth(meta?.predictionMonth)}</strong> mencapai <strong>{formatNumber(totals.pred)} kasus</strong> (interval ketidakpastian 95%: {formatNumber(totals.lower)}–{formatNumber(totals.upper)} kasus). Laporan pemicu lingkungan terverifikasi ditampilkan sebagai konteks lapangan dan bahan evaluasi varian model, bukan sebagai diagnosis. Terdapat <strong>{totals.highCount} kecamatan siaga tinggi</strong> dan <strong>{totals.mediumCount} kecamatan waspada sedang</strong> yang membutuhkan mobilisasi sumber daya intervensi pencegahan dini sebelum lonjakan kurva kasus terjadi.
             </p>
 
             {/* Fixed 4-Column KPI Cards on both web and print */}

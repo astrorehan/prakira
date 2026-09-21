@@ -29,6 +29,7 @@ import { availableDiseases } from "./services/period.js";
 import { refreshPredictions } from "./services/predictions.js";
 import { refreshBacktest } from "./services/backtest.js";
 import { regenerateActions } from "./services/actions.js";
+import { backfillEnvironmentTickets } from "./services/tickets.js";
 
 const app = express();
 
@@ -116,6 +117,13 @@ async function startServer(): Promise<void> {
       console.log(
         `[gateway] Sinkronisasi dataset: ${result.observasi} observasi, ` +
           `bulan terakhir ${result.latestMonth ?? "—"}.`,
+      );
+    }
+
+    const backfilledTickets = await backfillEnvironmentTickets();
+    if (backfilledTickets > 0) {
+      console.log(
+        `[gateway] Tindak lanjut lingkungan: ${backfilledTickets} tiket lama dibuat.`,
       );
     }
 

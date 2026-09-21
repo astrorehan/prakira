@@ -29,7 +29,11 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def train_ispa_model(split_date: str = "2025-10-01", citizen_signal=None):
+def train_ispa_model(
+    split_date: str = "2025-10-01",
+    citizen_signal=None,
+    citizen_family: str | None = None,
+):
     """Train ISPA Monthly Model using Ensemble Blending."""
     logger.info("Starting ISPA Model Training (Monthly Ensemble Blending)...")
 
@@ -160,6 +164,7 @@ def train_ispa_model(split_date: str = "2025-10-01", citizen_signal=None):
             "r2": round(float(r2), 4),
         },
         "citizen_signal_comparison": citizen_comparison,
+        "citizen_signal_family": citizen_family if citizen_comparison else None,
         "baselines": baselines,
         "baseline_summary": baseline_summary,
         "conformal": conformal,

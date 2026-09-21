@@ -18,17 +18,32 @@ import {
   reviewReport,
   summarizeQueue,
   toPublicView as publicView,
+  ReportAlreadyReviewedError,
+  ReportHandlingModeRequiredError,
+  InvalidReportHandlingModeError,
+  REPORT_HANDLING_MODES,
   type ReportKind,
+  type ReportHandlingMode,
 } from "../services/reports.js";
+import {
+  findEnvironmentTicketByReportId,
+  listEnvironmentTickets,
+  listEnvironmentTicketsByReportIds,
+  updateEnvironmentTicket,
+  type EnvironmentTicketPriority,
+  type EnvironmentTicketStatus,
+} from "../services/tickets.js";
 import { listKecamatan } from "../services/districts.js";
 import {
   DEFAULT_RULES,
   detectEscalations,
 } from "../services/escalation.js";
-import { requireAuth } from "../middleware/auth.js";
+import { requireRole } from "../middleware/auth.js";
 import { asyncRoute, HttpError } from "../middleware/error.js";
 
 export const reportsRouter = Router();
+
+const REVIEW_ROLES = ["admin", "dinas", "analis", "puskesmas"];
 
 /** Foto dikirim sebagai data URL yang sudah dikecilkan klien. Batas keras
  *  supaya satu unggahan tidak membengkakkan database. */
@@ -138,7 +153,8 @@ reportsRouter.get(
   asyncRoute(async (req, res) => {
     const report = await findReport(req.params.code);
     if (!report) throw new HttpError(404, "Kode lacak tidak ditemukan.");
-    res.json({ data: publicView(report) });
+    const ticket = await findEnvironmentTicketByReportId(report.id);
+    res.json({ data: publicView(report, ticket) });
   }),
 );
 
@@ -194,13 +210,15 @@ const MAX_QUEUE_ROWS = 500;
 
 reportsRouter.get(
   "/",
-  requireAuth,
+  requireRole(...REVIEW_ROLES),
   asyncRoute(async (req, res) => {
     const kecamatan =
       typeof req.query.kecamatan === "string" ? req.query.kecamatan : undefined;
     const rows = await listReports({ kecamatan });
     const page = rows.slice(0, MAX_QUEUE_ROWS);
     const summary = await summarizeQueue();
+    const tickets = await listEnvironmentTicketsByReportIds(page.map((row) => row.id));
+    const ticketByReport = new Map(tickets.map((ticket) => [ticket.report_id, ticket]));
 
     res.json({
       meta: {
@@ -211,8 +229,103 @@ reportsRouter.get(
            sudah habis. */
         truncated: rows.length > page.length,
       },
-      data: page.map(publicView),
+      data: page.map((row) => publicView(row, ticketByReport.get(row.id))),
     });
+  }),
+);
+
+/**
+ * Antrean operasional unit lingkungan. Berbeda dari antrean verifikasi:
+ * laporan baru masuk ke sini hanya setelah petugas membenarkannya.
+ */
+reportsRouter.get(
+  "/environment-tickets",
+  requireRole(...REVIEW_ROLES),
+  asyncRoute(async (req, res) => {
+    const status =
+      typeof req.query.status === "string" ? req.query.status : undefined;
+    const kecamatan =
+      typeof req.query.kecamatan === "string" ? req.query.kecamatan : undefined;
+    const validStatuses = new Set<EnvironmentTicketStatus>([
+      "baru",
+      "diterima",
+      "dikerjakan",
+      "selesai",
+      "ditutup",
+    ]);
+    if (status && !validStatuses.has(status as EnvironmentTicketStatus)) {
+      throw new HttpError(400, "Status tiket tidak dikenal.");
+    }
+    const rows = await listEnvironmentTickets({
+      status: status as EnvironmentTicketStatus | undefined,
+      kecamatan,
+    });
+    res.json({
+      data: rows,
+      meta: {
+        total: rows.length,
+        baru: rows.filter((row) => row.status === "baru").length,
+        diterima: rows.filter((row) => row.status === "diterima").length,
+        dikerjakan: rows.filter((row) => row.status === "dikerjakan").length,
+        selesai: rows.filter((row) => row.status === "selesai").length,
+        ditutup: rows.filter((row) => row.status === "ditutup").length,
+      },
+    });
+  }),
+);
+
+reportsRouter.patch(
+  "/environment-tickets/:id",
+  requireRole(...REVIEW_ROLES),
+  asyncRoute(async (req, res) => {
+    const body = req.body ?? {};
+    if (typeof body !== "object" || Array.isArray(body)) {
+      throw new HttpError(400, "Badan permintaan tiket tidak valid.");
+    }
+    const validStatuses = new Set<EnvironmentTicketStatus>([
+      "baru",
+      "diterima",
+      "dikerjakan",
+      "selesai",
+      "ditutup",
+    ]);
+    const validPriorities = new Set<EnvironmentTicketPriority>(["normal", "tinggi"]);
+    if (body.status !== undefined && !validStatuses.has(body.status)) {
+      throw new HttpError(400, "Status tiket tidak dikenal.");
+    }
+    if (body.priority !== undefined && !validPriorities.has(body.priority)) {
+      throw new HttpError(400, "Prioritas tiket tidak dikenal.");
+    }
+    if (body.assignedTo !== undefined && typeof body.assignedTo !== "string") {
+      throw new HttpError(400, "Petugas penanggung jawab tidak valid.");
+    }
+    if (body.resolutionNote !== undefined && typeof body.resolutionNote !== "string") {
+      throw new HttpError(400, "Catatan penyelesaian tidak valid.");
+    }
+
+    try {
+      const updated = await updateEnvironmentTicket(
+        req.params.id,
+        {
+          status: body.status as EnvironmentTicketStatus | undefined,
+          priority: body.priority as EnvironmentTicketPriority | undefined,
+          assignedTo: body.assignedTo,
+          resolutionNote: body.resolutionNote,
+        },
+        req.session!.label,
+        req.session!.role,
+      );
+      if (!updated) throw new HttpError(404, "Tiket lingkungan tidak ditemukan.");
+      res.json({ data: updated });
+    } catch (error) {
+      if (error instanceof Error && error.name === "InvalidTicketTransitionError") {
+        throw new HttpError(409, error.message);
+      }
+      if (error instanceof Error && error.name === "TicketResolutionNoteRequiredError") {
+        throw new HttpError(400, error.message);
+      }
+      throw error;
+    }
   }),
 );
 
@@ -224,7 +337,7 @@ reportsRouter.get(
  */
 reportsRouter.get(
   "/:id/photo",
-  requireAuth,
+  requireRole(...REVIEW_ROLES),
   asyncRoute(async (req, res) => {
     const photo = await findReportPhoto(req.params.id);
     if (!photo) throw new HttpError(404, "Laporan ini tidak melampirkan foto.");
@@ -238,13 +351,23 @@ reportsRouter.get(
 
 reportsRouter.patch(
   "/:id/review",
-  requireAuth,
+  requireRole(...REVIEW_ROLES),
   asyncRoute(async (req, res) => {
     const body = req.body ?? {};
     if (body.status !== "terverifikasi" && body.status !== "ditolak") {
       throw new HttpError(
         400,
         "Keputusan harus 'terverifikasi' atau 'ditolak'.",
+      );
+    }
+    if (
+      body.handlingMode !== undefined &&
+      (typeof body.handlingMode !== "string" ||
+        !REPORT_HANDLING_MODES.includes(body.handlingMode as ReportHandlingMode))
+    ) {
+      throw new HttpError(
+        400,
+        "Pilihan tindak lanjut harus 'mandiri_warga' atau 'dlh'.",
       );
     }
     /* §5.4 menuntut alasan saat ditolak — pelapor berhak tahu apa yang kurang. */
@@ -258,18 +381,37 @@ reportsRouter.patch(
       );
     }
 
-    const updated = await reviewReport(
-      req.params.id,
-      {
-        status: body.status,
-        note: typeof body.note === "string" ? body.note : undefined,
-      },
-      req.session!.label,
-      req.session!.role,
-    );
+    let updated;
+    try {
+      updated = await reviewReport(
+        req.params.id,
+        {
+          status: body.status,
+          note: typeof body.note === "string" ? body.note : undefined,
+          handlingMode:
+            typeof body.handlingMode === "string"
+              ? (body.handlingMode as ReportHandlingMode)
+              : undefined,
+        },
+        req.session!.label,
+        req.session!.role,
+      );
+    } catch (error) {
+      if (error instanceof ReportAlreadyReviewedError) {
+        throw new HttpError(409, error.message);
+      }
+      if (
+        error instanceof ReportHandlingModeRequiredError ||
+        error instanceof InvalidReportHandlingModeError
+      ) {
+        throw new HttpError(400, error.message);
+      }
+      throw error;
+    }
 
     if (!updated) throw new HttpError(404, "Laporan tidak ditemukan.");
-    res.json({ meta: await summarizeQueue(), data: publicView(updated) });
+    const ticket = await findEnvironmentTicketByReportId(updated.id);
+    res.json({ meta: await summarizeQueue(), data: publicView(updated, ticket) });
   }),
 );
 
@@ -283,7 +425,7 @@ reportsRouter.patch(
  */
 reportsRouter.get(
   "/escalations",
-  requireAuth,
+  requireRole(...REVIEW_ROLES),
   asyncRoute(async (req, res) => {
     const num = (key: string): number | undefined => {
       const raw = req.query[key];
