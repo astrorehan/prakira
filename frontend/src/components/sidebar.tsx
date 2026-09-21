@@ -60,6 +60,8 @@ type NavItem = {
   href: string;
   label: string;
   icon: typeof Activity;
+  /** Hanya aktif di route ini, bukan di subroute modul lain. */
+  exact?: boolean;
   /** Angka kecil di kanan item — hanya untuk hal yang menunggu dikerjakan. */
   badge?: number;
   /** Dibacakan pembaca layar setelah angkanya. */
@@ -120,14 +122,16 @@ export function Sidebar() {
 
   const consoleItems: NavItem[] = React.useMemo(() => {
     if (isAdmin) {
-      // Menu khusus Administrator IT: Sistem & AI, Dashboard Pemantauan, Analitik & Evaluasi
+      // Menu khusus Administrator IT: sistem, pemantauan, prioritas, dan analitik.
       return [
         {
           href: "/admin",
           label: "Manajemen Sistem & AI",
           icon: ShieldCheck,
+          exact: true,
         },
         { href: "/dashboard", label: "Dashboard Pemantauan", icon: Activity },
+        { href: "/admin/prioritas", label: "Prioritas Terdampak", icon: Scale },
         { href: "/analitik", label: "Analitik & Evaluasi", icon: BarChart3 },
       ];
     }
@@ -162,14 +166,16 @@ export function Sidebar() {
     }
   }
 
-  const isActive = (href: string) =>
-    pathname === href ||
-    (href !== "/dashboard" && Boolean(pathname?.startsWith(href)));
+  const isActive = (item: NavItem) =>
+    pathname === item.href ||
+    (!item.exact &&
+      item.href !== "/dashboard" &&
+      Boolean(pathname?.startsWith(`${item.href}/`)));
 
   const navLinks = (onClick?: () => void) =>
     consoleItems.map((item) => {
       const Icon = item.icon;
-      const active = isActive(item.href);
+      const active = isActive(item);
       return (
         <Link
           key={item.href}
@@ -214,7 +220,6 @@ export function Sidebar() {
         { href: "/model", label: "Transparansi Model", icon: Microscope },
         { href: "/mesin-waktu", label: "Mesin Waktu", icon: History },
         { href: "/simulasi", label: "Simulator Cuaca", icon: SlidersHorizontal },
-        { href: "/prioritas", label: "Prioritas Terdampak", icon: Scale },
         { href: "/warga", label: "Portal Warga", icon: Users },
         { href: "/sistem", label: "Halaman Layanan", icon: Home },
       ].map((item) => {

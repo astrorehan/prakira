@@ -57,13 +57,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     },
     {
-      /* Rute publik: peringkat prioritas hanya memuat agregat wilayah. */
-      url: `${baseUrl}/prioritas`,
-      lastModified: now,
-      changeFrequency: "weekly",
-      priority: 0.7,
-    },
-    {
       url: `${baseUrl}/tentang`,
       lastModified: now,
       changeFrequency: "monthly",

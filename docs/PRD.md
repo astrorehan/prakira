@@ -308,7 +308,7 @@ Enam kelompok: curah hujan, suhu, kelembaban, riwayat kasus, bulan & musim, sert
 
 **Rubrik.** Originalitas (15%), Metodologi (10%).
 
-### 5.13 Prioritas Terdampak (`/prioritas`)
+### 5.13 Prioritas Terdampak (`/admin/prioritas`)
 
 **Tujuan.** Memperbaiki satu kelemahan jujur dari skor risiko sistem ini: skornya persentil terhadap sejarah kecamatan itu sendiri, jadi tiga kasus bisa berarti "tinggi" di kecamatan yang biasanya nol. Untuk pertanyaan "seberapa tidak biasa", itu benar. Untuk "kecamatan mana yang dijaga lebih dulu", ia bisa menaruh kecamatan 98 ribu jiwa di atas kecamatan 192 ribu jiwa.
 
@@ -326,7 +326,9 @@ indeks        = indeks_mentah ÷ indeks_mentah_tertinggi × 100
 - Faktor kerentanan yang **tidak** ada datanya ditulis sekeras yang ada — proporsi balita & lansia, cakupan jaminan kesehatan, sanitasi per kecamatan, dan kepadatan hunian di dalam kecamatan. Struktur umur tidak ada pada `dataset_raw/wilayah/kecamatan_semarang.csv`, dan mengarangnya adalah kelas kesalahan yang sudah dibersihkan dari sistem ini.
 - Kecamatan tanpa prediksi tidak diberi indeks dan tidak diberi peringkat.
 
-**Permukaan UI.** Rute publik `/prioritas`; `GET /api/districts/priority?disease=&bobot=populasi|kepadatan`.
+**Permukaan UI.** Rute konsol admin/dinas `/admin/prioritas`; endpoint
+`GET /api/districts/priority?disease=&bobot=populasi|kepadatan` hanya dapat
+diakses peran `admin` dan `dinas`.
 
 **Rubrik.** Impact Projection (20%), Originalitas (15%).
 
@@ -474,7 +476,7 @@ Bagian ini mencatat status implementasi yang telah terkirim dan terverifikasi se
 | Eskalasi S4 & Demo Lonjakan | **Terkirim** | Deteksi eskalasi deterministik di `/verifikasi` dan kendali injeksi simulasi di `/api/admin/demo/surge`. |
 | Mesin Waktu & Lead Time Analysis | **Terkirim** | Halaman `/mesin-waktu` dengan perbandingan dual-map aktual vs prediksi dan evaluasi lead time ±30 hari. |
 | Explainability & Simulator Cuaca | **Terkirim** | Modal kontribusi fitur lokal di `/dashboard` dan simulator skenario what-if di `/simulasi`. |
-| Matriks Prioritas Wilayah | **Terkirim** | Halaman `/prioritas` dengan pembobotan beban populasi vs kepadatan. |
+| Matriks Prioritas Wilayah | **Terkirim** | Halaman admin `/admin/prioritas` dengan pembobotan beban populasi vs kepadatan. |
 
 ---
 

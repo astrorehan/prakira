@@ -440,7 +440,7 @@ export function runSimulation(input: {
   });
 }
 
-/** Prioritas terdampak — risiko dikalikan orang yang menanggungnya. */
+/** Prioritas terdampak untuk konsol admin — risiko dikalikan orang yang menanggungnya. */
 export function fetchPriority(
   disease: string,
   weighting: PriorityWeighting = "populasi",

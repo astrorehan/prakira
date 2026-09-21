@@ -22,11 +22,9 @@ const MARKETING_ITEMS = [
   /* Bukti bahwa prakiraannya pernah benar — dan pernah salah — berdiri sebagai
      halaman sendiri, bukan lampiran di dalam halaman akurasi. */
   { href: "/mesin-waktu", label: "Mesin Waktu" },
-  /* Dua permukaan yang menunjukkan model bekerja, bukan hanya melaporkan
-     hasilnya: geser cuacanya dan lihat peringkat berubah, atau lihat urutan
-     risiko diadu dengan urutan jumlah jiwa terdampak. */
+  /* Simulator tetap menjadi permukaan publik untuk menunjukkan model bekerja;
+     matriks prioritas operasional hanya tersedia di konsol administrator. */
   { href: "/simulasi", label: "Simulator" },
-  { href: "/prioritas", label: "Prioritas" },
   { href: "/tentang", label: "Tentang" },
 ];
 
