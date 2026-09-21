@@ -157,7 +157,7 @@ function Slider({
         step={step}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="h-2 w-full cursor-pointer rounded-full bg-paper-200 accent-brand-700"
+        className="apple-range w-full"
         aria-describedby={`${id}-hint`}
       />
       <p id={`${id}-hint`} className="text-caption text-paper-600">

@@ -267,6 +267,7 @@ const config: Config = {
         "grad-paper": "linear-gradient(180deg, #FFFFFF 0%, #F5F7F7 100%)",
         "grad-brand": "linear-gradient(135deg, #17808F 0%, #0B4A57 52%, #06282F 100%)",
         "grad-brand-soft": "linear-gradient(135deg, #EAF4F5 0%, #D6E9EC 60%, #FFFFFF 100%)",
+        "grad-risk-signal": "linear-gradient(100deg, #E5AA52 0%, #C95E42 48%, #A8442C 100%)",
 
         "grad-risk-high":
           "linear-gradient(158deg, #F9DFD8 0%, #FBECE8 42%, #FFFFFF 100%)",

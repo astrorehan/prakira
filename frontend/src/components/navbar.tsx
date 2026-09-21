@@ -59,10 +59,10 @@ export function Navbar() {
   return (
     <header
       className={cn(
-        "sticky top-0 z-50 w-full border-b transition-[background-color,border-color,box-shadow] duration-slow ease-out",
+        "apple-edge-fade sticky top-0 z-50 w-full border-b border-transparent transition-[background-color,border-color,box-shadow,backdrop-filter] duration-slow ease-out",
         scrolled
-          ? "border-sand-200 bg-sand-50/90 shadow-[0_1px_0_rgba(14,34,37,.04),0_8px_24px_-16px_rgba(14,34,37,.25)] backdrop-blur-md"
-          : "border-transparent bg-transparent",
+          ? "apple-material border-sand-200/80 bg-sand-50/80 shadow-lift"
+          : "bg-transparent",
       )}
     >
       <div className="container flex h-16 items-center justify-between gap-4 md:h-20">
@@ -73,11 +73,18 @@ export function Navbar() {
             <Link
               key={item.href}
               href={item.href}
+              aria-current={
+                pathname === item.href || pathname?.startsWith(`${item.href}/`)
+                  ? "page"
+                  : undefined
+              }
               className={cn(
-                "rounded-full px-3.5 py-2 text-sm font-medium transition-colors duration-fast",
+                "rounded-full px-3.5 py-2 text-sm font-medium transition-[background-color,color] duration-fast active:bg-brand-100",
                 inverted
                   ? "text-white/65 hover:bg-white/10 hover:text-white"
-                  : "text-paper-600 hover:bg-paper-100 hover:text-foreground",
+                  : pathname === item.href || pathname?.startsWith(`${item.href}/`)
+                    ? "bg-brand-50 text-brand-700"
+                    : "text-paper-600 hover:bg-paper-100 hover:text-foreground",
               )}
             >
               {item.label}
@@ -113,7 +120,10 @@ export function Navbar() {
               <Menu className="h-5 w-5" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="w-full max-w-xs">
+          <SheetContent
+            side="right"
+            className="apple-material-strong w-full max-w-xs border-sand-200/80 bg-sand-50/80"
+          >
             <SheetTitle className="sr-only">Menu Navigasi</SheetTitle>
             <div className="mb-4 border-b border-border p-2">
               <Wordmark inverted={false} />

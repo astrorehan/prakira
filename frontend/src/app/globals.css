@@ -44,6 +44,13 @@
     --dur-fast: 140ms;
     --dur-base: 200ms;
     --dur-slow: 320ms;
+
+    /* Floating materials stay translucent only when the platform allows it.
+       The accessibility media queries below replace these with solid
+       surfaces without asking each component to branch. */
+    --material-bg: rgba(255, 255, 255, 0.72);
+    --material-bg-strong: rgba(255, 255, 255, 0.94);
+    --material-border: rgba(255, 255, 255, 0.74);
   }
 
   /* ── Dual surface: depth encodes audience (DESIGN-SYSTEM.md §3) ──
@@ -76,6 +83,7 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    font-optical-sizing: auto;
     /* cv05: l with tail · cv08: serifed capital I · ss03: round quotes.
        cv11 (single-storey a) is deliberately OFF — it flattens Inter. */
     font-feature-settings: "cv05" 1, "cv08" 1, "ss03" 1, "calt" 1;
@@ -179,6 +187,24 @@
       transition-duration: 0.01ms !important;
     }
   }
+
+  /* Transparency is independent from motion. A reader may want animation
+     but still need opaque surfaces for legibility. */
+  @media (prefers-reduced-transparency: reduce) {
+    :root {
+      --material-bg: var(--surface);
+      --material-bg-strong: var(--surface);
+      --material-border: var(--border-strong);
+    }
+  }
+
+  @media (prefers-contrast: more) {
+    :root {
+      --material-bg: var(--surface);
+      --material-bg-strong: var(--surface);
+      --material-border: var(--border-strong);
+    }
+  }
 }
 
 @layer components {
@@ -202,6 +228,109 @@
     @apply rounded-xl border border-border bg-surface shadow-card;
   }
 
+  /* A floating layer with enough material weight to stay legible over content.
+     It is opt-in so dense data cards remain flat and calm. */
+  .apple-material {
+    background-color: var(--material-bg);
+    border: 1px solid var(--material-border);
+    -webkit-backdrop-filter: blur(22px) saturate(145%);
+    backdrop-filter: blur(22px) saturate(145%);
+    box-shadow:
+      0 18px 48px -28px rgba(14, 34, 37, 0.28),
+      inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  }
+
+  .apple-material-strong {
+    background-color: var(--material-bg-strong);
+    border: 1px solid var(--material-border);
+    -webkit-backdrop-filter: blur(28px) saturate(155%);
+    backdrop-filter: blur(28px) saturate(155%);
+    box-shadow:
+      0 28px 56px -28px rgba(14, 34, 37, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.82);
+  }
+
+  /* Floating chrome needs a soft separation edge where content scrolls under
+     it; a hard divider makes the layer feel pinned to the page. */
+  .apple-edge-fade {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .apple-edge-fade::after {
+    position: absolute;
+    inset-inline: 0;
+    bottom: -12px;
+    z-index: -1;
+    height: 18px;
+    pointer-events: none;
+    content: "";
+    background: linear-gradient(to bottom, rgba(14, 34, 37, 0.1), transparent);
+    filter: blur(8px);
+    opacity: 0.7;
+  }
+
+  /* Used by popovers that do not already have a gesture animation. The
+     transform and blur are paired so the surface materializes instead of
+     merely fading in. */
+  .apple-materialize {
+    animation: materialize-in var(--dur-slow) var(--ease-out) both;
+    will-change: transform, opacity, filter;
+  }
+
+  /* A consistent, large-enough hit target for climate scenario sliders. */
+  .apple-range {
+    height: 1.5rem;
+    appearance: none;
+    cursor: pointer;
+    background: transparent;
+  }
+
+  .apple-range::-webkit-slider-runnable-track {
+    height: 0.4rem;
+    border-radius: 9999px;
+    background: var(--border);
+    box-shadow: inset 0 1px 2px rgba(14, 34, 37, 0.12);
+  }
+
+  .apple-range::-webkit-slider-thumb {
+    width: 1.35rem;
+    height: 1.35rem;
+    margin-top: -0.475rem;
+    appearance: none;
+    border: 2px solid var(--surface);
+    border-radius: 9999px;
+    background: var(--brand);
+    box-shadow: 0 2px 6px rgba(14, 34, 37, 0.22);
+    transition: box-shadow var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+  }
+
+  .apple-range:hover::-webkit-slider-thumb,
+  .apple-range:active::-webkit-slider-thumb {
+    background: #0f5f6e;
+    box-shadow: 0 3px 10px rgba(14, 34, 37, 0.28);
+  }
+
+  .apple-range::-moz-range-track {
+    height: 0.4rem;
+    border-radius: 9999px;
+    background: var(--border);
+    box-shadow: inset 0 1px 2px rgba(14, 34, 37, 0.12);
+  }
+
+  .apple-range::-moz-range-thumb {
+    width: 1.1rem;
+    height: 1.1rem;
+    border: 2px solid var(--surface);
+    border-radius: 9999px;
+    background: var(--brand);
+    box-shadow: 0 2px 6px rgba(14, 34, 37, 0.22);
+  }
+
+  .apple-range:focus-visible {
+    border-radius: 9999px;
+  }
+
   /* Hairline separator. Dense areas use these instead of shadows. */
   .hairline {
     @apply border-b border-border;
@@ -216,7 +345,8 @@
 
   /* ── DEPRECATED: liquid-glass family ────────────────────────────────────
      Redefined as flat, opaque surfaces so the ~60 existing call sites across
-     the app repaint without edits. No backdrop-filter anywhere.
+     the app repaint without edits. New floating chrome opts into
+     `.apple-material` explicitly.
      Migrate to <Card> / <Metric>, then delete this block before final submit.
      See DESIGN-SYSTEM.md §10.4. */
   .liquid-glass,
@@ -425,6 +555,42 @@
 @layer utilities {
   .animate-grow-x {
     animation: grow-x 900ms var(--ease-out) both;
+  }
+}
+
+@keyframes materialize-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .apple-materialize {
+    animation: none;
+    filter: none;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .apple-material,
+  .apple-material-strong {
+    background-color: var(--surface);
+    border-color: var(--border-strong);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: 0 1px 2px rgba(14, 34, 37, 0.08);
+  }
+
+  .apple-edge-fade::after {
+    display: none;
   }
 }
 

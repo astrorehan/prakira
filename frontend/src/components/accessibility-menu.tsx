@@ -123,7 +123,10 @@ export function AccessibilityMenu({
         )}
       </SheetTrigger>
 
-      <SheetContent side="right" className="w-full max-w-xs">
+      <SheetContent
+        side="right"
+        className="apple-material-strong w-full max-w-xs border-sand-200/80 bg-sand-50/80"
+      >
         <SheetHeader>
           <SheetTitle className="text-h3">
             Aksesibilitas &amp; Tampilan
