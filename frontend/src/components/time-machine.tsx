@@ -502,7 +502,7 @@ export function TimeMachine() {
                     setMonthIndex(Number(event.target.value));
                   }}
                   aria-valuetext={activeMonth.label}
-                  className="w-full cursor-pointer accent-brand-700"
+                  className="apple-range w-full"
                 />
               </label>
 

@@ -129,6 +129,11 @@ function KecamatanSearch({
           aria-expanded={open}
           role="combobox"
           aria-controls="kecamatan-listbox"
+          aria-activedescendant={
+            open && filtered[cursor]
+              ? `kecamatan-option-${filtered[cursor].id}`
+              : undefined
+          }
           autoComplete="off"
         />
         <button
@@ -149,7 +154,7 @@ function KecamatanSearch({
         <div
           id="kecamatan-listbox"
           role="listbox"
-          className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-2xl border border-sand-200 bg-white shadow-pop"
+          className="apple-material-strong apple-materialize absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-2xl border-sand-200/80 shadow-pop"
         >
           <div className="flex items-center justify-between border-b border-sand-100 px-4 py-2">
             <span className="font-mono text-overline uppercase text-paper-600">
@@ -175,14 +180,17 @@ function KecamatanSearch({
                 return (
                   <button
                     key={kec.id}
+                    id={`kecamatan-option-${kec.id}`}
                     type="button"
                     role="option"
                     aria-selected={selectedKecamatan === kec.nama}
                     onMouseEnter={() => setCursor(i)}
                     onClick={() => commit(kec.nama)}
                     className={cn(
-                      "flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors duration-fast",
-                      i === cursor ? "bg-sand-50" : "bg-transparent",
+                      "flex w-full items-center gap-3 px-4 py-2.5 text-left transition-[background-color,color] duration-fast",
+                      i === cursor
+                        ? "bg-brand-50/80 text-brand-800"
+                        : "bg-transparent hover:bg-sand-50/80",
                     )}
                   >
                     <MapPin className="h-4 w-4 shrink-0 text-paper-600" />
@@ -222,16 +230,21 @@ const LOCATE_MESSAGE: Record<string, string> = {
 };
 
 export function Hero({ selectedKecamatan, onSelectKecamatan }: HeroProps) {
-  const scrollToResults = () => {
-    document.getElementById("risk-check")?.scrollIntoView({ behavior: "smooth" });
-  };
+  const scrollToResults = React.useCallback(() => {
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    document
+      .getElementById("risk-check")
+      ?.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth" });
+  }, []);
 
   const pick = React.useCallback(
     (name: string) => {
       onSelectKecamatan(name);
-      window.setTimeout(scrollToResults, 120);
+      window.requestAnimationFrame(scrollToResults);
     },
-    [onSelectKecamatan],
+    [onSelectKecamatan, scrollToResults],
   );
 
   const { status: locateStatus, locate } = useLocateKecamatan(pick);
@@ -302,20 +315,13 @@ export function Hero({ selectedKecamatan, onSelectKecamatan }: HeroProps) {
               <br className="hidden md:block" />{" "}
               <span className="relative inline-block">
                 <span
-                  className="relative z-10"
-                  style={{
-                    backgroundImage:
-                      "linear-gradient(100deg,#E5AA52 0%,#C95E42 48%,#A8442C 100%)",
-                    WebkitBackgroundClip: "text",
-                    backgroundClip: "text",
-                    color: "transparent",
-                  }}
+                  className="relative z-10 bg-grad-risk-signal bg-clip-text text-transparent"
                 >
                   aman
                 </span>
                 <span
                   aria-hidden
-                  className="absolute inset-x-0 bottom-[0.08em] -z-0 h-[0.2em] rounded-full bg-[linear-gradient(90deg,rgba(229,170,82,.38)_0%,rgba(201,94,66,.34)_100%)]"
+                  className="absolute inset-x-0 bottom-[0.08em] -z-0 h-[0.2em] rounded-full bg-risk-medium-fill/40"
                 />
               </span>{" "}
               {forecastLabel}?
