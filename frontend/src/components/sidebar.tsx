@@ -7,7 +7,6 @@ import {
   Activity,
   BarChart3,
   ShieldCheck,
-  Users,
   LogOut,
   LogIn,
   Home,
@@ -20,7 +19,6 @@ import {
   Scale,
   SlidersHorizontal,
   FilePlus2,
-  ChevronDown,
 } from "lucide-react";
 import { AccessibilityMenu } from "@/components/accessibility-menu";
 import { BrandLockup } from "@/components/brand-lockup";
@@ -35,17 +33,18 @@ import { cn } from "@/lib/utils";
 import { ROLE_LABEL } from "@/lib/auth";
 import { useSessionContext } from "@/components/session-provider";
 import { fetchActions, fetchReportQueue } from "@/lib/api";
+import { readWorkContext, withWorkParams } from "@/lib/work-context";
 
 /**
  * Sidebar konsol — chrome bersama seluruh rute nakes dan administrator.
  *
- * Dua hal yang diperbaiki dari versi sebelumnya:
+ * Yang diperbaiki dari versi sebelumnya:
  *
- * 1. Portal warga dulu duduk sebaris dengan halaman konsol. Mengkliknya
- *    melempar petugas ke permukaan publik yang tidak punya sidebar, dan satu-
- *    satunya jalan pulang adalah tombol berlabel "Kembali ke Beranda" yang
- *    justru menghapus sesi. Sekarang tautan lintas-permukaan dipisah dan
- *    ditandai panah keluar.
+ * 1. Portal warga dulu duduk sebaris dengan halaman konsol, lalu sempat
+ *    menjadi daftar lima permukaan publik sekaligus. Keduanya membuat keluar
+ *    dari konsol terasa seperti pindah produk. Sekarang rel ini hanya punya
+ *    satu pintu publik, dan alat evaluasi berdiri sebagai kelompoknya sendiri
+ *    di dalam konsol karena itu memang pekerjaan petugas (F14).
  * 2. Tombol keluar diwarnai `risk-high`. Merah di produk ini berarti tingkat
  *    risiko penyakit (§1.1: "Warna adalah data"), bukan "tombol berbahaya".
  *    Keluar dari sesi bukan kedaruratan; kontrolnya kembali netral.
@@ -91,7 +90,10 @@ export function Sidebar() {
   const isAdmin = userRole === "admin";
   /* F09: dua peran yang pekerjaannya berbeda tidak boleh membuka menu yang
      sama. Petugas puskesmas membuka tugas dan wilayahnya sendiri; koordinator
-     dinas membuka pekerjaan lintas wilayah; analis membuka pintu evaluasi. */
+     dinas membuka pekerjaan lintas wilayah; analis membuka pintu evaluasi.
+     Petugas puskesmas mengerjakan tugas wilayahnya; alat evaluasi model bukan
+     pekerjaannya, jadi kelompok Evaluasi tidak ikut tampil di relnya. */
+  const canEvaluate = userRole !== "puskesmas";
   const consoleSubline = isAdmin
     ? "Konsol Administrator"
     : userRole === "puskesmas"
@@ -169,7 +171,6 @@ export function Sidebar() {
         home,
         { href: "/analitik", label: "Analitik & Evaluasi", icon: BarChart3 },
         weighting,
-        { href: "/model", label: "Kinerja Model", icon: Microscope },
       ];
     }
 
@@ -213,7 +214,7 @@ export function Sidebar() {
         badgeLabel: "laporan perlu diperiksa",
       },
       weighting,
-      { href: "/analitik", label: "Analitik & Riwayat", icon: BarChart3 },
+      { href: "/analitik", label: "Analitik & Evaluasi", icon: BarChart3 },
       { href: "/kasus", label: "Rekap kasus", icon: FilePlus2 },
     ];
   }, [pendingActions, pendingReports, isAdmin, userRole]);
@@ -271,41 +272,108 @@ export function Sidebar() {
       );
     });
 
-  /* Permukaan publik hidup di luar konsol: chrome-nya berbeda dan tidak ada
-     sidebar di sana. Ditandai panah keluar supaya kepindahannya disengaja. */
-  const crossSurfaceLinks = (onClick?: () => void) => (
-    <details className="group mt-2">
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3.5 pb-1 pt-4 overline marker:hidden">
-        <span>Halaman publik</span>
-        <ChevronDown className="h-3.5 w-3.5 transition-transform duration-fast group-open:rotate-180" aria-hidden="true" />
-      </summary>
-      <div className="space-y-0.5">
-        {[
-          { href: "/model", label: "Transparansi Model", icon: Microscope },
-          { href: "/mesin-waktu", label: "Mesin Waktu", icon: History },
-          { href: "/simulasi", label: "Simulator Cuaca", icon: SlidersHorizontal },
-          { href: "/warga", label: "Portal Warga", icon: Users },
-          { href: "/sistem", label: "Halaman Layanan", icon: Home },
-        ].map((item) => {
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onClick}
-              className="flex items-center gap-3 rounded-xl px-3.5 py-2 text-body-sm text-paper-600 transition-colors duration-fast ease-out hover:bg-paper-100 hover:text-foreground"
-            >
-              <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-              <span className="min-w-0 flex-1 truncate">{item.label}</span>
-              <ArrowUpRight
-                className="h-3.5 w-3.5 shrink-0 text-paper-600"
-                aria-hidden="true"
-              />
-            </Link>
-          );
-        })}
-      </div>
-    </details>
+  /* F14: alat evaluasi bukan "halaman publik" bagi petugas.
+     Simulator, uji historis, dan transparansi model memang terbuka untuk
+     siapa pun — itu disengaja — tetapi petugas membukanya di tengah pekerjaan,
+     untuk memeriksa apakah angka yang sedang ia pegang layak dipercaya. Jadi
+     ketiganya tampil sebagai kelompok "Evaluasi" di dalam konsol, membawa
+     penyakit/wilayah/periode yang sedang dikerjakan, dan halaman tujuannya
+     menyediakan jalan pulang ke pekerjaan itu.
+
+     Rute publiknya sendiri tinggal satu pintu: beranda. Sebelumnya rel ini
+     mendaftar lima permukaan publik sekaligus, yang membuat keluar dari konsol
+     terasa seperti pindah produk dan meninggalkan petugas mencari jalan
+     kembali. */
+  const EVALUATION_ITEMS = [
+    {
+      href: "/model",
+      label: "Transparansi Model",
+      icon: Microscope,
+      hint: "Seberapa sering prakiraan ini benar",
+    },
+    {
+      href: "/mesin-waktu",
+      label: "Uji Historis",
+      icon: History,
+      hint: "Peringatan yang terlewat dan alarm palsu",
+    },
+    {
+      href: "/simulasi",
+      label: "Simulator Cuaca",
+      icon: SlidersHorizontal,
+      hint: "Reaksi model terhadap cuaca lain",
+    },
+  ];
+
+  /* Tautan tetap `href` biasa supaya bisa dibuka di tab baru; konteks kerja
+     ditempelkan saat diklik, dari nilai terbaru — bukan dari salinan yang
+     dibekukan saat rel ini dirender. */
+  const openWithContext =
+    (href: string) => (event: React.MouseEvent<HTMLAnchorElement>) => {
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) {
+        return;
+      }
+      const ctx = readWorkContext();
+      if (!ctx) return;
+      event.preventDefault();
+      router.push(
+        withWorkParams(href, {
+          disease: ctx.disease,
+          kecamatan: ctx.kecamatan,
+          periode: ctx.periode,
+        }),
+      );
+    };
+
+  const evaluationLinks = (onClick?: () => void) => (
+    <div className="mt-4 space-y-0.5">
+      <p className="px-3.5 pb-1 overline">Evaluasi</p>
+      {EVALUATION_ITEMS.map((item) => {
+        const Icon = item.icon;
+        const active = pathname === item.href;
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            onClick={(event) => {
+              onClick?.();
+              openWithContext(item.href)(event);
+            }}
+            aria-current={active ? "page" : undefined}
+            title={item.hint}
+            className={cn(
+              "flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-body-sm font-medium transition-colors duration-fast ease-out",
+              active
+                ? "bg-primary font-semibold text-white shadow-xs"
+                : "text-paper-600 hover:bg-paper-100 hover:text-foreground",
+            )}
+          >
+            <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <span className="min-w-0 flex-1 truncate">{item.label}</span>
+          </Link>
+        );
+      })}
+    </div>
+  );
+
+  /* Satu pintu publik. Portal warga, halaman layanan, dan transparansi semua
+     dicapai dari sana, jadi rel ini tidak perlu menyalin daftarnya. */
+  const publicDoor = (onClick?: () => void) => (
+    <div className="mt-4 space-y-0.5">
+      <p className="px-3.5 pb-1 overline">Di luar konsol</p>
+      <Link
+        href="/"
+        onClick={onClick}
+        className="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-body-sm text-paper-600 transition-colors duration-fast ease-out hover:bg-paper-100 hover:text-foreground"
+      >
+        <Home className="h-4 w-4 shrink-0" aria-hidden="true" />
+        <span className="min-w-0 flex-1 truncate">Halaman publik Prakira</span>
+        <ArrowUpRight
+          className="h-3.5 w-3.5 shrink-0 text-paper-600"
+          aria-hidden="true"
+        />
+      </Link>
+    </div>
   );
 
   const accountBlock = (onClick?: () => void) => (
@@ -367,7 +435,8 @@ export function Sidebar() {
           className="flex-1 overflow-y-auto px-4 py-3"
         >
           <div className="space-y-1">{navLinks()}</div>
-          <div className="space-y-0.5">{crossSurfaceLinks()}</div>
+          {canEvaluate && evaluationLinks()}
+          {publicDoor()}
         </nav>
 
         <div className="border-t border-border p-4">{accountBlock()}</div>
@@ -389,7 +458,8 @@ export function Sidebar() {
             </div>
             <nav aria-label="Navigasi konsol" className="flex flex-col gap-1">
               {navLinks(() => setMobileOpen(false))}
-              {crossSurfaceLinks(() => setMobileOpen(false))}
+              {canEvaluate && evaluationLinks(() => setMobileOpen(false))}
+              {publicDoor(() => setMobileOpen(false))}
             </nav>
             <div className="mt-8 border-t border-border pt-4">
               {accountBlock(() => setMobileOpen(false))}

@@ -37,9 +37,9 @@ const SIZES: Record<
   LockupSize,
   { mark: string; stroke: number; title: string; sub: string; gap: string }
 > = {
-  sm: { mark: "h-6 w-6", stroke: 2, title: "text-base", sub: "text-3xs", gap: "gap-2" },
-  md: { mark: "h-7 w-7", stroke: 1.75, title: "text-base", sub: "text-3xs", gap: "gap-2" },
-  lg: { mark: "h-9 w-9", stroke: 1.35, title: "text-xl", sub: "text-2xs", gap: "gap-2.5" },
+  sm: { mark: "h-6 w-6", stroke: 2, title: "text-base", sub: "text-overline", gap: "gap-2" },
+  md: { mark: "h-7 w-7", stroke: 1.75, title: "text-base", sub: "text-overline", gap: "gap-2" },
+  lg: { mark: "h-9 w-9", stroke: 1.35, title: "text-xl", sub: "text-caption", gap: "gap-2.5" },
 };
 
 export function BrandLockup({

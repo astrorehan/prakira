@@ -70,7 +70,7 @@ function CustomComparisonTooltip({
     <div className="min-w-[240px] rounded-xl border border-paper-200 bg-paper-0/95 p-3.5 shadow-lift backdrop-blur-md">
       <div className="border-b border-paper-200 pb-2">
         <p className="font-semibold text-paper-900">{row.fullMonth || label}</p>
-        <p className="text-3xs uppercase tracking-wider text-paper-600">Evaluasi Data Uji (Blind Test)</p>
+        <p className="text-overline uppercase tracking-wider text-paper-600">Evaluasi Data Uji (Blind Test)</p>
       </div>
 
       <div className="mt-2.5 space-y-2 text-body-sm">
@@ -103,7 +103,7 @@ function CustomComparisonTooltip({
       </div>
 
       <div className="mt-3 rounded-lg bg-paper-50 p-2 border border-paper-200/80">
-        <div className="flex items-center justify-between text-3xs font-medium text-paper-600 mb-1">
+        <div className="flex items-center justify-between text-caption font-medium text-paper-600 mb-1">
           <span>STATUS RISIKO WILAYAH</span>
           {isRiskMatched ? (
             <span className="inline-flex items-center gap-1 font-semibold text-risk-low">
@@ -115,7 +115,7 @@ function CustomComparisonTooltip({
             </span>
           )}
         </div>
-        <div className="grid grid-cols-2 gap-1.5 text-2xs">
+        <div className="grid grid-cols-2 gap-1.5 text-caption">
           <div className="rounded border bg-white px-2 py-1 flex items-center justify-between" style={{ borderColor: actualRisk.color + "30" }}>
             <span className="text-paper-600">Aktual:</span>
             <span className={cn("font-semibold", actualRisk.textColor)}>{actualRisk.label}</span>
@@ -187,7 +187,7 @@ export function BacktestComparisonChart({
             <h4 className="text-body-sm font-semibold text-paper-900">
               Perbandingan Kurva: Kasus Riil vs Hasil Prediksi Model
             </h4>
-            <Badge variant="secondary" className="font-mono text-3xs">
+            <Badge variant="secondary" className="font-mono text-caption">
               {stats.total} Bulan Uji
             </Badge>
           </div>
@@ -246,7 +246,7 @@ export function BacktestComparisonChart({
                 <span className="font-medium text-brand-700">Prakiraan Model</span>
               </div>
             </div>
-            <div className="text-3xs text-paper-600 flex items-center gap-1">
+            <div className="text-caption text-paper-600 flex items-center gap-1">
               <Info className="h-3.5 w-3.5" />
               <span>Arahkan kursor pada titik bulan untuk rincian deviasi</span>
             </div>
@@ -340,22 +340,22 @@ export function BacktestComparisonChart({
                       ±{formatNumber(row.error)}
                     </td>
                     <td className="px-3.5 py-2 text-center">
-                      <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-3xs font-semibold uppercase tracking-wider border", actualRisk.bgSoft, actualRisk.border, actualRisk.textColor)}>
+                      <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-overline font-semibold uppercase tracking-wider border", actualRisk.bgSoft, actualRisk.border, actualRisk.textColor)}>
                         {actualRisk.label}
                       </span>
                     </td>
                     <td className="px-3.5 py-2 text-center">
-                      <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-3xs font-semibold uppercase tracking-wider border", predRisk.bgSoft, predRisk.border, predRisk.textColor)}>
+                      <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-overline font-semibold uppercase tracking-wider border", predRisk.bgSoft, predRisk.border, predRisk.textColor)}>
                         {predRisk.label}
                       </span>
                     </td>
                     <td className="px-3.5 py-2 text-center">
                       {isMatched ? (
-                        <span className="inline-flex items-center gap-1 text-2xs font-semibold text-risk-low bg-risk-low-bg border border-risk-low-br px-2 py-0.5 rounded-full">
+                        <span className="inline-flex items-center gap-1 text-caption font-semibold text-risk-low bg-risk-low-bg border border-risk-low-br px-2 py-0.5 rounded-full">
                           <CheckCircle2 className="h-3 w-3" /> Cocok
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-2xs font-semibold text-risk-medium bg-risk-medium-bg border border-risk-medium-br px-2 py-0.5 rounded-full">
+                        <span className="inline-flex items-center gap-1 text-caption font-semibold text-risk-medium bg-risk-medium-bg border border-risk-medium-br px-2 py-0.5 rounded-full">
                           <AlertCircle className="h-3 w-3" /> Beda
                         </span>
                       )}

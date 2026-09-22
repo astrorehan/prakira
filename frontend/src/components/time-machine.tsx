@@ -29,6 +29,7 @@ import { useApi } from "@/lib/use-api";
 import { cn, diseaseLabel, formatNumber, riskConfigOf } from "@/lib/utils";
 import { formatDateTime } from "@/lib/period";
 import { formatPeriodRange } from "@/lib/stats";
+import { pickInitialDisease, readWorkParams } from "@/lib/work-context";
 import type {
   DiseaseType,
   RewindCell,
@@ -213,10 +214,15 @@ export function TimeMachine() {
     [selectedDisease],
   );
 
+  /* F14: penyakit yang sedang dikerjakan petugas ikut lewat `?disease=`. */
   React.useEffect(() => {
-    if (!selectedDisease && diseases.data && diseases.data.length > 0) {
-      setSelectedDisease(diseases.data[0].disease);
-    }
+    if (selectedDisease || !diseases.data || diseases.data.length === 0) return;
+    setSelectedDisease(
+      pickInitialDisease(
+        diseases.data.map((d) => d.disease),
+        readWorkParams().disease,
+      ),
+    );
   }, [diseases.data, selectedDisease]);
 
   const payload = rewind.data?.data ?? null;

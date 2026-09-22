@@ -14,16 +14,22 @@ import {
   RefreshCw,
   Printer,
 } from "lucide-react";
-import { aggregateCoverage, formatNumber, formatMaybeNumber } from "@/lib/utils";
+import {
+  aggregateCoverage,
+  diseaseLabel,
+  formatNumber,
+  formatMaybeNumber,
+} from "@/lib/utils";
 import { formatMonth } from "@/lib/period";
 import { LiquidGlassCard } from "@/components/ui/liquid-glass-card";
-import { AppleGlassDate } from "@/components/ui/apple-glass-date";
 import { Button } from "@/components/ui/button";
+import { ConsolePageHeader } from "@/components/console/page-header";
 import { KpiCard } from "@/components/kpi-card";
 import { DiseaseSelector } from "@/components/disease-selector";
 import { DistrictDetailPanel } from "@/components/district-detail-panel";
 import { DistrictRankingTable } from "@/components/district-ranking-table";
 import { DataState } from "@/components/data-state";
+import { TrendChart } from "@/components/trend-chart";
 import { DataLagNotice } from "@/components/data-lag-notice";
 import { AttentionList } from "@/components/attention-list";
 import {
@@ -36,6 +42,11 @@ import {
 } from "@/lib/api";
 import { useApi } from "@/lib/use-api";
 import { usePeriod } from "@/lib/use-period";
+import {
+  pickInitialDisease,
+  readWorkParams,
+  rememberWorkContext,
+} from "@/lib/work-context";
 import type { DiseaseType } from "@/types";
 
 const ChoroplethMap = dynamic(() => import("@/components/choropleth-map"), {
@@ -66,11 +77,19 @@ export default function DashboardPrediksiPage() {
 
   /* Penyakit pertama dari gateway jadi pilihan awal. Tidak ada nilai bawaan
      "DBD" di berkas ini: kalau dataset hanya punya ISPA, dashboard harus
-     membuka ISPA, bukan halaman kosong berlabel DBD. */
+     membuka ISPA, bukan halaman kosong berlabel DBD.
+
+     F14: kecuali petugas baru kembali dari alat evaluasi. Tautan "Kembali ke
+     pekerjaan" membawa penyakitnya serta, dan halaman ini harus membukanya —
+     kembali ke pekerjaan tidak boleh berarti memfilter ulang dari nol. */
   React.useEffect(() => {
-    if (!selectedDisease && diseases.data && diseases.data.length > 0) {
-      setSelectedDisease(diseases.data[0].disease);
-    }
+    if (selectedDisease || !diseases.data || diseases.data.length === 0) return;
+    setSelectedDisease(
+      pickInitialDisease(
+        diseases.data.map((d) => d.disease),
+        readWorkParams().disease,
+      ),
+    );
   }, [diseases.data, selectedDisease]);
 
   const districts = useApi(
@@ -114,6 +133,21 @@ export default function DashboardPrediksiPage() {
       [...rows].sort((a, b) => (b.skor_risiko ?? -1) - (a.skor_risiko ?? -1))[0]
     );
   }, [rows, selectedDistrictId]);
+
+  /* F14: wilayah yang tadi dibuka ikut kembali bersama petugas. Dicocokkan
+     dengan baris yang benar-benar ada supaya `?kecamatan=` karangan tidak
+     memilih apa pun. Sekali saja — setelah itu pilihan petugas yang berlaku. */
+  const restoredDistrict = React.useRef(false);
+  React.useEffect(() => {
+    if (restoredDistrict.current || rows.length === 0) return;
+    restoredDistrict.current = true;
+    const wanted = readWorkParams().kecamatan;
+    if (!wanted) return;
+    const match = rows.find(
+      (d) => d.nama.toLowerCase() === wanted.toLowerCase(),
+    );
+    if (match) setSelectedDistrictId(match.id);
+  }, [rows]);
 
   const selectedTrigger = React.useMemo(() => {
     if (!selectedDistrict || !triggers.data?.data) return undefined;
@@ -176,6 +210,20 @@ export default function DashboardPrediksiPage() {
     };
   }, [rows]);
 
+  /* F14: pekerjaan yang sedang dipegang dititipkan ke alat evaluasi. Sidebar
+     membacanya saat petugas membuka simulator/uji historis, dan halaman tujuan
+     memakainya untuk menawarkan jalan pulang yang utuh. */
+  React.useEffect(() => {
+    if (!selectedDisease) return;
+    rememberWorkContext({
+      href: "/dashboard",
+      label: "Beranda / Prioritas",
+      disease: selectedDisease,
+      kecamatan: selectedDistrict?.nama ?? null,
+      periode: meta?.monthYear ?? null,
+    });
+  }, [selectedDisease, selectedDistrict?.nama, meta?.monthYear]);
+
   const pendingActions = (actions.data?.data ?? []).filter(
     (a) => a.status === "pending",
   ).length;
@@ -183,65 +231,54 @@ export default function DashboardPrediksiPage() {
   return (
     <div className="min-h-screen bg-background py-8 px-4 sm:px-6 lg:px-8 bg-mesh-blue">
       <div className="container max-w-7xl mx-auto space-y-8">
-        {/* 1. Kepala — judul, filter penyakit, periode */}
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-5 pb-4 border-b border-paper-200/80">
-          <div className="space-y-3">
-            {/* F06: halaman ini dibuka untuk mengetahui pekerjaan hari ini,
-                bukan untuk menganalisis dulu. Namanya menyebut itu. */}
-            <h1 className="h-display text-2xl sm:text-3xl lg:text-4xl font-semibold text-foreground">
-              Beranda / Prioritas
-            </h1>
-            <p className="text-body-sm text-paper-600">
-              Daftar perhatian lintas penyakit dulu; peta, prakiraan, dan tren ada
-              di bawahnya untuk penelusuran.
-            </p>
-            <DiseaseSelector
-              options={(diseases.data ?? []).map((d) => d.disease)}
-              selected={selectedDisease}
-              onSelect={(d) => {
-                setSelectedDisease(d);
-                setSelectedDistrictId(null);
-              }}
-            />
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3 shrink-0">
-            {meta && (
-              <AppleGlassDate
-                primary={`Data ${meta.monthYear}`}
-                secondary={`Prakiraan ${meta.predictionLabel}`}
-              />
-            )}
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                districts.reload();
-                trend.reload();
-                actions.reload();
-                triggers.reload();
-              }}
-              disabled={districts.refreshing}
-              className="gap-1.5"
-            >
-              <RefreshCw
-                className={districts.refreshing ? "h-4 w-4 animate-spin" : "h-4 w-4"}
-                aria-hidden
-              />
-              <span>Segarkan</span>
-            </Button>
-            <Button
-              asChild
-              size="sm"
-              className="gap-1.5 bg-brand-700 hover:bg-brand-800 text-white shadow-xs"
-            >
-              <Link href={`/buletin?disease=${encodeURIComponent(selectedDisease ?? "DBD")}`}>
-                <Printer className="h-3.5 w-3.5" aria-hidden />
-                <span>Draf Buletin</span>
-              </Link>
-            </Button>
-          </div>
-        </div>
+        {/* 1. Kepala — judul, filter penyakit, periode.
+            F17: memakai kepala halaman konsol yang sama dengan /tindakan,
+            /verifikasi, /kasus, dan /admin. Sebelumnya halaman ini menyusun
+            kepalanya sendiri — judul pada skala yang tidak dipakai halaman
+            lain, dan chip periode versinya sendiri yang tidak pernah menyebut
+            keterlambatan data. */}
+        <ConsolePageHeader
+          title="Beranda / Prioritas"
+          description="Daftar perhatian lintas penyakit dulu; peta, prakiraan, dan tren ada di bawahnya untuk penelusuran."
+          actions={
+            <>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  districts.reload();
+                  trend.reload();
+                  actions.reload();
+                  triggers.reload();
+                }}
+                disabled={districts.refreshing}
+                className="gap-1.5"
+              >
+                <RefreshCw
+                  className={districts.refreshing ? "h-4 w-4 animate-spin" : "h-4 w-4"}
+                  aria-hidden
+                />
+                <span>Segarkan</span>
+              </Button>
+              {/* Satu tombol utama per halaman (§10.8). */}
+              <Button asChild size="sm" className="gap-1.5">
+                <Link href={`/buletin?disease=${encodeURIComponent(selectedDisease ?? "DBD")}`}>
+                  <Printer className="h-3.5 w-3.5" aria-hidden />
+                  <span>Draf Buletin</span>
+                </Link>
+              </Button>
+            </>
+          }
+        >
+          <DiseaseSelector
+            options={(diseases.data ?? []).map((d) => d.disease)}
+            selected={selectedDisease}
+            onSelect={(d) => {
+              setSelectedDisease(d);
+              setSelectedDistrictId(null);
+            }}
+          />
+        </ConsolePageHeader>
 
         {/* Data yang tertinggal dari kalender harus tertulis, bukan disembunyikan. */}
         <DataLagNotice period={meta} />
@@ -269,10 +306,10 @@ export default function DashboardPrediksiPage() {
         />
 
         <div className="border-t border-paper-200/80 pt-6">
-          <h2 className="font-display text-xl font-semibold text-foreground">
-            Penelusuran risiko {selectedDisease ?? ""}
+          <h2 className="text-h2 text-foreground">
+            Penelusuran risiko {diseaseLabel(selectedDisease)}
           </h2>
-          <p className="mt-1 text-body-sm text-paper-600">
+          <p className="mt-1 max-w-2xl text-body-sm text-paper-600">
             Bahan untuk memeriksa alasan di balik daftar di atas: angka periode,
             sebaran wilayah, dan tren.
           </p>
@@ -351,8 +388,8 @@ export default function DashboardPrediksiPage() {
                 className="p-5 flex flex-col justify-between h-full space-y-3 min-h-[580px]"
               >
                 <div className="flex flex-wrap items-center justify-between gap-2 shrink-0">
-                  <h3 className="font-display text-lg font-semibold text-foreground flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-brand-700" />
+                  <h3 className="flex items-center gap-2 text-h3 text-foreground">
+                    <MapPin className="h-4 w-4 text-brand-700" aria-hidden="true" />
                     <span>Peta zona risiko</span>
                   </h3>
 
@@ -376,7 +413,11 @@ export default function DashboardPrediksiPage() {
                   )}
                 </div>
 
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-2xs text-muted-foreground pt-2 border-t border-paper-200/60 shrink-0">
+                {/* F17: legenda peta adalah kunci baca, bukan catatan kaki.
+                    `text-2xs` (11 px pada root 112,5%) di bawah warna risiko
+                    memaksa petugas mendekat ke layar untuk hal yang paling
+                    sering dibacanya. */}
+                <div className="flex shrink-0 flex-col justify-between gap-2 border-t border-paper-200/60 pt-2 text-caption text-paper-600 sm:flex-row sm:items-center">
                   <span>Klik kecamatan untuk detail</span>
 
                   <div className="flex flex-wrap items-center gap-3">
@@ -406,12 +447,36 @@ export default function DashboardPrediksiPage() {
               <DistrictDetailPanel
                 district={selectedDistrict}
                 disease={selectedDisease ?? ""}
-                trend={trend.data?.data ?? []}
                 trigger={selectedTrigger}
                 className="h-full min-h-[580px]"
               />
             </div>
           </div>
+
+          {/* 4b. Tren kota — deret tingkat kota, jadi ia berdiri sebagai
+              bagian halaman. F17: sebelumnya grafik ini duduk di dalam panel
+              berjudul "Kecamatan X", tempat satu-satunya yang membuatnya
+              mustahil dibaca sebagai milik kota. */}
+          <section className="mt-8 space-y-3">
+            <div className="min-w-0">
+              <h3 className="text-h3 text-foreground">
+                Tren kasus kota · {diseaseLabel(selectedDisease)}
+              </h3>
+              <p className="mt-1 max-w-2xl text-body-sm text-paper-600">
+                Penjumlahan 16 kecamatan per bulan: rekap resmi, lalu prakiraan
+                beserta rentangnya. Bukan deret satu kecamatan.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-border bg-surface p-4 shadow-card">
+              <TrendChart
+                data={trend.data?.data ?? []}
+                disease={selectedDisease ?? "DBD"}
+                showClimateOverlay={false}
+                chartHeightClass="h-[240px] w-full"
+              />
+            </div>
+          </section>
 
           {/* 5. Strip aksi tertunda — alurnya sendiri hidup di /tindakan */}
           {pendingActions > 0 && (
@@ -434,9 +499,7 @@ export default function DashboardPrediksiPage() {
 
           {/* 6. Peringkat kecamatan */}
           <div className="mt-8 space-y-4">
-            <h3 className="font-display text-xl font-semibold text-foreground">
-              Peringkat prioritas kecamatan
-            </h3>
+            <h3 className="text-h3 text-foreground">Peringkat prioritas kecamatan</h3>
 
             <DistrictRankingTable
               districts={rows}

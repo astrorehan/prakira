@@ -21,6 +21,7 @@ import { diseaseLabel } from "@/lib/utils";
 import { formatDateTime } from "@/lib/period";
 import { formatPeriodRange } from "@/lib/stats";
 import type { DiseaseType } from "@/types";
+import { pickInitialDisease, readWorkParams } from "@/lib/work-context";
 
 /**
  * Transparansi model (M8, PRD §5.7).
@@ -48,10 +49,16 @@ export function ModelTransparency() {
   const backtests = useApi(() => fetchBacktests(), []);
   const kecamatan = useApi(() => fetchKecamatanList(), []);
 
+  /* F14: petugas yang membuka halaman ini dari konsol sedang memegang satu
+     penyakit. `?disease=` membawanya ke sini supaya tidak memilih ulang. */
   React.useEffect(() => {
-    if (!selectedDisease && diseases.data && diseases.data.length > 0) {
-      setSelectedDisease(diseases.data[0].disease);
-    }
+    if (selectedDisease || !diseases.data || diseases.data.length === 0) return;
+    setSelectedDisease(
+      pickInitialDisease(
+        diseases.data.map((d) => d.disease),
+        readWorkParams().disease,
+      ),
+    );
   }, [diseases.data, selectedDisease]);
 
   const diseaseNames = React.useMemo(

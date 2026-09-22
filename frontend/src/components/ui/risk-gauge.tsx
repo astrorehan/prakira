@@ -35,7 +35,7 @@ export function RiskGauge({
       radius: 40,
       stroke: 6,
       scoreSize: "text-base font-semibold",
-      labelSize: "text-5xs font-medium tracking-wider",
+      labelSize: "text-overline font-medium",
       labelMargin: "mt-0.5",
       bottomOffset: "pb-0.5",
     },
@@ -43,7 +43,7 @@ export function RiskGauge({
       radius: 52,
       stroke: 7,
       scoreSize: "text-xl font-semibold",
-      labelSize: "text-5xs font-medium tracking-widest",
+      labelSize: "text-overline font-medium",
       labelMargin: "mt-0.5",
       bottomOffset: "pb-1",
     },
@@ -51,7 +51,7 @@ export function RiskGauge({
       radius: 76,
       stroke: 9.5,
       scoreSize: "text-2xl sm:text-3xl font-semibold",
-      labelSize: "text-3xs font-medium tracking-widest",
+      labelSize: "text-overline font-medium",
       labelMargin: "mt-1",
       bottomOffset: "pb-1.5",
     },
@@ -168,7 +168,7 @@ export function RiskGauge({
       {showLabel && (
         <span
           className={cn(
-            "mt-1.5 inline-flex items-center rounded-full px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider border shadow-2xs",
+            "mt-1.5 inline-flex items-center rounded-full border px-2 py-0.5 text-overline font-semibold uppercase shadow-2xs",
             colorConfig.bgSoft,
             colorConfig.border,
             colorConfig.text

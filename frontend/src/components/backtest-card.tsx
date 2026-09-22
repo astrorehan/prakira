@@ -55,7 +55,7 @@ function R2GaugeBar({ r2, percentage }: { r2: number; percentage: number }) {
 
   return (
     <div className="space-y-1.5 pt-1">
-      <div className="flex items-center justify-between text-3xs font-medium text-paper-600">
+      <div className="flex items-center justify-between text-caption font-medium text-paper-600">
         <span>0,0 (Acak)</span>
         <span className="font-semibold text-paper-700">0,40 (Moderat)</span>
         <span className="font-semibold text-paper-700">0,70 (Kuat)</span>
@@ -99,7 +99,7 @@ function CopyButton({ text, label }: { text: string; label?: string }) {
       type="button"
       onClick={handleCopy}
       title={label ?? "Salin ke papan klip"}
-      className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-3xs font-mono text-paper-600 hover:text-paper-900 hover:bg-paper-200 transition-colors"
+      className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-caption font-mono text-paper-600 hover:text-paper-900 hover:bg-paper-200 transition-colors"
     >
       {copied ? (
         <>
@@ -158,12 +158,12 @@ function BacktestSelectorCard({
         </div>
 
         {active ? (
-          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-brand-300 bg-brand-50 px-2.5 py-1 text-2xs font-semibold text-brand-800 shadow-2xs">
+          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-brand-300 bg-brand-50 px-2.5 py-1 text-caption font-semibold text-brand-800 shadow-2xs">
             <span className="h-1.5 w-1.5 rounded-full bg-brand-500 animate-pulse" />
             Sedang Dianalisis
           </span>
         ) : (
-          <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-paper-200 bg-paper-100 px-2 py-0.5 text-3xs font-medium text-paper-600 transition-colors group-hover:text-paper-900">
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-paper-200 bg-paper-100 px-2 py-0.5 text-caption font-medium text-paper-600 transition-colors group-hover:text-paper-900">
             <span>Pilih Model</span>
             <ChevronRight className="h-3 w-3" />
           </span>
@@ -175,7 +175,7 @@ function BacktestSelectorCard({
         {algo.models.map((m) => (
           <span
             key={m}
-            className="inline-flex items-center rounded-md bg-paper-100 px-2 py-0.5 font-mono text-3xs font-medium text-paper-700 border border-paper-200/80"
+            className="inline-flex items-center rounded-md bg-paper-100 px-2 py-0.5 font-mono text-caption font-medium text-paper-700 border border-paper-200/80"
           >
             {m}
           </span>
@@ -197,7 +197,7 @@ function BacktestSelectorCard({
             </p>
           </div>
 
-          <Badge variant={r2Eval.badgeVariant} className="shrink-0 text-3xs">
+          <Badge variant={r2Eval.badgeVariant} className="shrink-0 text-caption">
             {r2Eval.label}
           </Badge>
         </div>
@@ -210,7 +210,7 @@ function BacktestSelectorCard({
       <div className="mt-4 grid grid-cols-2 gap-2.5">
         {/* 1. Akurasi Kelas Risiko */}
         <div className="rounded-xl border border-paper-200/90 bg-white p-2.5 space-y-0.5">
-          <span className="text-3xs uppercase tracking-wider font-semibold text-paper-600 block">
+          <span className="text-overline uppercase tracking-wider font-semibold text-paper-600 block">
             Akurasi Status Risiko
           </span>
           <p className="tabular text-body-sm font-semibold text-paper-900">
@@ -218,47 +218,47 @@ function BacktestSelectorCard({
               ? "—"
               : `${formatNumber(metric.class_accuracy_pct, { maximumFractionDigits: 1 })}%`}
           </p>
-          <p className="text-4xs text-paper-600 truncate">
+          <p className="text-caption text-paper-600 truncate">
             Ketepatan level Waspada/Siaga
           </p>
         </div>
 
         {/* 2. MAE */}
         <div className="rounded-xl border border-paper-200/90 bg-white p-2.5 space-y-0.5">
-          <span className="text-3xs uppercase tracking-wider font-semibold text-paper-600 block">
+          <span className="text-overline uppercase tracking-wider font-semibold text-paper-600 block">
             Rata-rata Meleset (MAE)
           </span>
           <p className="tabular text-body-sm font-semibold text-paper-900 truncate">
             ±{formatNumber(metric.mae, { maximumFractionDigits: 2 })}{" "}
-            <span className="text-4xs font-normal text-paper-600">kasus/kec.</span>
+            <span className="text-caption font-normal text-paper-600">kasus/kec.</span>
           </p>
-          <p className="text-4xs text-paper-600 truncate">
+          <p className="text-caption text-paper-600 truncate">
             Deviasi absolut rata-rata
           </p>
         </div>
 
         {/* 3. RMSE */}
         <div className="rounded-xl border border-paper-200/90 bg-white p-2.5 space-y-0.5">
-          <span className="text-3xs uppercase tracking-wider font-semibold text-paper-600 block">
+          <span className="text-overline uppercase tracking-wider font-semibold text-paper-600 block">
             Sensitivitas Outlier (RMSE)
           </span>
           <p className="tabular text-body-sm font-semibold text-paper-900 truncate">
             {formatNumber(metric.rmse, { maximumFractionDigits: 2 })}
           </p>
-          <p className="text-4xs text-paper-600 truncate">
+          <p className="text-caption text-paper-600 truncate">
             Akar kuadrat galat
           </p>
         </div>
 
         {/* 4. Periode Uji */}
         <div className="rounded-xl border border-paper-200/90 bg-white p-2.5 space-y-0.5">
-          <span className="text-3xs uppercase tracking-wider font-semibold text-paper-600 block">
+          <span className="text-overline uppercase tracking-wider font-semibold text-paper-600 block">
             Data Uji Buta
           </span>
           <p className="tabular text-body-sm font-semibold text-paper-900">
             {metric.sample_size === null ? "—" : `${metric.sample_size} Bulan`}
           </p>
-          <p className="text-4xs text-paper-600 truncate">
+          <p className="text-caption text-paper-600 truncate">
             {testPeriodInfo.formatted}
           </p>
         </div>
@@ -266,7 +266,7 @@ function BacktestSelectorCard({
 
       {/* Discrepancy / Limited Sample Notice */}
       {isLimitedSample && (
-        <div className="mt-3 flex items-center gap-1.5 rounded-lg border border-risk-medium-br bg-risk-medium-bg px-2.5 py-1.5 text-2xs text-paper-800">
+        <div className="mt-3 flex items-center gap-1.5 rounded-lg border border-risk-medium-br bg-risk-medium-bg px-2.5 py-1.5 text-caption text-paper-800">
           <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-risk-medium" />
           <span className="leading-tight">
             Periode uji singkat ({metric.sample_size} bulan) — interpretasikan tren dengan hati-hati.
@@ -275,9 +275,9 @@ function BacktestSelectorCard({
       )}
 
       {/* Footer Metadata */}
-      <div className="mt-4 border-t border-paper-100 pt-2.5 flex items-center justify-between text-3xs text-paper-600">
+      <div className="mt-4 border-t border-paper-100 pt-2.5 flex items-center justify-between text-caption text-paper-600">
         <span className="font-mono">{testPeriodInfo.formatted}</span>
-        <span className="font-mono uppercase text-4xs bg-paper-100 px-1.5 py-0.5 rounded border border-paper-200">
+        <span className="font-mono uppercase text-overline bg-paper-100 px-1.5 py-0.5 rounded border border-paper-200">
           {metric.model_version.split("-").slice(-1)[0] ?? metric.model_version}
         </span>
       </div>
@@ -463,7 +463,7 @@ export function BacktestCard({
                 </p>
                 <div className="flex flex-wrap gap-2 pt-2 border-t border-paper-100">
                   {activeAlgo?.models.map((m) => (
-                    <Badge key={m} variant="secondary" className="font-mono text-3xs">
+                    <Badge key={m} variant="secondary" className="font-mono text-caption">
                       {m}
                     </Badge>
                   ))}

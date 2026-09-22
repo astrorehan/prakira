@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ReturnToWork } from "@/components/return-to-work";
 import { WeatherSimulator } from "@/components/weather-simulator";
 
 /**
@@ -16,5 +17,12 @@ export const metadata: Metadata = {
 };
 
 export default function SimulasiPage() {
-  return <WeatherSimulator />;
+  return (
+    <>
+      {/* F14: petugas yang sampai ke sini dari konsol punya jalan pulang yang
+          membawa kembali penyakit dan wilayah yang tadi dikerjakan. */}
+      <ReturnToWork surface="Simulator cuaca" />
+      <WeatherSimulator />
+    </>
+  );
 }

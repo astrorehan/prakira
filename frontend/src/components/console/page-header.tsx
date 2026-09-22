@@ -117,14 +117,20 @@ export function ConsolePageHeader({
   return (
     <header className={cn("border-b border-border pb-5", className)}>
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-        <div className="min-w-0 space-y-1.5">
+        {/* F17: judul halaman dijamin lebarnya. Tanpa lantai ini kolom
+            kendali mengambil 700 px dari 865 px dan "Beranda / Prioritas"
+            patah jadi tiga baris. */}
+        <div className="min-w-0 flex-1 space-y-1.5 md:min-w-[18rem]">
           <h1 className="text-h1 text-foreground">{title}</h1>
           {description && (
             <p className="max-w-2xl text-body-sm text-paper-600">{description}</p>
           )}
         </div>
 
-        <div className="flex shrink-0 flex-wrap items-center gap-2.5">
+        {/* F17: baris kendali boleh membungkus. Dengan `shrink-0`, chip
+            periode dan dua tombol memakan 700 px dan judul halaman terpaksa
+            patah jadi tiga baris di layar 1280 px. */}
+        <div className="flex min-w-0 flex-wrap items-center gap-2.5 md:justify-end">
           <PeriodChip />
           {actions}
         </div>

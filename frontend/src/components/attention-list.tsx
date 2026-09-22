@@ -179,9 +179,8 @@ export function AttentionList({ diseases, systemToday, className }: AttentionLis
   return (
     <section className={className}>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="font-display text-xl font-semibold text-foreground">
-          Perlu perhatian hari ini
-        </h2>
+        {/* F17: satu tingkat judul bagian di seluruh konsol (§4.2). */}
+        <h2 className="text-h2 text-foreground">Perlu perhatian hari ini</h2>
         <p className="text-caption text-paper-600">
           Seluruh penyakit yang dipantau, diurutkan dari yang paling mendesak.
         </p>

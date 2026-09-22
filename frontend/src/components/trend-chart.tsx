@@ -87,7 +87,7 @@ export function TrendChart({
 
             <XAxis
               dataKey="periodeLabel"
-              tick={{ fill: "#5A6C6E", fontSize: compact ? 9.5 : 11 }}
+              tick={{ fill: "#5A6C6E", fontSize: compact ? 11 : 12 }}
               tickMargin={compact ? 4 : 8}
               axisLine={false}
               tickLine={false}
@@ -96,7 +96,7 @@ export function TrendChart({
             {/* Left Axis: Kasus Penyakit */}
             <YAxis
               yAxisId="left"
-              tick={{ fill: "#5A6C6E", fontSize: compact ? 9.5 : 11 }}
+              tick={{ fill: "#5A6C6E", fontSize: compact ? 11 : 12 }}
               tickMargin={2}
               axisLine={false}
               tickLine={false}
@@ -108,7 +108,7 @@ export function TrendChart({
               <YAxis
                 yAxisId="right"
                 orientation="right"
-                tick={{ fill: rainColor, fontSize: compact ? 9.5 : 11 }}
+                tick={{ fill: rainColor, fontSize: compact ? 11 : 12 }}
                 tickMargin={2}
                 axisLine={false}
                 tickLine={false}
@@ -129,7 +129,7 @@ export function TrendChart({
                       <span className="font-semibold text-foreground">
                         {point.periodeLabel}
                       </span>
-                      <span className="text-3xs text-muted-foreground">
+                      <span className="text-caption text-muted-foreground">
                         {isForecast ? "Prakiraan" : "Observasi"}
                       </span>
                     </div>
@@ -156,7 +156,7 @@ export function TrendChart({
                       )}
 
                       {point.lower_bound !== null && point.upper_bound !== null && (
-                        <div className="flex items-center justify-between text-3xs text-muted-foreground pt-1 border-t border-paper-200/40">
+                        <div className="flex items-center justify-between text-caption text-muted-foreground pt-1 border-t border-paper-200/40">
                           {/* Interval berasal dari sebaran sub-model ensemble
                               (persentil 10-90), bukan interval 95% teoretis —
                               label lamanya menyebut angka yang tidak dihitung. */}
@@ -168,7 +168,7 @@ export function TrendChart({
                       )}
 
                       {showClimateOverlay && point.curah_hujan_mm !== null && (
-                        <div className="flex items-center justify-between text-3xs pt-1 text-paper-600">
+                        <div className="flex items-center justify-between text-caption pt-1 text-paper-600">
                           <span>Curah hujan:</span>
                           <span className="font-semibold" style={{ color: rainColor }}>
                             {point.curah_hujan_mm} mm
@@ -178,7 +178,7 @@ export function TrendChart({
                     </div>
 
                     {isForecast && (
-                      <div className="mt-2 rounded bg-risk-medium-bg px-2 py-1 text-3xs font-medium text-risk-medium border border-risk-medium-br/60">
+                      <div className="mt-2 rounded bg-risk-medium-bg px-2 py-1 text-caption font-medium text-risk-medium border border-risk-medium-br/60">
                         Prakiraan model untuk satu bulan ke depan
                       </div>
                     )}
@@ -250,7 +250,7 @@ export function TrendChart({
         <div
           className={cn(
             "mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-paper-200/70 pt-2.5 text-xs",
-            compact && "mt-2 pt-2 text-2xs gap-2"
+            compact && "mt-2 pt-2 text-caption gap-2"
           )}
         >
           <div className="flex flex-wrap items-center gap-3 text-muted-foreground">

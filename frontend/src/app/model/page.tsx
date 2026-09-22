@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { ReturnToWork } from "@/components/return-to-work";
 import { ModelTransparency } from "@/components/model-transparency";
 
 export const metadata: Metadata = {
@@ -16,5 +17,12 @@ export const metadata: Metadata = {
  * yang menulis.
  */
 export default function ModelPage() {
-  return <ModelTransparency />;
+  return (
+    <>
+      {/* F14: petugas yang sampai ke sini dari konsol punya jalan pulang yang
+          membawa kembali penyakit dan wilayah yang tadi dikerjakan. */}
+      <ReturnToWork surface="Transparansi model" />
+      <ModelTransparency />
+    </>
+  );
 }

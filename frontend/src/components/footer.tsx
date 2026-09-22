@@ -78,32 +78,55 @@ export function Footer() {
           </div>
 
           <div className="space-y-2">
+            {/* F14: kolom ini dulu bernama "Modul Sistem" dan berisi tiga rute
+                konsol — dashboard, analitik, manajemen data. Halaman publik
+                tidak punya urusan menawarkan ruang kerja petugas kepada warga;
+                yang terjadi hanya satu klik menuju layar masuk yang tidak
+                diminta. Yang tersisa di sini adalah permukaan yang memang
+                dibuka tanpa akun, dan satu pintu masuk petugas yang jujur
+                menyebut dirinya begitu. */}
             <h4 className="font-display font-medium text-foreground text-xs uppercase tracking-wider">
-              Modul Sistem
+              Layanan & Transparansi
             </h4>
             <ul className="space-y-1.5 text-xs">
               <li>
                 <Link
-                  href="/dashboard"
+                  href="/sistem"
                   className="hover:text-primary transition-colors"
                 >
-                  Dashboard Prediksi Risiko
+                  Layanan Publik & Data Kecamatan
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/analitik"
+                  href="/model"
                   className="hover:text-primary transition-colors"
                 >
-                  Analitik & Riwayat Cuaca
+                  Transparansi Model
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/admin"
+                  href="/mesin-waktu"
                   className="hover:text-primary transition-colors"
                 >
-                  Manajemen Data
+                  Uji Historis Prakiraan
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/simulasi"
+                  className="hover:text-primary transition-colors"
+                >
+                  Simulator Cuaca
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/masuk"
+                  className="hover:text-primary transition-colors"
+                >
+                  Masuk sebagai Petugas
                 </Link>
               </li>
             </ul>

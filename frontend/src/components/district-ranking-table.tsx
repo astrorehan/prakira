@@ -71,7 +71,7 @@ export function DistrictRankingTable({
       {/* Table Surface */}
       <div className="overflow-x-auto rounded-2xl border border-paper-200/90 bg-white/90 shadow-card">
         <table className="w-full text-left text-xs">
-          <thead className="bg-paper-50/90 border-b border-paper-200 text-2xs font-semibold text-muted-foreground uppercase tracking-wider">
+          <thead className="bg-paper-50/90 border-b border-paper-200 text-overline font-semibold text-muted-foreground uppercase tracking-wider">
             <tr>
               <th className="py-3.5 px-4">Peringkat & Kecamatan</th>
               <th
@@ -129,7 +129,7 @@ export function DistrictRankingTable({
                     <div className="flex items-center gap-2.5">
                       <span
                         className={cn(
-                          "flex h-6 w-6 items-center justify-center rounded-full text-2xs font-semibold",
+                          "flex h-6 w-6 items-center justify-center rounded-full text-caption font-semibold",
                           index < 3
                             ? "bg-risk-high-bg text-risk-high border border-risk-high-br/60"
                             : "bg-paper-100 text-paper-700",
@@ -144,7 +144,7 @@ export function DistrictRankingTable({
                             <span className="h-1.5 w-1.5 rounded-full bg-primary" />
                           )}
                         </div>
-                        <div className="text-3xs text-muted-foreground">
+                        <div className="text-caption text-muted-foreground">
                           BPS: <span className="font-mono">{kec.kode_bps}</span> ·{" "}
                           {(kec.populasi / 1000).toFixed(0)}k jiwa · {kec.luas_km2} km²
                         </div>
@@ -171,7 +171,7 @@ export function DistrictRankingTable({
                       {formatMaybeNumber(kec.kasus_aktif)} kasus
                     </div>
                     {kec.riwayat_periode.length > 1 && (
-                      <div className="text-3xs text-muted-foreground font-mono">
+                      <div className="text-caption text-muted-foreground font-mono">
                         {kec.riwayat_periode.length} bln:{" "}
                         {kec.riwayat_periode.join(" → ")}
                       </div>
@@ -180,14 +180,14 @@ export function DistrictRankingTable({
 
                   <td className="py-3 px-3">
                     {kec.kasus_prediksi === null ? (
-                      <span className="text-3xs text-paper-600">Belum diprediksi</span>
+                      <span className="text-caption text-paper-600">Belum diprediksi</span>
                     ) : (
                       <>
                         <div className="font-semibold text-risk-high">
                           {formatMaybeNumber(kec.kasus_prediksi)} kasus
                         </div>
                         {/* Batas selalu ikut angkanya, tidak pernah di kolom lain. */}
-                        <div className="font-mono text-3xs text-muted-foreground">
+                        <div className="font-mono text-caption text-muted-foreground">
                           {formatMaybeNumber(kec.kasus_prediksi_lower)}–
                           {formatMaybeNumber(kec.kasus_prediksi_upper)}
                         </div>
@@ -196,7 +196,7 @@ export function DistrictRankingTable({
                     {kec.delta_periode !== null && (
                       <div
                         className={cn(
-                          "text-3xs font-semibold",
+                          "text-caption font-semibold",
                           kec.delta_periode >= 0 ? "text-risk-high" : "text-risk-low",
                         )}
                       >
@@ -216,7 +216,7 @@ export function DistrictRankingTable({
                       <CloudRain className="h-3 w-3" />
                       <span>{formatMaybeNumber(kec.cuaca.curah_hujan_mm)} mm</span>
                     </div>
-                    <div className="text-3xs text-muted-foreground">
+                    <div className="text-caption text-muted-foreground">
                       {formatMaybeNumber(kec.cuaca.suhu_c)}°C ·{" "}
                       {formatMaybeNumber(kec.cuaca.kelembaban_pct)}% RH
                     </div>

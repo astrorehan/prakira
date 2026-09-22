@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Menu, LogIn, Landmark, Radio, ShieldCheck, X } from "lucide-react";
+import { ArrowLeft, Menu, LogIn, Landmark, Radio, ShieldCheck, X } from "lucide-react";
 import { BrandLockup } from "@/components/brand-lockup";
 
 import { cn } from "@/lib/utils";
@@ -88,19 +88,29 @@ export function SistemMasthead() {
             whose it is: ink bar, small type, statutory links only. */}
         <div className="bg-brand-900 text-white">
           <div className="container flex h-9 items-center justify-between gap-4">
-            <p className="flex items-center gap-2 font-mono text-3xs uppercase tracking-[0.08em] text-white/70">
+            <p className="flex min-w-0 items-center gap-2 font-mono text-overline uppercase text-white/70">
               <Landmark className="h-3 w-3 shrink-0" aria-hidden />
               <span className="truncate">
                 Situs resmi Pemerintah Kota Semarang
                 <span className="hidden sm:inline"> · Dinas Kesehatan Kota Semarang</span>
               </span>
             </p>
-            <nav aria-label="Tautan resmi" className="hidden items-center gap-5 sm:flex">
+            <nav aria-label="Tautan resmi" className="flex items-center gap-5">
+              {/* F14: halaman ini bukan pintu publik kedua. Ia satu permukaan
+                  di dalam situs yang sama, dan pembacanya harus bisa kembali
+                  ke berandanya tanpa menebak alamat. */}
+              <Link
+                href="/"
+                className="flex items-center gap-1.5 font-mono text-overline uppercase text-white/70 transition-colors duration-fast hover:text-white"
+              >
+                <ArrowLeft className="h-3 w-3 shrink-0" aria-hidden />
+                <span>Beranda Prakira</span>
+              </Link>
               {["PPID", "Kebijakan Privasi", "Bantuan"].map((label) => (
                 <a
                   key={label}
                   href="#informasi"
-                  className="font-mono text-3xs uppercase tracking-[0.08em] text-white/60 transition-colors duration-fast hover:text-white"
+                  className="hidden font-mono text-overline uppercase text-white/60 transition-colors duration-fast hover:text-white sm:inline"
                 >
                   {label}
                 </a>
@@ -157,7 +167,7 @@ export function SistemMasthead() {
                   >
                     <span
                       className={cn(
-                        "font-mono text-3xs tabular",
+                        "font-mono text-overline tabular",
                         isActive ? "text-brand-500" : "text-paper-600",
                       )}
                     >
@@ -172,7 +182,7 @@ export function SistemMasthead() {
         </nav>
 
         <nav aria-label="Navigasi layanan" className="container flex h-12 items-center justify-between md:hidden">
-          <span className="font-mono text-3xs uppercase tracking-[0.08em] text-paper-600">
+          <span className="font-mono text-overline uppercase text-paper-600">
             Menu layanan
           </span>
           <button
@@ -180,7 +190,7 @@ export function SistemMasthead() {
             onClick={() => setMenuOpen((v) => !v)}
             aria-expanded={menuOpen}
             aria-label={menuOpen ? "Tutup menu layanan" : "Buka menu layanan"}
-            className="inline-flex items-center gap-2 font-mono text-3xs uppercase tracking-[0.08em] text-brand-700"
+            className="inline-flex items-center gap-2 font-mono text-overline uppercase text-brand-700"
           >
             {menuOpen ? "Tutup" : "Buka"}
             {menuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
@@ -197,7 +207,7 @@ export function SistemMasthead() {
                     onClick={() => setMenuOpen(false)}
                     className="flex items-center gap-3 border-t border-sand-100 py-3 text-sm text-foreground"
                   >
-                    <span className="font-mono text-3xs tabular text-paper-600">
+                    <span className="font-mono text-overline tabular text-paper-600">
                       {item.code}
                     </span>
                     {item.label}
@@ -215,7 +225,7 @@ export function SistemMasthead() {
         <div className="container flex h-10 items-center gap-x-6 overflow-x-auto whitespace-nowrap">
           <span
             className={cn(
-              "flex items-center gap-2 font-mono text-3xs uppercase tracking-[0.08em]",
+              "flex items-center gap-2 font-mono text-overline uppercase",
               online ? "text-risk-low" : "text-risk-medium",
             )}
           >
@@ -241,14 +251,14 @@ export function SistemMasthead() {
             <>
               <span className="hidden h-3 w-px bg-sand-300 sm:block" />
 
-              <span className="hidden items-center gap-2 font-mono text-3xs uppercase tracking-[0.08em] text-paper-600 sm:flex">
+              <span className="hidden items-center gap-2 font-mono text-overline uppercase text-paper-600 sm:flex">
                 <Radio className="h-3 w-3" aria-hidden />
                 Data sampai {formatMonth(period.data.latestObserved)}
               </span>
 
               <span className="hidden h-3 w-px bg-sand-300 lg:block" />
 
-              <span className="hidden font-mono text-3xs uppercase tracking-[0.08em] text-paper-600 lg:inline">
+              <span className="hidden font-mono text-overline uppercase text-paper-600 lg:inline">
                 Prakiraan {formatMonth(period.data.predictionMonth)} ·{" "}
                 <span className="tabular">{period.data.historyMonths}</span> bulan riwayat
               </span>

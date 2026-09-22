@@ -23,6 +23,7 @@ import { fetchDiseases, runSimulation } from "@/lib/api";
 import { useApi } from "@/lib/use-api";
 import { cn, diseaseLabel, formatNumber, riskConfigOf } from "@/lib/utils";
 import type { DiseaseType, SimulateDistrict } from "@/types";
+import { pickInitialDisease, readWorkParams } from "@/lib/work-context";
 
 /**
  * Simulator cuaca (what-if).
@@ -251,10 +252,15 @@ export function WeatherSimulator() {
 
   const diseases = useApi(() => fetchDiseases(), []);
 
+  /* F14: penyakit yang sedang dikerjakan petugas ikut lewat `?disease=`. */
   React.useEffect(() => {
-    if (!disease && diseases.data && diseases.data.length > 0) {
-      setDisease(diseases.data[0].disease);
-    }
+    if (disease || !diseases.data || diseases.data.length === 0) return;
+    setDisease(
+      pickInitialDisease(
+        diseases.data.map((d) => d.disease),
+        readWorkParams().disease,
+      ),
+    );
   }, [diseases.data, disease]);
 
   const settled = useDebounced(adjustment, DEBOUNCE_MS);

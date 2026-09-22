@@ -18,6 +18,12 @@ import { formatMonth } from "@/lib/period";
 import { downloadCsv, slugify, toCsv } from "@/lib/export";
 import { diseaseLabel } from "@/lib/utils";
 import { climateCorrelations, isSignificant, strongestCorrelation } from "@/lib/stats";
+import {
+  pickInitialDisease,
+  readWorkParams,
+  rememberWorkContext,
+  withWorkParams,
+} from "@/lib/work-context";
 import type { DiseaseType } from "@/types";
 
 /**
@@ -34,6 +40,33 @@ import type { DiseaseType } from "@/types";
  * dipercaya hanya bisa dibuka petugas yang punya akun. Yang tersisa di sini
  * adalah yang memang pekerjaan analis: hubungan iklim–kasus dan rekap deretnya.
  */
+/* Tiga alat, tiga pertanyaan berbeda. Yang dituliskan di kartu adalah
+   pertanyaannya, bukan nama tekniknya: "backtest" tidak memberi tahu petugas
+   kapan ia perlu membukanya. */
+const EVALUATION_TOOLS = [
+  {
+    href: "/model",
+    title: "Transparansi model",
+    question:
+      "Algoritma, fitur, periode latih, hasil uji, cakupan data per kecamatan, dan batasan yang berlaku.",
+    cta: "Buka transparansi model",
+  },
+  {
+    href: "/mesin-waktu",
+    title: "Uji historis",
+    question:
+      "Pada bulan-bulan yang sudah lewat, peringatan apa yang terlewat dan alarm apa yang tidak terbukti.",
+    cta: "Buka uji historis",
+  },
+  {
+    href: "/simulasi",
+    title: "Simulator cuaca",
+    question:
+      "Bagaimana prakiraan bergerak bila curah hujan, suhu, atau kelembaban berbeda. Skenario, bukan prakiraan berjalan.",
+    cta: "Buka simulator",
+  },
+] as const;
+
 export default function AnalitikPage() {
   const [selectedDisease, setSelectedDisease] = React.useState<DiseaseType | null>(null);
   const toast = useConsoleToast();
@@ -41,10 +74,25 @@ export default function AnalitikPage() {
   const diseases = useApi(() => fetchDiseases(), []);
   const climate = useApi(() => fetchClimateSeries(60), []);
 
+  /* F14: alat evaluasi dibuka dari sini, jadi pekerjaan yang ditinggalkan
+     punya nama dan alamat kembali. */
   React.useEffect(() => {
-    if (!selectedDisease && diseases.data && diseases.data.length > 0) {
-      setSelectedDisease(diseases.data[0].disease);
-    }
+    if (!selectedDisease) return;
+    rememberWorkContext({
+      href: "/analitik",
+      label: "Analitik & Evaluasi",
+      disease: selectedDisease,
+    });
+  }, [selectedDisease]);
+
+  React.useEffect(() => {
+    if (selectedDisease || !diseases.data || diseases.data.length === 0) return;
+    setSelectedDisease(
+      pickInitialDisease(
+        diseases.data.map((d) => d.disease),
+        readWorkParams().disease,
+      ),
+    );
   }, [diseases.data, selectedDisease]);
 
   const diseaseNames = React.useMemo(
@@ -115,8 +163,8 @@ export default function AnalitikPage() {
     <div className="min-h-screen bg-background bg-mesh-blue px-4 py-8 sm:px-6 lg:px-8">
       <div className="container mx-auto max-w-7xl space-y-8">
         <ConsolePageHeader
-          title="Analitik & Riwayat"
-          description="Hubungan antara data iklim dan kejadian penyakit per kecamatan. Semua angka di halaman ini dihitung dari deret yang sedang ditampilkan; hasil uji modelnya ada di halaman Transparansi Model."
+          title="Analitik & Evaluasi"
+          description="Hubungan antara data iklim dan kejadian penyakit per kecamatan, dan pintu ke alat yang menguji seberapa jauh prakiraan boleh dipercaya. Semua angka di halaman ini dihitung dari deret yang sedang ditampilkan."
           actions={
             <Button
               size="sm"
@@ -151,7 +199,7 @@ export default function AnalitikPage() {
             <Card className="space-y-4 p-5">
               <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-start">
                 <div className="min-w-0">
-                  <h2 className="text-h3 text-foreground">
+                  <h2 className="text-h2 text-foreground">
                     Korelasi iklim vs kasus {diseaseLabel(selectedDisease)}
                   </h2>
                   <p className="text-caption text-paper-600">
@@ -181,27 +229,48 @@ export default function AnalitikPage() {
           </DataState>
         </section>
 
-        {/* 2. Akurasi model — isinya di /model, bukan disalin ulang di sini.
-            Dua salinan metrik yang sama pada akhirnya akan berbeda, dan yang
-            keliru selalu yang tidak sedang dilihat penulisnya. */}
-        <section>
-          <Card className="flex flex-col justify-between gap-4 p-5 sm:flex-row sm:items-center">
-            <div className="min-w-0 space-y-1">
-              <h2 className="text-h3 text-foreground">Akurasi prediksi vs aktual</h2>
-              <p className="text-body-sm text-paper-600">
-                Metrik uji tiap model, grafik backtest, cakupan data per kecamatan, dan
-                daftar batasan tinggal di halaman Transparansi Model — terbuka tanpa
-                perlu masuk, supaya bisa dirujuk ke luar dinas.
-              </p>
-            </div>
+        {/* 2. Alat evaluasi.
+            F14: simulator, uji historis, dan transparansi model dulu hanya
+            tercantum sebagai "halaman publik" di rel konsol — sederet tautan
+            keluar tanpa keterangan kapan salah satunya berguna. Ketiganya
+            menjawab pertanyaan yang berbeda, dan semuanya muncul di pekerjaan
+            yang sama: apakah angka yang sedang saya pegang layak dipakai.
+            Isinya tidak disalin ke sini; dua salinan metrik yang sama pada
+            akhirnya akan berbeda, dan yang keliru selalu yang tidak sedang
+            dilihat penulisnya. */}
+        <section className="space-y-4">
+          <div className="min-w-0">
+            <h2 className="text-h2 text-foreground">Alat evaluasi</h2>
+            <p className="mt-1 max-w-2xl text-body-sm text-paper-600">
+              Ketiganya membuka pada penyakit yang sedang dipilih di halaman ini, dan
+              menyediakan jalan kembali ke pekerjaan. Semuanya juga terbuka untuk
+              publik tanpa perlu masuk, supaya bisa dirujuk ke luar dinas.
+            </p>
+          </div>
 
-            <Button asChild size="sm" variant="outline" className="shrink-0 gap-1.5">
-              <Link href="/model">
-                <span>Buka Transparansi Model</span>
-                <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              </Link>
-            </Button>
-          </Card>
+          <ul className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {EVALUATION_TOOLS.map((tool) => (
+              <li key={tool.href}>
+                <Card className="flex h-full flex-col justify-between gap-4 p-5">
+                  <div className="min-w-0 space-y-1.5">
+                    <h3 className="text-h3 text-foreground">{tool.title}</h3>
+                    <p className="text-body-sm text-paper-600">{tool.question}</p>
+                  </div>
+
+                  <Button asChild size="sm" variant="outline" className="gap-1.5 self-start">
+                    <Link
+                      href={withWorkParams(tool.href, {
+                        disease: selectedDisease,
+                      })}
+                    >
+                      <span>{tool.cta}</span>
+                      <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                    </Link>
+                  </Button>
+                </Card>
+              </li>
+            ))}
+          </ul>
         </section>
 
         {/* 3. Rekapitulasi */}

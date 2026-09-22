@@ -220,7 +220,7 @@ export function WhyThisNumber({
             : "Belum ada prakiraan untuk kecamatan ini."
         }
         className={cn(
-          "inline-flex items-center gap-1.5 rounded-full border border-brand-300/60 bg-brand-50 px-3 py-1.5 text-3xs font-medium text-brand-700 transition-colors hover:bg-brand-100 disabled:cursor-not-allowed disabled:border-paper-200 disabled:bg-paper-100 disabled:text-paper-500",
+          "inline-flex items-center gap-1.5 rounded-full border border-brand-300/60 bg-brand-50 px-3 py-1.5 text-caption font-medium text-brand-700 transition-colors hover:bg-brand-100 disabled:cursor-not-allowed disabled:border-paper-200 disabled:bg-paper-100 disabled:text-paper-500",
           className,
         )}
       >

@@ -147,10 +147,10 @@ export default function ChoroplethMap({
       const html = `
         <div style="font-family:var(--font-sans, system-ui);font-size:12px;min-width:250px;color:#0E2225;line-height:1.4">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-            <span style="font-size:10px;text-transform:uppercase;font-weight:600;letter-spacing:0.06em;color:#5A6C6E">
+            <span style="font-size:12px;text-transform:uppercase;font-weight:600;letter-spacing:0.06em;color:#5A6C6E">
               KECAMATAN
             </span>
-            <span style="background:${riskCfg.color};color:#FFFFFF;padding:2px 8px;border-radius:9999px;font-size:10px;font-weight:600">
+            <span style="background:${riskCfg.color};color:#FFFFFF;padding:2px 8px;border-radius:9999px;font-size:12px;font-weight:600">
               ${riskCfg.label.toUpperCase()}
             </span>
           </div>
@@ -159,7 +159,7 @@ export default function ChoroplethMap({
             ${item.nama}
           </div>
 
-          <div style="display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:11px;border-top:1px solid #DFE6E6;padding-top:6px">
+          <div style="display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:12px;border-top:1px solid #DFE6E6;padding-top:6px">
             <span style="color:#5A6C6E">Kasus ${formatMonth(item.periode_observasi)}:</span>
             <span style="font-weight:600;color:#0E2225">${formatMaybeNumber(item.kasus_aktif)} kasus${delta}</span>
 
@@ -179,12 +179,12 @@ export default function ChoroplethMap({
           ${
             triggerTotal > 0
               ? `
-            <div style="margin-top:6px;padding-top:6px;border-top:1px solid #DFE6E6;font-size:11px;">
+            <div style="margin-top:6px;padding-top:6px;border-top:1px solid #DFE6E6;font-size:12px;">
               <div style="display:flex;justify-content:space-between;color:#0E2225;font-weight:600;margin-bottom:2px">
                 <span style="color:#0B4A57;">Sinyal Pemicu Lingkungan:</span>
-                <span style="background:#FEF3C7;color:#92400E;padding:1px 6px;border-radius:4px;font-size:10px">${triggerTotal} terverifikasi</span>
+                <span style="background:#FEF3C7;color:#92400E;padding:1px 6px;border-radius:4px;font-size:12px">${triggerTotal} terverifikasi</span>
               </div>
-              <div style="font-size:10px;color:#5A6C6E;">
+              <div style="font-size:12px;color:#5A6C6E;">
                 ${triggerBreakdown}
               </div>
             </div>
@@ -192,7 +192,7 @@ export default function ChoroplethMap({
               : ""
           }
 
-          <div style="margin-top:8px;padding-top:6px;border-top:1px dashed #DFE6E6;font-size:10px;color:#0B4A57;font-weight:600">
+          <div style="margin-top:8px;padding-top:6px;border-top:1px dashed #DFE6E6;font-size:12px;color:#0B4A57;font-weight:600">
             Klik untuk rekomendasi intervensi lengkap →
           </div>
         </div>
@@ -241,7 +241,7 @@ export default function ChoroplethMap({
             html: `
               <div style="position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;">
                 <div style="position:absolute;width:28px;height:28px;background:rgba(217, 119, 6, 0.35);border-radius:9999px;animation:pulse 2s infinite;"></div>
-                <div style="position:relative;display:flex;align-items:center;gap:3px;background:#D97706;color:#ffffff;padding:2px 7px;border-radius:9999px;font-size:10px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,0.25);border:1.5px solid #FFFFFF;">
+                <div style="position:relative;display:flex;align-items:center;gap:3px;background:#D97706;color:#ffffff;padding:2px 7px;border-radius:9999px;font-size:12px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,0.25);border:1.5px solid #FFFFFF;">
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                   <span>${trigger.total}</span>
                 </div>
@@ -294,7 +294,7 @@ export default function ChoroplethMap({
           type="button"
           onClick={() => setShowTriggers(!showTriggers)}
           className={cn(
-            "flex items-center gap-2 px-3 py-1.5 rounded-xl border text-2xs sm:text-xs font-semibold backdrop-blur-md shadow-xs transition-all",
+            "flex items-center gap-2 px-3 py-1.5 rounded-xl border text-caption sm:text-xs font-semibold backdrop-blur-md shadow-xs transition-all",
             showTriggers
               ? "bg-white/95 border-amber-300/80 text-amber-900 shadow-amber-500/10"
               : "bg-white/80 border-paper-200 text-muted-foreground hover:text-foreground",
@@ -348,10 +348,10 @@ export default function ChoroplethMap({
               <LeafletTooltip direction="top" offset={[0, -10]} className="dsdc-map-tooltip">
                 <div className="text-xs p-1">
                   <div className="font-semibold text-foreground">{district.nama}</div>
-                  <div className="text-2xs text-amber-700 font-medium mt-0.5">
+                  <div className="text-caption text-amber-700 font-medium mt-0.5">
                     {trigger.total} Laporan Lingkungan Terverifikasi
                   </div>
-                  <div className="text-3xs text-muted-foreground mt-1 space-y-0.5">
+                  <div className="text-caption text-muted-foreground mt-1 space-y-0.5">
                     {trigger.byKind.jentik > 0 && <div>• {trigger.byKind.jentik} Titik Jentik</div>}
                     {trigger.byKind.genangan > 0 && (
                       <div>• {trigger.byKind.genangan} Genangan Air</div>
