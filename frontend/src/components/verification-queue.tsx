@@ -15,6 +15,7 @@ import {
   RotateCcw,
   Recycle,
   FlaskConical,
+  Mail,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
@@ -24,7 +25,10 @@ import { Label } from "@/components/ui/label";
 import { ConsoleToast, useConsoleToast } from "@/components/console/toast";
 import { DataState } from "@/components/data-state";
 import { EscalationPanel } from "@/components/escalation-panel";
-import { EnvironmentTicketQueue } from "@/components/environment-ticket-queue";
+import {
+  DispositionEmailModal,
+  type DispositionEmailData,
+} from "@/components/disposition-email-modal";
 import {
   sortForQueue,
   REPORT_KIND,
@@ -200,6 +204,7 @@ function ReportPhoto({ id }: { id: string }) {
 function ReportRow({
   report,
   onDecide,
+  onShowDisposition,
 }: {
   report: CitizenReport;
   onDecide: (
@@ -208,6 +213,7 @@ function ReportRow({
     note?: string,
     handlingMode?: EnvironmentHandlingMode,
   ) => void | Promise<void>;
+  onShowDisposition?: (report: CitizenReport) => void;
 }) {
   const [rejecting, setRejecting] = React.useState(false);
   const [addingAdvice, setAddingAdvice] = React.useState(false);
@@ -386,10 +392,10 @@ function ReportRow({
                     />
                     <span>
                       <span className="block text-body-sm font-medium text-foreground">
-                        Teruskan ke DLH
+                        Kirim Disposisi Email ke DLH
                       </span>
                       <span className="mt-0.5 block text-caption leading-relaxed text-paper-600">
-                        Siapkan penerusan ke Dinas Lingkungan Hidup untuk penanganan teknis.
+                        Terima laporan dan terbitkan surat rujukan resmi otomatis ke Dinas Lingkungan Hidup.
                       </span>
                     </span>
                   </label>
@@ -431,7 +437,7 @@ function ReportRow({
                   className="gap-1.5"
                 >
                   <Check className="h-4 w-4" aria-hidden="true" />
-                  {handlingMode === "dlh" ? "Terima & siapkan penerusan ke DLH" : "Terima & tampilkan arahan"}
+                  {handlingMode === "dlh" ? "Terima & Kirim Disposisi DLH" : "Terima & kirim arahan"}
                 </Button>
                 <Button
                   size="sm"
@@ -519,15 +525,29 @@ function ReportRow({
           )}
         </div>
       ) : (
-        <div className="mt-3 border-t border-border pt-3 text-caption text-paper-600">
-          <span className="font-medium text-foreground">
-            {report.status === "terverifikasi" ? "Diterima" : "Ditolak"}
-          </span>{" "}
-          oleh {report.reviewer ?? "petugas"}
-          {report.reviewedAt ? ` · ${formatDateTime(report.reviewedAt)}` : ""}
-          {report.routing.handlingMode === "mandiri_warga" ? " · Arahan mandiri warga" : ""}
-          {report.routing.handlingMode === "dlh" ? " · Diteruskan ke DLH" : ""}
-          {report.reviewNote ? ` · ${report.reviewNote}` : ""}
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-caption text-paper-600">
+          <div>
+            <span className="font-medium text-foreground">
+              {report.status === "terverifikasi" ? "Diterima" : "Ditolak"}
+            </span>{" "}
+            oleh {report.reviewer ?? "petugas"}
+            {report.reviewedAt ? ` · ${formatDateTime(report.reviewedAt)}` : ""}
+            {report.routing.handlingMode === "mandiri_warga" ? " · Arahan mandiri warga" : ""}
+            {report.routing.handlingMode === "dlh" ? " · Disposisi terkirim ke DLH" : ""}
+            {report.reviewNote ? ` · ${report.reviewNote}` : ""}
+          </div>
+          {report.routing.handlingMode === "dlh" && onShowDisposition && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => onShowDisposition(report)}
+              className="h-7 gap-1.5 text-caption font-medium text-teal-800 border-teal-200 bg-teal-50/60 hover:bg-teal-100 hover:text-teal-900"
+            >
+              <Mail className="h-3 w-3" />
+              <span>Lihat Disposisi DLH</span>
+            </Button>
+          )}
         </div>
       )}
     </Card>
@@ -541,7 +561,8 @@ export function VerificationQueue() {
   const [status, setStatus] = React.useState<ReportStatus | "semua">("menunggu");
   const [wilayah, setWilayah] = React.useState("semua");
   const [decideError, setDecideError] = React.useState<string | null>(null);
-  const [ticketRefresh, setTicketRefresh] = React.useState(0);
+  const [dispositionData, setDispositionData] = React.useState<DispositionEmailData | null>(null);
+  const [dispositionModalOpen, setDispositionModalOpen] = React.useState(false);
   const toast = useConsoleToast();
 
   const reports = queue.data?.data ?? null;
@@ -580,22 +601,38 @@ export function VerificationQueue() {
     };
   }, [reports, wilayah]);
 
+  const handleShowDisposition = React.useCallback((report: CitizenReport) => {
+    setDispositionData({
+      reportId: report.id,
+      kind: report.kind,
+      kecamatan: report.kecamatan,
+      kelurahan: report.kelurahan,
+      description: report.description,
+      createdAt: report.submittedAt,
+      dispositionNumber: report.ticket?.id,
+    });
+    setDispositionModalOpen(true);
+  }, []);
+
   const decide = React.useCallback(
-        async (
-          id: string,
-          next: "terverifikasi" | "ditolak",
-          note?: string,
-          handlingMode?: EnvironmentHandlingMode,
-        ) => {
+    async (
+      id: string,
+      next: "terverifikasi" | "ditolak",
+      note?: string,
+      handlingMode?: EnvironmentHandlingMode,
+    ) => {
       setDecideError(null);
+      const targetReport = reports?.find((r) => r.id === id);
       try {
         await reviewReport(id, { status: next, note, handlingMode });
         queue.reload();
-        if (handlingMode === "dlh") setTicketRefresh((value) => value + 1);
+        if (next === "terverifikasi" && handlingMode === "dlh" && targetReport) {
+          handleShowDisposition(targetReport);
+        }
         toast.show(
           next === "terverifikasi"
             ? handlingMode === "dlh"
-              ? `${id} diterima dan tiket DLH dibuat.`
+              ? `${id} diterima. Surat disposisi resmi telah dikirim ke DLH.`
               : handlingMode === "mandiri_warga"
                 ? `${id} diterima dengan arahan mandiri warga.`
                 : `${id} diterima. Pelapor bisa melihat perubahan ini di halaman lacak.`
@@ -605,7 +642,7 @@ export function VerificationQueue() {
         setDecideError(caught instanceof Error ? caught.message : String(caught));
       }
     },
-    [queue, toast],
+    [queue, reports, toast, handleShowDisposition],
   );
 
   return (
@@ -634,11 +671,9 @@ export function VerificationQueue() {
         <SummaryTile
           label="Laporan lingkungan menunggu"
           value={String(summary.lingkunganMenunggu)}
-          hint="Petugas memilih arahan mandiri warga atau meneruskannya ke Dinas Lingkungan Hidup."
+          hint="Petugas memilih arahan mandiri warga atau mengirim disposisi email ke Dinas Lingkungan Hidup."
         />
       </div>
-
-      <EnvironmentTicketQueue refreshToken={ticketRefresh} />
 
       {/* Pola sebelum satuan. Antrean di bawah tetap urut menunggu-terlama;
           yang ditambahkan di sini adalah pembacaan yang tidak muncul dari
@@ -726,7 +761,12 @@ export function VerificationQueue() {
       >
         <div className="space-y-3">
           {visible.map((r) => (
-            <ReportRow key={r.id} report={r} onDecide={decide} />
+            <ReportRow
+              key={r.id}
+              report={r}
+              onDecide={decide}
+              onShowDisposition={handleShowDisposition}
+            />
           ))}
         </div>
       </DataState>
@@ -742,6 +782,12 @@ export function VerificationQueue() {
       </div>
 
       <ConsoleToast message={toast.message} onDismiss={toast.dismiss} />
+
+      <DispositionEmailModal
+        open={dispositionModalOpen}
+        onOpenChange={setDispositionModalOpen}
+        data={dispositionData}
+      />
     </div>
   );
 }

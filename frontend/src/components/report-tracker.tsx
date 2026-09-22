@@ -47,7 +47,7 @@ function buildSteps(report: CitizenReport): Step[] {
         ? "Pilihan tindak lanjut"
         : "Rekap kesehatan"
       : report.routing.workflow === "tiket_lingkungan"
-      ? "Diteruskan ke DLH"
+      ? "Disposisi ke DLH"
       : report.routing.workflow === "arahan_warga"
         ? "Arahan mandiri warga"
         : report.routing.workflow === "rekap_evaluasi"
@@ -56,15 +56,15 @@ function buildSteps(report: CitizenReport): Step[] {
   const followUpDetail =
     !decided
       ? report.routing.family === "lingkungan"
-        ? "Petugas akan memilih apakah laporan perlu arahan warga atau diteruskan ke DLH."
+        ? "Petugas akan memilih apakah laporan perlu arahan warga atau disposisi ke DLH."
         : "Setelah diterima, laporan masuk rekap evaluasi kesehatan."
       : report.routing.workflow === "tiket_lingkungan"
-      ? "Laporan diteruskan ke DLH; penanganan teknis menjadi kewenangan instansi penerima."
+      ? "Laporan telah diteruskan melalui surat disposisi resmi ke Dinas Lingkungan Hidup Kota Semarang."
       : report.routing.workflow === "arahan_warga"
         ? "Petugas memilih tindak lanjut melalui arahan yang aman dilakukan warga."
         : report.routing.workflow === "rekap_evaluasi"
           ? "Laporan terverifikasi masuk rekap evaluasi kesehatan."
-          : "Petugas akan memilih apakah laporan perlu arahan warga atau diteruskan ke DLH.";
+          : "Petugas akan memilih apakah laporan perlu arahan warga atau disposisi ke DLH.";
 
   return [
     {
@@ -205,13 +205,13 @@ function ReportDetail({ report }: { report: CitizenReport }) {
             <Info className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />
             <span>
               {report.simulated
-                ? "Ini laporan peragaan; tidak membuat tiket operasional."
+                ? "Ini laporan peragaan; tidak menerbitkan surat disposisi."
                 : report.routing.workflow === "tiket_lingkungan"
                   ? report.ticket
-                    ? `Laporan bertipe pemicu lingkungan diteruskan ke ${FAMILY_ROUTING.lingkungan}; penanganan teknis merupakan kewenangan instansi penerima.`
-                    : "Laporan lingkungan sudah diterima dan disiapkan untuk penerusan ke instansi terkait."
+                    ? `Laporan bertipe pemicu lingkungan telah diteruskan via disposisi resmi ke ${FAMILY_ROUTING.lingkungan}.`
+                    : "Laporan lingkungan sudah diterima dan sedang disiapkan untuk rujukan tindak lanjut."
                   : report.routing.workflow === "arahan_warga"
-                    ? "Petugas memilih arahan mandiri warga; laporan ini tidak dibuatkan tiket DLH."
+                    ? "Petugas memilih arahan mandiri warga; laporan ini tidak dialihkan ke dinas lain."
                     : report.routing.workflow === "rekap_evaluasi"
                       ? `Laporan kesehatan masuk rekap evaluasi dan menjadi perhatian ${FAMILY_ROUTING.kesehatan}.`
                       : "Petugas belum menetapkan jalur tindak lanjut laporan ini."}{" "}
@@ -222,18 +222,20 @@ function ReportDetail({ report }: { report: CitizenReport }) {
           {report.ticket && (
             <div className="mt-4 rounded-2xl border border-teal-200 bg-teal-50/70 p-4 text-body-sm text-teal-950">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="font-semibold">Tiket {report.ticket.id}</span>
-                <span className="rounded-full border border-teal-300 bg-white/70 px-2.5 py-1 text-caption font-medium">
-                  {TICKET_STATUS_LABEL[report.ticket.status]}
+                <span className="font-semibold">Disposisi Resmi: {report.ticket.id}</span>
+                <span className="rounded-full border border-teal-300 bg-white/70 px-2.5 py-1 text-caption font-medium text-teal-800">
+                  Terkirim ke DLH
                 </span>
               </div>
               <p className="mt-2 leading-relaxed">
-                Tujuan: {report.ticket.destinationUnit}. Status terakhir diperbarui pada{" "}
-                {formatDateTime(report.ticket.updatedAt)}. Penanganan teknis merupakan kewenangan instansi penerima.
+                Surat rujukan telah dikirimkan ke <strong>{report.ticket.destinationUnit} Kota Semarang</strong> (<span className="font-mono text-caption text-teal-900">dlh@semarangkota.go.id</span>) untuk penjadwalan pembersihan dan penanganan di lokasi.
+              </p>
+              <p className="mt-1 text-caption text-paper-600">
+                Waktu disposisi: {formatDateTime(report.ticket.updatedAt)}. Penanganan teknis merupakan kewenangan instansi penerima.
               </p>
               {report.ticket.resolutionNote && (
                 <p className="mt-2 border-t border-teal-200 pt-2 leading-relaxed">
-                  Catatan penanganan: {report.ticket.resolutionNote}
+                  Catatan rujukan: {report.ticket.resolutionNote}
                 </p>
               )}
             </div>
