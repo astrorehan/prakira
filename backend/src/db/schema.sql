@@ -56,6 +56,13 @@ CREATE TABLE IF NOT EXISTS prediksi (
   PRIMARY KEY (kecamatan_id, disease, month_start)
 );
 
+-- Jalur baca dashboard selalu menyaring penyakit + bulan terlebih dahulu.
+-- Kunci utama dimulai dari kecamatan, sehingga tanpa indeks ini pemeriksaan
+-- snapshot lengkap dan fallback bulan terakhir harus memindai seluruh riwayat
+-- prediksi ketika tabel sudah tumbuh melewati satu periode.
+CREATE INDEX IF NOT EXISTS idx_prediksi_disease_month
+  ON prediksi (disease, month_start);
+
 -- Ringkasan backtest per penyakit, disalin apa adanya dari layanan ML.
 CREATE TABLE IF NOT EXISTS model_backtest (
   disease                TEXT PRIMARY KEY,

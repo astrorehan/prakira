@@ -16,6 +16,8 @@ import { ApiError } from "@/lib/api";
 export type AsyncState<T> = {
   data: T | null;
   error: string | null;
+  /** Gangguan saat muat ulang; data terakhir tetap dipertahankan. */
+  refreshError: string | null;
   /** Benar hanya pada pemuatan pertama; muat ulang memakai `refreshing`. */
   loading: boolean;
   refreshing: boolean;
@@ -28,6 +30,7 @@ export function useApi<T>(
 ): AsyncState<T> {
   const [data, setData] = React.useState<T | null>(null);
   const [error, setError] = React.useState<string | null>(null);
+  const [refreshError, setRefreshError] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [refreshing, setRefreshing] = React.useState(false);
   const [nonce, setNonce] = React.useState(0);
@@ -44,12 +47,28 @@ export function useApi<T>(
      tidak dijamin — kalau permintaannya selesai lebih dulu, `loading` kembali
      menyala setelah datanya tiba dan halamannya tersangkut di "Memuat data…". */
   const hasData = React.useRef(false);
+  const previousDeps = React.useRef<React.DependencyList | null>(null);
 
   React.useEffect(() => {
     let alive = true;
 
+    const dependencyChanged =
+      previousDeps.current === null ||
+      previousDeps.current.length !== deps.length ||
+      deps.some((value, index) => !Object.is(value, previousDeps.current?.[index]));
+    previousDeps.current = [...deps];
+
     setError(null);
-    if (hasData.current) setRefreshing(true);
+    setRefreshError(null);
+    if (dependencyChanged) {
+      /* Data dari penyakit/entitas lama tidak boleh tetap terlihat di bawah
+         label baru ketika permintaan transisinya gagal. Reload manual dengan
+         dependency yang sama tetap memakai stale-while-revalidate. */
+      hasData.current = false;
+      setData(null);
+      setLoading(true);
+      setRefreshing(false);
+    } else if (hasData.current) setRefreshing(true);
     else setLoading(true);
 
     ref
@@ -59,18 +78,28 @@ export function useApi<T>(
         hasData.current = true;
         setData(result);
         setError(null);
+        setRefreshError(null);
       })
       .catch((caught: unknown) => {
         if (!alive) return;
-        hasData.current = false;
-        setData(null);
-        setError(
+        const message =
           caught instanceof ApiError
             ? caught.message
             : caught instanceof Error
               ? caught.message
-              : "Terjadi kesalahan yang tidak dikenal.",
-        );
+              : "Terjadi kesalahan yang tidak dikenal.";
+
+        if (hasData.current) {
+          /* Kegagalan refresh tidak boleh menghapus snapshot terakhir yang
+             masih berguna. Pemanggil dapat memilih menampilkan refreshError
+             sebagai peringatan tanpa mengganti seluruh layar menjadi kosong. */
+          setRefreshError(message);
+          return;
+        }
+
+        hasData.current = false;
+        setData(null);
+        setError(message);
       })
       .finally(() => {
         if (!alive) return;
@@ -86,5 +115,5 @@ export function useApi<T>(
 
   const reload = React.useCallback(() => setNonce((n) => n + 1), []);
 
-  return { data, error, loading, refreshing, reload };
+  return { data, error, refreshError, loading, refreshing, reload };
 }

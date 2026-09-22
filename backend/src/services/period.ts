@@ -8,6 +8,23 @@
  */
 import { all, one } from "../db/index.js";
 
+/* Metadata periode dibaca oleh hampir setiap permukaan. Data ini berubah saat
+   ingest, bukan di setiap request, jadi cache singkat menghindari beberapa
+   perjalanan bolak-balik ke Postgres untuk satu kali buka halaman. */
+const PERIOD_CACHE_TTL_MS = 15_000;
+
+type TimedValue<T> = {
+  expiresAt: number;
+  value: T;
+};
+
+let diseasesCache: TimedValue<string[]> | null = null;
+let diseasesInFlight: Promise<string[]> | null = null;
+const latestCache = new Map<string, TimedValue<string | null>>();
+const latestInFlight = new Map<string, Promise<string | null>>();
+const periodCache = new Map<string, TimedValue<ReportingPeriod>>();
+const periodInFlight = new Map<string, Promise<ReportingPeriod>>();
+
 const MONTHS_ID = [
   "Januari",
   "Februari",
@@ -155,6 +172,7 @@ export async function availableDiseases(): Promise<string[]> {
 
 export async function reportingPeriod(
   disease?: string,
+  knownDiseases?: string[],
 ): Promise<ReportingPeriod> {
   const latest = await latestObservedMonth(disease);
   const predictionMonth = latest ? addMonths(latest, 1) : null;
@@ -175,7 +193,7 @@ export async function reportingPeriod(
     predictionLabel: monthLabel(predictionMonth),
     historyMonths: months?.n ?? 0,
     granularity: "monthly",
-    diseases: await availableDiseases(),
+    diseases: knownDiseases ?? (await availableDiseases()),
     ...describeDataLag(latest),
   };
 }

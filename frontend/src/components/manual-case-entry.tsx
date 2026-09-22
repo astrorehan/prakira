@@ -66,14 +66,20 @@ export function ManualCaseEntryCard({
   const kecamatanApi = useApi(() => fetchKecamatanList(), []);
   const recentCasesApi = useApi(() => fetchRecentManualCases(), []);
 
-  const diseasesList =
-    propDiseases && propDiseases.length > 0
-      ? propDiseases
-      : fetchedDiseases.data && fetchedDiseases.data.length > 0
-        ? fetchedDiseases.data
-        : DEFAULT_DISEASES;
+  const diseasesList = React.useMemo(
+    () =>
+      propDiseases && propDiseases.length > 0
+        ? propDiseases
+        : fetchedDiseases.data && fetchedDiseases.data.length > 0
+          ? fetchedDiseases.data
+          : DEFAULT_DISEASES,
+    [propDiseases, fetchedDiseases.data],
+  );
 
-  const kecamatanList = kecamatanApi.data ?? [];
+  const kecamatanList = React.useMemo(
+    () => kecamatanApi.data ?? [],
+    [kecamatanApi.data],
+  );
 
   // Form states
   const [disease, setDisease] = React.useState<string>("DBD");

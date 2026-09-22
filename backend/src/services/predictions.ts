@@ -34,6 +34,13 @@ export type RefreshOutcome = {
   error?: string;
 };
 
+/* Satu proses gateway bisa menerima beberapa permintaan bersamaan ketika
+   dashboard dibuka. Tanpa single-flight, masing-masing permintaan akan
+   memanggil layanan ML untuk batch yang sama dan semuanya mencoba menulis
+   snapshot yang sama. Selain lambat, pola itu membuat cold start Render
+   dikali jumlah widget di halaman. */
+const refreshInFlight = new Map<string, Promise<RefreshOutcome>>();
+
 /** Bulan yang diprediksi untuk sebuah penyakit: satu bulan setelah data terakhir. */
 export async function predictionMonthFor(
   disease: string,
@@ -48,6 +55,26 @@ export async function predictionMonthFor(
  * dashboard tetap bisa dilayani dari cache.
  */
 export async function refreshPredictions(
+  disease: string,
+): Promise<RefreshOutcome> {
+  const key = disease.toUpperCase();
+  const running = refreshInFlight.get(key);
+  if (running) return running;
+
+  const task = refreshPredictionsOnce(key);
+  refreshInFlight.set(key, task);
+  task.then(
+    () => {
+      if (refreshInFlight.get(key) === task) refreshInFlight.delete(key);
+    },
+    () => {
+      if (refreshInFlight.get(key) === task) refreshInFlight.delete(key);
+    },
+  );
+  return task;
+}
+
+async function refreshPredictionsOnce(
   disease: string,
 ): Promise<RefreshOutcome> {
   const month = await predictionMonthFor(disease);
@@ -82,32 +109,34 @@ async function storePredictions(
   );
   const mlIdToId = new Map(kecamatanRows.map((r) => [r.ml_id, r.id]));
 
+  const incomingIds = new Set(predictions.map((prediction) => prediction.kecamatan_id));
+  const unknownIds = predictions.filter(
+    (prediction) => !mlIdToId.has(prediction.kecamatan_id),
+  );
+  if (
+    predictions.length !== kecamatanRows.length ||
+    incomingIds.size !== kecamatanRows.length ||
+    unknownIds.length > 0
+  ) {
+    throw new Error(
+      `Layanan ML mengembalikan batch tidak lengkap: ${predictions.length} hasil ` +
+        `untuk ${kecamatanRows.length} kecamatan yang terdaftar.`,
+    );
+  }
+
   const generatedAt = new Date().toISOString();
-  let count = 0;
-  let modelVersion = "unknown";
+  const modelVersion = predictions[0]?.model_version ?? "unknown";
 
-  /* Satu transaksi untuk seluruh batch: dashboard tidak boleh sempat membaca
-     separuh kota memakai model baru dan separuhnya model lama. */
+  /* Satu transaksi dan satu INSERT untuk seluruh batch: dashboard tidak boleh
+     sempat membaca separuh kota memakai model baru dan separuhnya model lama.
+     Satu INSERT juga menghindari 16 perjalanan bolak-balik ke Supabase. */
   await transaction(async (tx) => {
-    for (const prediction of predictions) {
-      const kecamatanId = mlIdToId.get(prediction.kecamatan_id);
-      if (!kecamatanId) continue;
-
-      await tx.run(
-        `INSERT INTO prediksi
-           (kecamatan_id, disease, month_start, predicted_cases, lower_bound, upper_bound,
-            risk_score, risk_class, data_coverage, drivers, model_version, generated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-         ON CONFLICT (kecamatan_id, disease, month_start) DO UPDATE SET
-           predicted_cases = excluded.predicted_cases,
-           lower_bound     = excluded.lower_bound,
-           upper_bound     = excluded.upper_bound,
-           risk_score      = excluded.risk_score,
-           risk_class      = excluded.risk_class,
-           data_coverage   = excluded.data_coverage,
-           drivers         = excluded.drivers,
-           model_version   = excluded.model_version,
-           generated_at    = excluded.generated_at`,
+    const values = predictions
+      .map(() => "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+      .join(", ");
+    const params = predictions.flatMap((prediction) => {
+      const kecamatanId = mlIdToId.get(prediction.kecamatan_id)!;
+      return [
         kecamatanId,
         disease.toUpperCase(),
         month,
@@ -122,23 +151,39 @@ async function storePredictions(
         JSON.stringify(prediction.drivers ?? []),
         prediction.model_version,
         generatedAt,
-      );
-      modelVersion = prediction.model_version;
-      count += 1;
-    }
+      ];
+    });
+
+    await tx.run(
+      `INSERT INTO prediksi
+         (kecamatan_id, disease, month_start, predicted_cases, lower_bound, upper_bound,
+          risk_score, risk_class, data_coverage, drivers, model_version, generated_at)
+       VALUES ${values}
+       ON CONFLICT (kecamatan_id, disease, month_start) DO UPDATE SET
+         predicted_cases = excluded.predicted_cases,
+         lower_bound     = excluded.lower_bound,
+         upper_bound     = excluded.upper_bound,
+         risk_score      = excluded.risk_score,
+         risk_class      = excluded.risk_class,
+         data_coverage   = excluded.data_coverage,
+         drivers         = excluded.drivers,
+         model_version   = excluded.model_version,
+         generated_at    = excluded.generated_at`,
+      ...params,
+    );
   });
 
-  if (count > 0) {
+  if (predictions.length > 0) {
     await logAudit({
       actor: "ML Service",
       role: "AI Service",
       action: `Inferensi ${disease.toUpperCase()} ${month}`,
-      details: `${count} kecamatan diprediksi dengan model ${modelVersion}.`,
+      details: `${predictions.length} kecamatan diprediksi dengan model ${modelVersion}.`,
       status: "success",
     });
   }
 
-  return count;
+  return predictions.length;
 }
 
 export async function readPredictions(
@@ -162,6 +207,42 @@ export async function latestStoredPredictionMonth(
     disease.toUpperCase(),
   );
   return row?.m ?? null;
+}
+
+/**
+ * Snapshot hanya dianggap siap bila seluruh kecamatan terwakili. Mengecek
+ * bulan terakhir saja tidak cukup: batch parsial sebelumnya bisa membuat
+ * gateway berhenti mencoba ulang dan dashboard menyajikan campuran kosong.
+ */
+export async function hasCompletePredictions(
+  disease: string,
+  month: string,
+): Promise<boolean> {
+  const row = await one<{ stored: number; expected: number }>(
+    `SELECT
+       (SELECT COUNT(*) FROM prediksi WHERE disease = ? AND month_start = ?) AS stored,
+       (SELECT COUNT(*) FROM kecamatan) AS expected`,
+    disease.toUpperCase(),
+    month,
+  );
+  return Number(row?.stored ?? 0) === Number(row?.expected ?? 0) && Number(row?.expected ?? 0) > 0;
+}
+
+/** Bulan snapshot lengkap terbaru untuk fallback saat ML sedang tidur. */
+export async function latestCompletePredictionMonth(
+  disease: string,
+): Promise<string | null> {
+  const row = await one<{ month_start: string | null }>(
+    `SELECT month_start
+       FROM prediksi
+      WHERE disease = ?
+      GROUP BY month_start
+      HAVING COUNT(*) = (SELECT COUNT(*) FROM kecamatan)
+      ORDER BY month_start DESC
+      LIMIT 1`,
+    disease.toUpperCase(),
+  );
+  return row?.month_start ?? null;
 }
 
 export function parseDrivers(

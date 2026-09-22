@@ -108,9 +108,33 @@ def load_real_weekly_weights(year: int) -> np.ndarray:
     return weights
 
 
+def reported_week_limit(year: int) -> int:
+    """Batas minggu yang benar-benar ada di sumber tahun berjalan.
+
+    File mingguan tahun berjalan hanya berisi laporan sampai periode terakhir
+    yang diterima. Mengisi minggu setelah itu dengan nol akan membuat bulan
+    masa depan terlihat sebagai observasi resmi dan mendorong model selalu
+    memprakirakan nol. Tahun-tahun yang tidak punya file mingguan tetap
+    memakai 52 minggu sebagai perilaku lama yang paling aman.
+    """
+    weekly_file = DATASET_RAW_KASUS / f"jumlah-pasien-dbd-minguan_{year}.csv"
+    if not weekly_file.exists():
+        return 52
+
+    df = pd.read_csv(weekly_file)
+    if "Category" not in df.columns:
+        return 52
+
+    week_numbers = pd.to_numeric(df["Category"], errors="coerce").dropna()
+    week_numbers = week_numbers[(week_numbers >= 1) & (week_numbers <= 52)]
+    if week_numbers.empty:
+        return 52
+    return int(week_numbers.max())
+
+
 def process_raw_dbd_files():
     """Load yearly raw DBD Puskesmas CSV files and combine with real weekly distribution files."""
-    logger.info("Starting processing raw DBD case files with REAL weekly distributions (2021 - 2025)...")
+    logger.info("Starting processing raw DBD case files with REAL weekly distributions...")
 
     yearly_data = []
 
@@ -123,6 +147,8 @@ def process_raw_dbd_files():
     )
     if not years:
         years = list(range(2021, 2027))
+
+    latest_source_year = max(years)
 
     for year in years:
         file_path = DATASET_RAW_KASUS / f"dbd_{year}.csv"
@@ -180,7 +206,16 @@ def process_raw_dbd_files():
         logger.info(f"Loaded REAL weekly weights for Year {year} (Total citywide cases: {real_weights.sum():.2f})")
 
         start_date = f"{year}-01-01"
-        dates = pd.date_range(start=start_date, periods=52, freq="W-MON")
+        week_limit = 52
+        if year == latest_source_year:
+            week_limit = reported_week_limit(year)
+            if week_limit < 52:
+                logger.info(
+                    "Year %s is the latest source year; trimming synthetic future weeks after week %s.",
+                    year,
+                    week_limit,
+                )
+        dates = pd.date_range(start=start_date, periods=week_limit, freq="W-MON")
 
         year_group = annual_kecamatan[annual_kecamatan["year"] == year]
 
@@ -191,9 +226,20 @@ def process_raw_dbd_files():
             annual_total = int(match["total_cases"].values[0]) if not match.empty else 0
 
             if annual_total > 0:
-                weekly_cases = np.random.multinomial(annual_total, real_weights)
+                if week_limit == 52:
+                    # Pertahankan distribusi dan urutan RNG historis persis;
+                    # koreksi ini hanya perlu mengubah tahun sumber terakhir.
+                    weekly_cases = np.random.multinomial(annual_total, real_weights)
+                else:
+                    weights = real_weights[:week_limit]
+                    weight_total = weights.sum()
+                    if weight_total <= 0:
+                        weights = np.full(week_limit, 1.0 / week_limit)
+                    else:
+                        weights = weights / weight_total
+                    weekly_cases = np.random.multinomial(annual_total, weights)
             else:
-                weekly_cases = np.zeros(52, dtype=int)
+                weekly_cases = np.zeros(week_limit, dtype=int)
 
             for week_start, cases in zip(dates, weekly_cases):
                 weekly_records.append(

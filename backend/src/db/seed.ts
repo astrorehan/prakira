@@ -265,8 +265,14 @@ export async function datasetNeedsRefresh(): Promise<boolean> {
   );
   const current = new Map(currentRows.map((row) => [row.disease, row.latest]));
 
+  /* Bandingkan dengan ketat. Dataset baru bisa memperbaiki periode terakhir
+     yang ternyata merupakan baris nol sintetis (misalnya sumber kasus tahun
+     berjalan baru tersedia sampai Agustus, sementara file lama sudah
+     terlanjur membuat baris September). Pemeriksaan `current < latest` tidak
+     pernah menghapus baris masa depan itu, sehingga observasi palsu tetap
+     menjadi dasar prediksi selamanya. */
   return Object.entries(expected).some(
-    ([disease, latest]) => (current.get(disease) ?? "") < latest,
+    ([disease, latest]) => (current.get(disease) ?? "") !== latest,
   );
 }
 

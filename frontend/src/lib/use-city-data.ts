@@ -47,6 +47,7 @@ export type CityData = {
   meta: (DistrictsMeta & { staleDiseases: string[] }) | null;
   loading: boolean;
   error: string | null;
+  refreshError: string | null;
   reload: () => void;
 };
 
@@ -61,23 +62,36 @@ export function useCityData(): CityData {
   const [payload, setPayload] = React.useState<Payload | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [refreshError, setRefreshError] = React.useState<string | null>(null);
   const [nonce, setNonce] = React.useState(0);
+  const hasPayload = React.useRef(false);
 
   React.useEffect(() => {
     let alive = true;
     setLoading(true);
+    setError(null);
+    setRefreshError(null);
 
     loadCityData()
       .then((result) => {
         if (alive) {
+          hasPayload.current = true;
           setPayload(result);
           setError(null);
+          setRefreshError(null);
         }
       })
       .catch((caught: unknown) => {
         if (alive) {
-          setPayload(null);
-          setError(caught instanceof Error ? caught.message : String(caught));
+          const message = caught instanceof Error ? caught.message : String(caught);
+          if (hasPayload.current) {
+            /* Reload yang gagal tidak boleh mengosongkan landing page yang
+               sudah punya snapshot kota. */
+            setRefreshError(message);
+          } else {
+            setPayload(null);
+            setError(message);
+          }
         }
       })
       .finally(() => {
@@ -111,6 +125,7 @@ export function useCityData(): CityData {
     meta: payload?.meta ?? null,
     loading,
     error,
+    refreshError,
     reload,
   };
 }

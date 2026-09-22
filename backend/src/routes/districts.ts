@@ -11,9 +11,10 @@ import {
   getClimateSeries,
   getDistricts,
   getTrend,
+  invalidateDistrictViewCache,
 } from "../services/districts.js";
 import {
-  latestStoredPredictionMonth,
+  hasCompletePredictions,
   refreshPredictions,
 } from "../services/predictions.js";
 import { regenerateActions } from "../services/actions.js";
@@ -48,15 +49,19 @@ async function assertDisease(disease: string): Promise<string> {
 async function ensurePredictions(
   disease: string,
   force: boolean,
+  knownDiseases?: string[],
 ): Promise<{ stale: boolean; error?: string }> {
-  const period = await reportingPeriod(disease);
-  const stored = await latestStoredPredictionMonth(disease);
-  const needsRefresh = force || stored !== period.predictionMonth;
+  const period = await reportingPeriod(disease, knownDiseases);
+  const complete = period.predictionMonth
+    ? await hasCompletePredictions(disease, period.predictionMonth)
+    : false;
+  const needsRefresh = force || !complete;
 
   if (!needsRefresh) return { stale: false };
 
   const outcome = await refreshPredictions(disease);
   if (outcome.refreshed > 0) {
+    invalidateDistrictViewCache(disease);
     await regenerateActions([disease]);
     return { stale: false };
   }
@@ -74,7 +79,9 @@ districtsRouter.get(
 
     res.json({
       meta: { disease, ...(await reportingPeriod(disease)), ...status },
-      data: await getDistricts(disease),
+      data: await getDistricts(disease, {
+        bypassCache: req.query.refresh === "1",
+      }),
     });
   }),
 );
@@ -109,18 +116,26 @@ districtsRouter.get(
   asyncRoute(async (req, res) => {
     const diseases = await availableDiseases();
     const force = req.query.refresh === "1";
-    const stale: string[] = [];
-    const data: Record<string, Awaited<ReturnType<typeof getDistricts>>> = {};
-
-    for (const disease of diseases) {
-      const status = await ensurePredictions(disease, force);
-      if (status.stale) stale.push(disease);
-      data[disease] = await getDistricts(disease);
-    }
+    const results = await Promise.all(
+      diseases.map(async (disease) => {
+        const status = await ensurePredictions(disease, force, diseases);
+        return {
+          disease,
+          status,
+          rows: await getDistricts(disease),
+        };
+      }),
+    );
+    const stale = results
+      .filter((result) => result.status.stale)
+      .map((result) => result.disease);
+    const data = Object.fromEntries(
+      results.map((result) => [result.disease, result.rows]),
+    ) as Record<string, Awaited<ReturnType<typeof getDistricts>>>;
 
     res.json({
       meta: {
-        ...(await reportingPeriod()),
+        ...(await reportingPeriod(undefined, diseases)),
         diseases,
         stale: stale.length > 0,
         staleDiseases: stale,

@@ -1,58 +1,59 @@
 {
   "dbd": {
     "algorithm": "ensemble_ridge_trees_xgboost",
-    "version": "ensemble-monthly-dbd-2026.09.20",
+    "version": "ensemble-monthly-dbd-2026.09.22",
     "granularity": "monthly",
     "is_log_transformed": true,
-    "trained_at": "2026-09-20T21:15:53.890387",
+    "trained_at": "2026-09-22T21:16:45.012514",
     "train_period": "2021-04-01 to 2024-12-01",
-    "test_period": "2025-01-01 to 2026-09-01",
+    "test_period": "2025-01-01 to 2026-08-01",
     "n_train_samples": 720,
-    "n_test_samples": 336,
+    "n_test_samples": 320,
     "metrics": {
-      "mae": 1.1039,
-      "rmse": 1.417,
-      "r2": 0.3809
+      "mae": 1.3016,
+      "rmse": 1.7261,
+      "r2": 0.2273
     },
     "citizen_signal_comparison": null,
+    "citizen_signal_family": null,
     "baselines": {
       "persistence": {
         "label": "Kasus bulan lalu",
-        "mae": 0.7411,
-        "rmse": 1.3898,
-        "r2": 0.4044
+        "mae": 0.85,
+        "rmse": 1.7393,
+        "r2": 0.2155
       },
       "seasonal_mean": {
         "label": "Rata-rata musiman",
-        "mae": 2.1277,
-        "rmse": 2.8428,
-        "r2": -1.4919
+        "mae": 2.2375,
+        "rmse": 3.0353,
+        "r2": -1.3894
       },
       "district_mean": {
         "label": "Rata-rata kecamatan",
-        "mae": 2.1103,
-        "rmse": 2.571,
-        "r2": -1.0382
+        "mae": 2.1167,
+        "rmse": 2.6299,
+        "r2": -0.7938
       }
     },
     "baseline_summary": {
       "best_baseline": "persistence",
       "best_baseline_label": "Kasus bulan lalu",
-      "best_baseline_mae": 0.7411,
-      "model_mae": 1.1039,
+      "best_baseline_mae": 0.85,
+      "model_mae": 1.3016,
       "model_beats_all_baselines": false,
-      "mae_improvement_pct": -48.95
+      "mae_improvement_pct": -53.13
     },
     "conformal": {
-      "empirical_coverage": 0.8988,
+      "empirical_coverage": 0.8594,
       "target_coverage": 0.8,
-      "mean_width": 3.1458,
+      "mean_width": 3.325,
       "median_width": 3.0,
-      "n_evaluated": 336,
+      "n_evaluated": 320,
       "method": "rolling_origin_conformal_normalized",
       "difficulty": "1 + cases_ma_3m",
       "alpha": 0.2,
-      "q_hat": 0.650175,
+      "q_hat": 0.681646,
       "n_calibration": 368,
       "n_folds": 8,
       "calibration_period": "2023-02-01 to 2024-12-01"
@@ -60,23 +61,23 @@
     "top_features": [
       {
         "feature": "cases_ma_3m",
-        "importance": 0.1535088793301827
+        "importance": 0.15592575879655263
       },
       {
         "feature": "cases_lag1",
-        "importance": 0.08336500726742507
-      },
-      {
-        "feature": "population",
-        "importance": 0.03969267555754217
+        "importance": 0.06896547948524695
       },
       {
         "feature": "cases_lag2",
-        "importance": 0.03007562406858699
+        "importance": 0.04158173212762706
       },
       {
-        "feature": "rainfall_cumul_2m",
-        "importance": 0.025559635864538396
+        "feature": "population",
+        "importance": 0.03730615055176549
+      },
+      {
+        "feature": "rainfall_lag1",
+        "importance": 0.0367458517737042
       }
     ]
   },

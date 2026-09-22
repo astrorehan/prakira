@@ -56,7 +56,10 @@ export function CaseCsvImportCard({
   className,
 }: CaseCsvImportCardProps) {
   const fetchedDiseases = useApi(() => fetchDiseases(), []);
-  const diseases = propDiseases ?? fetchedDiseases.data ?? [];
+  const diseases = React.useMemo(
+    () => propDiseases ?? fetchedDiseases.data ?? [],
+    [propDiseases, fetchedDiseases.data],
+  );
 
   const [disease, setDisease] = React.useState<string>("");
   const [state, setState] = React.useState<ImportState>({ kind: "idle" });

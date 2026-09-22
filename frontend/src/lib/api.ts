@@ -78,22 +78,33 @@ export type DistrictsMeta = ReportingPeriod & {
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 90_000);
 
   try {
     response = await fetch(`${API_BASE}${path}`, {
       credentials: "include",
       cache: "no-store",
       ...init,
+      signal: controller.signal,
       headers: {
         ...(init?.body ? { "content-type": "application/json" } : {}),
         ...(init?.headers ?? {}),
       },
     });
-  } catch {
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new ApiError(
+        0,
+        "Layanan terlalu lama merespons. Data terakhir tetap dipertahankan; coba muat ulang.",
+      );
+    }
     throw new ApiError(
       0,
       "Gateway tidak dapat dihubungi. Pastikan layanan backend berjalan, lalu muat ulang.",
     );
+  } finally {
+    clearTimeout(timeout);
   }
 
   if (response.status === 204) return undefined as T;

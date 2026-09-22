@@ -11,6 +11,8 @@
 import { all } from "../db/index.js";
 import { isPancaroba, rainfallCategory } from "./climate.js";
 import {
+  hasCompletePredictions,
+  latestCompletePredictionMonth,
   parseDrivers,
   readPredictions,
   type StoredPrediction,
@@ -87,6 +89,44 @@ type ObservasiRow = {
   humidity_pct: number | null;
 };
 
+type TrendPayload = {
+  periode: string;
+  kasus_aktual: number | null;
+  kasus_prediksi: number | null;
+  lower_bound: number | null;
+  upper_bound: number | null;
+  curah_hujan_mm: number | null;
+  suhu_c: number | null;
+  kelembaban_pct: number | null;
+  proyeksi: boolean;
+}[];
+
+/* Respons ini dibaca berulang oleh beberapa widget pada satu halaman. Cache
+   pendek mengurangi perjalanan ke Supabase tanpa menjadikan data operasional
+   basi dalam waktu lama; refresh prediksi dan ingest menginvalidasinya. */
+const VIEW_CACHE_TTL_MS = 10_000;
+const districtsCache = new Map<
+  string,
+  { expiresAt: number; value: DistrictPayload[] }
+>();
+const trendCache = new Map<
+  string,
+  { expiresAt: number; value: TrendPayload }
+>();
+
+export function invalidateDistrictViewCache(disease?: string): void {
+  if (disease) {
+    const upper = disease.toUpperCase();
+    districtsCache.delete(upper);
+    for (const key of trendCache.keys()) {
+      if (key.startsWith(`${upper}:`)) trendCache.delete(key);
+    }
+    return;
+  }
+  districtsCache.clear();
+  trendCache.clear();
+}
+
 export function listKecamatan(): Promise<KecamatanRow[]> {
   return all<KecamatanRow>("SELECT * FROM kecamatan ORDER BY nama");
 }
@@ -109,8 +149,14 @@ async function observationMonths(
 
 export async function getDistricts(
   disease: string,
+  options: { bypassCache?: boolean } = {},
 ): Promise<DistrictPayload[]> {
   const upper = disease.toUpperCase();
+  if (!options.bypassCache) {
+    const cached = districtsCache.get(upper);
+    if (cached && cached.expiresAt > Date.now()) return cached.value;
+    districtsCache.delete(upper);
+  }
   const kecamatan = await listKecamatan();
 
   const months = await observationMonths(upper, 3);
@@ -135,14 +181,27 @@ export async function getDistricts(
   }
 
   const predictionMonth = latest ? addMonths(latest, 1) : null;
-  const predictions = predictionMonth
+  let predictions = predictionMonth
     ? await readPredictions(upper, predictionMonth)
     : new Map<string, StoredPrediction>();
+  /* Jangan tampilkan snapshot parsial. Pembaca bisa datang bersamaan dengan
+     refresh, dan satu kecamatan yang tersimpan tidak berarti satu kota sudah
+     punya snapshot yang layak dibandingkan. Bila ML gagal setelah periode
+     observasi berubah, pertahankan snapshot lengkap terakhir supaya data tidak
+     lenyap dari layar; metadata rute tetap menandainya sebagai stale. */
+  if (predictions.size !== kecamatan.length) {
+    const fallbackMonth = await latestCompletePredictionMonth(upper);
+    if (fallbackMonth && fallbackMonth !== predictionMonth) {
+      predictions = await readPredictions(upper, fallbackMonth);
+    } else if (predictions.size !== kecamatan.length) {
+      predictions = new Map<string, StoredPrediction>();
+    }
+  }
 
   /* Riwayat dibaca dari yang terlama supaya sparkline naik ke kanan. */
   const historyMonths = [...months].reverse();
 
-  return kecamatan.map((kec) => {
+  const value = kecamatan.map((kec) => {
     const current = latest ? observations.get(latest)?.get(kec.id) : undefined;
     const prior = previous
       ? observations.get(previous)?.get(kec.id)
@@ -207,11 +266,26 @@ export async function getDistricts(
         .filter((v): v is number => typeof v === "number"),
     };
   });
+  districtsCache.set(upper, {
+    expiresAt: Date.now() + VIEW_CACHE_TTL_MS,
+    value,
+  });
+  return value;
 }
 
 /** Deret bulanan tingkat kota: aktual sampai bulan terakhir, lalu prediksi. */
-export async function getTrend(disease: string, historyMonths = 12) {
+export async function getTrend(
+  disease: string,
+  historyMonths = 12,
+  options: { bypassCache?: boolean } = {},
+): Promise<TrendPayload> {
   const upper = disease.toUpperCase();
+  const cacheKey = `${upper}:${historyMonths}`;
+  if (!options.bypassCache) {
+    const cached = trendCache.get(cacheKey);
+    if (cached && cached.expiresAt > Date.now()) return cached.value;
+    trendCache.delete(cacheKey);
+  }
 
   const actualRows = await all<{
     month_start: string;
@@ -238,7 +312,7 @@ export async function getTrend(disease: string, historyMonths = 12) {
   const latest = await latestObservedMonth(upper);
   const predictionMonth = latest ? addMonths(latest, 1) : null;
 
-  const points = actual.map((row) => ({
+  const points: TrendPayload = actual.map((row) => ({
     periode: row.month_start,
     kasus_aktual: row.cases,
     kasus_prediksi: null as number | null,
@@ -251,7 +325,9 @@ export async function getTrend(disease: string, historyMonths = 12) {
   }));
 
   if (predictionMonth) {
-    const stored = await readPredictions(upper, predictionMonth);
+    const stored = (await hasCompletePredictions(upper, predictionMonth))
+      ? await readPredictions(upper, predictionMonth)
+      : new Map<string, StoredPrediction>();
     if (stored.size > 0) {
       let predicted = 0;
       let lower = 0;
@@ -274,7 +350,7 @@ export async function getTrend(disease: string, historyMonths = 12) {
 
       points.push({
         periode: predictionMonth,
-        kasus_aktual: null as unknown as number,
+        kasus_aktual: null,
         kasus_prediksi: predicted,
         lower_bound: lower,
         upper_bound: upper2,
@@ -286,6 +362,10 @@ export async function getTrend(disease: string, historyMonths = 12) {
     }
   }
 
+  trendCache.set(cacheKey, {
+    expiresAt: Date.now() + VIEW_CACHE_TTL_MS,
+    value: points,
+  });
   return points;
 }
 
