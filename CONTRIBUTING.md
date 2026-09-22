@@ -204,13 +204,13 @@ npm run seed
 #### Opsi A: Menjalankan Seluruh Layanan Sekaligus (Direkomendasikan)
 Gunakan runner otomatis di [`scripts/dev.mjs`](./scripts/dev.mjs) yang mengorkestrasi startup berurutan dan pembersihan proses:
 ```bash
-npm run dev
+npm run demo
 ```
 
-Runner akan menyalakan:
-- `[ml]` di `http://127.0.0.1:8001`
-- `[gateway]` di `http://localhost:4200`
-- `[frontend]` di `http://localhost:3000`
+Runner akan menyalakan ML, gateway, dan frontend sekaligus. Port bawaan `8001`,
+`4200`, dan `3000` diperiksa lebih dahulu; bila sedang dipakai, runner memilih
+port kosong berikutnya dan meneruskan alamat yang benar ke semua layanan. URL
+akhir dicetak di baris `[demo]`.
 
 #### Opsi B: Menjalankan Secara Modular (Terminal Terpisah)
 Bila ingin mengisolasi log atau mendebug layanan tertentu:

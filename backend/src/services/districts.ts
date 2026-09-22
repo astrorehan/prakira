@@ -105,6 +105,9 @@ type TrendPayload = {
    pendek mengurangi perjalanan ke Supabase tanpa menjadikan data operasional
    basi dalam waktu lama; refresh prediksi dan ingest menginvalidasinya. */
 const VIEW_CACHE_TTL_MS = 10_000;
+const DIRECTORY_CACHE_TTL_MS = 60_000;
+let kecamatanCache: { expiresAt: number; value: KecamatanRow[] } | null = null;
+let kecamatanInFlight: Promise<KecamatanRow[]> | null = null;
 const districtsCache = new Map<
   string,
   { expiresAt: number; value: DistrictPayload[] }
@@ -128,7 +131,29 @@ export function invalidateDistrictViewCache(disease?: string): void {
 }
 
 export function listKecamatan(): Promise<KecamatanRow[]> {
-  return all<KecamatanRow>("SELECT * FROM kecamatan ORDER BY nama");
+  if (kecamatanCache && kecamatanCache.expiresAt > Date.now()) {
+    return Promise.resolve(kecamatanCache.value);
+  }
+  kecamatanCache = null;
+  if (kecamatanInFlight) return kecamatanInFlight;
+
+  const task = all<KecamatanRow>("SELECT * FROM kecamatan ORDER BY nama").then(
+    (value) => {
+      kecamatanCache = {
+        expiresAt: Date.now() + DIRECTORY_CACHE_TTL_MS,
+        value,
+      };
+      return value;
+    },
+  );
+  kecamatanInFlight = task;
+  task.finally(() => {
+    if (kecamatanInFlight === task) kecamatanInFlight = null;
+  }).catch(() => {
+    /* Pemanggil menerima error dari task; finally tidak boleh membuat
+       unhandled rejection tambahan. */
+  });
+  return task;
 }
 
 /** Bulan observasi terakhir per penyakit, jatuh ke keseluruhan bila kosong. */

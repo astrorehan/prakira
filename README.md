@@ -169,11 +169,13 @@ pengembangan — di `NODE_ENV=production`, gateway menolak jalan tanpa
 # Seeding basis data PostgreSQL
 npm run seed
 
-# Nyalakan seluruh layanan sekaligus
-npm run dev
+# Nyalakan seluruh layanan sekaligus; port kosong dipilih otomatis
+npm run demo
 ```
 
-Buka http://localhost:3000. Basis data diisi dari dataset historis `ml-services/`
+Runner mencetak URL frontend, gateway, dan layanan ML yang benar-benar dipilih.
+Jika `3000`, `4200`, atau `8001` sedang dipakai, layanan terkait dialihkan ke
+port berikutnya dan proxy API ikut menyesuaikan. Basis data diisi dari dataset historis `ml-services/`
 dan GeoJSON batas wilayah; prediksi dan backtest ditarik dari layanan ML lalu
 disimpan.
 

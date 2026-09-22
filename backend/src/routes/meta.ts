@@ -16,6 +16,49 @@ import { mlHealth } from "../services/ml.js";
 
 export const metaRouter = Router();
 
+type DiseaseMeta = {
+  disease: string;
+  months: number;
+  kecamatan: number;
+  latest: string;
+};
+
+const DISEASE_META_TTL_MS = 15_000;
+let diseasesMetaCache: { expiresAt: number; value: DiseaseMeta[] } | null = null;
+let diseasesMetaInFlight: Promise<DiseaseMeta[]> | null = null;
+
+function diseaseMeta(): Promise<DiseaseMeta[]> {
+  if (diseasesMetaCache && diseasesMetaCache.expiresAt > Date.now()) {
+    return Promise.resolve(diseasesMetaCache.value);
+  }
+  diseasesMetaCache = null;
+  if (diseasesMetaInFlight) return diseasesMetaInFlight;
+
+  const task = all<DiseaseMeta>(
+    `SELECT disease,
+          COUNT(DISTINCT month_start)  AS months,
+          COUNT(DISTINCT kecamatan_id) AS kecamatan,
+          MAX(month_start)             AS latest
+       FROM observasi
+      GROUP BY disease
+      ORDER BY disease`,
+  ).then((value) => {
+    diseasesMetaCache = {
+      expiresAt: Date.now() + DISEASE_META_TTL_MS,
+      value,
+    };
+    return value;
+  });
+  diseasesMetaInFlight = task;
+  task.finally(() => {
+    if (diseasesMetaInFlight === task) diseasesMetaInFlight = null;
+  }).catch(() => {
+    /* Pemanggil menerima error dari task; finally tidak boleh membuat
+       unhandled rejection tambahan. */
+  });
+  return task;
+}
+
 metaRouter.get(
   "/period",
   asyncRoute(async (req, res) => {
@@ -40,20 +83,7 @@ metaRouter.get(
 metaRouter.get(
   "/diseases",
   asyncRoute(async (_req, res) => {
-    const rows = await all<{
-      disease: string;
-      months: number;
-      kecamatan: number;
-      latest: string;
-    }>(
-      `SELECT disease,
-            COUNT(DISTINCT month_start)  AS months,
-            COUNT(DISTINCT kecamatan_id) AS kecamatan,
-            MAX(month_start)             AS latest
-       FROM observasi
-      GROUP BY disease
-      ORDER BY disease`,
-    );
+    const rows = await diseaseMeta();
 
     res.json(
       rows.map((row) => ({

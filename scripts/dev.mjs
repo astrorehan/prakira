@@ -7,6 +7,7 @@
  */
 import { spawn, execSync } from "node:child_process";
 import { existsSync } from "node:fs";
+import net from "node:net";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -77,6 +78,55 @@ function findPython() {
   return candidates.find((p) => existsSync(p)) ?? null;
 }
 
+/**
+ * Memeriksa port IPv4 dan IPv6 supaya port yang sedang dipakai aplikasi lain
+ * tidak lolos hanya karena aplikasi itu mendengarkan pada alamat yang berbeda.
+ */
+function canListen(port, host) {
+  return new Promise((resolve) => {
+    const server = net.createServer();
+
+    const finish = (result) => {
+      server.removeAllListeners();
+      resolve(result);
+    };
+
+    server.once("error", (error) => {
+      if (error?.code === "EADDRINUSE") finish("busy");
+      else if (error?.code === "EAFNOSUPPORT" || error?.code === "EADDRNOTAVAIL") {
+        finish("unsupported");
+      } else {
+        finish("unavailable");
+      }
+    });
+    server.listen({ port, host }, () => {
+      server.close(() => finish("available"));
+    });
+  });
+}
+
+async function isPortAvailable(port) {
+  /* Gunakan alamat wildcard. Di Windows, menguji 127.0.0.1 saja dapat
+     terlihat kosong walaupun proses lain sudah mendengarkan pada 0.0.0.0. */
+  const ipv4 = await canListen(port, "0.0.0.0");
+  if (ipv4 === "busy" || ipv4 === "unavailable") return false;
+
+  const ipv6 = await canListen(port, "::");
+  return ipv6 !== "busy" && ipv6 !== "unavailable";
+}
+
+async function findAvailablePort(preferred, reserved, fallback) {
+  const start = Number.isInteger(preferred) && preferred > 0 ? preferred : fallback;
+  for (let port = start; port < start + 100 && port <= 65_535; port += 1) {
+    if (reserved.has(port)) continue;
+    if (await isPortAvailable(port)) {
+      reserved.add(port);
+      return port;
+    }
+  }
+  throw new Error(`Tidak menemukan port kosong mulai dari ${start}.`);
+}
+
 async function waitForHttp(url, timeoutMs = 4000) {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
@@ -91,13 +141,41 @@ async function waitForHttp(url, timeoutMs = 4000) {
 
 async function main() {
   const python = findPython();
+  const reservedPorts = new Set();
+  const gatewayPort = await findAvailablePort(
+    Number(process.env.GATEWAY_PORT ?? 4200),
+    reservedPorts,
+    4200,
+  );
+  const frontendPort = await findAvailablePort(
+    Number(process.env.FRONTEND_PORT ?? 3000),
+    reservedPorts,
+    3000,
+  );
+  const mlPort = python
+    ? await findAvailablePort(
+        Number(process.env.ML_PORT ?? 8001),
+        reservedPorts,
+        8001,
+      )
+    : null;
+
+  const gatewayUrl = `http://127.0.0.1:${gatewayPort}`;
+  const frontendUrl = `http://localhost:${frontendPort}`;
+  const mlUrl = mlPort ? `http://127.0.0.1:${mlPort}` : null;
+
   if (python) {
-    run("ml", python, ["-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8001"], {
-      cwd: path.join(root, "ml-services"),
-      shell: false,
-    });
+    run(
+      "ml",
+      python,
+      ["-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", String(mlPort)],
+      {
+        cwd: path.join(root, "ml-services"),
+        shell: false,
+      },
+    );
     // Tunggu FastAPI siap sebelum gateway melakukan fetch
-    await waitForHttp("http://127.0.0.1:8001/health", 4000);
+    await waitForHttp(`${mlUrl}/health`, 10_000);
   } else {
     process.stdout.write(
       `${COLORS.ml}[ml]${COLORS.reset} lingkungan virtual belum dibuat — layanan model dilewati.\n` +
@@ -108,27 +186,43 @@ async function main() {
 
   const npmCmd = isWindows ? "npm.cmd" : "npm";
 
-  /* Gateway harus mendarat di port yang dituju `frontend/.env.local`
-     (`API_PROXY_TARGET`). Kalau lingkungan pemanggil sudah membawa `PORT`
-     — pratinjau IDE mengisinya dengan port frontend — gateway dan Next
-     berebut 3000 dan seluruh `/api` menjawab 500. */
+  /* Port yang dipilih diteruskan ke gateway dan frontend. Dengan begitu proxy
+     `/api/*` selalu mengikuti gateway yang benar, meskipun port bawaan sedang
+     dipakai aplikasi lain. */
   run("gateway", npmCmd, ["run", "dev"], {
     cwd: path.join(root, "backend"),
     shell: isWindows,
-    env: { PORT: process.env.GATEWAY_PORT ?? "4200" },
+    env: {
+      PORT: String(gatewayPort),
+      CORS_ORIGINS: `${frontendUrl},http://127.0.0.1:${frontendPort}`,
+      ...(mlUrl ? { ML_SERVICE_URL: mlUrl } : {}),
+    },
   });
 
-  // Beri jeda singkat agar gateway mulai listen sebelum frontend menyala
-  await new Promise((r) => setTimeout(r, 600));
+  // Tunggu gateway siap agar frontend tidak memulai request ke port kosong.
+  const gatewayReady = await waitForHttp(`${gatewayUrl}/api/health`, 15_000);
+  if (!gatewayReady) {
+    process.stdout.write(
+      `${COLORS.gateway}[gateway]${COLORS.reset} belum menjawab dalam 15 detik; frontend tetap dijalankan agar detail galat terlihat.\n`,
+    );
+  }
 
   run("frontend", npmCmd, ["run", "dev"], {
     cwd: path.join(root, "frontend"),
     shell: isWindows,
-    /* IDE/pratinjau kadang mewariskan PORT lain ke proses anak. Demo lokal
-       harus tetap mendarat di alamat yang tertulis di dokumentasi; gunakan
-       FRONTEND_PORT bila memang ingin menggantinya secara sengaja. */
-    env: { PORT: process.env.FRONTEND_PORT ?? "3000" },
+    env: {
+      PORT: String(frontendPort),
+      API_PROXY_TARGET: gatewayUrl,
+    },
   });
+
+  process.stdout.write(
+    `\n${COLORS.reset}[demo] Frontend: ${frontendUrl}\n` +
+      `${COLORS.reset}[demo] Gateway:  ${gatewayUrl}\n` +
+      (mlUrl
+        ? `${COLORS.reset}[demo] ML:       ${mlUrl}\n`
+        : `${COLORS.reset}[demo] ML:       dilewati (venv belum tersedia)\n`),
+  );
 }
 
 function isAlive(child) {
@@ -142,9 +236,9 @@ function isAlive(child) {
  * bekerja bila anaknya pemimpin grup — yang menuntut `detached: true` saat
  * `spawn`, dan sebelumnya tidak diset. Panggilannya karena itu selalu melempar
  * ESRCH, galatnya ditelan `catch` kosong, dan uvicorn serta Next tetap hidup
- * setelah Ctrl+C. Port 8001 dan 3000 tetap terpakai, lalu `npm run dev`
- * berikutnya gagal dengan alasan yang tidak menyebut sebabnya — persis jenis
- * kejadian yang menghabiskan waktu saat menyiapkan demo.
+ * setelah Ctrl+C. Port layanan tetap terpakai, lalu perintah berikutnya gagal
+ * dengan alasan yang tidak menyebut sebabnya — persis jenis kejadian yang
+ * menghabiskan waktu saat menyiapkan demo.
  */
 function signalTree(child, signal) {
   if (!isAlive(child)) return;
