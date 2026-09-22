@@ -5,34 +5,32 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import {
   Activity,
-  Bug,
-  ShieldAlert,
-  MapPin,
-  TrendingUp,
   ArrowRight,
+  ChevronDown,
   CloudOff,
   RefreshCw,
   Printer,
+  ShieldAlert,
 } from "lucide-react";
 import {
   aggregateCoverage,
+  cn,
   diseaseLabel,
-  formatNumber,
   formatMaybeNumber,
+  formatNumber,
 } from "@/lib/utils";
 import { formatMonth } from "@/lib/period";
-import { LiquidGlassCard } from "@/components/ui/liquid-glass-card";
 import { Button } from "@/components/ui/button";
 import { ConsolePageHeader } from "@/components/console/page-header";
-import { KpiCard } from "@/components/kpi-card";
 import { DiseaseSelector } from "@/components/disease-selector";
 import { DistrictDetailPanel } from "@/components/district-detail-panel";
+import { DistrictPriorityList } from "@/components/district-priority-list";
 import { DistrictRankingTable } from "@/components/district-ranking-table";
 import { DataState } from "@/components/data-state";
 import { TrendChart } from "@/components/trend-chart";
-import { AttentionList } from "@/components/attention-list";
 import {
   fetchActions,
+  fetchAllDistricts,
   fetchDiseases,
   fetchDistricts,
   fetchGeoJson,
@@ -40,7 +38,6 @@ import {
   fetchTriggerSummary,
 } from "@/lib/api";
 import { useApi } from "@/lib/use-api";
-import { usePeriod } from "@/lib/use-period";
 import {
   pickInitialDisease,
   readWorkParams,
@@ -48,48 +45,70 @@ import {
 } from "@/lib/work-context";
 import type { DiseaseType } from "@/types";
 
+const MAP_HEIGHT = "h-[420px] lg:h-[560px]";
+
 const ChoroplethMap = dynamic(() => import("@/components/choropleth-map"), {
   ssr: false,
   loading: () => (
-    <div className="h-[520px] w-full rounded-2xl border border-paper-200 bg-paper-100 flex flex-col items-center justify-center text-muted-foreground text-xs animate-pulse gap-2">
+    <div
+      className={cn(
+        MAP_HEIGHT,
+        "w-full rounded-2xl border border-paper-200 bg-paper-100 flex flex-col items-center justify-center text-muted-foreground text-xs animate-pulse gap-2",
+      )}
+    >
       <Activity className="h-6 w-6 text-primary animate-spin" />
-      <span>Memuat peta spasial Kota Semarang…</span>
+      <span>Memuat peta Kota Semarang…</span>
     </div>
   ),
 });
 
+const LEGEND = [
+  { label: "Rendah", className: "bg-risk-low" },
+  { label: "Waspada", className: "bg-risk-medium" },
+  { label: "Siaga", className: "bg-risk-high" },
+  /* Kelas keempat, karena kekosongan bukan "rendah". */
+  { label: "Tanpa prediksi", className: "bg-paper-300" },
+];
+
 /**
- * Dashboard prediksi.
+ * Beranda konsol.
  *
- * Sebelum ada gateway, halaman ini memanggil `getKecamatanDataList(disease)` —
- * sebuah fungsi yang menghitung "kasus" dari indeks array dan menempelkan
- * "Minggu 34 · Agustus 2026" di kepalanya. Sekarang setiap angka berasal dari
- * `/api/districts`, dan tiga keadaan yang dulu mustahil kini bisa muncul dan
- * harus terlihat: memuat, gateway gagal, dan prediksi basi karena layanan ML
- * sedang mati.
+ * Inti halaman muat di satu layar: pilihan penyakit menempel di atas peta,
+ * tiga angka ringkas di sebelahnya, dan panel kanan yang berganti antara lima
+ * wilayah prioritas dan detail wilayah terpilih. Tren kota dan peringkat
+ * lengkap ada di bawah lipatan untuk yang ingin menelusuri.
+ *
+ * Versi sebelumnya membuka dengan daftar perhatian lintas penyakit setinggi
+ * 1.300 px, sehingga tab penyakit dan petanya terpisah jauh dan isi daftar
+ * tidak mengikuti tab yang aktif.
  */
 export default function DashboardPrediksiPage() {
   const [selectedDisease, setSelectedDisease] = React.useState<DiseaseType | null>(null);
   const [selectedDistrictId, setSelectedDistrictId] = React.useState<string | null>(null);
+  const [showRanking, setShowRanking] = React.useState(false);
 
   const diseases = useApi(() => fetchDiseases(), []);
+  /* Hanya untuk memilih penyakit pembuka: yang zona siaganya paling banyak. */
+  const overview = useApi(() => fetchAllDistricts(), []);
 
-  /* Penyakit pertama dari gateway jadi pilihan awal. Tidak ada nilai bawaan
-     "DBD" di berkas ini: kalau dataset hanya punya ISPA, dashboard harus
-     membuka ISPA, bukan halaman kosong berlabel DBD.
-
-     F14: kecuali petugas baru kembali dari alat evaluasi. Tautan "Kembali ke
-     pekerjaan" membawa penyakitnya serta, dan halaman ini harus membukanya —
-     kembali ke pekerjaan tidak boleh berarti memfilter ulang dari nol. */
+  /* Pilihan awal: penyakit yang dibawa pulang dari alat evaluasi (F14) bila
+     ada; kalau tidak, penyakit dengan zona siaga terbanyak — halaman harus
+     dibuka dari yang paling butuh perhatian, bukan dari urutan abjad. */
   React.useEffect(() => {
     if (selectedDisease || !diseases.data || diseases.data.length === 0) return;
-    setSelectedDisease(
-      pickInitialDisease(
-        diseases.data.map((d) => d.disease),
-        readWorkParams().disease,
-      ),
-    );
-  }, [diseases.data, selectedDisease]);
+    const list = diseases.data.map((d) => d.disease);
+    const wanted = readWorkParams().disease;
+    if (wanted) {
+      setSelectedDisease(pickInitialDisease(list, wanted));
+      return;
+    }
+    if (overview.loading) return;
+    const byDisease = overview.data?.data ?? {};
+    const siagaOf = (d: DiseaseType) =>
+      (byDisease[d] ?? []).filter((r) => r.tingkat_risiko === "tinggi").length;
+    const best = [...list].sort((a, b) => siagaOf(b) - siagaOf(a))[0];
+    setSelectedDisease(best ?? list[0]);
+  }, [diseases.data, overview.loading, overview.data, selectedDisease]);
 
   const districts = useApi(
     () =>
@@ -105,46 +124,27 @@ export default function DashboardPrediksiPage() {
   );
 
   const geo = useApi(() => fetchGeoJson(), []);
-
-  const actions = useApi(
-    () => (selectedDisease ? fetchActions(selectedDisease) : Promise.resolve(null as never)),
-    [selectedDisease],
-  );
-
+  /* Semua penyakit: panel prioritas memakai yang aktif, strip tugas memakai
+     seluruhnya. */
+  const actions = useApi(() => fetchActions(), []);
   const triggers = useApi(() => fetchTriggerSummary(), []);
 
-  /* Tanggal sistem dipakai daftar perhatian untuk menilai tenggat; dibaca dari
-     periode pelaporan, bukan dari jam peramban. */
-  const { period } = usePeriod();
-
-  /* `?? []` membuat array baru tiap render; tanpa memo, dua `useMemo` di bawah
-     ikut dihitung ulang pada setiap render meskipun datanya tidak berubah. */
   const rows = React.useMemo(() => districts.data?.data ?? [], [districts.data]);
   const meta = districts.data?.meta ?? null;
 
-  const selectedDistrict = React.useMemo(() => {
-    if (rows.length === 0) return undefined;
-    /* Sebelum petugas memilih, buka kecamatan dengan skor tertinggi untuk
-       penyakit yang sedang aktif — dashboard operasional harus mulai dari yang
-       butuh perhatian, dan harus berpindah saat filternya berganti. */
-    return (
-      rows.find((d) => d.id === selectedDistrictId) ??
-      [...rows].sort((a, b) => (b.skor_risiko ?? -1) - (a.skor_risiko ?? -1))[0]
-    );
-  }, [rows, selectedDistrictId]);
+  const selectedDistrict = React.useMemo(
+    () => rows.find((d) => d.id === selectedDistrictId),
+    [rows, selectedDistrictId],
+  );
 
-  /* F14: wilayah yang tadi dibuka ikut kembali bersama petugas. Dicocokkan
-     dengan baris yang benar-benar ada supaya `?kecamatan=` karangan tidak
-     memilih apa pun. Sekali saja — setelah itu pilihan petugas yang berlaku. */
+  /* F14: wilayah yang tadi dibuka ikut kembali bersama petugas. Sekali saja. */
   const restoredDistrict = React.useRef(false);
   React.useEffect(() => {
     if (restoredDistrict.current || rows.length === 0) return;
     restoredDistrict.current = true;
     const wanted = readWorkParams().kecamatan;
     if (!wanted) return;
-    const match = rows.find(
-      (d) => d.nama.toLowerCase() === wanted.toLowerCase(),
-    );
+    const match = rows.find((d) => d.nama.toLowerCase() === wanted.toLowerCase());
     if (match) setSelectedDistrictId(match.id);
   }, [rows]);
 
@@ -158,60 +158,19 @@ export default function DashboardPrediksiPage() {
   const totals = React.useMemo(() => {
     const observed = rows.filter((d) => d.kasus_aktif !== null);
     const predicted = rows.filter((d) => d.kasus_prediksi !== null);
-
-    const active = observed.reduce((s, d) => s + (d.kasus_aktif ?? 0), 0);
-    const pred = predicted.reduce((s, d) => s + (d.kasus_prediksi ?? 0), 0);
-    const lower = predicted.reduce((s, d) => s + (d.kasus_prediksi_lower ?? 0), 0);
-    const upper = predicted.reduce((s, d) => s + (d.kasus_prediksi_upper ?? 0), 0);
-
-    const high = rows.filter((d) => d.tingkat_risiko === "tinggi").length;
-    const medium = rows.filter((d) => d.tingkat_risiko === "sedang").length;
-    const low = rows.filter((d) => d.tingkat_risiko === "rendah").length;
-    const unknown = rows.filter((d) => d.tingkat_risiko === null).length;
-
-    /* Riwayat kota dijumlahkan per posisi bulan, bukan per kecamatan: hanya
-       kecamatan yang punya panjang riwayat sama yang boleh dijumlahkan. */
-    const historyLength = Math.min(
-      ...rows.map((d) => d.riwayat_periode.length).filter((n) => n > 0),
-      3,
-    );
-    const history =
-      Number.isFinite(historyLength) && historyLength > 0
-        ? Array.from({ length: historyLength }, (_, i) =>
-            rows.reduce((s, d) => {
-              const series = d.riwayat_periode;
-              return s + (series[series.length - historyLength + i] ?? 0);
-            }, 0),
-          )
-        : [];
-
-    const lastMonth = history.length >= 2 ? history[history.length - 2] : null;
-
     return {
-      active,
-      pred,
-      lower,
-      upper,
-      high,
-      medium,
-      low,
-      unknown,
-      history,
+      active: observed.reduce((s, d) => s + (d.kasus_aktif ?? 0), 0),
+      pred: predicted.reduce((s, d) => s + (d.kasus_prediksi ?? 0), 0),
+      lower: predicted.reduce((s, d) => s + (d.kasus_prediksi_lower ?? 0), 0),
+      upper: predicted.reduce((s, d) => s + (d.kasus_prediksi_upper ?? 0), 0),
       predictedCount: predicted.length,
-      /* Total kota mewarisi cakupan kecamatan paling tipis — sebuah jumlah
-         hanya sekuat masukannya yang paling lemah (PRD §7-H2). */
-      coverage: rows.length > 0 ? aggregateCoverage(rows.map((d) => d.coverage)) : "insufficient",
-      deltaMonthly:
-        lastMonth === null || lastMonth === 0
-          ? null
-          : Math.round(((active - lastMonth) / lastMonth) * 100),
-      deltaForecast: active === 0 ? null : Math.round(((pred - active) / active) * 100),
+      high: rows.filter((d) => d.tingkat_risiko === "tinggi").length,
+      /* Total kota mewarisi cakupan kecamatan paling tipis (PRD §7-H2). */
+      coverage:
+        rows.length > 0 ? aggregateCoverage(rows.map((d) => d.coverage)) : "insufficient",
     };
   }, [rows]);
 
-  /* F14: pekerjaan yang sedang dipegang dititipkan ke alat evaluasi. Sidebar
-     membacanya saat petugas membuka simulator/uji historis, dan halaman tujuan
-     memakainya untuk menawarkan jalan pulang yang utuh. */
   React.useEffect(() => {
     if (!selectedDisease) return;
     rememberWorkContext({
@@ -223,22 +182,21 @@ export default function DashboardPrediksiPage() {
     });
   }, [selectedDisease, selectedDistrict?.nama, meta?.monthYear]);
 
-  const pendingActions = (actions.data?.data ?? []).filter(
-    (a) => a.status === "pending",
-  ).length;
+  const allActions = React.useMemo(() => actions.data?.data ?? [], [actions.data]);
+  const diseaseActions = React.useMemo(
+    () => allActions.filter((a) => a.disease === selectedDisease),
+    [allActions, selectedDisease],
+  );
+  const pendingActions = allActions.filter((a) => a.status === "pending").length;
+
+  const forecastHidden = totals.predictedCount === 0 || totals.coverage === "insufficient";
 
   return (
     <div className="min-h-screen bg-background py-8 px-4 sm:px-6 lg:px-8 bg-mesh-blue">
-      <div className="container max-w-7xl mx-auto space-y-8">
-        {/* 1. Kepala — judul, filter penyakit, periode.
-            F17: memakai kepala halaman konsol yang sama dengan /tindakan,
-            /verifikasi, /kasus, dan /admin. Sebelumnya halaman ini menyusun
-            kepalanya sendiri — judul pada skala yang tidak dipakai halaman
-            lain, dan chip periode versinya sendiri yang tidak pernah menyebut
-            keterlambatan data. */}
+      <div className="container max-w-7xl mx-auto space-y-6">
         <ConsolePageHeader
           title="Beranda / Prioritas"
-          description="Daftar perhatian lintas penyakit dulu; peta, prakiraan, dan tren ada di bawahnya untuk penelusuran."
+          description="Peta risiko per kecamatan dan wilayah yang perlu didahulukan."
           actions={
             <>
               <Button
@@ -268,8 +226,26 @@ export default function DashboardPrediksiPage() {
               </Button>
             </>
           }
-        >
+        />
+
+        {/* Prediksi basi harus tertulis, bukan disembunyikan. */}
+        {meta?.stale && (
+          <div className="flex items-start gap-2.5 rounded-xl border border-risk-medium-br bg-risk-medium-bg px-4 py-3">
+            <CloudOff className="mt-0.5 h-4 w-4 shrink-0 text-risk-medium" aria-hidden />
+            <p className="text-body-sm text-foreground">
+              <span className="font-semibold">Prediksi belum diperbarui.</span>{" "}
+              <span className="text-paper-700">
+                Layanan model tidak terhubung; angka prakiraan memakai perhitungan
+                terakhir yang tersimpan.
+              </span>
+            </p>
+          </div>
+        )}
+
+        {/* Kendali + angka ringkas, tepat di atas peta. */}
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <DiseaseSelector
+            className="max-w-full overflow-x-auto"
             options={(diseases.data ?? []).map((d) => d.disease)}
             selected={selectedDisease}
             onSelect={(d) => {
@@ -277,195 +253,114 @@ export default function DashboardPrediksiPage() {
               setSelectedDistrictId(null);
             }}
           />
-        </ConsolePageHeader>
-
-        {/* Data yang tertinggal dari kalender harus tertulis, bukan disembunyikan. */}
-
-        {/* Prediksi basi harus tertulis, bukan disembunyikan. */}
-        {meta?.stale && (
-          <div className="flex items-start gap-2.5 rounded-xl border border-risk-medium-br bg-risk-medium-bg px-4 py-3">
-            <CloudOff className="mt-0.5 h-4 w-4 shrink-0 text-risk-medium" aria-hidden />
-            <div className="text-body-sm text-foreground">
-              <p className="font-semibold">Prediksi belum diperbarui.</p>
-              <p className="text-paper-700">
-                Layanan model tidak dapat dihubungi, jadi angka prakiraan di halaman
-                ini berasal dari perhitungan terakhir yang tersimpan — atau belum ada
-                sama sekali. Data observasi tetap mutakhir.
-                {meta.error ? ` (${meta.error})` : ""}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* 2. Daftar perhatian lintas penyakit — pekerjaan sebelum analisis. */}
-        <AttentionList
-          diseases={(diseases.data ?? []).map((d) => d.disease)}
-          systemToday={period?.systemToday ?? null}
-        />
-
-        <div className="border-t border-paper-200/80 pt-6">
-          <h2 className="text-h2 text-foreground">
-            Penelusuran risiko {diseaseLabel(selectedDisease)}
-          </h2>
-          <p className="mt-1 max-w-2xl text-body-sm text-paper-600">
-            Bahan untuk memeriksa alasan di balik daftar di atas: angka periode,
-            sebaran wilayah, dan tren.
-          </p>
+          {rows.length > 0 && (
+            <dl className="grid grid-cols-3 divide-x divide-border rounded-xl border border-border bg-surface shadow-xs">
+              <Stat
+                label={`Kasus ${formatMonth(meta?.latestObserved)}`}
+                value={formatNumber(totals.active)}
+              />
+              <Stat
+                label={`Prakiraan ${formatMonth(meta?.predictionMonth)}`}
+                value={forecastHidden ? "—" : formatMaybeNumber(totals.pred)}
+                sub={
+                  forecastHidden
+                    ? undefined
+                    : `${formatNumber(totals.lower)}–${formatNumber(totals.upper)}`
+                }
+              />
+              <Stat
+                label="Zona siaga"
+                value={String(totals.high)}
+                sub={`dari ${rows.length}`}
+                tone={totals.high > 0 ? "danger" : undefined}
+              />
+            </dl>
+          )}
         </div>
 
         <DataState
-          loading={districts.loading || diseases.loading}
+          loading={districts.loading || diseases.loading || !selectedDisease}
           error={districts.error ?? diseases.error}
-          empty={!districts.loading && rows.length === 0}
+          empty={!districts.loading && !!selectedDisease && rows.length === 0}
           emptyMessage="Belum ada kecamatan yang terdaftar di gateway."
           onRetry={() => {
             diseases.reload();
             districts.reload();
           }}
         >
-          {/* 3. Ringkasan KPI */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Angka teramati — tidak punya interval prediksi. */}
-            <KpiCard
-              label={`Kasus ${selectedDisease ?? ""} · ${formatMonth(meta?.latestObserved)}`}
-              value={formatNumber(totals.active)}
-              unit="kasus"
-              range={null}
-              coverage={totals.coverage}
-              delta={
-                totals.deltaMonthly === null
-                  ? null
-                  : `${totals.deltaMonthly >= 0 ? "+" : ""}${totals.deltaMonthly}% vs bulan lalu`
-              }
-              positive={(totals.deltaMonthly ?? 0) <= 0}
-              sparkline={totals.history}
-              icon={<Bug className="h-4 w-4" />}
-              index={0}
-            />
-
-            {/* Prakiraan — intervalnya ikut angka, tidak pernah di sebelahnya. */}
-            <KpiCard
-              label={`Prakiraan ${formatMonth(meta?.predictionMonth)}`}
-              value={
-                totals.predictedCount === 0 ? "—" : formatMaybeNumber(totals.pred)
-              }
-              unit={totals.predictedCount === 0 ? undefined : "kasus"}
-              range={totals.predictedCount === 0 ? null : { lower: totals.lower, upper: totals.upper }}
-              coverage={totals.predictedCount === 0 ? "insufficient" : totals.coverage}
-              delta={
-                totals.deltaForecast === null
-                  ? null
-                  : `${totals.deltaForecast >= 0 ? "+" : ""}${totals.deltaForecast}% vs bulan observasi`
-              }
-              positive={false}
-              icon={<TrendingUp className="h-4 w-4 text-risk-high" />}
-              index={1}
-            />
-
-            {/* Kecamatan terklasifikasi — hitungan hal yang sudah diputuskan. */}
-            <KpiCard
-              label="Kecamatan zona siaga"
-              value={totals.high}
-              unit={`dari ${rows.length}`}
-              range={null}
-              coverage={totals.coverage}
-              description={
-                `Waspada ${totals.medium} · Rendah ${totals.low}` +
-                (totals.unknown > 0 ? ` · Tanpa prediksi ${totals.unknown}` : "")
-              }
-              icon={<ShieldAlert className="h-4 w-4 text-risk-high" />}
-              index={2}
-            />
-          </div>
-
-          {/* 4. Peta & detail kecamatan */}
-          <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-            <div className="lg:col-span-7 flex flex-col h-full">
-              <LiquidGlassCard
-                variant="default"
-                className="p-5 flex flex-col justify-between h-full space-y-3 min-h-[580px]"
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2 shrink-0">
-                  <h3 className="flex items-center gap-2 text-h3 text-foreground">
-                    <MapPin className="h-4 w-4 text-brand-700" aria-hidden="true" />
-                    <span>Peta zona risiko</span>
-                  </h3>
-
-                </div>
-
-                <div className="flex-1 min-h-[440px] relative w-full">
-                  {geo.data ? (
-                    <ChoroplethMap
-                      geojson={geo.data}
-                      districts={rows}
-                      disease={selectedDisease ?? ""}
-                      selectedId={selectedDistrictId}
-                      onSelect={(id) => setSelectedDistrictId(id)}
-                      triggers={triggers.data?.data ?? []}
-                      height="100%"
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center rounded-2xl border border-paper-200 bg-paper-100 text-xs text-paper-600">
-                      {geo.error ?? "Memuat batas wilayah…"}
-                    </div>
-                  )}
-                </div>
-
-                {/* F17: legenda peta adalah kunci baca, bukan catatan kaki.
-                    `text-2xs` (11 px pada root 112,5%) di bawah warna risiko
-                    memaksa petugas mendekat ke layar untuk hal yang paling
-                    sering dibacanya. */}
-                <div className="flex shrink-0 flex-col justify-between gap-2 border-t border-paper-200/60 pt-2 text-caption text-paper-600 sm:flex-row sm:items-center">
-                  <span>Klik kecamatan untuk detail</span>
-
-                  <div className="flex flex-wrap items-center gap-3">
-                    <span className="flex items-center gap-1.5">
-                      <span className="h-2 w-2 rounded-full bg-risk-low" />
-                      <span className="text-paper-700 font-medium">Rendah</span>
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <span className="h-2 w-2 rounded-full bg-risk-medium" />
-                      <span className="text-paper-700 font-medium">Waspada</span>
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <span className="h-2 w-2 rounded-full bg-risk-high" />
-                      <span className="text-paper-700 font-medium">Siaga</span>
-                    </span>
-                    {/* Kelas keempat, karena kekosongan bukan "rendah". */}
-                    <span className="flex items-center gap-1.5">
-                      <span className="h-2 w-2 rounded-full bg-paper-300" />
-                      <span className="text-paper-700 font-medium">Tanpa prediksi</span>
-                    </span>
+          {/* Peta + panel kanan */}
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
+            <div className="relative lg:col-span-8">
+              <div className={cn(MAP_HEIGHT, "overflow-hidden rounded-2xl border border-border shadow-card")}>
+                {geo.data ? (
+                  <ChoroplethMap
+                    geojson={geo.data}
+                    districts={rows}
+                    disease={selectedDisease ?? ""}
+                    selectedId={selectedDistrictId}
+                    onSelect={(id) => setSelectedDistrictId(id)}
+                    triggers={triggers.data?.data ?? []}
+                    height="100%"
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center bg-paper-100 text-xs text-paper-600">
+                    {geo.error ?? "Memuat batas wilayah…"}
                   </div>
-                </div>
-              </LiquidGlassCard>
+                )}
+              </div>
+              {/* Legenda menempel di peta: kunci baca, bukan catatan kaki. */}
+              <div className="pointer-events-none absolute bottom-3 left-3 z-[400] flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-border bg-surface/95 px-3 py-2 text-caption shadow-xs backdrop-blur">
+                {LEGEND.map((l) => (
+                  <span key={l.label} className="flex items-center gap-1.5">
+                    <span className={cn("h-2.5 w-2.5 rounded-full", l.className)} />
+                    <span className="font-medium text-paper-700">{l.label}</span>
+                  </span>
+                ))}
+              </div>
             </div>
 
-            <div className="lg:col-span-5 flex flex-col h-full">
-              <DistrictDetailPanel
-                district={selectedDistrict}
-                disease={selectedDisease ?? ""}
-                trigger={selectedTrigger}
-                className="h-full min-h-[580px]"
-              />
+            <div className={cn("lg:col-span-4 lg:h-[560px]", "min-h-0")}>
+              {selectedDistrict ? (
+                <DistrictDetailPanel
+                  district={selectedDistrict}
+                  disease={selectedDisease ?? ""}
+                  trigger={selectedTrigger}
+                  onBack={() => setSelectedDistrictId(null)}
+                  className="h-full min-h-0 overflow-y-auto"
+                />
+              ) : (
+                <DistrictPriorityList
+                  districts={rows}
+                  actions={diseaseActions}
+                  disease={selectedDisease ?? ""}
+                  onSelect={(id) => setSelectedDistrictId(id)}
+                />
+              )}
             </div>
           </div>
 
-          {/* 4b. Tren kota — deret tingkat kota, jadi ia berdiri sebagai
-              bagian halaman. F17: sebelumnya grafik ini duduk di dalam panel
-              berjudul "Kecamatan X", tempat satu-satunya yang membuatnya
-              mustahil dibaca sebagai milik kota. */}
-          <section className="mt-8 space-y-3">
-            <div className="min-w-0">
-              <h3 className="text-h3 text-foreground">
-                Tren kasus kota · {diseaseLabel(selectedDisease)}
-              </h3>
-              <p className="mt-1 max-w-2xl text-body-sm text-paper-600">
-                Penjumlahan 16 kecamatan per bulan: rekap resmi, lalu prakiraan
-                beserta rentangnya. Bukan deret satu kecamatan.
-              </p>
-            </div>
+          {/* Tugas lintas penyakit — satu baris; alurnya hidup di /tindakan. */}
+          {pendingActions > 0 && (
+            <Link
+              href="/tindakan"
+              className="group mt-5 flex items-center justify-between gap-3 rounded-2xl border border-risk-high-br/70 bg-risk-high-bg/60 px-5 py-3 shadow-xs transition-colors hover:bg-risk-high-bg"
+            >
+              <span className="flex items-center gap-2.5 text-body-sm font-semibold text-foreground">
+                <ShieldAlert className="h-4 w-4 shrink-0 text-risk-high" aria-hidden />
+                {pendingActions} tindakan menunggu keputusan
+              </span>
+              <span className="flex shrink-0 items-center gap-1 text-caption font-semibold text-risk-high">
+                Buka Tugas
+                <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+              </span>
+            </Link>
+          )}
 
+          {/* Tren kota */}
+          <section className="mt-8 space-y-3">
+            <h2 className="text-h3 text-foreground">
+              Tren kasus kota · {diseaseLabel(selectedDisease)}
+            </h2>
             <div className="rounded-2xl border border-border bg-surface p-4 shadow-card">
               <TrendChart
                 data={trend.data?.data ?? []}
@@ -476,37 +371,65 @@ export default function DashboardPrediksiPage() {
             </div>
           </section>
 
-          {/* 5. Strip aksi tertunda — alurnya sendiri hidup di /tindakan */}
-          {pendingActions > 0 && (
-            <Link
-              href="/tindakan"
-              className="group mt-8 flex items-center justify-between gap-3 rounded-2xl border border-risk-high-br/70 bg-risk-high-bg/60 px-5 py-3.5 shadow-xs transition-colors hover:bg-risk-high-bg"
+          {/* Peringkat lengkap — disembunyikan; lima teratas sudah di panel. */}
+          <section className="mt-6">
+            <button
+              type="button"
+              onClick={() => setShowRanking((v) => !v)}
+              aria-expanded={showRanking}
+              className="flex items-center gap-1.5 text-body-sm font-semibold text-brand-700 hover:underline"
             >
-              <div className="flex items-center gap-2.5">
-                <ShieldAlert className="h-4 w-4 text-risk-high shrink-0" />
-                <span className="text-sm font-semibold text-foreground">
-                  {pendingActions} tindakan menunggu keputusan
-                </span>
-              </div>
-              <span className="flex items-center gap-1 text-xs font-semibold text-risk-high shrink-0">
-                <span>Buka Aksi Dini</span>
-                <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-              </span>
-            </Link>
-          )}
-
-          {/* 6. Peringkat kecamatan */}
-          <div className="mt-8 space-y-4">
-            <h3 className="text-h3 text-foreground">Peringkat prioritas kecamatan</h3>
-
-            <DistrictRankingTable
-              districts={rows}
-              selectedId={selectedDistrictId}
-              onSelectDistrict={(id) => setSelectedDistrictId(id)}
-            />
-          </div>
+              <ChevronDown
+                className={cn("h-4 w-4 transition-transform", showRanking && "rotate-180")}
+                aria-hidden
+              />
+              {showRanking
+                ? "Sembunyikan peringkat kecamatan"
+                : `Lihat peringkat semua ${rows.length} kecamatan`}
+            </button>
+            {showRanking && (
+              <DistrictRankingTable
+                className="mt-3"
+                districts={rows}
+                selectedId={selectedDistrictId}
+                onSelectDistrict={(id) => {
+                  setSelectedDistrictId(id);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+              />
+            )}
+          </section>
         </DataState>
       </div>
+    </div>
+  );
+}
+
+function Stat({
+  label,
+  value,
+  sub,
+  tone,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+  tone?: "danger";
+}) {
+  return (
+    <div className="min-w-0 px-3 py-2 sm:px-4">
+      <dt className="truncate text-caption text-paper-600">{label}</dt>
+      <dd className="flex flex-wrap items-baseline gap-x-1.5">
+        <span
+          className={cn(
+            "text-h3 tabular font-semibold",
+            tone === "danger" ? "text-risk-high" : "text-foreground",
+          )}
+        >
+          {value}
+        </span>
+        {sub && <span className="text-caption tabular text-paper-600">{sub}</span>}
+      </dd>
     </div>
   );
 }

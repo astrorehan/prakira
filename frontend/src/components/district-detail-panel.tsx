@@ -4,19 +4,18 @@ import * as React from "react";
 import {
   CloudRain,
   Thermometer,
-  Wind,
   Activity,
   AlertTriangle,
+  ArrowLeft,
 } from "lucide-react";
 import {
   cn,
   COVERAGE_CONFIG,
   formatMaybeIncidence,
   formatMaybeNumber,
-  formatMaybePercent,
   riskConfigOf,
 } from "@/lib/utils";
-import { formatMonth } from "@/lib/period";
+import { formatMonth, formatMonthShort } from "@/lib/period";
 import type { DiseaseType, DistrictTriggerSummary, KecamatanData } from "@/types";
 import { RiskGauge } from "./ui/risk-gauge";
 import { WhyThisNumber } from "./why-this-number";
@@ -25,6 +24,8 @@ interface DistrictDetailPanelProps {
   district: KecamatanData | undefined;
   disease: DiseaseType;
   trigger?: DistrictTriggerSummary;
+  /** Bila ada, kepala panel menampilkan tombol kembali ke daftar prioritas. */
+  onBack?: () => void;
   className?: string;
 }
 
@@ -68,6 +69,7 @@ export function DistrictDetailPanel({
   district,
   disease,
   trigger,
+  onBack,
   className,
 }: DistrictDetailPanelProps) {
   if (!district) {
@@ -109,10 +111,19 @@ export function DistrictDetailPanel({
              Risiko satu-satunya hal berwarna di sini (§1.1 "warna adalah data"). */}
       <div className="flex shrink-0 items-start justify-between gap-3 border-b border-border pb-4">
         <div className="min-w-0">
-          <p className="overline">Detail wilayah</p>
-          <h3 className="truncate text-h3 text-foreground">
-            Kecamatan {district.nama}
-          </h3>
+          {onBack ? (
+            <button
+              type="button"
+              onClick={onBack}
+              className="mb-1 inline-flex items-center gap-1 text-caption font-medium text-brand-700 hover:underline"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+              Daftar prioritas
+            </button>
+          ) : (
+            <p className="overline">Detail wilayah</p>
+          )}
+          <h3 className="text-h3 text-foreground">{district.nama}</h3>
           <p className={cn("mt-1 text-caption font-medium", risk.textColor)}>
             Risiko {risk.label.toLowerCase()}
           </p>
@@ -129,23 +140,23 @@ export function DistrictDetailPanel({
       {/* 2. Angka utama: observasi di kiri, prakiraan di kanan */}
       <dl className="grid shrink-0 grid-cols-2 gap-3">
         <div className="rounded-xl border border-border bg-paper-50 p-3">
-          <dt className="overline">Kasus {formatMonth(district.periode_observasi)}</dt>
+          <dt className="overline">Kasus {formatMonthShort(district.periode_observasi)}</dt>
           <dd className="mt-1 flex items-baseline gap-1">
             <span className="text-metric-sm text-foreground">
               {formatMaybeNumber(district.kasus_aktif)}
             </span>
             <span className="text-caption text-paper-600">kasus</span>
           </dd>
-          <dd className="mt-2 flex items-center justify-between border-t border-border pt-2 text-caption text-paper-600">
-            <span>Insidensi</span>
-            <span className="font-medium text-foreground">
+          <dd className="mt-2 border-t border-border pt-2 text-caption text-paper-600">
+            Insidensi{" "}
+            <span className="whitespace-nowrap font-medium text-foreground">
               {formatMaybeIncidence(district.incidence_rate)}
             </span>
           </dd>
         </div>
 
         <div className="rounded-xl border border-border bg-paper-50 p-3">
-          <dt className="overline">Prakiraan {formatMonth(district.periode_prediksi)}</dt>
+          <dt className="overline">Prakiraan {formatMonthShort(district.periode_prediksi)}</dt>
 
           {hasPrediction ? (
             <>
@@ -156,9 +167,9 @@ export function DistrictDetailPanel({
                 <span className="text-caption text-paper-600">kasus</span>
               </dd>
               {/* Angka prediksi tidak pernah tampil tanpa batasnya (PRD §7-H1). */}
-              <dd className="mt-2 flex items-center justify-between gap-2 border-t border-border pt-2 text-caption text-paper-600">
-                <span>Rentang</span>
-                <span className="tabular font-medium text-foreground">
+              <dd className="mt-2 border-t border-border pt-2 text-caption text-paper-600">
+                Rentang{" "}
+                <span className="tabular whitespace-nowrap font-medium text-foreground">
                   {formatMaybeNumber(district.kasus_prediksi_lower)}–
                   {formatMaybeNumber(district.kasus_prediksi_upper)}
                 </span>
@@ -172,59 +183,34 @@ export function DistrictDetailPanel({
         </div>
       </dl>
 
-      {/* 3. Status data — keadaan masukan, bukan keadaan wilayah. Dipisahkan
-             dari blok risiko supaya "cakupan rendah" tidak ikut terbaca
-             sebagai "risiko rendah". */}
-      <div className="shrink-0 rounded-xl border border-border bg-paper-50 px-3 py-2.5">
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-caption text-paper-600">Cakupan data</span>
-          <span className="text-caption font-medium text-foreground">
-            {coverage.label}
+      {/* 3. Iklim bulan observasi dan status data dalam satu baris ringkas.
+             Cakupan data hanya disebut bila bukan "high" — label yang selalu
+             sama di setiap kartu berhenti dibaca. */}
+      <div className="shrink-0 space-y-1.5 text-caption text-paper-600">
+        <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <span className="inline-flex items-center gap-1">
+            <CloudRain className="h-3.5 w-3.5 text-brand-600" aria-hidden="true" />
+            Hujan{" "}
+            <span className="font-medium text-foreground">
+              {formatMaybeNumber(district.cuaca.curah_hujan_mm)} mm
+            </span>
           </span>
-        </div>
-        <p className="mt-1 text-caption leading-relaxed text-paper-600">
-          {coverage.description}
-        </p>
-        <p className="mt-1.5 border-t border-border pt-1.5 text-caption text-paper-600">
-          Perubahan kasus dibanding bulan sebelumnya:{" "}
-          <span className="font-medium text-foreground">
-            {formatMaybePercent(district.delta_periode)}
+          <span className="inline-flex items-center gap-1">
+            <Thermometer className="h-3.5 w-3.5 text-brand-600" aria-hidden="true" />
+            Suhu{" "}
+            <span className="font-medium text-foreground">
+              {formatMaybeNumber(district.cuaca.suhu_c)} °C
+            </span>
           </span>
+          <span className="text-paper-500">({formatMonthShort(district.periode_observasi)})</span>
         </p>
+        {district.coverage !== "high" && (
+          <p title={coverage.description}>
+            Cakupan data:{" "}
+            <span className="font-medium text-foreground">{coverage.label}</span>
+          </p>
+        )}
       </div>
-
-      {/* 4. Iklim bulan observasi */}
-      <dl className="grid shrink-0 grid-cols-3 gap-3 rounded-xl border border-border bg-paper-50 px-3 py-2.5">
-        <div className="min-w-0">
-          <dt className="flex items-center gap-1.5 text-caption text-paper-600">
-            <CloudRain className="h-3.5 w-3.5 shrink-0 text-brand-600" aria-hidden="true" />
-            <span>Hujan</span>
-          </dt>
-          <dd className="mt-0.5 text-body-sm font-medium text-foreground">
-            {formatMaybeNumber(district.cuaca.curah_hujan_mm)} mm
-          </dd>
-        </div>
-
-        <div className="min-w-0">
-          <dt className="flex items-center gap-1.5 text-caption text-paper-600">
-            <Thermometer className="h-3.5 w-3.5 shrink-0 text-brand-600" aria-hidden="true" />
-            <span>Suhu</span>
-          </dt>
-          <dd className="mt-0.5 text-body-sm font-medium text-foreground">
-            {formatMaybeNumber(district.cuaca.suhu_c)} °C
-          </dd>
-        </div>
-
-        <div className="min-w-0">
-          <dt className="flex items-center gap-1.5 text-caption text-paper-600">
-            <Wind className="h-3.5 w-3.5 shrink-0 text-brand-600" aria-hidden="true" />
-            <span>Sifat</span>
-          </dt>
-          <dd className="mt-0.5 truncate text-body-sm font-medium text-foreground">
-            {district.cuaca.status_cuaca ?? "—"}
-          </dd>
-        </div>
-      </dl>
 
       {/* 5. Pemicu dominan menurut model — mengisi kalimat "Dasar:" (§5.2).
              Daftar ini bersifat global: fitur iklim ber-importance tertinggi
@@ -233,17 +219,20 @@ export function DistrictDetailPanel({
       <div className="shrink-0 space-y-2">
         {district.drivers.length > 0 && (
           <div className="rounded-xl border border-border bg-paper-50 p-3">
-            <p className="overline">Pemicu dominan menurut model</p>
+            <p className="overline">Pemicu utama menurut model</p>
             <ul className="mt-1.5 space-y-1">
               {district.drivers.map((d) => (
                 <li
                   key={d.label}
                   className="flex items-baseline justify-between gap-3 text-caption text-paper-700"
                 >
-                  <span className="min-w-0 truncate">{d.label}</span>
-                  <span className="tabular shrink-0 font-medium text-foreground">
+                  <span className="min-w-0 first-letter:uppercase">{d.label}</span>
+                  <span
+                    className="tabular shrink-0 font-medium text-foreground"
+                    title={`Persentil ${d.percentile} dari riwayat wilayah ini`}
+                  >
                     {d.value.toLocaleString("id-ID", { maximumFractionDigits: 1 })}
-                    {d.unit} · persentil {d.percentile}
+                    {d.unit}
                   </span>
                 </li>
               ))}

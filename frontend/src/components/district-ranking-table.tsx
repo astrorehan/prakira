@@ -2,11 +2,7 @@
 
 import * as React from "react";
 import { useState, useMemo } from "react";
-import {
-  ArrowUpDown,
-  ChevronRight,
-  CloudRain,
-} from "lucide-react";
+import { ArrowUpDown, ChevronRight } from "lucide-react";
 import {
   cn,
   formatMaybeIncidence,
@@ -104,7 +100,6 @@ export function DistrictRankingTable({
                   <ArrowUpDown className="h-3 w-3" />
                 </div>
               </th>
-              <th className="py-3.5 px-3">Iklim</th>
               <th className="py-3.5 px-4 text-right">Aksi</th>
             </tr>
           </thead>
@@ -145,8 +140,7 @@ export function DistrictRankingTable({
                           )}
                         </div>
                         <div className="text-caption text-muted-foreground">
-                          BPS: <span className="font-mono">{kec.kode_bps}</span> ·{" "}
-                          {(kec.populasi / 1000).toFixed(0)}k jiwa · {kec.luas_km2} km²
+                          {(kec.populasi / 1000).toFixed(0)} rb jiwa
                         </div>
                       </div>
                     </div>
@@ -170,10 +164,14 @@ export function DistrictRankingTable({
                     <div className="font-semibold text-foreground">
                       {formatMaybeNumber(kec.kasus_aktif)} kasus
                     </div>
-                    {kec.riwayat_periode.length > 1 && (
-                      <div className="text-caption text-muted-foreground font-mono">
-                        {kec.riwayat_periode.length} bln:{" "}
-                        {kec.riwayat_periode.join(" → ")}
+                    {kec.delta_periode !== null && (
+                      <div
+                        className={cn(
+                          "text-caption font-medium",
+                          kec.delta_periode > 0 ? "text-risk-high" : "text-paper-600",
+                        )}
+                      >
+                        {formatMaybePercent(kec.delta_periode)} vs bulan sebelumnya
                       </div>
                     )}
                   </td>
@@ -183,7 +181,7 @@ export function DistrictRankingTable({
                       <span className="text-caption text-paper-600">Belum diprediksi</span>
                     ) : (
                       <>
-                        <div className="font-semibold text-risk-high">
+                        <div className="font-semibold text-foreground">
                           {formatMaybeNumber(kec.kasus_prediksi)} kasus
                         </div>
                         {/* Batas selalu ikut angkanya, tidak pernah di kolom lain. */}
@@ -193,33 +191,12 @@ export function DistrictRankingTable({
                         </div>
                       </>
                     )}
-                    {kec.delta_periode !== null && (
-                      <div
-                        className={cn(
-                          "text-caption font-semibold",
-                          kec.delta_periode >= 0 ? "text-risk-high" : "text-risk-low",
-                        )}
-                      >
-                        {formatMaybePercent(kec.delta_periode)} vs bulan lalu
-                      </div>
-                    )}
                   </td>
 
                   <td className="py-3 px-3">
                     <span className="font-medium text-paper-700">
                       {formatMaybeIncidence(kec.incidence_rate)}
                     </span>
-                  </td>
-
-                  <td className="py-3 px-3">
-                    <div className="text-brand-700 font-semibold flex items-center gap-1">
-                      <CloudRain className="h-3 w-3" />
-                      <span>{formatMaybeNumber(kec.cuaca.curah_hujan_mm)} mm</span>
-                    </div>
-                    <div className="text-caption text-muted-foreground">
-                      {formatMaybeNumber(kec.cuaca.suhu_c)}°C ·{" "}
-                      {formatMaybeNumber(kec.cuaca.kelembaban_pct)}% RH
-                    </div>
                   </td>
 
                   <td className="py-3 px-4 text-right">
@@ -238,7 +215,7 @@ export function DistrictRankingTable({
 
             {sorted.length === 0 && (
               <tr>
-                <td colSpan={7} className="py-8 text-center text-muted-foreground text-xs">
+                <td colSpan={6} className="py-8 text-center text-muted-foreground text-xs">
                   Belum ada data kecamatan untuk penyakit ini.
                 </td>
               </tr>

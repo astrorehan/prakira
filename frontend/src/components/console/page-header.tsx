@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { CalendarDays, TriangleAlert } from "lucide-react";
+import { CalendarDays, Info, TriangleAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePeriod } from "@/lib/use-period";
 
@@ -91,6 +91,45 @@ export function PeriodChip({ className }: { className?: string }) {
           </span>
         </>
       )}
+      <PeriodInfo monthYear={period.monthYear} predictionLabel={period.predictionLabel} />
+    </span>
+  );
+}
+
+/**
+ * Penjelasan jarak antara bulan data dan bulan prakiraan — cukup satu ikon.
+ * Chip-nya sendiri tetap pendek; siapa pun yang bertanya "kenapa Oktober
+ * kalau datanya Desember?" menemukan jawabannya saat mengarahkan kursor atau
+ * menekan Tab, tanpa paragraf yang menetap di layar.
+ */
+function PeriodInfo({
+  monthYear,
+  predictionLabel,
+}: {
+  monthYear: string;
+  predictionLabel: string;
+}) {
+  const id = React.useId();
+  return (
+    <span className="group/info relative inline-flex">
+      <button
+        type="button"
+        aria-describedby={id}
+        aria-label="Tentang periode prakiraan"
+        className="inline-flex h-4 w-4 items-center justify-center rounded-full text-paper-500 hover:text-brand-700 focus-visible:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300"
+      >
+        <Info className="h-3.5 w-3.5" aria-hidden="true" />
+      </button>
+      <span
+        role="tooltip"
+        id={id}
+        className="pointer-events-none invisible absolute right-0 top-full z-50 mt-2 w-72 rounded-xl border border-border bg-surface p-3 text-left text-caption leading-relaxed text-paper-700 opacity-0 shadow-card transition-opacity duration-fast group-hover/info:visible group-hover/info:opacity-100 group-focus-within/info:visible group-focus-within/info:opacity-100"
+      >
+        Rekap kasus resmi terakhir: <strong className="font-semibold text-foreground">{monthYear}</strong>.
+        Model memprakirakan bulan demi bulan sampai{" "}
+        <strong className="font-semibold text-foreground">{predictionLabel}</strong> memakai
+        data iklim BMKG terbaru; makin jauh bulannya, makin lebar rentangnya.
+      </span>
     </span>
   );
 }
