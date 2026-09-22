@@ -106,13 +106,22 @@ function canListen(port, host) {
 }
 
 async function isPortAvailable(port) {
-  /* Gunakan alamat wildcard. Di Windows, menguji 127.0.0.1 saja dapat
-     terlihat kosong walaupun proses lain sudah mendengarkan pada 0.0.0.0. */
-  const ipv4 = await canListen(port, "0.0.0.0");
-  if (ipv4 === "busy" || ipv4 === "unavailable") return false;
+  /* Periksa wildcard dan loopback. Di Windows, bind ke 0.0.0.0 dapat
+     terlihat kosong walaupun proses lain sudah mendengarkan khusus pada
+     127.0.0.1 (dan sebaliknya). */
+  const ipv4 = await Promise.all([
+    canListen(port, "0.0.0.0"),
+    canListen(port, "127.0.0.1"),
+  ]);
+  if (ipv4.some((result) => result === "busy" || result === "unavailable")) {
+    return false;
+  }
 
-  const ipv6 = await canListen(port, "::");
-  return ipv6 !== "busy" && ipv6 !== "unavailable";
+  const ipv6 = await Promise.all([
+    canListen(port, "::"),
+    canListen(port, "::1"),
+  ]);
+  return !ipv6.some((result) => result === "busy" || result === "unavailable");
 }
 
 async function findAvailablePort(preferred, reserved, fallback) {
