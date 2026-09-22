@@ -1,11 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { Loader2, MapPin, Send, ShieldQuestion } from "lucide-react";
+import { Loader2, Mail, MapPin, Send, ShieldQuestion } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { DispositionEmailModal } from "@/components/disposition-email-modal";
 import { forwardReport } from "@/lib/api";
 import { formatDateTime } from "@/lib/period";
 import { REPORT_KIND } from "@/lib/reports";
@@ -48,7 +49,7 @@ function ForwardCard({
   const [failing, setFailing] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const [copied, setCopied] = React.useState(false);
+  const [draftOpen, setDraftOpen] = React.useState(false);
 
   const target = report.forwarding?.target ?? "Dinas Lingkungan Hidup";
   const summary = summaryLine(report);
@@ -99,9 +100,10 @@ function ForwardCard({
         </div>
       </div>
 
-      {/* "Siapkan ringkasan" menyalin teks yang akan dikirim lewat kanal
-          instansi penerima. Aplikasi ini tidak punya sambungan ke kanal itu,
-          jadi ia tidak berpura-pura mengirimkannya sendiri. */}
+      {/* "Siapkan ringkasan" membuka draf surat rujukan yang akan dikirim
+          lewat kanal instansi penerima. Aplikasi ini tidak punya sambungan ke
+          kanal itu, jadi ia tidak berpura-pura mengirimkannya sendiri: yang
+          disediakan adalah teksnya, dan penyampaiannya dicatat terpisah. */}
       <div className="mt-3 rounded-xl border border-border bg-paper-50 p-3">
         <p className="text-caption font-medium text-paper-700">
           Ringkasan untuk disampaikan
@@ -118,19 +120,19 @@ function ForwardCard({
         <Button
           size="sm"
           variant="outline"
-          className="mt-3"
-          onClick={async () => {
-            try {
-              await navigator.clipboard.writeText(`${report.id} — ${summary}`);
-              setCopied(true);
-            } catch {
-              setCopied(false);
-            }
-          }}
+          className="mt-3 gap-1.5"
+          onClick={() => setDraftOpen(true)}
         >
-          {copied ? "Ringkasan tersalin" : "Siapkan ringkasan"}
+          <Mail className="h-4 w-4" aria-hidden />
+          Siapkan ringkasan
         </Button>
       </div>
+
+      <DispositionEmailModal
+        open={draftOpen}
+        onOpenChange={setDraftOpen}
+        report={report}
+      />
 
       {failed && report.forwarding?.note && (
         <p className="mt-3 text-caption leading-relaxed text-risk-high">
@@ -287,28 +289,48 @@ export function ForwardingQueue({
           {showArchive && (
             <ul className="space-y-1.5">
               {forwarded.map((report) => (
-                <li
-                  key={report.id}
-                  className="rounded-xl border border-border bg-white px-3 py-2 text-caption leading-relaxed text-paper-700"
-                >
-                  <span className="font-mono uppercase">{report.id}</span> ·{" "}
-                  {report.kecamatan} · diteruskan ke{" "}
-                  {report.forwarding?.target ?? "instansi penerima"}
-                  {report.forwarding?.channel
-                    ? ` lewat ${report.forwarding.channel}`
-                    : ""}
-                  {report.forwarding?.forwardedAt
-                    ? ` · ${formatDateTime(report.forwarding.forwardedAt)}`
-                    : ""}
-                  {report.forwarding?.reference
-                    ? ` · rujukan ${report.forwarding.reference}`
-                    : ""}
-                </li>
+                <ArchiveRow key={report.id} report={report} />
               ))}
             </ul>
           )}
         </div>
       )}
     </section>
+  );
+}
+
+/** Satu baris arsip; suratnya tetap bisa dibuka kembali setelah disampaikan. */
+function ArchiveRow({ report }: { report: CitizenReport }) {
+  const [open, setOpen] = React.useState(false);
+
+  return (
+    <li className="rounded-xl border border-border bg-white px-3 py-2 text-caption leading-relaxed text-paper-700">
+      <ArchiveLine report={report} />
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="mt-1 font-medium text-brand-700 hover:underline"
+      >
+        Lihat surat yang disampaikan
+      </button>
+      <DispositionEmailModal open={open} onOpenChange={setOpen} report={report} />
+    </li>
+  );
+}
+
+function ArchiveLine({ report }: { report: CitizenReport }) {
+  return (
+    <span>
+      <span className="font-mono uppercase">{report.id}</span> ·{" "}
+      {report.kecamatan} · diteruskan ke{" "}
+      {report.forwarding?.target ?? "instansi penerima"}
+      {report.forwarding?.channel ? ` lewat ${report.forwarding.channel}` : ""}
+      {report.forwarding?.forwardedAt
+        ? ` · ${formatDateTime(report.forwarding.forwardedAt)}`
+        : ""}
+      {report.forwarding?.reference
+        ? ` · rujukan ${report.forwarding.reference}`
+        : ""}
+    </span>
   );
 }
