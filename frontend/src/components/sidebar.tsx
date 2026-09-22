@@ -89,7 +89,16 @@ export function Sidebar() {
 
   const userRole = session?.role;
   const isAdmin = userRole === "admin";
-  const consoleSubline = isAdmin ? "Konsol Administrator" : "Konsol Tenaga Kesehatan";
+  /* F09: dua peran yang pekerjaannya berbeda tidak boleh membuka menu yang
+     sama. Petugas puskesmas membuka tugas dan wilayahnya sendiri; koordinator
+     dinas membuka pekerjaan lintas wilayah; analis membuka pintu evaluasi. */
+  const consoleSubline = isAdmin
+    ? "Konsol Administrator"
+    : userRole === "puskesmas"
+      ? "Konsol Petugas Puskesmas"
+      : userRole === "analis"
+        ? "Konsol Analis"
+        : "Konsol Dinas Kesehatan";
 
   /* Kedua angka berubah saat petugas memutuskan sesuatu di /verifikasi atau
      /tindakan, dan sidebar tetap terpasang selama itu. Ditarik ulang tiap kali
@@ -122,8 +131,25 @@ export function Sidebar() {
   }, [pathname, session, isAdmin]);
 
   const consoleItems: NavItem[] = React.useMemo(() => {
+    /* F06/F08: satu pintu keputusan untuk semua peran, dan namanya menyebut
+       pekerjaan — bukan "dashboard prediksi", yang menjanjikan bahan analisis. */
+    const home: NavItem = {
+      href: "/dashboard",
+      label: "Beranda / Prioritas",
+      icon: Home,
+    };
+
+    /* F07: papan bobot terdampak adalah bukti pendukung urutan, bukan pintu
+       keputusan kedua. Dinas bisa membukanya sejak dulu tanpa punya menunya;
+       sekarang menunya ada di setiap peran yang berwenang, dengan nama yang
+       tidak bersaing dengan beranda. */
+    const weighting: NavItem = {
+      href: "/admin/prioritas",
+      label: "Bobot penduduk terdampak",
+      icon: Scale,
+    };
+
     if (isAdmin) {
-      // Menu khusus Administrator IT: sistem, pemantauan, prioritas, dan analitik.
       return [
         {
           href: "/admin",
@@ -131,33 +157,66 @@ export function Sidebar() {
           icon: ShieldCheck,
           exact: true,
         },
-        { href: "/dashboard", label: "Dashboard Pemantauan", icon: Activity },
-        { href: "/admin/prioritas", label: "Prioritas Terdampak", icon: Scale },
+        home,
+        weighting,
         { href: "/analitik", label: "Analitik & Evaluasi", icon: BarChart3 },
       ];
     }
 
-    // Menu Tenaga Kesehatan (Nakes): Surveilans klinis, verifikasi warga, dan aksi intervensi
+    if (userRole === "analis") {
+      // Analis membuka pintu evaluasi: seberapa benar prakiraannya selama ini.
+      return [
+        home,
+        { href: "/analitik", label: "Analitik & Evaluasi", icon: BarChart3 },
+        weighting,
+        { href: "/model", label: "Kinerja Model", icon: Microscope },
+      ];
+    }
+
+    if (userRole === "puskesmas") {
+      // Petugas lapangan: tugasnya sendiri, wilayahnya sendiri, rekapnya sendiri.
+      return [
+        home,
+        {
+          href: "/tindakan",
+          label: "Tugas saya",
+          icon: Siren,
+          badge: pendingActions ?? undefined,
+          badgeLabel: "tugas menunggu",
+        },
+        {
+          href: "/verifikasi",
+          label: "Laporan wilayah",
+          icon: ClipboardCheck,
+          badge: pendingReports ?? undefined,
+          badgeLabel: "laporan perlu diperiksa",
+        },
+        { href: "/kasus", label: "Rekap kasus", icon: FilePlus2 },
+      ];
+    }
+
+    // Koordinator dinas: pekerjaan lintas wilayah dan lintas penyakit.
     return [
-      { href: "/dashboard", label: "Dashboard Prediksi", icon: Activity },
+      home,
       {
         href: "/tindakan",
         label: "Aksi Dini",
         icon: Siren,
         badge: pendingActions ?? undefined,
-        badgeLabel: "menunggu instruksi",
+        badgeLabel: "menunggu keputusan",
       },
       {
         href: "/verifikasi",
         label: "Verifikasi Laporan",
         icon: ClipboardCheck,
         badge: pendingReports ?? undefined,
-        badgeLabel: "laporan menunggu verifikasi",
+        badgeLabel: "laporan perlu diperiksa",
       },
+      weighting,
       { href: "/analitik", label: "Analitik & Riwayat", icon: BarChart3 },
-      { href: "/kasus", label: "Entri Kasus", icon: FilePlus2 },
+      { href: "/kasus", label: "Rekap kasus", icon: FilePlus2 },
     ];
-  }, [pendingActions, pendingReports, isAdmin]);
+  }, [pendingActions, pendingReports, isAdmin, userRole]);
 
   async function handleSignOut() {
     try {

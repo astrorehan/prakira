@@ -12,8 +12,9 @@ import { describeDeadline, type Deadline } from "./period";
 
 const STATUS_RANK: Record<ActionRecommendation["status"], number> = {
   pending: 0,
-  in_progress: 1,
-  completed: 2,
+  assigned: 1,
+  in_progress: 2,
+  completed: 3,
 };
 
 const PRIORITY_RANK: Record<ActionRecommendation["priority"], number> = {
@@ -22,11 +23,79 @@ const PRIORITY_RANK: Record<ActionRecommendation["priority"], number> = {
   low: 2,
 };
 
+/**
+ * Nama tahap menyebut kejadian yang benar-benar tercatat (audit §7.A, F05).
+ *
+ * "Sedang berjalan" dulu dipakai untuk tindakan yang baru saja ditugaskan dan
+ * belum tentu dikerjakan siapa pun. Dua keadaan itu kini punya nama sendiri.
+ */
 export const STATUS_LABEL: Record<ActionRecommendation["status"], string> = {
-  pending: "Menunggu instruksi",
-  in_progress: "Sedang berjalan",
+  pending: "Perlu keputusan",
+  assigned: "Ditugaskan",
+  in_progress: "Dikerjakan",
   completed: "Selesai",
 };
+
+/**
+ * Penanda yang menempel pada tindakan tanpa menggantikan tahapnya.
+ *
+ * Audit §7.A menegaskan "Belum dikonfirmasi", "Terkendala", dan "Lewat tenggat"
+ * bukan status: tindakan yang terkendala tetap ditugaskan kepada seseorang.
+ * Menjadikannya status akan menghapus informasi siapa pemiliknya.
+ */
+export type ActionMarker = {
+  id: "belum_dikonfirmasi" | "terkendala" | "lewat_tenggat";
+  label: string;
+  detail: string;
+  tone: "risk-medium" | "risk-high";
+};
+
+/**
+ * Tenggat yang dipakai untuk menilai ketepatan waktu adalah tenggat yang
+ * disepakati manusia bila ada; `due_date` hanyalah saran mesin aturan.
+ */
+export function effectiveDueDate(rec: ActionRecommendation): string {
+  return rec.assignment?.agreedDueDate ?? rec.due_date;
+}
+
+export function actionMarkers(
+  rec: ActionRecommendation,
+  systemToday: string | null,
+): ActionMarker[] {
+  const markers: ActionMarker[] = [];
+
+  if (rec.assignment && !rec.acknowledgement && rec.status !== "completed") {
+    markers.push({
+      id: "belum_dikonfirmasi",
+      label: "Belum dikonfirmasi",
+      detail: `Penugasan ke ${rec.assignment.unit} belum dibenarkan pelaksana.`,
+      tone: "risk-medium",
+    });
+  }
+
+  if (rec.blocker) {
+    markers.push({
+      id: "terkendala",
+      label: "Terkendala",
+      detail: rec.blocker.note,
+      tone: "risk-high",
+    });
+  }
+
+  if (rec.status !== "completed") {
+    const deadline = describeDeadline(effectiveDueDate(rec), systemToday);
+    if (deadline.urgency === "overdue") {
+      markers.push({
+        id: "lewat_tenggat",
+        label: "Lewat tenggat",
+        detail: `Tenggat ${deadline.label.toLowerCase()}.`,
+        tone: "risk-high",
+      });
+    }
+  }
+
+  return markers;
+}
 
 export const PRIORITY_LABEL: Record<ActionRecommendation["priority"], string> = {
   high: "Prioritas tinggi",
@@ -52,6 +121,7 @@ export const COVERAGE_LABEL: Record<string, string> = {
 
 export type QueuedAction = ActionRecommendation & {
   deadline: Deadline;
+  markers: ActionMarker[];
 };
 
 /** Melekatkan tenggat terhitung supaya komponen tidak menghitung ulang per render. */
@@ -59,7 +129,11 @@ export function toQueuedAction(
   rec: ActionRecommendation,
   systemToday: string | null,
 ): QueuedAction {
-  return { ...rec, deadline: describeDeadline(rec.due_date, systemToday) };
+  return {
+    ...rec,
+    deadline: describeDeadline(effectiveDueDate(rec), systemToday),
+    markers: actionMarkers(rec, systemToday),
+  };
 }
 
 /**
@@ -94,7 +168,11 @@ export type QueueSummary = {
   overdue: number;
   /** Jatuh tempo dalam 3 hari dan belum selesai. */
   dueSoon: number;
-  /** Jiwa di wilayah yang tindakannya belum diinstruksikan. */
+  /** Sudah ditugaskan, pelaksananya belum membenarkan menerima. */
+  unacknowledged: number;
+  /** Ditugaskan atau dikerjakan tetapi sedang tertahan kendala. */
+  blocked: number;
+  /** Jiwa di wilayah yang tindakannya belum diputuskan. */
   populationPending: number;
   districtsPending: string[];
   /** Tenggat terdekat di antara yang belum selesai. */
@@ -114,6 +192,8 @@ export function summarizeQueue(list: QueuedAction[]): QueueSummary {
     pending: pending.length,
     inProgress: list.filter((r) => r.status === "in_progress").length,
     completed: list.filter((r) => r.status === "completed").length,
+    unacknowledged: open.filter((r) => r.assignment && !r.acknowledgement).length,
+    blocked: open.filter((r) => r.blocker !== null).length,
     overdue: open.filter((r) => r.deadline.urgency === "overdue").length,
     dueSoon: open.filter(
       (r) => r.deadline.urgency === "today" || r.deadline.urgency === "soon",

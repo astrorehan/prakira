@@ -22,8 +22,27 @@ import {
 
 export type ReportKind =
   "gejala" | "jentik" | "genangan" | "sampah" | "saluran";
-export type ReportStatus = "menunggu" | "terverifikasi" | "ditolak";
+/**
+ * `perlu_informasi` ditambahkan oleh audit F11: laporan yang lokasinya tidak
+ * dapat ditelusuri dulu hanya punya dua pintu — diterima atau ditolak — dan
+ * warga harus mengulang dari awal tanpa hubungan ke laporan sebelumnya.
+ */
+export type ReportStatus =
+  | "menunggu"
+  | "perlu_informasi"
+  | "terverifikasi"
+  | "ditolak";
 export type ReportHandlingMode = "mandiri_warga" | "dlh";
+
+/**
+ * Keadaan penyampaian ke instansi lain (F10).
+ *
+ * Lingkup Dinkes berakhir pada penyampaian yang tercatat. Tidak ada keadaan
+ * "dikerjakan" atau "selesai" di sini dengan sengaja: pengerjaan instansi
+ * penerima bukan pekerjaan yang dikelola PRAKIRA, dan menampilkannya berarti
+ * menjanjikan pemantauan yang tidak punya sumber pembaruan.
+ */
+export type ForwardState = "perlu_diteruskan" | "diteruskan" | "gagal";
 
 export const REPORT_HANDLING_MODES: ReportHandlingMode[] = [
   "mandiri_warga",
@@ -90,7 +109,7 @@ const GUIDANCE: Record<ReportKind, CitizenGuidance> = {
     steps: [
       "Jauhkan anak-anak dan hewan dari genangan, terutama bila air berbau atau mengalir deras.",
       "Hindari menyentuh air dengan tangan kosong; gunakan alas kaki dan pelindung bila harus melintas.",
-      "Simpan kode tiket dan perbarui laporan bila genangan meluas atau tidak surut.",
+      "Simpan kode lacak dan kirim pembaruan bila genangan meluas atau tidak surut.",
     ],
     caution: "Jangan masuk ke saluran, membuka penutup jalan, atau menangani kabel/limbah di dalam air.",
   },
@@ -99,7 +118,7 @@ const GUIDANCE: Record<ReportKind, CitizenGuidance> = {
     steps: [
       "Jauhkan anak-anak dan hewan dari tumpukan sampah.",
       "Jangan membakar, membongkar, atau memindahkan limbah yang tidak dikenal.",
-      "Simpan kode tiket dan gunakan status tiket untuk melihat pembaruan penanganan.",
+      "Simpan kode lacak untuk melihat perkembangan pemeriksaan dan penerusan.",
     ],
     caution: "Jika terlihat benda tajam, bahan kimia, atau limbah medis, jangan menyentuhnya dan beri tahu petugas.",
   },
@@ -108,7 +127,7 @@ const GUIDANCE: Record<ReportKind, CitizenGuidance> = {
     steps: [
       "Amankan anak-anak dan kendaraan dari area yang airnya meluap.",
       "Bersihkan hanya sumbatan kecil dari tempat yang aman dan tidak berada di dalam saluran.",
-      "Simpan kode tiket dan laporkan perubahan tinggi air melalui laporan baru bila kondisi memburuk.",
+      "Simpan kode lacak dan laporkan perubahan tinggi air melalui laporan baru bila kondisi memburuk.",
     ],
     caution: "Jangan masuk ke saluran atau membuka manhole; air deras dapat menyeret orang tanpa terlihat.",
   },
@@ -176,6 +195,18 @@ export type ReportRow = {
   review_note: string | null;
   handling_mode: ReportHandlingMode | null;
   device_hash: string;
+  landmark: string | null;
+  rt_rw: string | null;
+  info_request: string | null;
+  info_requested_at: string | null;
+  related_report_id: string | null;
+  forward_state: ForwardState | null;
+  forward_target: string | null;
+  forward_channel: string | null;
+  forward_reference: string | null;
+  forward_note: string | null;
+  forwarded_at: string | null;
+  forwarded_by: string | null;
 };
 
 /* Proyeksi kolom yang dipakai setiap kueri baca laporan. Ditulis sekali di
@@ -184,7 +215,10 @@ export type ReportRow = {
    tadi. `photo` hanya muncul sebagai uji keberadaan. */
 export const REPORT_COLUMNS = `id, kind, kecamatan, kelurahan, occurred_at,
         description, submitted_at, status, reviewed_at, reviewer, review_note,
-        handling_mode, device_hash, (photo IS NOT NULL) AS has_photo`;
+        handling_mode, device_hash, landmark, rt_rw, info_request,
+        info_requested_at, related_report_id, forward_state, forward_target,
+        forward_channel, forward_reference, forward_note, forwarded_at,
+        forwarded_by, (photo IS NOT NULL) AS has_photo`;
 
 /* Tanpa 0/O dan 1/I/L: kode ini diketik ulang orang dari layar ponsel, dan
    satu karakter ambigu mengubah "laporan saya hilang" jadi keluhan. */
@@ -251,6 +285,13 @@ export type NewReport = {
   occurredAt: string;
   description: string;
   photo?: string;
+  /* Patokan dan RT/RW dipisahkan dari narasi (F11): petugas perlu menilai
+     apakah lokasi dapat ditelusuri tanpa membaca ulang ceritanya. */
+  landmark?: string;
+  rtRw?: string;
+  /* Pengiriman ulang atas laporan yang sama tetap terhubung ke kode lacak
+     sebelumnya, bukan memulai kejadian baru tanpa jejak. */
+  relatedReportId?: string;
 };
 
 export async function createReport(
@@ -260,10 +301,16 @@ export async function createReport(
   const id = generateTrackingCode();
   const submittedAt = new Date().toISOString();
 
+  const related = input.relatedReportId
+    ? normalizeTrackingCode(input.relatedReportId)
+    : "";
+  const relatedId = related ? ((await findReport(related))?.id ?? null) : null;
+
   await run(
     `INSERT INTO laporan_warga
-       (id, kind, kecamatan, kelurahan, occurred_at, description, submitted_at, photo, status, device_hash)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'menunggu', ?)`,
+       (id, kind, kecamatan, kelurahan, occurred_at, description, submitted_at,
+        photo, status, device_hash, landmark, rt_rw, related_report_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'menunggu', ?, ?, ?, ?)`,
     id,
     input.kind,
     input.kecamatan,
@@ -273,6 +320,9 @@ export async function createReport(
     submittedAt,
     input.photo ?? null,
     hash,
+    input.landmark?.trim() || null,
+    input.rtRw?.trim() || null,
+    relatedId,
   );
 
   await logAudit({
@@ -333,7 +383,12 @@ export function listReports(filter?: {
   const where = clauses.length > 0 ? `WHERE ${clauses.join(" AND ")}` : "";
   return all<ReportRow>(
     `SELECT ${REPORT_COLUMNS} FROM laporan_warga ${where}
-      ORDER BY CASE status WHEN 'menunggu' THEN 0 WHEN 'terverifikasi' THEN 1 ELSE 2 END,
+      ORDER BY CASE status
+                 WHEN 'menunggu' THEN 0
+                 WHEN 'perlu_informasi' THEN 1
+                 WHEN 'terverifikasi' THEN 2
+                 ELSE 3
+               END,
                submitted_at ASC`,
     ...params,
   );
@@ -353,6 +408,51 @@ export function listReports(filter?: {
  * delapan laporan baru berhak tahu mana yang datang dari warga dan mana yang
  * disuntikkan untuk demo.
  */
+export type PublicForwarding = {
+  state: ForwardState;
+  target: string | null;
+  channel: string | null;
+  reference: string | null;
+  note: string | null;
+  forwardedAt: string | null;
+};
+
+/**
+ * Kelengkapan informasi laporan (F11).
+ *
+ * Dihitung dari kolom, bukan ditebak dari narasi: petugas perlu tahu apakah
+ * lokasi dapat ditelusuri sebelum memutuskan, dan warga perlu tahu apa yang
+ * kurang bila diminta melengkapi.
+ */
+export type ReportCompleteness = {
+  hasKelurahan: boolean;
+  hasRtRw: boolean;
+  hasLandmark: boolean;
+  hasPhoto: boolean;
+  /** Benar bila ada kelurahan/RT-RW/patokan — cukup untuk dicari di lapangan. */
+  locatable: boolean;
+  missing: string[];
+};
+
+export function describeCompleteness(row: ReportRow): ReportCompleteness {
+  const hasKelurahan = Boolean(row.kelurahan?.trim());
+  const hasRtRw = Boolean(row.rt_rw?.trim());
+  const hasLandmark = Boolean(row.landmark?.trim());
+  const missing: string[] = [];
+  if (!hasKelurahan) missing.push("kelurahan");
+  if (!hasRtRw) missing.push("RT/RW");
+  if (!hasLandmark) missing.push("patokan lokasi");
+  if (!row.has_photo) missing.push("foto");
+  return {
+    hasKelurahan,
+    hasRtRw,
+    hasLandmark,
+    hasPhoto: row.has_photo,
+    locatable: hasKelurahan || hasRtRw || hasLandmark,
+    missing,
+  };
+}
+
 export function toPublicView(
   row: ReportRow,
   ticket?: EnvironmentTicket | null,
@@ -370,6 +470,13 @@ export function toPublicView(
   reviewedAt: string | null;
   reviewer: string | null;
   reviewNote: string | null;
+  landmark: string | null;
+  rtRw: string | null;
+  infoRequest: string | null;
+  infoRequestedAt: string | null;
+  relatedReportId: string | null;
+  completeness: ReportCompleteness;
+  forwarding: PublicForwarding | null;
   routing: {
     family: "kesehatan" | "lingkungan";
     destination: string;
@@ -378,7 +485,7 @@ export function toPublicView(
       | "rekap_evaluasi"
       | "pilih_tindak_lanjut"
       | "arahan_warga"
-      | "tiket_lingkungan";
+      | "penerusan_instansi";
   };
   guidance: CitizenGuidance;
   ticket: PublicEnvironmentTicket | null;
@@ -396,8 +503,14 @@ export function toPublicView(
       : handlingMode === "mandiri_warga"
         ? "arahan_warga"
         : handlingMode === "dlh"
-          ? "tiket_lingkungan"
+          ? "penerusan_instansi"
           : "pilih_tindak_lanjut";
+
+  /* Baris lama yang sudah dirutekan ke DLH sebelum kolom penerusan ada tetap
+     berarti "perlu diteruskan": membuat tiket di dalam aplikasi bukan bukti
+     bahwa laporannya sudah sampai ke instansi penerima. */
+  const forwardState: ForwardState | null =
+    row.forward_state ?? (handlingMode === "dlh" ? "perlu_diteruskan" : null);
   const destination =
     family === "kesehatan"
       ? REPORT_DESTINATION.kesehatan
@@ -420,6 +533,22 @@ export function toPublicView(
     reviewedAt: row.reviewed_at,
     reviewer: row.reviewer,
     reviewNote: row.review_note,
+    landmark: row.landmark,
+    rtRw: row.rt_rw,
+    infoRequest: row.info_request,
+    infoRequestedAt: row.info_requested_at,
+    relatedReportId: row.related_report_id,
+    completeness: describeCompleteness(row),
+    forwarding: forwardState
+      ? {
+          state: forwardState,
+          target: row.forward_target ?? REPORT_DESTINATION.lingkungan,
+          channel: row.forward_channel,
+          reference: row.forward_reference,
+          note: row.forward_note,
+          forwardedAt: row.forwarded_at,
+        }
+      : null,
     routing: {
       family,
       destination,
@@ -455,12 +584,21 @@ export class InvalidReportHandlingModeError extends Error {
   }
 }
 
+export class ForwardStateError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ForwardStateError";
+  }
+}
+
 export async function reviewReport(
   id: string,
   decision: {
-    status: "terverifikasi" | "ditolak";
+    status: "terverifikasi" | "ditolak" | "perlu_informasi";
     note?: string;
     handlingMode?: ReportHandlingMode;
+    /** Pertanyaan yang harus dijawab pelapor bila keputusannya minta informasi. */
+    infoRequest?: string;
   },
   reviewer: string,
   role: string,
@@ -476,7 +614,10 @@ export async function reviewReport(
       id,
     );
     if (!existing) return;
-    if (existing.status !== "menunggu") {
+    /* Laporan yang sedang menunggu kelengkapan masih boleh diputuskan: itu
+       justru tujuan permintaannya. Yang tidak boleh diputuskan dua kali adalah
+       laporan yang sudah diterima atau ditolak. */
+    if (existing.status !== "menunggu" && existing.status !== "perlu_informasi") {
       throw new ReportAlreadyReviewedError(existing.status);
     }
 
@@ -497,15 +638,34 @@ export async function reviewReport(
         : null;
     selectedHandlingMode = handlingMode;
 
+    /* Laporan yang diterima dan dirutekan ke instansi lain masuk keadaan
+       "perlu diteruskan". Ia belum diteruskan: penyampaian adalah kejadian
+       tersendiri yang dicatat lewat `recordForwarding`. */
+    const forwardState =
+      decision.status === "terverifikasi" && handlingMode === "dlh"
+        ? "perlu_diteruskan"
+        : null;
+    const infoRequest =
+      decision.status === "perlu_informasi"
+        ? (decision.infoRequest?.trim() || note)
+        : null;
+
     await tx.run(
       `UPDATE laporan_warga
-          SET status = ?, reviewed_at = ?, reviewer = ?, review_note = ?, handling_mode = ?
+          SET status = ?, reviewed_at = ?, reviewer = ?, review_note = ?,
+              handling_mode = ?, forward_state = COALESCE(forward_state, ?),
+              forward_target = COALESCE(forward_target, ?),
+              info_request = ?, info_requested_at = ?
         WHERE id = ?`,
       decision.status,
       reviewedAt,
       reviewer,
       note,
       handlingMode,
+      forwardState,
+      forwardState ? REPORT_DESTINATION.lingkungan : null,
+      infoRequest,
+      decision.status === "perlu_informasi" ? reviewedAt : null,
       id,
     );
 
@@ -514,20 +674,10 @@ export async function reviewReport(
       id,
     );
 
-    if (
-      updated &&
-      decision.status === "terverifikasi" &&
-      handlingMode === "dlh"
-    ) {
-      await ensureEnvironmentTicketTx(tx, {
-        id: updated.id,
-        kind: updated.kind,
-        kecamatan: updated.kecamatan,
-        kelurahan: updated.kelurahan,
-        description: updated.description,
-        simulated: isSimulated(updated),
-      }, reviewedAt);
-    }
+    /* Tiket DLH tidak lagi dibuat di sini. Membuat tiket di dalam aplikasi dan
+       menyampaikan laporan melalui kanal yang diterima instansi adalah dua
+       kejadian berbeda (audit F10); yang pertama pernah tampil seolah yang
+       kedua sudah terjadi. Baris tiket lama tetap ada sebagai riwayat. */
   });
 
   if (!updated) return null;
@@ -543,12 +693,125 @@ export async function reviewReport(
   return updated;
 }
 
+/**
+ * Mencatat penyampaian laporan ke instansi penerima (F10, audit §7.E).
+ *
+ * Batasnya disengaja: yang tercatat adalah tujuan, waktu, kanal, dan referensi
+ * bila tersedia. Tidak ada kolom progres, PIC instansi penerima, atau
+ * penyelesaian — Dinkes menyampaikan informasi dan tidak mengelola pekerjaan
+ * instansi lain. Penyampaian yang gagal tetap "perlu diteruskan": itu
+ * pekerjaan penerusan yang belum selesai, bukan tunggakan penanganan.
+ */
+export async function recordForwarding(
+  id: string,
+  input: {
+    delivered: boolean;
+    target?: string;
+    channel?: string;
+    reference?: string;
+    note?: string;
+  },
+  actor: string,
+  role: string,
+): Promise<ReportRow | null> {
+  const existing = await findReport(id);
+  if (!existing) return null;
+
+  const family = REPORT_FAMILY[existing.kind];
+  if (family !== "lingkungan" || existing.handling_mode !== "dlh") {
+    throw new ForwardStateError(
+      "Hanya laporan lingkungan yang dirutekan ke instansi lain yang dapat dicatat penerusannya.",
+    );
+  }
+  if (existing.status !== "terverifikasi") {
+    throw new ForwardStateError(
+      "Laporan harus diperiksa dan diterima lebih dulu sebelum diteruskan.",
+    );
+  }
+  if (existing.forward_state === "diteruskan") {
+    throw new ForwardStateError("Laporan ini sudah tercatat diteruskan.");
+  }
+
+  const now = new Date().toISOString();
+  const target = input.target?.trim() || REPORT_DESTINATION.lingkungan;
+  const channel = input.channel?.trim() || null;
+  const note = input.note?.trim() || null;
+
+  if (input.delivered && !channel) {
+    throw new ForwardStateError(
+      "Sebutkan kanal penyampaian yang dipakai agar catatannya dapat diperiksa kembali.",
+    );
+  }
+  if (!input.delivered && !note) {
+    throw new ForwardStateError(
+      "Penyampaian yang gagal wajib menyebutkan alasannya.",
+    );
+  }
+
+  await run(
+    `UPDATE laporan_warga
+        SET forward_state = ?, forward_target = ?, forward_channel = ?,
+            forward_reference = ?, forward_note = ?, forwarded_at = ?, forwarded_by = ?
+      WHERE id = ?`,
+    input.delivered ? "diteruskan" : "gagal",
+    target,
+    channel,
+    input.reference?.trim() || null,
+    note,
+    input.delivered ? now : null,
+    input.delivered ? actor : null,
+    existing.id,
+  );
+
+  await logAudit({
+    actor,
+    role,
+    action: `Penerusan laporan ${existing.id}`,
+    details: input.delivered
+      ? `Disampaikan ke ${target} melalui ${channel}${input.reference ? ` — referensi ${input.reference}` : ""}.`
+      : `Penyampaian ke ${target} belum berhasil — ${note}.`,
+    status: input.delivered ? "success" : "warning",
+  });
+
+  return findReport(existing.id);
+}
+
+/** Laporan lain di kecamatan dan jenis yang sama, untuk menautkan duplikat. */
+export async function listRelatedReports(
+  id: string,
+  windowDays = 14,
+): Promise<ReportRow[]> {
+  const report = await findReport(id);
+  if (!report) return [];
+  const cutoff = new Date(
+    Date.parse(report.submitted_at) - windowDays * 86_400_000,
+  ).toISOString();
+
+  return all<ReportRow>(
+    `SELECT ${REPORT_COLUMNS} FROM laporan_warga
+      WHERE id <> ? AND kecamatan = ? AND kind = ?
+        AND (submitted_at > ? OR related_report_id = ? OR id = ?)
+      ORDER BY submitted_at DESC
+      LIMIT 10`,
+    report.id,
+    report.kecamatan,
+    report.kind,
+    cutoff,
+    report.id,
+    report.related_report_id ?? "",
+  );
+}
+
 export type QueueSummary = {
   total: number;
   menunggu: number;
+  perluInformasi: number;
   terverifikasi: number;
   ditolak: number;
   lingkunganMenunggu: number;
+  /** Sudah diputuskan perlu diteruskan, penyampaiannya belum tercatat. */
+  perluDiteruskan: number;
+  diteruskan: number;
   oldestWaitHours: number | null;
 };
 
@@ -557,7 +820,11 @@ export async function summarizeQueue(): Promise<QueueSummary> {
     status: ReportStatus;
     kind: ReportKind;
     submitted_at: string;
-  }>("SELECT status, kind, submitted_at FROM laporan_warga");
+    handling_mode: ReportHandlingMode | null;
+    forward_state: ForwardState | null;
+  }>(
+    "SELECT status, kind, submitted_at, handling_mode, forward_state FROM laporan_warga",
+  );
 
   const pending = rows.filter((r) => r.status === "menunggu");
   const oldest = pending.reduce<number | null>((acc, r) => {
@@ -566,11 +833,23 @@ export async function summarizeQueue(): Promise<QueueSummary> {
     return acc === null || t < acc ? t : acc;
   }, null);
 
+  /* Baris lama yang dirutekan ke DLH sebelum kolom penerusan ada dihitung
+     sebagai pekerjaan penerusan yang belum tercatat, bukan sebagai selesai. */
+    const awaitingForward = rows.filter(
+    (r) =>
+      r.status === "terverifikasi" &&
+      r.handling_mode === "dlh" &&
+      (r.forward_state ?? "perlu_diteruskan") !== "diteruskan",
+  ).length;
+
   return {
     total: rows.length,
     menunggu: pending.length,
+    perluInformasi: rows.filter((r) => r.status === "perlu_informasi").length,
     terverifikasi: rows.filter((r) => r.status === "terverifikasi").length,
     ditolak: rows.filter((r) => r.status === "ditolak").length,
+    perluDiteruskan: awaitingForward,
+    diteruskan: rows.filter((r) => r.forward_state === "diteruskan").length,
     lingkunganMenunggu: pending.filter(
       (r) => REPORT_FAMILY[r.kind] === "lingkungan",
     ).length,

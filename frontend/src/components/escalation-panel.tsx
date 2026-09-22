@@ -62,7 +62,13 @@ const DEMO_KINDS: ReportKind[] = [
   "saluran",
 ];
 
-function EscalationCard({ item }: { item: Escalation }) {
+function EscalationCard({
+  item,
+  onFocus,
+}: {
+  item: Escalation;
+  onFocus?: (kecamatan: string) => void;
+}) {
   const [open, setOpen] = React.useState(false);
   const jenis = item.jenisDominan ? REPORT_KIND[item.jenisDominan] : null;
 
@@ -135,6 +141,21 @@ function EscalationCard({ item }: { item: Escalation }) {
             .
           </li>
         </ul>
+      )}
+
+      {/* F08: eskalasi adalah penanda, bukan pekerjaan tersendiri. Satu-satunya
+          tindakan yang masuk akal dari sini adalah membuka antrean kecamatan
+          itu — bukan menutup atau menyelesaikan "eskalasi" yang tidak pernah
+          menjadi barang apa pun di basis data. */}
+      {onFocus && (
+        <Button
+          size="sm"
+          variant="outline"
+          className="mt-3"
+          onClick={() => onFocus(item.kecamatan)}
+        >
+          Buka antrean {item.kecamatan}
+        </Button>
       )}
     </Card>
   );
@@ -313,10 +334,20 @@ function DemoControls({
   );
 }
 
-export function EscalationPanel({ onChanged }: { onChanged?: () => void }) {
+export function EscalationPanel({
+  onChanged,
+  onFocusDistrict,
+}: {
+  onChanged?: () => void;
+  onFocusDistrict?: (kecamatan: string) => void;
+}) {
   const { session } = useSessionContext();
   const escalations = useApi(() => fetchEscalations(), []);
   const [rulesOpen, setRulesOpen] = React.useState(false);
+  /* Kendali peragaan menulis ke antrean yang dilihat semua petugas, jadi ia
+     tidak lagi berdiri berdampingan dengan pekerjaan sungguhan (F08). Ia harus
+     dinyalakan dengan sengaja. */
+  const [demoOpen, setDemoOpen] = React.useState(false);
 
   const canDemo = session?.role === "admin" || session?.role === "dinas";
   const items = escalations.data?.data ?? [];
@@ -377,12 +408,29 @@ export function EscalationPanel({ onChanged }: { onChanged?: () => void }) {
       >
         <div className="grid gap-3 lg:grid-cols-2">
           {items.map((item) => (
-            <EscalationCard key={item.kecamatan} item={item} />
+            <EscalationCard
+              key={item.kecamatan}
+              item={item}
+              onFocus={onFocusDistrict}
+            />
           ))}
         </div>
       </DataState>
 
-      {canDemo && <DemoControls onDone={refresh} />}
+      {canDemo && (
+        <div className="space-y-3">
+          <button
+            type="button"
+            onClick={() => setDemoOpen((value) => !value)}
+            aria-expanded={demoOpen}
+            className="inline-flex items-center gap-1.5 text-caption text-paper-600 underline-offset-4 hover:text-brand-700 hover:underline"
+          >
+            <FlaskConical className="h-3.5 w-3.5" aria-hidden />
+            {demoOpen ? "Tutup mode peragaan" : "Mode peragaan lonjakan"}
+          </button>
+          {demoOpen && <DemoControls onDone={refresh} />}
+        </div>
+      )}
     </section>
   );
 }

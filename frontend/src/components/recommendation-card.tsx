@@ -150,9 +150,13 @@ export function RecommendationCard({
             <span>{COVERAGE_LABEL[recommendation.data_coverage] ?? recommendation.data_coverage}</span>
           </span>
 
+          {/* F16: lencana hijau bercentang membuat proyeksi beban terbaca
+              seperti hasil yang sudah tercapai. Warnanya netral dan kalimatnya
+              menyebut apa yang sebenarnya dihitung: beban bila tidak ada
+              intervensi. */}
           {recommendation.estimated_impact && (
-            <span className="inline-flex items-center gap-1 rounded-md bg-risk-low-bg/80 px-2 py-0.5 text-3xs font-medium text-risk-low border border-risk-low-br/60 line-clamp-1 max-w-full">
-              <CheckCircle2 className="h-3 w-3 shrink-0" />
+            <span className="inline-flex items-center gap-1 rounded-md border border-paper-300 bg-paper-50 px-2 py-0.5 text-3xs font-medium text-paper-700 line-clamp-1 max-w-full">
+              <span className="shrink-0 font-semibold">Tanpa intervensi:</span>
               <span className="truncate">{recommendation.estimated_impact}</span>
             </span>
           )}

@@ -48,10 +48,20 @@ export const REPORT_STATUS: Record<
   ReportStatus,
   { label: string; badge: "risk-medium" | "risk-low" | "risk-none"; blurb: string }
 > = {
+  /* F10: sebelum keputusan diambil, yang benar-benar dijanjikan hanyalah
+     pemeriksaan. Menyebut "akan diteruskan" di tahap ini menjanjikan pekerjaan
+     instansi lain yang belum tentu diminta. */
   menunggu: {
-    label: "Menunggu verifikasi",
+    label: "Diperiksa petugas",
     badge: "risk-medium",
-    blurb: "Petugas puskesmas wilayah Anda akan memeriksa laporan ini.",
+    blurb:
+      "Petugas memeriksa laporan dan menentukan tindak lanjut yang sesuai.",
+  },
+  perlu_informasi: {
+    label: "Perlu informasi tambahan",
+    badge: "risk-medium",
+    blurb:
+      "Petugas butuh keterangan lain sebelum dapat memutuskan. Pertanyaannya tercantum di bawah — jawab dengan kode lacak yang sama.",
   },
   terverifikasi: {
     label: "Terverifikasi",
@@ -80,8 +90,11 @@ export function normalizeTrackingCode(input: string): string {
 
 const STATUS_RANK: Record<ReportStatus, number> = {
   menunggu: 0,
-  terverifikasi: 1,
-  ditolak: 2,
+  /* Menunggu jawaban pelapor: belum dapat diputuskan, tetapi bolanya bukan di
+     petugas — jadi ia tidak boleh menyamar sebagai pekerjaan paling mendesak. */
+  perlu_informasi: 1,
+  terverifikasi: 2,
+  ditolak: 3,
 };
 
 /** Yang belum diputuskan lebih dulu, lalu yang paling lama menunggu. */

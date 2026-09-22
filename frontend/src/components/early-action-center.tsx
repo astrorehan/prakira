@@ -4,7 +4,7 @@ import * as React from "react";
 import { AlertTriangle, Clock, Info, RotateCcw, Send, Users, Zap } from "lucide-react";
 import { cn, formatNumber } from "@/lib/utils";
 import type { ActionRecommendation } from "@/types";
-import { updateActionStatus } from "@/lib/api";
+import { assignAction } from "@/lib/api";
 import {
   sortQueue,
   summarizeQueue,
@@ -35,7 +35,16 @@ interface EarlyActionCenterProps {
   className?: string;
 }
 
-type StatusFilter = "all" | "pending" | "in_progress" | "completed";
+type StatusFilter =
+  /* F09: petugas lapangan membuka tugasnya sendiri, bukan seluruh antrean kota.
+     "Tugas saya" mencocokkan penugasan yang benar-benar tercatat — unit atau
+     pelaksana — bukan menebak wilayah kerja dari peran. */
+  | "mine"
+  | "all"
+  | "pending"
+  | "assigned"
+  | "in_progress"
+  | "completed";
 
 /** Kartu ringkas di kepala antrean. Angka dulu, keterangannya menyusul. */
 function SummaryTile({
@@ -100,11 +109,15 @@ export function EarlyActionCenter({
   onChanged,
   className,
 }: EarlyActionCenterProps) {
-  const [statusFilter, setStatusFilter] = React.useState<StatusFilter>("all");
+  const [chosenFilter, setChosenFilter] = React.useState<StatusFilter | null>(null);
   const [activeModalRec, setActiveModalRec] = React.useState<ActionRecommendation | null>(null);
   const [batchModalOpen, setBatchModalOpen] = React.useState(false);
   const [isBatchSubmitting, setIsBatchSubmitting] = React.useState(false);
   const [batchError, setBatchError] = React.useState<string | null>(null);
+  /* Penugasan massal memilih barisnya satu per satu. Tanpa daftar pilihan,
+     satu tombol menyetujui pekerjaan yang belum dibaca siapa pun (audit F05). */
+  const [selected, setSelected] = React.useState<Record<string, boolean>>({});
+  const [batchUnit, setBatchUnit] = React.useState("");
   const toast = useConsoleToast();
 
   /* Tenggat dihitung sekali di sini, bukan di tiap baris saat render. */
@@ -115,41 +128,81 @@ export function EarlyActionCenter({
 
   const summary = React.useMemo(() => summarizeQueue(queue), [queue]);
 
-  const filtered = React.useMemo(
-    () => queue.filter((r) => statusFilter === "all" || r.status === statusFilter),
-    [queue, statusFilter],
+  const isMine = React.useCallback(
+    (rec: ActionRecommendation) => {
+      const who = operator?.trim().toLowerCase();
+      if (!who || !rec.assignment) return false;
+      return (
+        rec.assignment.unit.toLowerCase().includes(who) ||
+        (rec.assignment.pic ?? "").toLowerCase().includes(who)
+      );
+    },
+    [operator],
   );
 
-  /* Status ditulis ke gateway, bukan ke state lokal. Sebelumnya perubahan
+  const mineCount = React.useMemo(
+    () => queue.filter((r) => isMine(r) && r.status !== "completed").length,
+    [queue, isMine],
+  );
+
+  /* Antrean terbuka pada tugas sendiri bila ada; kalau tidak ada, pada seluruh
+     antrean. Pilihan petugas selalu menang atas keduanya. */
+  const statusFilter: StatusFilter = chosenFilter ?? (mineCount > 0 ? "mine" : "all");
+  const setStatusFilter = setChosenFilter;
+
+  const filtered = React.useMemo(
+    () =>
+      queue.filter((r) =>
+        statusFilter === "all"
+          ? true
+          : statusFilter === "mine"
+            ? isMine(r) && r.status !== "completed"
+            : r.status === statusFilter,
+      ),
+    [queue, statusFilter, isMine],
+  );
+
+  const pendingActions = React.useMemo(
+    () => queue.filter((r) => r.status === "pending"),
+    [queue],
+  );
+  const selectedIds = pendingActions
+    .filter((r) => selected[r.id])
+    .map((r) => r.id);
+
+  /* Kejadian ditulis ke gateway, bukan ke state lokal. Sebelumnya perubahan
      hanya hidup di memori tab ini: menyegarkan halaman mengembalikan semua
      tindakan ke "menunggu instruksi", dan petugas kedua tidak pernah melihat
      keputusan petugas pertama. */
-  const handleConfirmDispatch = async (id: string, checklist: string[]) => {
-    await updateActionStatus(id, "in_progress");
-    const rec = recommendations.find((r) => r.id === id);
-    const targets = rec ? rec.target_kecamatan.join(", ") : "wilayah target";
-    toast.show(
-      `${id} dicatat berjalan untuk ${targets}` +
-        (checklist.length > 0 ? ` - ${checklist.length} butir SOP tercentang.` : "."),
-    );
+  const handleActionChanged = (message: string) => {
+    toast.show(message);
     onChanged?.();
   };
 
-  const handleBatchDispatchAll = async () => {
+  /**
+   * Penugasan beberapa tindakan sekaligus ke satu unit.
+   *
+   * Yang hilang di sini adalah "Tandai semua berjalan": tombol itu menuliskan
+   * bahwa pekerjaan sudah dimulai untuk setiap tindakan yang kebetulan ada di
+   * antrean, tanpa ada yang membacanya, tanpa pelaksana, dan tanpa seorang pun
+   * yang membenarkan menerimanya. Yang tersisa adalah kejadian yang memang
+   * boleh diputuskan seorang koordinator sekaligus: menyerahkannya ke satu
+   * unit. Mulai dikerjakan tetap dicatat per tindakan oleh pelaksananya.
+   */
+  const handleBatchAssign = async () => {
     setIsBatchSubmitting(true);
     setBatchError(null);
-    const pendingIds = queue.filter((r) => r.status === "pending").map((r) => r.id);
-
     try {
       /* Berurutan, bukan paralel: kegagalan di tengah menyisakan keadaan yang
          bisa dijelaskan ("tiga dari lima tersimpan"), bukan campuran acak. */
       let saved = 0;
-      for (const id of pendingIds) {
-        await updateActionStatus(id, "in_progress");
+      for (const id of selectedIds) {
+        await assignAction(id, { unit: batchUnit.trim() });
         saved += 1;
       }
       setBatchModalOpen(false);
-      toast.show(`${saved} tindakan dicatat berjalan.`);
+      setSelected({});
+      toast.show(`${saved} tindakan ditugaskan ke ${batchUnit.trim()}.`);
       onChanged?.();
     } catch (caught) {
       setBatchError(caught instanceof Error ? caught.message : String(caught));
@@ -159,14 +212,29 @@ export function EarlyActionCenter({
   };
 
   const filters: { id: StatusFilter; label: string; count: number; alert?: boolean }[] = [
+    ...(operator
+      ? [
+          {
+            id: "mine" as const,
+            label: "Tugas saya",
+            count: mineCount,
+            alert: mineCount > 0,
+          },
+        ]
+      : []),
     { id: "all", label: "Semua", count: summary.total },
     {
       id: "pending",
-      label: "Perlu tindakan",
+      label: "Perlu keputusan",
       count: summary.pending,
       alert: summary.pending > 0,
     },
-    { id: "in_progress", label: "Berjalan", count: summary.inProgress },
+    {
+      id: "assigned",
+      label: "Ditugaskan",
+      count: summary.total - summary.pending - summary.inProgress - summary.completed,
+    },
+    { id: "in_progress", label: "Dikerjakan", count: summary.inProgress },
     { id: "completed", label: "Selesai", count: summary.completed },
   ];
 
@@ -178,7 +246,7 @@ export function EarlyActionCenter({
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <SummaryTile
           icon={Zap}
-          label="Perlu instruksi"
+          label="Perlu keputusan"
           value={String(summary.pending)}
           note={`dari ${summary.total} rekomendasi`}
           tone={summary.pending > 0 ? "warn" : "neutral"}
@@ -190,9 +258,12 @@ export function EarlyActionCenter({
           note={summary.dueSoon > 0 ? `${summary.dueSoon} jatuh tempo ≤ 3 hari` : "Tidak ada"}
           tone={summary.overdue > 0 ? "alert" : "neutral"}
         />
+        {/* F16: yang dihitung adalah penduduk wilayah yang tindakannya belum
+            diputuskan — bukan orang yang "terlindungi", klaim yang tidak pernah
+            diukur sistem ini. */}
         <SummaryTile
           icon={Users}
-          label="Warga menunggu"
+          label="Penduduk wilayah belum diputuskan"
           value={formatNumber(summary.populationPending)}
           note={
             summary.districtsPending.length > 0
@@ -247,14 +318,51 @@ export function EarlyActionCenter({
         {summary.pending > 0 && (
           <Button
             size="sm"
+            variant={selectedIds.length > 0 ? "primary" : "outline"}
+            disabled={selectedIds.length === 0}
             onClick={() => setBatchModalOpen(true)}
             className="shrink-0 gap-1.5 self-start sm:self-auto"
           >
             <Zap className="h-3.5 w-3.5" aria-hidden="true" />
-            <span>Tandai semua berjalan ({summary.pending})</span>
+            <span>
+              {selectedIds.length === 0
+                ? "Pilih tindakan untuk ditugaskan"
+                : `Tugaskan ${selectedIds.length} tindakan`}
+            </span>
           </Button>
         )}
       </div>
+
+      {/* Pemilihan sadar: satu baris satu centang, dengan judul dan wilayahnya
+          terbaca, supaya penugasan massal tetap keputusan atas pekerjaan yang
+          dilihat — bukan atas jumlah. */}
+      {pendingActions.length > 0 && (
+        <fieldset className="space-y-2 rounded-xl border border-border bg-surface p-3.5">
+          <legend className="overline">Pilih tindakan yang akan ditugaskan</legend>
+          {pendingActions.map((rec) => (
+            <label
+              key={rec.id}
+              className="flex cursor-pointer items-start gap-2.5 text-caption leading-relaxed text-paper-700"
+            >
+              <input
+                type="checkbox"
+                checked={Boolean(selected[rec.id])}
+                onChange={() =>
+                  setSelected((current) => ({
+                    ...current,
+                    [rec.id]: !current[rec.id],
+                  }))
+                }
+                className="mt-0.5 accent-brand-700"
+              />
+              <span>
+                <span className="font-medium text-foreground">{rec.title}</span> ·{" "}
+                {rec.target_kecamatan.join(", ")} · tenggat {rec.deadline.date}
+              </span>
+            </label>
+          ))}
+        </fieldset>
+      )}
 
       {/* 3. Antrean */}
       {filtered.length === 0 ? (
@@ -282,7 +390,7 @@ export function EarlyActionCenter({
         onOpenChange={(open) => {
           if (!open) setActiveModalRec(null);
         }}
-        onConfirmDispatch={handleConfirmDispatch}
+        onChanged={handleActionChanged}
         systemToday={systemToday}
         operator={operator}
       />
@@ -299,9 +407,9 @@ export function EarlyActionCenter({
                 <Zap className="h-5 w-5" aria-hidden="true" />
               </span>
               <div className="min-w-0">
-                <DialogTitle className="text-h3">Tandai semua tindakan berjalan</DialogTitle>
+                <DialogTitle className="text-h3">Tugaskan tindakan terpilih</DialogTitle>
                 <DialogDescription className="text-caption">
-                  Ubah status seluruh tindakan yang masih menunggu.
+                  Menyerahkan {selectedIds.length} tindakan ke satu unit pelaksana.
                 </DialogDescription>
               </div>
             </div>
@@ -311,8 +419,10 @@ export function EarlyActionCenter({
               kecamatan dan populasinya tidak bisa melenceng dari datanya. */}
           <dl className="space-y-2 rounded-xl border border-border bg-paper-50 p-3.5 text-body-sm">
             <div className="flex justify-between gap-4">
-              <dt className="text-paper-600">Tindakan menunggu</dt>
-              <dd className="tabular font-semibold text-risk-high">{summary.pending}</dd>
+              <dt className="text-paper-600">Tindakan terpilih</dt>
+              <dd className="tabular font-semibold text-risk-high">
+                {selectedIds.length}
+              </dd>
             </div>
             <div className="flex justify-between gap-4">
               <dt className="shrink-0 text-paper-600">Kecamatan target</dt>
@@ -331,11 +441,22 @@ export function EarlyActionCenter({
           {/* Tidak ada kanal pengiriman di sistem ini; yang berubah adalah
               status dan jejak auditnya. Menuliskan "broadcast WhatsApp" akan
               membuat petugas mengira pesannya sudah terkirim. */}
-          <p className="text-caption leading-relaxed text-paper-600">
-            Status seluruh tindakan menunggu diubah menjadi berjalan dan tercatat di
-            jejak audit atas nama {operator ?? "petugas yang masuk"}. Draf pesannya
-            tetap harus disalin ke kanal resmi dinas.
-          </p>
+          <div className="space-y-2">
+            <input
+              value={batchUnit}
+              onChange={(e) => setBatchUnit(e.target.value)}
+              placeholder="Unit pelaksana"
+              className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-caption text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
+            {/* Yang tercatat adalah penyerahan pekerjaan, bukan pelaksanaannya.
+                Konfirmasi penerimaan dan catatan lapangan tetap per tindakan,
+                karena keduanya datang dari orang yang mengerjakannya. */}
+            <p className="text-caption leading-relaxed text-paper-600">
+              Tindakan terpilih dicatat ditugaskan ke unit ini atas nama{" "}
+              {operator ?? "petugas yang masuk"}. Konfirmasi penerimaan, tenggat
+              yang disepakati, dan catatan pelaksanaan dicatat per tindakan.
+            </p>
+          </div>
 
           {batchError && (
             <p role="alert" className="text-caption font-medium text-risk-high">
@@ -355,14 +476,15 @@ export function EarlyActionCenter({
             <Button
               size="sm"
               loading={isBatchSubmitting}
-              onClick={handleBatchDispatchAll}
+              onClick={handleBatchAssign}
+              disabled={isBatchSubmitting || batchUnit.trim().length === 0}
               className="gap-1.5"
             >
               <Send className="h-3.5 w-3.5" aria-hidden="true" />
               <span>
                 {isBatchSubmitting
                   ? "Menyimpan…"
-                  : `Catat ${summary.pending} tindakan berjalan`}
+                  : `Tugaskan ${selectedIds.length} tindakan`}
               </span>
             </Button>
           </DialogFooter>

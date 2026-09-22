@@ -25,6 +25,7 @@ import { DistrictDetailPanel } from "@/components/district-detail-panel";
 import { DistrictRankingTable } from "@/components/district-ranking-table";
 import { DataState } from "@/components/data-state";
 import { DataLagNotice } from "@/components/data-lag-notice";
+import { AttentionList } from "@/components/attention-list";
 import {
   fetchActions,
   fetchDiseases,
@@ -34,6 +35,7 @@ import {
   fetchTriggerSummary,
 } from "@/lib/api";
 import { useApi } from "@/lib/use-api";
+import { usePeriod } from "@/lib/use-period";
 import type { DiseaseType } from "@/types";
 
 const ChoroplethMap = dynamic(() => import("@/components/choropleth-map"), {
@@ -92,6 +94,10 @@ export default function DashboardPrediksiPage() {
   );
 
   const triggers = useApi(() => fetchTriggerSummary(), []);
+
+  /* Tanggal sistem dipakai daftar perhatian untuk menilai tenggat; dibaca dari
+     periode pelaporan, bukan dari jam peramban. */
+  const { period } = usePeriod();
 
   /* `?? []` membuat array baru tiap render; tanpa memo, dua `useMemo` di bawah
      ikut dihitung ulang pada setiap render meskipun datanya tidak berubah. */
@@ -180,9 +186,15 @@ export default function DashboardPrediksiPage() {
         {/* 1. Kepala — judul, filter penyakit, periode */}
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-5 pb-4 border-b border-paper-200/80">
           <div className="space-y-3">
+            {/* F06: halaman ini dibuka untuk mengetahui pekerjaan hari ini,
+                bukan untuk menganalisis dulu. Namanya menyebut itu. */}
             <h1 className="h-display text-2xl sm:text-3xl lg:text-4xl font-semibold text-foreground">
-              Prediksi Risiko Penyakit
+              Beranda / Prioritas
             </h1>
+            <p className="text-body-sm text-paper-600">
+              Daftar perhatian lintas penyakit dulu; peta, prakiraan, dan tren ada
+              di bawahnya untuk penelusuran.
+            </p>
             <DiseaseSelector
               options={(diseases.data ?? []).map((d) => d.disease)}
               selected={selectedDisease}
@@ -250,6 +262,22 @@ export default function DashboardPrediksiPage() {
           </div>
         )}
 
+        {/* 2. Daftar perhatian lintas penyakit — pekerjaan sebelum analisis. */}
+        <AttentionList
+          diseases={(diseases.data ?? []).map((d) => d.disease)}
+          systemToday={period?.systemToday ?? null}
+        />
+
+        <div className="border-t border-paper-200/80 pt-6">
+          <h2 className="font-display text-xl font-semibold text-foreground">
+            Penelusuran risiko {selectedDisease ?? ""}
+          </h2>
+          <p className="mt-1 text-body-sm text-paper-600">
+            Bahan untuk memeriksa alasan di balik daftar di atas: angka periode,
+            sebaran wilayah, dan tren.
+          </p>
+        </div>
+
         <DataState
           loading={districts.loading || diseases.loading}
           error={districts.error ?? diseases.error}
@@ -260,7 +288,7 @@ export default function DashboardPrediksiPage() {
             districts.reload();
           }}
         >
-          {/* 2. Ringkasan KPI */}
+          {/* 3. Ringkasan KPI */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Angka teramati — tidak punya interval prediksi. */}
             <KpiCard
@@ -315,7 +343,7 @@ export default function DashboardPrediksiPage() {
             />
           </div>
 
-          {/* 3. Peta & detail kecamatan */}
+          {/* 4. Peta & detail kecamatan */}
           <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
             <div className="lg:col-span-7 flex flex-col h-full">
               <LiquidGlassCard
@@ -385,7 +413,7 @@ export default function DashboardPrediksiPage() {
             </div>
           </div>
 
-          {/* 4. Strip aksi tertunda — alurnya sendiri hidup di /tindakan */}
+          {/* 5. Strip aksi tertunda — alurnya sendiri hidup di /tindakan */}
           {pendingActions > 0 && (
             <Link
               href="/tindakan"
@@ -394,7 +422,7 @@ export default function DashboardPrediksiPage() {
               <div className="flex items-center gap-2.5">
                 <ShieldAlert className="h-4 w-4 text-risk-high shrink-0" />
                 <span className="text-sm font-semibold text-foreground">
-                  {pendingActions} tindakan menunggu instruksi
+                  {pendingActions} tindakan menunggu keputusan
                 </span>
               </div>
               <span className="flex items-center gap-1 text-xs font-semibold text-risk-high shrink-0">
@@ -404,7 +432,7 @@ export default function DashboardPrediksiPage() {
             </Link>
           )}
 
-          {/* 5. Peringkat kecamatan */}
+          {/* 6. Peringkat kecamatan */}
           <div className="mt-8 space-y-4">
             <h3 className="font-display text-xl font-semibold text-foreground">
               Peringkat prioritas kecamatan

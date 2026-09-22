@@ -179,6 +179,13 @@ export function CitizenReportForm() {
   const [kind, setKind] = React.useState<ReportKind | null>(null);
   const [kecamatan, setKecamatan] = React.useState("");
   const [kelurahan, setKelurahan] = React.useState("");
+  /* F11: petugas lapangan butuh patokan, bukan koordinat. Menanyakan titik GPS
+     memaksa izin lokasi untuk laporan yang seharusnya bisa dikirim tanpa akun;
+     patokan dan RT/RW dikenali orang setempat dan cukup untuk menemukan lokasi. */
+  const [landmark, setLandmark] = React.useState("");
+  const [rtRw, setRtRw] = React.useState("");
+  /* Kiriman lanjutan dari laporan yang diminta dilengkapi petugas. */
+  const [relatedReportId, setRelatedReportId] = React.useState<string | null>(null);
   const [occurredAt, setOccurredAt] = React.useState(todayValue());
   const [description, setDescription] = React.useState("");
   const [photo, setPhoto] = React.useState<{ dataUrl: string; bytes: number } | null>(null);
@@ -205,6 +212,15 @@ export function CitizenReportForm() {
     return () => {
       alive = false;
     };
+  }, []);
+
+  /* `?lengkapi=<kode>` datang dari halaman lacak ketika petugas meminta
+     informasi tambahan. Kiriman baru ditautkan ke laporan lama supaya jawaban
+     warga tidak muncul sebagai laporan lepas yang tak berhubungan. */
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const code = new URLSearchParams(window.location.search).get("lengkapi");
+    if (code) setRelatedReportId(code.trim().toUpperCase());
   }, []);
 
   /* Pilihan dari halaman depan mengisi kecamatan, tapi hanya selama pembaca
@@ -245,6 +261,9 @@ export function CitizenReportForm() {
         kind,
         kecamatan,
         kelurahan: kelurahan.trim() || undefined,
+        landmark: landmark.trim() || undefined,
+        rtRw: rtRw.trim() || undefined,
+        relatedReportId: relatedReportId ?? undefined,
         occurredAt,
         description,
         photo: photo?.dataUrl,
@@ -288,6 +307,20 @@ export function CitizenReportForm() {
 
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-9">
+      {/* Kiriman lanjutan: warga perlu tahu bahwa jawabannya tersambung ke
+          laporan lamanya, bukan menjadi laporan kedua yang berdiri sendiri. */}
+      {relatedReportId && (
+        <div
+          role="status"
+          className="rounded-2xl border border-sand-200 bg-sand-50 p-4 text-body-sm leading-relaxed text-paper-700"
+        >
+          Anda sedang melengkapi laporan{" "}
+          <strong className="font-semibold">{relatedReportId}</strong>. Tulis saja
+          informasi yang diminta petugas — kiriman ini akan disambungkan ke laporan
+          tersebut.
+        </div>
+      )}
+
       {/* Kuota */}
       {limit && limit.remaining < limit.max && (
         <div
@@ -429,7 +462,7 @@ export function CitizenReportForm() {
 
           <div className="space-y-1.5">
             <Label htmlFor="kelurahan">
-              Kelurahan atau RT/RW{" "}
+              Kelurahan{" "}
               <span className="font-normal text-paper-600">— boleh dikosongkan</span>
             </Label>
             <Input
@@ -437,13 +470,47 @@ export function CitizenReportForm() {
               value={kelurahan}
               onChange={(e) => setKelurahan(e.target.value)}
               maxLength={80}
-              placeholder="Mis. Tlogosari Kulon RW 04"
+              placeholder="Mis. Tlogosari Kulon"
               className="border-sand-200 bg-white text-base sm:text-sm"
             />
-            <p className="text-caption text-paper-600">
-              Makin sempit wilayahnya, makin cepat petugas menemukannya.
-            </p>
           </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="rtRw">
+                RT/RW{" "}
+                <span className="font-normal text-paper-600">— boleh dikosongkan</span>
+              </Label>
+              <Input
+                id="rtRw"
+                value={rtRw}
+                onChange={(e) => setRtRw(e.target.value)}
+                maxLength={20}
+                placeholder="Mis. RT 03 / RW 04"
+                className="border-sand-200 bg-white text-base sm:text-sm"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="landmark">
+                Patokan terdekat{" "}
+                <span className="font-normal text-paper-600">— boleh dikosongkan</span>
+              </Label>
+              <Input
+                id="landmark"
+                value={landmark}
+                onChange={(e) => setLandmark(e.target.value)}
+                maxLength={120}
+                placeholder="Mis. belakang Masjid Al-Huda, dekat warung Bu Sri"
+                className="border-sand-200 bg-white text-base sm:text-sm"
+              />
+            </div>
+          </div>
+
+          <p className="text-caption text-paper-600">
+            Petugas mencari lokasi dari patokan dan RT/RW ini. Anda tidak perlu
+            membagikan titik GPS.
+          </p>
         </div>
       </fieldset>
 

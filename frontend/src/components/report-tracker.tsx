@@ -38,33 +38,48 @@ type Step = {
   at?: string;
 };
 
+/**
+ * Langkah penerusan menyebut keadaan yang benar-benar tercatat (audit F10).
+ *
+ * Sebelum petugas memutuskan, yang dijanjikan hanyalah pemeriksaan: menulis
+ * "akan diteruskan ke DLH" di tahap itu menjanjikan pekerjaan instansi lain
+ * yang belum tentu diminta. Setelah diputuskan pun ada dua keadaan berbeda —
+ * "perlu diteruskan" (belum disampaikan) dan "diteruskan" (penyampaiannya
+ * tercatat, lengkap dengan kanal dan waktunya).
+ */
 function buildSteps(report: CitizenReport): Step[] {
-  const decided = report.status !== "menunggu";
+  const decided =
+    report.status !== "menunggu" && report.status !== "perlu_informasi";
   const rejected = report.status === "ditolak";
+  const forwarded = report.forwarding?.state === "diteruskan";
   const followUpLabel =
     !decided
       ? report.routing.family === "lingkungan"
-        ? "Pilihan tindak lanjut"
+        ? "Penentuan tindak lanjut"
         : "Rekap kesehatan"
-      : report.routing.workflow === "tiket_lingkungan"
-      ? "Diteruskan ke DLH"
+      : report.routing.workflow === "penerusan_instansi"
+      ? forwarded
+        ? `Diteruskan ke ${report.forwarding?.target ?? "instansi penerima"}`
+        : "Perlu diteruskan"
       : report.routing.workflow === "arahan_warga"
         ? "Arahan mandiri warga"
         : report.routing.workflow === "rekap_evaluasi"
           ? "Masuk rekap kesehatan"
-          : "Pilihan tindak lanjut";
+          : "Penentuan tindak lanjut";
   const followUpDetail =
     !decided
       ? report.routing.family === "lingkungan"
-        ? "Petugas akan memilih apakah laporan perlu arahan warga atau diteruskan ke DLH."
+        ? "Petugas memeriksa laporan dan menentukan tindak lanjut yang sesuai."
         : "Setelah diterima, laporan masuk rekap evaluasi kesehatan."
-      : report.routing.workflow === "tiket_lingkungan"
-      ? "Laporan diteruskan ke DLH; penanganan teknis menjadi kewenangan instansi penerima."
+      : report.routing.workflow === "penerusan_instansi"
+      ? forwarded
+        ? `Disampaikan pada ${report.forwarding?.forwardedAt ? formatDateTime(report.forwarding.forwardedAt) : "waktu yang tercatat"}${report.forwarding?.channel ? ` lewat ${report.forwarding.channel}` : ""}. Penanganan teknis menjadi kewenangan instansi penerima.`
+        : "Petugas sudah memutuskan laporan ini perlu diteruskan; penyampaiannya ke instansi penerima belum tercatat."
       : report.routing.workflow === "arahan_warga"
         ? "Petugas memilih tindak lanjut melalui arahan yang aman dilakukan warga."
         : report.routing.workflow === "rekap_evaluasi"
           ? "Laporan terverifikasi masuk rekap evaluasi kesehatan."
-          : "Petugas akan memilih apakah laporan perlu arahan warga atau diteruskan ke DLH.";
+          : "Petugas memeriksa laporan dan menentukan tindak lanjut yang sesuai.";
 
   return [
     {
@@ -81,6 +96,18 @@ function buildSteps(report: CitizenReport): Step[] {
       state: decided ? "done" : "current",
       at: report.reviewedAt ?? undefined,
     },
+    ...(report.status === "perlu_informasi"
+      ? [
+          {
+            label: "Perlu informasi tambahan",
+            detail:
+              report.infoRequest ??
+              "Petugas membutuhkan keterangan lain sebelum dapat memutuskan.",
+            state: "current" as const,
+            at: report.infoRequestedAt ?? undefined,
+          },
+        ]
+      : []),
     rejected
       ? {
           label: "Ditolak",
@@ -92,7 +119,12 @@ function buildSteps(report: CitizenReport): Step[] {
       : {
           label: followUpLabel,
           detail: followUpDetail,
-          state: report.status === "terverifikasi" ? "done" : "idle",
+          state:
+            report.status !== "terverifikasi"
+              ? "idle"
+              : report.routing.workflow === "penerusan_instansi" && !forwarded
+                ? "current"
+                : "done",
         },
   ];
 }
@@ -206,12 +238,12 @@ function ReportDetail({ report }: { report: CitizenReport }) {
             <span>
               {report.simulated
                 ? "Ini laporan peragaan; tidak membuat tiket operasional."
-                : report.routing.workflow === "tiket_lingkungan"
-                  ? report.ticket
-                    ? `Laporan bertipe pemicu lingkungan diteruskan ke ${FAMILY_ROUTING.lingkungan}; penanganan teknis merupakan kewenangan instansi penerima.`
-                    : "Laporan lingkungan sudah diterima dan disiapkan untuk penerusan ke instansi terkait."
+                : report.routing.workflow === "penerusan_instansi"
+                  ? report.forwarding?.state === "diteruskan"
+                    ? `Laporan sudah disampaikan ke ${report.forwarding.target}; penanganan teknis merupakan kewenangan instansi penerima.`
+                    : "Petugas memutuskan laporan ini perlu diteruskan. Halaman ini akan menyebut waktu penyampaiannya begitu tercatat."
                   : report.routing.workflow === "arahan_warga"
-                    ? "Petugas memilih arahan mandiri warga; laporan ini tidak dibuatkan tiket DLH."
+                    ? "Petugas memilih arahan mandiri warga; laporan ini tidak diteruskan ke instansi lain."
                     : report.routing.workflow === "rekap_evaluasi"
                       ? `Laporan kesehatan masuk rekap evaluasi dan menjadi perhatian ${FAMILY_ROUTING.kesehatan}.`
                       : "Petugas belum menetapkan jalur tindak lanjut laporan ini."}{" "}
@@ -260,6 +292,22 @@ function ReportDetail({ report }: { report: CitizenReport }) {
             </div>
           )}
         </>
+      )}
+
+      {report.status === "perlu_informasi" && (
+        <div className="mt-7 border-t border-sand-200 pt-6">
+          <p className="text-body-sm leading-relaxed text-paper-700">
+            Kirim kelengkapannya lewat formulir laporan; sebutkan kode{" "}
+            <span className="font-mono uppercase">{report.id}</span> supaya
+            petugas dapat menautkannya dengan laporan ini.
+          </p>
+          <Button asChild variant="outline" className="group mt-4">
+            <Link href={`/warga/lapor?lengkapi=${encodeURIComponent(report.id)}`}>
+              Lengkapi laporan ini
+              <ArrowRight className="transition-transform duration-fast group-hover:translate-x-0.5" />
+            </Link>
+          </Button>
+        </div>
       )}
 
       {report.status === "ditolak" && (

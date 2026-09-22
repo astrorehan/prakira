@@ -16,6 +16,7 @@ import {
   MapPin,
   Printer,
   Rat,
+  UserCheck,
   Users,
   Wind,
 } from "lucide-react";
@@ -25,6 +26,7 @@ import type { DeadlineUrgency } from "@/lib/period";
 import {
   ACTION_TYPE_LABEL,
   COVERAGE_LABEL,
+  effectiveDueDate,
   PRIORITY_LABEL,
   STATUS_LABEL,
   type QueuedAction,
@@ -82,13 +84,22 @@ const STATUS_STYLE: Record<
   { className: string; icon: React.ComponentType<{ className?: string }> }
 > = {
   pending: { className: "text-risk-high", icon: Circle },
+  assigned: { className: "text-brand-600", icon: UserCheck },
   in_progress: { className: "text-brand-600", icon: Loader },
   completed: { className: "text-risk-low", icon: CheckCircle2 },
 };
 
+/**
+ * Nama tombol menyebut pekerjaan yang menunggu di baliknya (audit §8).
+ *
+ * "Buka & tandai berjalan" dulu menggabungkan membaca dan mengubah keadaan
+ * dalam satu klik — petugas yang hanya ingin melihat isinya ikut menuliskan
+ * bahwa pekerjaan sudah berjalan.
+ */
 const ACTION_LABEL: Record<QueuedAction["status"], string> = {
   pending: "Tinjau tindakan",
-  in_progress: "Buka protokol",
+  assigned: "Buka penugasan",
+  in_progress: "Catat pelaksanaan",
   completed: "Lihat arsip",
 };
 
@@ -128,7 +139,7 @@ function ActionRow({
   if (!isOpen) {
     if (action.completed_at) {
       const completedDate = new Date(action.completed_at);
-      const dueDate = new Date(action.due_date);
+      const dueDate = new Date(effectiveDueDate(action));
       const formattedCompleted = formatDate(action.completed_at);
       if (!Number.isNaN(completedDate.getTime()) && !Number.isNaN(dueDate.getTime())) {
         const days = daysBetween(dueDate, completedDate);
@@ -219,6 +230,33 @@ function ActionRow({
               </Fact>
             </div>
 
+            {/* Penanda tidak menggantikan tahap: tindakan yang terkendala tetap
+                ditugaskan kepada seseorang (audit §7.A). */}
+            {action.markers.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {action.markers.map((marker) => (
+                  <Badge
+                    key={marker.id}
+                    variant={marker.tone}
+                    title={marker.detail}
+                  >
+                    {marker.label}
+                  </Badge>
+                ))}
+              </div>
+            )}
+
+            {action.assignment && (
+              <p className="text-caption leading-relaxed text-paper-600">
+                <span className="font-medium text-paper-700">Pelaksana:</span>{" "}
+                {action.assignment.unit}
+                {action.assignment.pic ? ` · ${action.assignment.pic}` : ""}
+                {action.assignment.agreedDueDate
+                  ? ` · tenggat disepakati ${formatDate(action.assignment.agreedDueDate)}`
+                  : ""}
+              </p>
+            )}
+
             {action.estimated_impact && (
               <p className="text-caption leading-relaxed text-paper-600">
                 {/* Bukan "proyeksi dampak": sistem tidak pernah mengukur efek
@@ -243,6 +281,7 @@ function ActionRow({
 
             <span className="tabular text-caption text-paper-600 lg:text-right">
               Tenggat {action.deadline.date}
+              {action.assignment?.agreedDueDate ? " (disepakati)" : ""}
             </span>
 
             <span
@@ -255,10 +294,18 @@ function ActionRow({
               <span>{STATUS_LABEL[action.status]}</span>
             </span>
 
-            {action.dispatched_at && (
+            {action.assignment && (
               <span className="text-caption text-paper-600 lg:text-right">
-                Dikirim {formatDateTime(action.dispatched_at)}
-                {action.dispatched_by ? ` · ${action.dispatched_by}` : ""}
+                Ditugaskan {formatDateTime(action.assignment.assignedAt)}
+                {action.assignment.assignedBy
+                  ? ` · ${action.assignment.assignedBy}`
+                  : ""}
+              </span>
+            )}
+
+            {action.acknowledgement && (
+              <span className="text-caption text-paper-600 lg:text-right">
+                Dikonfirmasi lewat {action.acknowledgement.source}
               </span>
             )}
 

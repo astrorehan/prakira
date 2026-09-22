@@ -668,9 +668,7 @@ export default function DesignSystemPage() {
                 onOpenChange={(open) => {
                   if (!open) setDemoModalRec(null);
                 }}
-                onConfirmDispatch={async () => {
-                  setDemoModalRec(null);
-                }}
+                onChanged={() => setDemoModalRec(null)}
                 systemToday={period?.systemToday ?? null}
                 operator={null}
               />

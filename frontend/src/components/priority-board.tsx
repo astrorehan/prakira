@@ -397,12 +397,6 @@ export function PriorityBoard() {
               </Card>
             </div>
 
-            <ImpactCalculator
-              disease={meta.disease}
-              monthLabel={meta.predictionLabel}
-              rows={rows}
-            />
-
             <Card className="p-5">
               <p className="text-body-sm text-paper-700">
                 Peringkat risiko yang jadi masukan halaman ini berasal dari
@@ -426,6 +420,29 @@ export function PriorityBoard() {
                 </Link>
               </div>
             </Card>
+
+            {/* F16: kalkulator ini menghitung skenario dari asumsi yang diketik
+                sendiri — bukan hasil yang pernah diukur sistem. Berdiri di
+                sebelah peringkat prioritas, angkanya terbaca seperti capaian;
+                karena itu ia dipisah ke bagian sendiri di bawah, dengan judul
+                yang menyebut sifatnya. */}
+            <div className="border-t border-paper-200 pt-6">
+              <p className="overline text-paper-600">
+                Bahan advokasi — skenario, bukan hasil terukur
+              </p>
+              <p className="mt-1 max-w-2xl text-body-sm text-paper-700">
+                Angka di bawah dihitung dari asumsi yang Anda isi sendiri.
+                Sistem tidak pernah mengukur efek intervensinya, jadi hasilnya
+                tidak boleh dibaca sebagai capaian program maupun dasar urutan
+                prioritas di atas.
+              </p>
+            </div>
+
+            <ImpactCalculator
+              disease={meta.disease}
+              monthLabel={meta.predictionLabel}
+              rows={rows}
+            />
           </div>
         )}
       </DataState>

@@ -17,6 +17,7 @@ import {
   fetchKecamatanList,
   previewImport,
   type ImportPreview,
+  type ImportResult,
 } from "@/lib/api";
 import { downloadCsv, toCsv } from "@/lib/export";
 import { useApi } from "@/lib/use-api";
@@ -30,7 +31,17 @@ export type ImportState =
   | { kind: "reading"; fileName: string }
   | { kind: "preview"; fileName: string; csv: string; preview: ImportPreview }
   | { kind: "committing"; fileName: string }
-  | { kind: "done"; fileName: string; imported: number; rejected: number }
+  | {
+      kind: "done";
+      fileName: string;
+      imported: number;
+      rejected: number;
+      /* F13: jumlah angka lama yang diganti disebut terpisah dari jumlah baris
+         baru, karena penggantian punya akibat yang berbeda bagi pembaca rekap. */
+      replaced: number;
+      /* F18: jawaban "lalu apa" setelah berkas masuk. */
+      readiness: ImportResult["readiness"];
+    }
   | { kind: "error"; fileName: string; reason: string };
 
 export type CaseCsvImportCardProps = {
@@ -108,6 +119,8 @@ export function CaseCsvImportCard({
         fileName,
         imported: result.imported,
         rejected: result.problems.length,
+        replaced: result.replaced,
+        readiness: result.readiness,
       });
       invalidatePeriod();
       onImported?.();
@@ -206,7 +219,10 @@ export function CaseCsvImportCard({
               <div>
                 <p className="text-body-sm font-semibold text-foreground">{state.fileName}</p>
                 <p className="text-caption text-paper-600">
-                  {state.preview.validRows} baris siap disimpan
+                  {state.preview.newRows} periode baru
+                  {state.preview.replacedRows > 0
+                    ? `, ${state.preview.replacedRows} angka lama akan diganti`
+                    : ", tidak ada angka lama yang diganti"}
                   {state.preview.problems.length > 0
                     ? `, ${state.preview.problems.length} baris ditolak`
                     : ""}
@@ -246,6 +262,25 @@ export function CaseCsvImportCard({
               </div>
             )}
 
+            {state.preview.replacements.length > 0 && (
+              <div className="mt-3 rounded-lg border border-risk-medium-br bg-risk-medium-bg/50 p-2.5">
+                <p className="text-caption font-semibold text-risk-medium">
+                  Angka yang akan diganti
+                </p>
+                <ul className="mt-1 max-h-28 space-y-0.5 overflow-y-auto text-caption text-paper-700">
+                  {state.preview.replacements.slice(0, 8).map((row) => (
+                    <li key={`${row.nama}-${row.month}`}>
+                      • {row.nama} · {formatMonth(row.month)}:{" "}
+                      {row.previousCases ?? "—"} → {row.cases}
+                    </li>
+                  ))}
+                  {state.preview.replacements.length > 8 && (
+                    <li>…dan {state.preview.replacements.length - 8} periode lainnya.</li>
+                  )}
+                </ul>
+              </div>
+            )}
+
             {state.preview.problems.length > 0 && (
               <ul className="mt-3 max-h-28 space-y-1 overflow-y-auto rounded-lg bg-risk-medium-bg/60 p-2 text-caption text-risk-medium">
                 {state.preview.problems.slice(0, 8).map((p) => (
@@ -264,7 +299,9 @@ export function CaseCsvImportCard({
                 disabled={state.preview.validRows === 0}
                 className="gap-1.5"
               >
-                Konfirmasi & Simpan {state.preview.validRows} Baris
+                {state.preview.replacedRows > 0
+                  ? `Simpan ${state.preview.validRows} baris & ganti ${state.preview.replacedRows} angka`
+                  : `Konfirmasi & Simpan ${state.preview.validRows} Baris`}
               </Button>
               <Button size="sm" variant="ghost" onClick={() => setState({ kind: "idle" })}>
                 Batalkan
@@ -281,13 +318,53 @@ export function CaseCsvImportCard({
           <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-risk-low-br bg-risk-low-bg p-3.5 text-body-sm font-medium text-risk-low">
             <CheckCircle2 className="mt-0.5 h-4.5 w-4.5 shrink-0" aria-hidden="true" />
             <div>
-              <p className="font-semibold">Impor Berhasil!</p>
+              <p className="font-semibold">Rekap tersimpan</p>
               <p className="text-caption text-risk-low/90">
-                {state.imported} baris dari berkas {state.fileName} berhasil masuk basis data observasi
-                {state.rejected > 0 ? ` (${state.rejected} baris ditolak)` : ""}.
-                Data kini tersimpan dan siap dipelajari oleh model AI saat Administrator melakukan *retraining*.
+                {state.imported} baris dari {state.fileName} tersimpan
+                {state.replaced > 0
+                  ? `, ${state.replaced} di antaranya mengganti angka sebelumnya`
+                  : ""}
+                {state.rejected > 0 ? `, ${state.rejected} baris ditolak` : ""}.
               </p>
             </div>
+          </div>
+        )}
+
+        {/* F18: perjalanan sampai prakiraan benar-benar bisa dipakai. */}
+        {state.kind === "done" && (
+          <div className="mt-3 rounded-xl border border-border bg-surface p-3.5">
+            <p className="text-caption font-semibold text-foreground">
+              Kesiapan periode {formatMonth(state.readiness.month)} ·{" "}
+              {state.readiness.disease}
+            </p>
+            <p className="mt-0.5 text-caption text-paper-600">
+              {state.readiness.saved} dari {state.readiness.totalDistricts} kecamatan
+              tersimpan, {state.readiness.checked} diperiksa.
+            </p>
+            <ol className="mt-2.5 space-y-1.5">
+              {state.readiness.stages.map((stage) => (
+                <li key={stage.id} className="text-caption leading-relaxed">
+                  <span
+                    className={
+                      stage.state === "selesai"
+                        ? "font-medium text-risk-low"
+                        : stage.state === "berjalan"
+                          ? "font-medium text-risk-medium"
+                          : "font-medium text-paper-600"
+                    }
+                  >
+                    {stage.label}
+                  </span>
+                  <span className="text-paper-600"> — {stage.detail}</span>
+                  {stage.state !== "selesai" && (
+                    <span className="text-paper-600">
+                      {" "}
+                      Penanggung jawab: {stage.owner}.
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ol>
           </div>
         )}
 

@@ -27,7 +27,7 @@ export type ActionRow = {
   disease: string;
   action_type: string;
   priority: "high" | "medium" | "low";
-  status: "pending" | "in_progress" | "completed";
+  status: ActionStatus;
   title: string;
   description: string;
   basis: string;
@@ -48,6 +48,53 @@ export type ActionRow = {
   dispatched_at: string | null;
   dispatched_by: string | null;
   completed_at: string | null;
+  assigned_unit: string | null;
+  assigned_pic: string | null;
+  assignment_note: string | null;
+  assigned_at: string | null;
+  assigned_by: string | null;
+  agreed_due_date: string | null;
+  acknowledged_at: string | null;
+  acknowledged_by: string | null;
+  acknowledgement_source: string | null;
+  blocker_note: string | null;
+  blocked_at: string | null;
+  result_note: string | null;
+  completed_by: string | null;
+  sop_completed: string | null;
+  published_at: string | null;
+  published_by: string | null;
+};
+
+/**
+ * Model status minimal audit §7.A: Perlu keputusan -> Ditugaskan -> Dikerjakan
+ * -> Selesai. `in_progress` dipertahankan sebagai "dikerjakan" supaya baris
+ * lama yang sudah ditandai berjalan tidak berubah arti saat gateway naik.
+ */
+export type ActionStatus =
+  | "pending"
+  | "assigned"
+  | "in_progress"
+  | "completed";
+
+export type ActionHistoryEvent =
+  | "ditugaskan"
+  | "dikonfirmasi"
+  | "kendala"
+  | "catatan"
+  | "selesai"
+  | "dibuka_kembali"
+  | "dipublikasikan"
+  | "publikasi_ditarik";
+
+export type ActionHistoryRow = {
+  id: number;
+  tindakan_id: string;
+  ts: string;
+  event: ActionHistoryEvent;
+  actor: string;
+  role: string;
+  detail: string;
 };
 
 const PRIORITY_OF: Record<RiskClass, "high" | "medium" | "low"> = {
@@ -93,7 +140,8 @@ async function regenerateForDisease(disease: string): Promise<number> {
      dikirim dibuang, yang sudah dikirim disimpan sebagai riwayat. */
   await run(
     `DELETE FROM tindakan
-      WHERE disease = ? AND prediction_month <> ? AND dispatched_at IS NULL`,
+      WHERE disease = ? AND prediction_month <> ?
+        AND dispatched_at IS NULL AND assigned_at IS NULL`,
     upper,
     predictionMonth,
   );
@@ -375,41 +423,350 @@ export function getAction(id: string): Promise<ActionRow | null> {
   return one<ActionRow>("SELECT * FROM tindakan WHERE id = ?", id);
 }
 
-export async function updateActionStatus(
+export class ActionTransitionError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ActionTransitionError";
+  }
+}
+
+/**
+ * Penugasan (F04). Sebelum ini antarmuka hanya bisa menulis "berjalan": tidak
+ * ada tempat untuk PIC, tenggat yang disepakati, atau kalimat penugasan, jadi
+ * produk mencatat awal pekerjaan tanpa pemiliknya.
+ */
+export async function assignAction(
   id: string,
-  status: ActionRow["status"],
+  input: {
+    unit: string;
+    pic?: string | null;
+    dueDate?: string | null;
+    note?: string | null;
+  },
+  actor: string,
+  role: string,
+): Promise<ActionRow | null> {
+  const existing = await getAction(id);
+  if (!existing) return null;
+  if (existing.status === "completed") {
+    throw new ActionTransitionError(
+      "Tindakan yang sudah selesai tidak dapat ditugaskan ulang. Buka kembali lebih dulu bila hasilnya perlu diperbaiki.",
+    );
+  }
+
+  const now = new Date().toISOString();
+  const unit = input.unit.trim();
+  const pic = input.pic?.trim() || null;
+  const dueDate = input.dueDate?.trim() || null;
+  const note = input.note?.trim() || null;
+
+  await run(
+    `UPDATE tindakan
+        SET status = CASE WHEN status = 'pending' THEN 'assigned' ELSE status END,
+            assigned_unit = ?, assigned_pic = ?, assignment_note = ?,
+            agreed_due_date = ?, assigned_at = COALESCE(assigned_at, ?), assigned_by = ?,
+            dispatched_at = COALESCE(dispatched_at, ?), dispatched_by = COALESCE(dispatched_by, ?)
+      WHERE id = ?`,
+    unit,
+    pic,
+    note,
+    dueDate,
+    now,
+    actor,
+    now,
+    actor,
+    id,
+  );
+
+  await appendHistory(id, "ditugaskan", actor, role, {
+    detail:
+      `Ditugaskan ke ${unit}${pic ? ` (${pic})` : ""}` +
+      (dueDate ? `, tenggat ${dueDate}` : ", tanpa tenggat yang disepakati") +
+      (note ? `. ${note}` : "."),
+    now,
+  });
+
+  await logAudit({
+    actor,
+    role,
+    action: `Penugasan tindakan ${id}`,
+    details: `${existing.title} ditugaskan ke ${unit}${pic ? ` (${pic})` : ""}.`,
+    status: "info",
+  });
+
+  return getAction(id);
+}
+
+/**
+ * Konfirmasi penerimaan tugas. `source` membedakan pengakuan pelaksana sendiri
+ * dari konfirmasi yang dicatat koordinator dari kanal kerja di luar aplikasi —
+ * audit §7.A.6 menuntut sumber konfirmasi itu disebut, bukan disamarkan.
+ */
+export async function acknowledgeAction(
+  id: string,
+  input: { source: string; note?: string | null },
+  actor: string,
+  role: string,
+): Promise<ActionRow | null> {
+  const existing = await getAction(id);
+  if (!existing) return null;
+  if (existing.status === "pending") {
+    throw new ActionTransitionError(
+      "Tindakan belum ditugaskan. Tetapkan unit pelaksana lebih dulu.",
+    );
+  }
+  if (existing.status === "completed") {
+    throw new ActionTransitionError("Tindakan sudah berstatus selesai.");
+  }
+
+  const now = new Date().toISOString();
+  const source = input.source.trim();
+  const note = input.note?.trim() || null;
+
+  await run(
+    `UPDATE tindakan
+        SET status = 'in_progress',
+            acknowledged_at = COALESCE(acknowledged_at, ?),
+            acknowledged_by = ?, acknowledgement_source = ?
+      WHERE id = ?`,
+    now,
+    actor,
+    source,
+    id,
+  );
+
+  await appendHistory(id, "dikonfirmasi", actor, role, {
+    detail: `Penerimaan tugas dikonfirmasi — sumber: ${source}${note ? `. ${note}` : "."}`,
+    now,
+  });
+
+  return getAction(id);
+}
+
+/** Kendala pelaksanaan. Statusnya tidak berubah: tugas tetap terbuka. */
+export async function recordActionBlocker(
+  id: string,
+  note: string,
   actor: string,
   role: string,
 ): Promise<ActionRow | null> {
   const existing = await getAction(id);
   if (!existing) return null;
 
+  const text = note.trim();
+  if (!text) {
+    throw new ActionTransitionError("Kendala wajib dijelaskan agar dapat ditindaklanjuti.");
+  }
   const now = new Date().toISOString();
-  const dispatchedAt =
-    status === "pending" ? null : (existing.dispatched_at ?? now);
-  const completedAt =
-    status === "completed" ? (existing.completed_at ?? now) : null;
+
+  await run(
+    "UPDATE tindakan SET blocker_note = ?, blocked_at = ? WHERE id = ?",
+    text,
+    now,
+    id,
+  );
+  await appendHistory(id, "kendala", actor, role, { detail: text, now });
+
+  return getAction(id);
+}
+
+/** Catatan perkembangan. Hanya menambah riwayat — tidak mengubah keadaan. */
+export async function recordActionProgress(
+  id: string,
+  note: string,
+  actor: string,
+  role: string,
+): Promise<ActionRow | null> {
+  const existing = await getAction(id);
+  if (!existing) return null;
+  const text = note.trim();
+  if (!text) {
+    throw new ActionTransitionError("Catatan pelaksanaan tidak boleh kosong.");
+  }
+  await appendHistory(id, "catatan", actor, role, { detail: text });
+  return getAction(id);
+}
+
+/**
+ * Penyelesaian tugas. Hasil wajib ditulis: audit §5.F04 menolak "Selesai" yang
+ * hanya berarti seseorang menekan tombol. Butir SOP yang tercentang ikut
+ * disimpan di sini — selama ia hanya hidup di state modal, tampilannya
+ * menyerupai bukti pelaksanaan yang tidak pernah tersimpan.
+ */
+export async function completeAction(
+  id: string,
+  input: { resultNote: string; sopCompleted?: string[] },
+  actor: string,
+  role: string,
+): Promise<ActionRow | null> {
+  const existing = await getAction(id);
+  if (!existing) return null;
+  if (existing.status === "pending") {
+    throw new ActionTransitionError(
+      "Tindakan belum ditugaskan. Tetapkan unit pelaksana lebih dulu.",
+    );
+  }
+
+  const result = input.resultNote.trim();
+  if (!result) {
+    throw new ActionTransitionError(
+      "Penyelesaian wajib menyertakan catatan hasil yang dapat dibaca orang lain.",
+    );
+  }
+
+  const now = new Date().toISOString();
+  const checked = input.sopCompleted ?? [];
 
   await run(
     `UPDATE tindakan
-        SET status = ?, dispatched_at = ?, dispatched_by = ?, completed_at = ?
+        SET status = 'completed', completed_at = COALESCE(completed_at, ?),
+            completed_by = ?, result_note = ?, sop_completed = ?,
+            blocker_note = NULL, blocked_at = NULL
       WHERE id = ?`,
-    status,
-    dispatchedAt,
-    status === "pending" ? null : actor,
-    completedAt,
+    now,
+    actor,
+    result,
+    JSON.stringify(checked),
     id,
+  );
+
+  await appendHistory(id, "selesai", actor, role, {
+    detail:
+      `Hasil: ${result}` +
+      (checked.length > 0
+        ? ` — ${checked.length} butir SOP tercatat terlaksana.`
+        : " — tanpa butir SOP yang dicentang."),
+    now,
+  });
+
+  await logAudit({
+    actor,
+    role,
+    action: `Penyelesaian tindakan ${id}`,
+    details: `${existing.title} diselesaikan. ${result}`,
+    status: "success",
+  });
+
+  return getAction(id);
+}
+
+/** Membuka kembali tugas yang ditutup terlalu cepat. Alasan wajib. */
+export async function reopenAction(
+  id: string,
+  reason: string,
+  actor: string,
+  role: string,
+): Promise<ActionRow | null> {
+  const existing = await getAction(id);
+  if (!existing) return null;
+  if (existing.status !== "completed") {
+    throw new ActionTransitionError("Tindakan ini belum berstatus selesai.");
+  }
+  const text = reason.trim();
+  if (!text) {
+    throw new ActionTransitionError("Membuka kembali tugas wajib menyertakan alasan.");
+  }
+
+  await run(
+    `UPDATE tindakan
+        SET status = 'in_progress', completed_at = NULL, completed_by = NULL
+      WHERE id = ?`,
+    id,
+  );
+  await appendHistory(id, "dibuka_kembali", actor, role, { detail: text });
+
+  return getAction(id);
+}
+
+/**
+ * Persetujuan publikasi (F15). Halaman layanan publik membaca rekomendasi
+ * tindakan dan menerjemahkan statusnya menjadi kegiatan; tanpa keputusan
+ * penerbitan tersendiri, usulan sistem terbaca warga sebagai kegiatan dinas.
+ */
+export async function setActionPublication(
+  id: string,
+  published: boolean,
+  actor: string,
+  role: string,
+): Promise<ActionRow | null> {
+  const existing = await getAction(id);
+  if (!existing) return null;
+  if (published && existing.status === "pending") {
+    throw new ActionTransitionError(
+      "Usulan yang belum ditugaskan tidak dapat ditampilkan kepada warga.",
+    );
+  }
+
+  const now = new Date().toISOString();
+  await run(
+    "UPDATE tindakan SET published_at = ?, published_by = ? WHERE id = ?",
+    published ? now : null,
+    published ? actor : null,
+    id,
+  );
+
+  await appendHistory(
+    id,
+    published ? "dipublikasikan" : "publikasi_ditarik",
+    actor,
+    role,
+    {
+      detail: published
+        ? "Ditinjau dan disetujui untuk ditampilkan di layanan publik."
+        : "Ditarik dari layanan publik; kembali menjadi usulan internal.",
+      now,
+    },
   );
 
   await logAudit({
     actor,
     role,
-    action: `Status tindakan ${id}`,
-    details: `${existing.status} -> ${status} (${existing.title}).`,
+    action: `Publikasi tindakan ${id}`,
+    details: published
+      ? `${existing.title} disetujui tampil di layanan publik.`
+      : `${existing.title} ditarik dari layanan publik.`,
     status: "info",
   });
 
   return getAction(id);
+}
+
+async function appendHistory(
+  id: string,
+  event: ActionHistoryEvent,
+  actor: string,
+  role: string,
+  options: { detail?: string; now?: string } = {},
+): Promise<void> {
+  await run(
+    `INSERT INTO tindakan_riwayat (tindakan_id, ts, event, actor, role, detail)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    id,
+    options.now ?? new Date().toISOString(),
+    event,
+    actor,
+    role,
+    options.detail ?? "",
+  );
+}
+
+export function listActionHistory(id: string): Promise<ActionHistoryRow[]> {
+  return all<ActionHistoryRow>(
+    "SELECT * FROM tindakan_riwayat WHERE tindakan_id = ? ORDER BY ts, id",
+    id,
+  );
+}
+
+export async function listActionHistoryFor(
+  ids: string[],
+): Promise<ActionHistoryRow[]> {
+  if (ids.length === 0) return [];
+  return all<ActionHistoryRow>(
+    `SELECT * FROM tindakan_riwayat
+      WHERE tindakan_id = ANY(?::text[])
+      ORDER BY ts, id`,
+    ids,
+  );
 }
 
 /** Statistik kecil yang dipakai strip dashboard tanpa menarik seluruh antrean. */

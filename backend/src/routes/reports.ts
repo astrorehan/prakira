@@ -15,9 +15,12 @@ import {
   findReportPhoto,
   getTriggerSummaryByDistrict,
   listReports,
+  listRelatedReports,
+  recordForwarding,
   reviewReport,
   summarizeQueue,
   toPublicView as publicView,
+  ForwardStateError,
   ReportAlreadyReviewedError,
   ReportHandlingModeRequiredError,
   InvalidReportHandlingModeError,
@@ -27,11 +30,7 @@ import {
 } from "../services/reports.js";
 import {
   findEnvironmentTicketByReportId,
-  listEnvironmentTickets,
   listEnvironmentTicketsByReportIds,
-  updateEnvironmentTicket,
-  type EnvironmentTicketPriority,
-  type EnvironmentTicketStatus,
 } from "../services/tickets.js";
 import { listKecamatan } from "../services/districts.js";
 import {
@@ -114,6 +113,26 @@ reportsRouter.post(
       }
     }
 
+    /* Patokan dan RT/RW opsional tetapi dibatasi panjangnya: keduanya tampil
+       apa adanya di antrean petugas. */
+    for (const [field, label] of [
+      ["landmark", "Patokan lokasi"],
+      ["rtRw", "RT/RW"],
+    ] as const) {
+      const value = body[field];
+      if (value !== undefined && typeof value !== "string") {
+        errors.push(`${label} tidak valid.`);
+      } else if (typeof value === "string" && value.trim().length > 160) {
+        errors.push(`${label} terlalu panjang.`);
+      }
+    }
+    if (
+      body.relatedReportId !== undefined &&
+      typeof body.relatedReportId !== "string"
+    ) {
+      errors.push("Kode laporan terkait tidak valid.");
+    }
+
     if (errors.length > 0) throw new HttpError(400, errors.join(" "));
 
     const hash = hashOf(req);
@@ -135,6 +154,12 @@ reportsRouter.post(
         occurredAt: body.occurredAt,
         description: body.description,
         photo: typeof body.photo === "string" ? body.photo : undefined,
+        landmark: typeof body.landmark === "string" ? body.landmark : undefined,
+        rtRw: typeof body.rtRw === "string" ? body.rtRw : undefined,
+        relatedReportId:
+          typeof body.relatedReportId === "string"
+            ? body.relatedReportId
+            : undefined,
       },
       hash,
     );
@@ -235,97 +260,66 @@ reportsRouter.get(
 );
 
 /**
- * Antrean operasional unit lingkungan. Berbeda dari antrean verifikasi:
- * laporan baru masuk ke sini hanya setelah petugas membenarkannya.
+ * Penyampaian laporan ke instansi penerima (F10, audit §7.E).
+ *
+ * Menggantikan antrean pengelolaan tiket DLH. Dinkes menyampaikan informasi
+ * dan mencatat penyampaiannya; menetapkan PIC, memulai, atau menyatakan
+ * pekerjaan instansi lain selesai bukan kewenangan yang dimodelkan produk ini,
+ * jadi kendalinya tidak ada lagi di sini.
  */
-reportsRouter.get(
-  "/environment-tickets",
-  requireRole(...REVIEW_ROLES),
-  asyncRoute(async (req, res) => {
-    const status =
-      typeof req.query.status === "string" ? req.query.status : undefined;
-    const kecamatan =
-      typeof req.query.kecamatan === "string" ? req.query.kecamatan : undefined;
-    const validStatuses = new Set<EnvironmentTicketStatus>([
-      "baru",
-      "diterima",
-      "dikerjakan",
-      "selesai",
-      "ditutup",
-    ]);
-    if (status && !validStatuses.has(status as EnvironmentTicketStatus)) {
-      throw new HttpError(400, "Status tiket tidak dikenal.");
-    }
-    const rows = await listEnvironmentTickets({
-      status: status as EnvironmentTicketStatus | undefined,
-      kecamatan,
-    });
-    res.json({
-      data: rows,
-      meta: {
-        total: rows.length,
-        baru: rows.filter((row) => row.status === "baru").length,
-        diterima: rows.filter((row) => row.status === "diterima").length,
-        dikerjakan: rows.filter((row) => row.status === "dikerjakan").length,
-        selesai: rows.filter((row) => row.status === "selesai").length,
-        ditutup: rows.filter((row) => row.status === "ditutup").length,
-      },
-    });
-  }),
-);
-
-reportsRouter.patch(
-  "/environment-tickets/:id",
+reportsRouter.post(
+  "/:id/forward",
   requireRole(...REVIEW_ROLES),
   asyncRoute(async (req, res) => {
     const body = req.body ?? {};
-    if (typeof body !== "object" || Array.isArray(body)) {
-      throw new HttpError(400, "Badan permintaan tiket tidak valid.");
+    if (typeof body.delivered !== "boolean") {
+      throw new HttpError(
+        400,
+        "Sebutkan apakah penyampaian berhasil dengan nilai 'delivered' true atau false.",
+      );
     }
-    const validStatuses = new Set<EnvironmentTicketStatus>([
-      "baru",
-      "diterima",
-      "dikerjakan",
-      "selesai",
-      "ditutup",
-    ]);
-    const validPriorities = new Set<EnvironmentTicketPriority>(["normal", "tinggi"]);
-    if (body.status !== undefined && !validStatuses.has(body.status)) {
-      throw new HttpError(400, "Status tiket tidak dikenal.");
-    }
-    if (body.priority !== undefined && !validPriorities.has(body.priority)) {
-      throw new HttpError(400, "Prioritas tiket tidak dikenal.");
-    }
-    if (body.assignedTo !== undefined && typeof body.assignedTo !== "string") {
-      throw new HttpError(400, "Petugas penanggung jawab tidak valid.");
-    }
-    if (body.resolutionNote !== undefined && typeof body.resolutionNote !== "string") {
-      throw new HttpError(400, "Catatan penyelesaian tidak valid.");
+    for (const field of ["target", "channel", "reference", "note"]) {
+      if (body[field] !== undefined && typeof body[field] !== "string") {
+        throw new HttpError(400, `Kolom '${field}' tidak valid.`);
+      }
     }
 
+    let updated;
     try {
-      const updated = await updateEnvironmentTicket(
+      updated = await recordForwarding(
         req.params.id,
         {
-          status: body.status as EnvironmentTicketStatus | undefined,
-          priority: body.priority as EnvironmentTicketPriority | undefined,
-          assignedTo: body.assignedTo,
-          resolutionNote: body.resolutionNote,
+          delivered: body.delivered,
+          target: body.target,
+          channel: body.channel,
+          reference: body.reference,
+          note: body.note,
         },
         req.session!.label,
         req.session!.role,
       );
-      if (!updated) throw new HttpError(404, "Tiket lingkungan tidak ditemukan.");
-      res.json({ data: updated });
     } catch (error) {
-      if (error instanceof Error && error.name === "InvalidTicketTransitionError") {
+      if (error instanceof ForwardStateError) {
         throw new HttpError(409, error.message);
-      }
-      if (error instanceof Error && error.name === "TicketResolutionNoteRequiredError") {
-        throw new HttpError(400, error.message);
       }
       throw error;
     }
+
+    if (!updated) throw new HttpError(404, "Laporan tidak ditemukan.");
+    res.json({ meta: await summarizeQueue(), data: publicView(updated) });
+  }),
+);
+
+/**
+ * Laporan lain pada kejadian yang sama. Dipakai untuk menautkan duplikat tanpa
+ * menghapus jejak pelapor mana pun: setiap pelapor tetap memegang kodenya.
+ */
+reportsRouter.get(
+  "/:id/related",
+  requireRole(...REVIEW_ROLES),
+  asyncRoute(async (req, res) => {
+    const rows = await listRelatedReports(req.params.id);
+    res.json({ data: rows.map((row) => publicView(row)) });
   }),
 );
 
@@ -354,10 +348,25 @@ reportsRouter.patch(
   requireRole(...REVIEW_ROLES),
   asyncRoute(async (req, res) => {
     const body = req.body ?? {};
-    if (body.status !== "terverifikasi" && body.status !== "ditolak") {
+    if (
+      body.status !== "terverifikasi" &&
+      body.status !== "ditolak" &&
+      body.status !== "perlu_informasi"
+    ) {
       throw new HttpError(
         400,
-        "Keputusan harus 'terverifikasi' atau 'ditolak'.",
+        "Keputusan harus 'terverifikasi', 'perlu_informasi', atau 'ditolak'.",
+      );
+    }
+    /* Meminta kelengkapan tanpa menyebut apa yang kurang membuat warga
+       mengulang dari awal — persis yang hendak dihindari F11. */
+    if (
+      body.status === "perlu_informasi" &&
+      (typeof body.infoRequest !== "string" || body.infoRequest.trim() === "")
+    ) {
+      throw new HttpError(
+        400,
+        "Sebutkan informasi apa yang perlu dilengkapi pelapor.",
       );
     }
     if (
@@ -388,6 +397,8 @@ reportsRouter.patch(
         {
           status: body.status,
           note: typeof body.note === "string" ? body.note : undefined,
+          infoRequest:
+            typeof body.infoRequest === "string" ? body.infoRequest : undefined,
           handlingMode:
             typeof body.handlingMode === "string"
               ? (body.handlingMode as ReportHandlingMode)

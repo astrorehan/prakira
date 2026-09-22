@@ -28,11 +28,19 @@ import { Input } from "./ui/input";
 import {
   fetchDiseases,
   fetchKecamatanList,
+  fetchPeriodReadiness,
+  fetchRecapEntry,
   fetchRecentManualCases,
+  markRecapChecked,
   submitManualCase,
   type KecamatanRef,
 } from "@/lib/api";
-import type { DiseaseSummary, ManualCaseRecord } from "@/types";
+import type {
+  DiseaseSummary,
+  ManualCaseRecord,
+  PeriodReadiness,
+  RecapEntryResponse,
+} from "@/types";
 import { useApi } from "@/lib/use-api";
 import { invalidatePeriod } from "@/lib/use-period";
 
@@ -75,6 +83,15 @@ export function ManualCaseEntryCard({
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   });
   const [casesCount, setCasesCount] = React.useState<string>("");
+  /* F13: alasan koreksi wajib ketika angka tersimpan diganti angka lain.
+     Rekap adalah angka yang dipertanggungjawabkan seseorang, bukan catatan
+     yang boleh berubah diam-diam. */
+  const [reason, setReason] = React.useState<string>("");
+  const [existing, setExisting] = React.useState<RecapEntryResponse | null>(null);
+  /* F18: setelah menyimpan, operator berhak tahu apakah layanannya sudah siap
+     dipakai — bukan hanya bahwa barisnya masuk. */
+  const [readiness, setReadiness] = React.useState<PeriodReadiness | null>(null);
+  const [checking, setChecking] = React.useState(false);
 
   // Optional climate toggles
   const [showClimate, setShowClimate] = React.useState(false);
@@ -96,6 +113,34 @@ export function ManualCaseEntryCard({
       setKecamatanId(kecamatanList[0].id);
     }
   }, [kecamatanList, kecamatanId]);
+
+  /* Nilai tersimpan dibaca sebelum menyimpan, bukan sesudah. Operator yang
+     tidak melihat angka yang akan ia ganti tidak sedang mengoreksi apa pun —
+     ia menimpa. */
+  React.useEffect(() => {
+    if (!kecamatanId || !disease || !periodDate) return;
+    let cancelled = false;
+    setExisting(null);
+    setReason("");
+    fetchRecapEntry(kecamatanId, disease, `${periodDate}-01`)
+      .then((response) => {
+        if (!cancelled) setExisting(response.data);
+      })
+      .catch(() => {
+        if (!cancelled) setExisting(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [kecamatanId, disease, periodDate]);
+
+  const previousCases = existing?.entry?.cases ?? null;
+  const parsedPreview = casesCount === "" ? null : Number(casesCount);
+  const replacing =
+    previousCases !== null &&
+    parsedPreview !== null &&
+    Number.isInteger(parsedPreview) &&
+    parsedPreview !== previousCases;
 
   // Handle Form Submit
   const handleSubmit = async (e: React.FormEvent) => {
@@ -136,6 +181,18 @@ export function ManualCaseEntryCard({
       return;
     }
 
+    if (
+      previousCases !== null &&
+      parsedCases !== previousCases &&
+      reason.trim().length < 8
+    ) {
+      setFeedback({
+        type: "error",
+        message: `Periode ini sudah berisi ${previousCases}. Sebutkan alasan koreksinya sebelum menggantinya.`,
+      });
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -147,21 +204,32 @@ export function ManualCaseEntryCard({
         rainfall_mm: rainfall ? Number(rainfall) : null,
         temp_mean_c: temp ? Number(temp) : null,
         humidity_pct: humidity ? Number(humidity) : null,
+        reason: reason.trim() || undefined,
       });
 
       const kecNama =
         kecamatanList.find((k) => k.id === kecamatanId)?.nama ?? kecamatanId;
 
+      /* Kalimatnya menyebut penggantian secara utuh — nilai lama, nilai baru —
+         karena akibat koreksi tidak berhenti di layar ini. */
       setFeedback({
         type: "success",
-        message: `Berhasil mencatat ${parsedCases} kasus ${disease.toUpperCase()} di ${kecNama}.`,
-        details: `Tersimpan di tabel observasi resmi untuk periode ${response.data.month_start}. Data ini akan langsung mempengaruhi model saat retraining berikutnya.`,
+        message: response.data.replaced
+          ? `Total rekap ${disease.toUpperCase()} ${kecNama} diperbarui dari ${response.data.previous_cases} menjadi ${parsedCases}.`
+          : `Total rekap ${disease.toUpperCase()} ${kecNama} ditetapkan ${parsedCases}.`,
+        details: `Periode ${response.data.month_start}, atas nama ${response.data.recorded_by ?? "petugas yang masuk"}. Angka ini menjadi dasar prakiraan periode berikutnya.`,
       });
 
-      // Reset cases count for fast next entry
       setCasesCount("");
+      setReason("");
       invalidatePeriod();
       recentCasesApi.reload();
+      fetchRecapEntry(kecamatanId, disease, `${periodDate}-01`)
+        .then((next) => setExisting(next.data))
+        .catch(() => undefined);
+      fetchPeriodReadiness(disease, `${periodDate}-01`)
+        .then((next) => setReadiness(next.data))
+        .catch(() => setReadiness(null));
       if (onSaved) onSaved();
     } catch (err) {
       setFeedback({
@@ -185,14 +253,18 @@ export function ManualCaseEntryCard({
         <div>
           <div className="flex items-center gap-2">
             <h3 className="font-display text-heading-sm text-foreground">
-              Entri Kasus Manual (Nakes)
+              Total rekap kecamatan
             </h3>
             <Badge variant="risk-low" className="text-overline uppercase">
               Resmi Faskes
             </Badge>
           </div>
+          {/* F13: yang disimpan adalah total satu kecamatan untuk satu periode,
+              bukan tambahan kasus. Nama lamanya ("entri kasus") membuat operator
+              mengira angkanya dijumlahkan dengan yang sudah ada. */}
           <p className="text-body-sm text-paper-600">
-            Input data kasus konfirmasi resmi dari fasilitas kesehatan langsung ke sistem observasi.
+            Total kasus terkonfirmasi satu kecamatan untuk satu periode. Nilai
+            baru menggantikan nilai lama, bukan menambahnya.
           </p>
         </div>
 
@@ -288,7 +360,7 @@ export function ManualCaseEntryCard({
               className="flex items-center gap-1.5 text-caption font-semibold text-foreground"
             >
               <PlusCircle className="h-3.5 w-3.5 text-brand-600" aria-hidden="true" />
-              Jumlah Kasus (Positif)
+              Total kasus periode ini
             </label>
             <Input
               id="manual-cases-count"
@@ -384,6 +456,128 @@ export function ManualCaseEntryCard({
           )}
         </div>
 
+        {/* Nilai yang sedang berlaku, pemiliknya, dan riwayat koreksinya. */}
+        {existing && (
+          <div className="rounded-xl border border-border bg-paper-50 p-3.5 text-caption leading-relaxed text-paper-700">
+            {existing.entry ? (
+              <>
+                <p>
+                  <span className="font-semibold text-foreground">
+                    Tersimpan: {formatNumber(existing.entry.cases)} kasus
+                  </span>{" "}
+                  — dicatat {existing.entry.recorded_by ?? "petugas"} pada{" "}
+                  {formatDateTime(existing.entry.recorded_at)}.{" "}
+                  {existing.entry.recap_state === "diperiksa"
+                    ? "Sudah diperiksa pemilik rekap."
+                    : "Belum diperiksa pemilik rekap."}
+                </p>
+                {replacing && (
+                  <p className="mt-1.5 font-medium text-risk-medium">
+                    Akan diganti: {formatNumber(existing.entry.cases)} →{" "}
+                    {formatNumber(parsedPreview as number)}.
+                  </p>
+                )}
+                {existing.revisions.length > 0 && (
+                  <ul className="mt-2 space-y-0.5 border-t border-border pt-2 text-paper-600">
+                    {existing.revisions.slice(0, 3).map((rev) => (
+                      <li key={rev.recorded_at}>
+                        {formatDateTime(rev.recorded_at)} · {rev.previous_cases ?? "—"} →{" "}
+                        {rev.new_cases} · {rev.actor} — {rev.reason}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {existing.entry.recap_state !== "diperiksa" && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="mt-2.5"
+                    disabled={checking}
+                    onClick={async () => {
+                      setChecking(true);
+                      try {
+                        await markRecapChecked({
+                          kecamatanId,
+                          disease,
+                          monthStart: `${periodDate}-01`,
+                        });
+                        const next = await fetchRecapEntry(
+                          kecamatanId,
+                          disease,
+                          `${periodDate}-01`,
+                        );
+                        setExisting(next.data);
+                      } catch {
+                        /* Kegagalan ditampilkan lewat keadaan yang tidak berubah. */
+                      } finally {
+                        setChecking(false);
+                      }
+                    }}
+                  >
+                    Tandai sudah diperiksa
+                  </Button>
+                )}
+              </>
+            ) : (
+              <p>Periode ini belum pernah diisi untuk kecamatan tersebut.</p>
+            )}
+          </div>
+        )}
+
+        {previousCases !== null && (
+          <div className="flex flex-col gap-1.5">
+            <label
+              htmlFor="manual-reason"
+              className="text-caption font-semibold text-foreground"
+            >
+              Alasan koreksi {replacing ? "" : "(bila angkanya diubah)"}
+            </label>
+            <Input
+              id="manual-reason"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="Mis. koreksi setelah verifikasi laboratorium."
+              className="h-11 text-body-sm"
+            />
+          </div>
+        )}
+
+        {/* F18: perjalanan dari rekap tersimpan sampai prakiraan siap dipakai. */}
+        {readiness && (
+          <div className="rounded-xl border border-border bg-surface p-3.5">
+            <p className="text-caption font-semibold text-foreground">
+              Kesiapan periode {formatMonth(readiness.month)} · {readiness.disease}
+            </p>
+            <p className="mt-0.5 text-caption text-paper-600">
+              {readiness.saved} dari {readiness.totalDistricts} kecamatan tersimpan,{" "}
+              {readiness.checked} diperiksa.
+            </p>
+            <ol className="mt-2.5 space-y-1.5">
+              {readiness.stages.map((stage) => (
+                <li key={stage.id} className="text-caption leading-relaxed">
+                  <span
+                    className={cn(
+                      "font-medium",
+                      stage.state === "selesai"
+                        ? "text-teal-800"
+                        : stage.state === "berjalan"
+                          ? "text-risk-medium"
+                          : "text-paper-600",
+                    )}
+                  >
+                    {stage.label}
+                  </span>
+                  <span className="text-paper-600"> — {stage.detail}</span>
+                  {stage.state !== "selesai" && (
+                    <span className="text-paper-600"> Penanggung jawab: {stage.owner}.</span>
+                  )}
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
+
         {/* Feedback Alert */}
         {feedback && (
           <div
@@ -413,7 +607,7 @@ export function ManualCaseEntryCard({
         {/* Submit Actions */}
         <div className="flex items-center justify-between pt-1">
           <span className="text-caption text-paper-500">
-            * Data akan disimpan langsung ke tabel observasi resmi
+            * Menggantikan total yang tersimpan untuk kecamatan dan periode ini
           </span>
 
           <Button
@@ -429,7 +623,7 @@ export function ManualCaseEntryCard({
             ) : (
               <>
                 <FilePlus2 className="mr-2 h-4 w-4" />
-                Simpan Kasus
+                {replacing ? "Simpan koreksi" : "Simpan total rekap"}
               </>
             )}
           </Button>

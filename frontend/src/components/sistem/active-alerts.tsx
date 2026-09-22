@@ -50,6 +50,7 @@ const LEVEL_STYLE: Record<RiskLevel, { rail: string; tag: string; word: string }
 
 const STATUS_LABEL: Record<ActionRecommendation["status"], string> = {
   pending: "Usulan tindakan internal",
+  assigned: "Sudah ditugaskan ke pelaksana",
   in_progress: "Sedang dilaksanakan",
   completed: "Selesai dilaksanakan",
 };
@@ -201,7 +202,10 @@ function NoticeCard({ rec }: { rec: ActionRecommendation }) {
 
 export function ActiveAlerts() {
   const [filter, setFilter] = useState<DiseaseType | "Semua">("Semua");
-  const actions = useApi(() => fetchActions(), []);
+  /* F15: halaman warga membaca kegiatan yang sudah ditinjau untuk publikasi,
+     bukan setiap usulan yang keluar dari mesin aturan. Usulan internal yang
+     tampil di sini dulu terbaca sebagai peringatan yang sudah berlaku. */
+  const actions = useApi(() => fetchActions(undefined, { publishedOnly: true }), []);
 
   const all = useMemo(() => actions.data?.data ?? [], [actions.data]);
   const diseases = useMemo(
@@ -264,7 +268,7 @@ export function ActiveAlerts() {
           loading={actions.loading}
           error={actions.error}
           empty={!actions.loading && list.length === 0}
-          emptyMessage="Tidak ada peringatan yang sedang berlaku untuk periode ini."
+          emptyMessage="Belum ada kegiatan yang diterbitkan untuk periode ini."
           onRetry={actions.reload}
           className="mt-8"
         >
@@ -280,8 +284,8 @@ export function ActiveAlerts() {
         <Reveal className="mt-6 flex items-start gap-2.5 rounded-xl border border-sand-200 bg-sand-50 p-4">
           <Megaphone className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden />
           <p className="text-caption text-paper-600">
-            Peringatan di halaman ini dihasilkan mesin aturan dari prakiraan model dan
-            belum berstatus surat edaran resmi. Nomor surat dan pengesahannya diterbitkan
+            Peringatan di halaman ini disusun mesin aturan dari prakiraan model,
+            ditinjau petugas sebelum diterbitkan, dan belum berstatus surat edaran resmi. Nomor surat dan pengesahannya diterbitkan
             Dinas Kesehatan Kota Semarang melalui kanal resminya sendiri.
           </p>
         </Reveal>

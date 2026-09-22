@@ -14,6 +14,15 @@ import { startIngestJob, finishIngestJob } from "../db/seed.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { asyncRoute, HttpError } from "../middleware/error.js";
 import { logAudit } from "../services/audit.js";
+import {
+  RecapReasonRequiredError,
+  districtRecapStatus,
+  findRecapEntry,
+  listRecapRevisions,
+  markRecapChecked,
+  periodReadiness,
+  saveRecap,
+} from "../services/recap.js";
 
 export const casesRouter = Router();
 
@@ -116,54 +125,153 @@ casesRouter.post(
         ? Number(humidity_pct)
         : null;
 
-    const recordedAt = new Date().toISOString();
-
-    // 6. Upsert ke tabel observasi
-    await run(
-      `INSERT INTO observasi
-         (kecamatan_id, disease, month_start, cases, rainfall_mm, temp_mean_c, humidity_pct, source, recorded_at)
-       VALUES
-         (?, ?, ?, ?, ?, ?, ?, 'manual', ?)
-       ON CONFLICT (kecamatan_id, disease, month_start) DO UPDATE SET
-         cases = excluded.cases,
-         rainfall_mm = COALESCE(excluded.rainfall_mm, observasi.rainfall_mm),
-         temp_mean_c = COALESCE(excluded.temp_mean_c, observasi.temp_mean_c),
-         humidity_pct = COALESCE(excluded.humidity_pct, observasi.humidity_pct),
-         source = 'manual',
-         recorded_at = excluded.recorded_at`,
-      resolvedKecamatan.id,
-      normDisease,
-      normMonth,
-      parsedCases,
-      parsedRainfall,
-      parsedTemp,
-      parsedHumidity,
-      recordedAt,
-    );
-
-    // 7. Audit Log
-    await logAudit({
-      actor: req.session!.label,
-      role: req.session!.role,
-      action: `Entri manual kasus ${normDisease}`,
-      details: `${resolvedKecamatan.nama} (${normMonth}): ${parsedCases} kasus resmi.`,
-      status: "success",
-    });
+    /* 6. Simpan sebagai total rekap kecamatan.
+       Satu baris observasi adalah total kecamatan untuk satu penyakit pada
+       satu bulan; menyimpan ulang berarti mengganti total itu, bukan
+       menambahkan kontribusi faskes. Karena itu koreksi yang mengubah angka
+       menuntut alasan, dan jawabannya menyebut nilai lama dan nilai baru. */
+    let result;
+    try {
+      result = await saveRecap(
+        {
+          kecamatanId: resolvedKecamatan.id,
+          kecamatanNama: resolvedKecamatan.nama,
+          disease: normDisease,
+          month: normMonth,
+          cases: parsedCases,
+          rainfall: parsedRainfall,
+          temp: parsedTemp,
+          humidity: parsedHumidity,
+          reason: typeof req.body?.reason === "string" ? req.body.reason : null,
+        },
+        req.session!.label,
+        req.session!.role,
+      );
+    } catch (error) {
+      if (error instanceof RecapReasonRequiredError) {
+        throw new HttpError(409, error.message);
+      }
+      throw error;
+    }
 
     res.status(201).json({
       status: "success",
-      message: `Berhasil mencatat ${parsedCases} kasus ${normDisease} di ${resolvedKecamatan.nama} untuk periode ${normMonth}.`,
+      message: result.replaced
+        ? `Total rekap ${normDisease} untuk ${resolvedKecamatan.nama} pada ${normMonth} diperbarui dari ${result.previousCases} menjadi ${parsedCases}.`
+        : `Total rekap ${normDisease} untuk ${resolvedKecamatan.nama} pada ${normMonth} ditetapkan ${parsedCases}.`,
       data: {
         kecamatan_id: resolvedKecamatan.id,
         kecamatan_nama: resolvedKecamatan.nama,
         disease: normDisease,
         month_start: normMonth,
         cases: parsedCases,
+        previous_cases: result.previousCases,
+        replaced: result.replaced,
         rainfall_mm: parsedRainfall,
         temp_mean_c: parsedTemp,
         humidity_pct: parsedHumidity,
         source: "manual",
-        recorded_at: recordedAt,
+        recorded_at: result.entry?.recorded_at ?? new Date().toISOString(),
+        recorded_by: result.entry?.recorded_by ?? req.session!.label,
+      },
+    });
+  }),
+);
+
+/**
+ * GET /api/cases/entry
+ * Rekap yang sudah tersimpan untuk satu kecamatan-penyakit-periode, beserta
+ * riwayat koreksinya. Dipanggil sebelum menyimpan supaya operator melihat
+ * nilai yang akan ia ganti, bukan mengetahuinya setelah tergantikan.
+ */
+casesRouter.get(
+  "/entry",
+  requireAuth,
+  requireRole("puskesmas", "dinas", "admin"),
+  asyncRoute(async (req, res) => {
+    const kecamatanId = String(req.query.kecamatan_id ?? "").trim();
+    const disease = String(req.query.disease ?? "").trim().toUpperCase();
+    const rawMonth = String(req.query.month_start ?? "").trim();
+    if (!kecamatanId || !disease || !rawMonth) {
+      throw new HttpError(
+        400,
+        "Kecamatan, penyakit, dan periode wajib disertakan.",
+      );
+    }
+    const month = normalizeMonthStart(rawMonth);
+    const entry = await findRecapEntry(kecamatanId, disease, month);
+    res.json({
+      data: {
+        entry,
+        revisions: entry
+          ? await listRecapRevisions(kecamatanId, disease, month)
+          : [],
+      },
+    });
+  }),
+);
+
+/**
+ * POST /api/cases/entry/checked
+ * Menandai rekap satu kecamatan sudah diperiksa pemiliknya. Kejadian ini
+ * berbeda dari penyimpanan: tersimpan berarti angkanya masuk, diperiksa
+ * berarti ada orang yang membenarkannya untuk periode itu.
+ */
+casesRouter.post(
+  "/entry/checked",
+  requireAuth,
+  requireRole("puskesmas", "dinas", "admin"),
+  asyncRoute(async (req, res) => {
+    const body = req.body ?? {};
+    const kecamatanId = String(body.kecamatan_id ?? "").trim();
+    const disease = String(body.disease ?? "").trim().toUpperCase();
+    if (!kecamatanId || !disease) {
+      throw new HttpError(400, "Kecamatan dan penyakit wajib disertakan.");
+    }
+    const month = normalizeMonthStart(String(body.month_start ?? ""));
+    const entry = await markRecapChecked(
+      kecamatanId,
+      disease,
+      month,
+      req.session!.label,
+      req.session!.role,
+    );
+    if (!entry) {
+      throw new HttpError(
+        404,
+        "Belum ada rekap tersimpan untuk kecamatan dan periode itu.",
+      );
+    }
+    res.json({ data: entry });
+  }),
+);
+
+/**
+ * GET /api/cases/readiness
+ * Jawaban tunggal yang diminta audit F18: periode apa yang lengkap, prakiraan
+ * apa yang sah dibaca, dan siapa yang harus mengerjakan kekurangannya.
+ */
+casesRouter.get(
+  "/readiness",
+  requireAuth,
+  requireRole("puskesmas", "dinas", "admin", "analis"),
+  asyncRoute(async (req, res) => {
+    const disease = String(req.query.disease ?? "DBD").trim().toUpperCase();
+    if (!VALID_DISEASES.includes(disease)) {
+      throw new HttpError(400, `Penyakit '${disease}' tidak valid.`);
+    }
+    const rawMonth =
+      typeof req.query.month_start === "string" && req.query.month_start
+        ? normalizeMonthStart(req.query.month_start)
+        : undefined;
+
+    const readiness = await periodReadiness(disease, rawMonth);
+    res.json({
+      data: {
+        ...readiness,
+        districts: readiness.month
+          ? await districtRecapStatus(disease, readiness.month)
+          : [],
       },
     });
   }),
@@ -243,6 +351,7 @@ casesRouter.post(
       nama: string;
       month: string;
       cases: number;
+      previousCases: number | null;
       rainfall: number | null;
       temp: number | null;
       humidity: number | null;
@@ -282,12 +391,37 @@ casesRouter.post(
         nama: row.kecamatan_nama,
         month: `${row.month_start.slice(0, 7)}-01`,
         cases: Math.round(cases),
+        previousCases: null,
         rainfall: toNumber(row.rainfall_mm),
         temp: toNumber(row.temp_mean_c),
         humidity: toNumber(row.humidity_pct),
       });
     });
 
+    /* Nilai yang akan tergantikan dibaca sebelum apa pun ditulis: pratinjau
+       yang hanya menghitung "baris valid" tidak memberi tahu operator bahwa
+       sebagian di antaranya mengganti total yang sudah ada. */
+    const existingRows = await all<{
+      kecamatan_id: string;
+      month_start: string;
+      cases: number;
+    }>(
+      `SELECT kecamatan_id, month_start, cases FROM observasi
+        WHERE disease = ? AND month_start = ANY(?::text[])`,
+      disease,
+      Array.from(new Set(valid.map((row) => row.month))),
+    );
+    const existingByKey = new Map(
+      existingRows.map((row) => [`${row.kecamatan_id}|${row.month_start}`, row.cases]),
+    );
+    for (const row of valid) {
+      row.previousCases =
+        existingByKey.get(`${row.kecamatanId}|${row.month}`) ?? null;
+    }
+
+    const replacements = valid.filter(
+      (row) => row.previousCases !== null && row.previousCases !== row.cases,
+    );
     const preview = valid.slice(0, 10);
 
     if (dryRun) {
@@ -301,6 +435,14 @@ casesRouter.post(
         },
         totalRows: rows.length,
         validRows: valid.length,
+        newRows: valid.filter((row) => row.previousCases === null).length,
+        replacedRows: replacements.length,
+        replacements: replacements.slice(0, 10).map((row) => ({
+          nama: row.nama,
+          month: row.month,
+          previousCases: row.previousCases,
+          cases: row.cases,
+        })),
         problems,
         preview,
       });
@@ -324,15 +466,17 @@ casesRouter.post(
           await tx.run(
             `INSERT INTO observasi
                (kecamatan_id, disease, month_start, cases, rainfall_mm, temp_mean_c,
-                humidity_pct, source, recorded_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, 'import', ?)
+                humidity_pct, source, recorded_at, recorded_by, recap_state)
+             VALUES (?, ?, ?, ?, ?, ?, ?, 'import', ?, ?, 'tersimpan')
              ON CONFLICT (kecamatan_id, disease, month_start) DO UPDATE SET
                cases = excluded.cases,
                rainfall_mm = COALESCE(excluded.rainfall_mm, observasi.rainfall_mm),
                temp_mean_c = COALESCE(excluded.temp_mean_c, observasi.temp_mean_c),
                humidity_pct = COALESCE(excluded.humidity_pct, observasi.humidity_pct),
                source = 'import',
-               recorded_at = excluded.recorded_at`,
+               recorded_at = excluded.recorded_at,
+               recorded_by = excluded.recorded_by,
+               recap_state = 'tersimpan'`,
             row.kecamatanId,
             disease,
             row.month,
@@ -341,7 +485,28 @@ casesRouter.post(
             row.temp,
             row.humidity,
             recordedAt,
+            req.session!.label,
           );
+
+          /* Impor mengganti total kecamatan sama seperti entri manual, jadi
+             perubahan angkanya masuk riwayat koreksi yang sama. */
+          if (row.previousCases !== row.cases) {
+            await tx.run(
+              `INSERT INTO observasi_revisi
+                 (kecamatan_id, disease, month_start, previous_cases, new_cases,
+                  reason, actor, role, recorded_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              row.kecamatanId,
+              disease,
+              row.month,
+              row.previousCases,
+              row.cases,
+              "Impor CSV rekap periode.",
+              req.session!.label,
+              req.session!.role,
+              recordedAt,
+            );
+          }
         }
       });
     } catch (error) {
@@ -369,7 +534,14 @@ casesRouter.post(
       status: problems.length > 0 ? "warning" : "success",
     });
 
-    res.json({ dryRun: false, disease, imported: valid.length, problems });
+    res.json({
+      dryRun: false,
+      disease,
+      imported: valid.length,
+      replaced: replacements.length,
+      problems,
+      readiness: await periodReadiness(disease),
+    });
   }),
 );
 

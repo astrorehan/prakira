@@ -36,6 +36,18 @@ function row(overrides: Partial<ReportRow> = {}): ReportRow {
     review_note: null,
     handling_mode: null,
     device_hash: "0123456789abcdef0123456789abcdef",
+    landmark: null,
+    rt_rw: null,
+    info_request: null,
+    info_requested_at: null,
+    related_report_id: null,
+    forward_state: null,
+    forward_target: null,
+    forward_channel: null,
+    forward_reference: null,
+    forward_note: null,
+    forwarded_at: null,
+    forwarded_by: null,
     ...overrides,
   };
 }
@@ -63,7 +75,7 @@ test("keputusan publik menyertakan jalur dan arahan yang dapat ditindaklanjuti",
     family: "lingkungan",
     destination: "Dinas Lingkungan Hidup",
     handlingMode: "dlh",
-    workflow: "tiket_lingkungan",
+    workflow: "penerusan_instansi",
   });
   assert.ok(view.guidance.steps.length >= 3);
   assert.match(view.guidance.caution, /Jangan/);

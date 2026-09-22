@@ -23,8 +23,22 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { ActionRecommendation } from "@/types";
 import { cn, formatNumber } from "@/lib/utils";
-import { describeDeadline, formatMonth } from "@/lib/period";
-import { COVERAGE_LABEL, PRIORITY_LABEL } from "@/lib/action-queue";
+import { describeDeadline, formatDateTime, formatMonth } from "@/lib/period";
+import {
+  COVERAGE_LABEL,
+  effectiveDueDate,
+  PRIORITY_LABEL,
+  STATUS_LABEL,
+} from "@/lib/action-queue";
+import {
+  acknowledgeAction,
+  assignAction,
+  completeAction,
+  recordActionBlocker,
+  recordActionProgress,
+  reopenAction,
+  setActionPublication,
+} from "@/lib/api";
 
 /**
  * Modal SOP & instruksi.
@@ -46,21 +60,27 @@ import { COVERAGE_LABEL, PRIORITY_LABEL } from "@/lib/action-queue";
  *    WhatsApp. Sekarang ia menulis status ke gateway, dan teks di sekitarnya
  *    hanya menjanjikan apa yang benar-benar terjadi: statusnya tercatat dan
  *    drafnya bisa disalin.
+ * 5. Satu tombol "Tandai sebagai berjalan" diganti tab Pelaksanaan (audit F04,
+ *    F05). Tombol itu adalah seluruh alur kerja yang pernah dimiliki produk
+ *    ini: tidak ada tempat mencatat siapa yang ditugasi, apakah ia menerima
+ *    penugasannya, kendala yang muncul, atau hasil akhirnya — sehingga
+ *    pekerjaan lapangan berhenti tercatat tepat setelah dimulai. Centang SOP
+ *    pun hanya hidup di memori tab ini dan hilang ketika modalnya ditutup.
  */
 
 interface DispatchActionModalProps {
   recommendation: ActionRecommendation | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Menulis status ke gateway. Melempar bila gagal. */
-  onConfirmDispatch: (id: string, checklistCompleted: string[]) => Promise<void>;
+  /** Dipanggil setelah satu kejadian tercatat, supaya antrean menarik data segar. */
+  onChanged: (message: string) => void;
   /** Hari acuan konsol dari `/api/meta/period`. */
   systemToday: string | null;
   /** Nama petugas yang sedang masuk — tercatat di audit trail. */
   operator: string | null;
 }
 
-type TabId = "protocol" | "draft";
+type TabId = "protocol" | "execution" | "draft";
 
 function FactTile({
   icon: Icon,
@@ -86,7 +106,7 @@ export function DispatchActionModal({
   recommendation,
   open,
   onOpenChange,
-  onConfirmDispatch,
+  onChanged,
   systemToday,
   operator,
 }: DispatchActionModalProps) {
@@ -96,17 +116,42 @@ export function DispatchActionModal({
   const [error, setError] = React.useState<string | null>(null);
   const [copyState, setCopyState] = React.useState<"idle" | "copied" | "failed">("idle");
 
+  /* Bidang pelaksanaan. Semuanya dikosongkan tiap kali tindakannya berganti. */
+  const [unit, setUnit] = React.useState("");
+  const [pic, setPic] = React.useState("");
+  const [agreedDue, setAgreedDue] = React.useState("");
+  const [assignNote, setAssignNote] = React.useState("");
+  const [ackSource, setAckSource] = React.useState("");
+  const [progressNote, setProgressNote] = React.useState("");
+  const [blockerNote, setBlockerNote] = React.useState("");
+  const [resultNote, setResultNote] = React.useState("");
+
   const id = recommendation?.id;
 
   /* Reset penuh tiap kali rekomendasi berganti. Penjagaan lama membuat status
      "terkirim" bocor dari satu tindakan ke tindakan berikutnya. */
   React.useEffect(() => {
     setActiveTab("protocol");
-    setCheckedItems({});
     setIsSubmitting(false);
     setError(null);
     setCopyState("idle");
+    setPic("");
+    setAgreedDue("");
+    setAssignNote("");
+    setAckSource("");
+    setProgressNote("");
+    setBlockerNote("");
+    setResultNote("");
   }, [id]);
+
+  /* Centang SOP dibaca dari yang tersimpan, bukan dimulai kosong tiap kali.
+     Versi sebelumnya membuang centangnya begitu modal ditutup, sehingga
+     petugas berikutnya tidak pernah tahu butir mana yang sudah dikerjakan. */
+  React.useEffect(() => {
+    const saved = recommendation?.result?.sopCompleted ?? [];
+    setCheckedItems(Object.fromEntries(saved.map((item) => [item, true])));
+    setUnit(recommendation?.assignment?.unit ?? recommendation?.pic_unit ?? "");
+  }, [id, recommendation?.assignment?.unit, recommendation?.pic_unit, recommendation?.result]);
 
   if (!recommendation) return null;
 
@@ -114,8 +159,8 @@ export function DispatchActionModal({
   const completedCount = checklist.filter((item) => checkedItems[item]).length;
   const progressPct =
     checklist.length === 0 ? 0 : Math.round((completedCount / checklist.length) * 100);
-  const deadline = describeDeadline(recommendation.due_date, systemToday);
-  const alreadyDispatched = recommendation.status !== "pending";
+  const deadline = describeDeadline(effectiveDueDate(recommendation), systemToday);
+  const action = recommendation;
 
   const toggleCheck = (item: string) =>
     setCheckedItems((prev) => ({ ...prev, [item]: !prev[item] }));
@@ -132,15 +177,18 @@ export function DispatchActionModal({
     setTimeout(() => setCopyState("idle"), 2400);
   };
 
-  const handleDispatch = async () => {
+  /** Menjalankan satu kejadian dan melaporkan apa yang tercatat, bukan lebih. */
+  const record = async (
+    run: () => Promise<unknown>,
+    message: string,
+    { close = false } = {},
+  ) => {
     setIsSubmitting(true);
     setError(null);
     try {
-      await onConfirmDispatch(
-        recommendation.id,
-        checklist.filter((i) => checkedItems[i]),
-      );
-      onOpenChange(false);
+      await run();
+      onChanged(message);
+      if (close) onOpenChange(false);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : String(caught));
     } finally {
@@ -150,7 +198,8 @@ export function DispatchActionModal({
 
   const tabs: { id: TabId; label: string }[] = [
     { id: "protocol", label: `1. Protokol & SOP (${completedCount}/${checklist.length})` },
-    { id: "draft", label: "2. Draf pesan" },
+    { id: "execution", label: "2. Pelaksanaan" },
+    { id: "draft", label: "3. Draf pesan" },
   ];
 
   return (
@@ -348,7 +397,314 @@ export function DispatchActionModal({
             </div>
           )}
 
-          {/* Tab 2 — draf */}
+          {/* Tab 2 — pelaksanaan (F04): satu alur dari penugasan sampai hasil */}
+          {activeTab === "execution" && (
+            <div
+              role="tabpanel"
+              id="dispatch-panel-execution"
+              aria-labelledby="dispatch-tab-execution"
+              className="space-y-5 p-6"
+            >
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="muted">{STATUS_LABEL[action.status]}</Badge>
+                {action.assignment && !action.acknowledgement && (
+                  <Badge variant="risk-medium">Belum dikonfirmasi</Badge>
+                )}
+                {action.blocker && <Badge variant="risk-high">Terkendala</Badge>}
+              </div>
+
+              {/* Penugasan. Tanpa unit dan orang, "berjalan" tidak menyebut
+                  siapa pun yang bisa ditanya kabarnya. */}
+              <section className="space-y-2.5 rounded-xl border border-border bg-surface p-3.5">
+                <h4 className="text-caption font-semibold text-foreground">
+                  {action.assignment ? "Penugasan" : "Tugaskan tindakan ini"}
+                </h4>
+                {action.assignment ? (
+                  <p className="text-caption leading-relaxed text-paper-700">
+                    {action.assignment.unit}
+                    {action.assignment.pic ? ` · ${action.assignment.pic}` : ""} —
+                    ditugaskan {formatDateTime(action.assignment.assignedAt)}
+                    {action.assignment.assignedBy
+                      ? ` oleh ${action.assignment.assignedBy}`
+                      : ""}
+                    {action.assignment.agreedDueDate
+                      ? `. Tenggat disepakati ${action.assignment.agreedDueDate}.`
+                      : "."}
+                    {action.assignment.note ? ` ${action.assignment.note}` : ""}
+                  </p>
+                ) : null}
+
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <input
+                    value={unit}
+                    onChange={(e) => setUnit(e.target.value)}
+                    placeholder="Unit pelaksana"
+                    className="min-w-0 rounded-lg border border-border bg-surface px-3 py-2 text-caption text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  />
+                  <input
+                    value={pic}
+                    onChange={(e) => setPic(e.target.value)}
+                    placeholder="Nama PIC (opsional)"
+                    className="min-w-0 rounded-lg border border-border bg-surface px-3 py-2 text-caption text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  />
+                  <input
+                    type="date"
+                    value={agreedDue}
+                    onChange={(e) => setAgreedDue(e.target.value)}
+                    aria-label="Tenggat yang disepakati"
+                    className="min-w-0 rounded-lg border border-border bg-surface px-3 py-2 text-caption text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  />
+                  <input
+                    value={assignNote}
+                    onChange={(e) => setAssignNote(e.target.value)}
+                    placeholder="Catatan penugasan (opsional)"
+                    className="min-w-0 rounded-lg border border-border bg-surface px-3 py-2 text-caption text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  />
+                </div>
+                <p className="text-caption leading-relaxed text-paper-600">
+                  Tenggat saran mesin aturan {deadline.date}. Tenggat yang
+                  disepakati bersama pelaksana dipakai untuk menilai ketepatan
+                  waktu.
+                </p>
+                <Button
+                  size="sm"
+                  disabled={isSubmitting || unit.trim().length === 0}
+                  onClick={() =>
+                    record(
+                      () =>
+                        assignAction(action.id, {
+                          unit: unit.trim(),
+                          pic: pic.trim() || undefined,
+                          dueDate: agreedDue || undefined,
+                          note: assignNote.trim() || undefined,
+                        }),
+                      `${action.id} ditugaskan ke ${unit.trim()}.`,
+                    )
+                  }
+                >
+                  {action.assignment ? "Perbarui penugasan" : "Tugaskan"}
+                </Button>
+              </section>
+
+              {/* Konfirmasi penerimaan. Dicatat beserta jalurnya — produk ini
+                  tidak punya kanal kirim, jadi konfirmasi selalu datang dari
+                  luar aplikasi dan sumbernya harus disebut. */}
+              {action.assignment && (
+                <section className="space-y-2.5 rounded-xl border border-border bg-surface p-3.5">
+                  <h4 className="text-caption font-semibold text-foreground">
+                    Konfirmasi penerimaan
+                  </h4>
+                  {action.acknowledgement ? (
+                    <p className="text-caption leading-relaxed text-paper-700">
+                      Dibenarkan lewat {action.acknowledgement.source} pada{" "}
+                      {formatDateTime(action.acknowledgement.at)}
+                      {action.acknowledgement.by
+                        ? ` — dicatat ${action.acknowledgement.by}`
+                        : ""}
+                      .
+                    </p>
+                  ) : (
+                    <>
+                      <input
+                        value={ackSource}
+                        onChange={(e) => setAckSource(e.target.value)}
+                        placeholder="Mis. telepon piket, rapat koordinasi, pesan grup"
+                        className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-caption text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      />
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={isSubmitting || ackSource.trim().length === 0}
+                        onClick={() =>
+                          record(
+                            () =>
+                              acknowledgeAction(action.id, {
+                                source: ackSource.trim(),
+                              }),
+                            `${action.id} dikonfirmasi diterima pelaksana.`,
+                          )
+                        }
+                      >
+                        Catat konfirmasi
+                      </Button>
+                    </>
+                  )}
+                </section>
+              )}
+
+              {/* Pelaksanaan, kendala, dan hasil. */}
+              {action.assignment && action.status !== "completed" && (
+                <section className="space-y-3 rounded-xl border border-border bg-surface p-3.5">
+                  <h4 className="text-caption font-semibold text-foreground">
+                    Catatan lapangan
+                  </h4>
+
+                  {action.blocker && (
+                    <p className="rounded-lg border border-risk-high-br bg-risk-high-bg px-3 py-2 text-caption leading-relaxed text-risk-high">
+                      Kendala: {action.blocker.note} ({formatDateTime(action.blocker.at)})
+                    </p>
+                  )}
+
+                  <textarea
+                    rows={2}
+                    value={progressNote}
+                    onChange={(e) => setProgressNote(e.target.value)}
+                    placeholder="Apa yang dikerjakan hari ini."
+                    className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-caption text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={isSubmitting || progressNote.trim().length === 0}
+                    onClick={() =>
+                      record(() => {
+                        const note = progressNote.trim();
+                        setProgressNote("");
+                        return recordActionProgress(action.id, note);
+                      }, `Catatan pelaksanaan ${action.id} tersimpan.`)
+                    }
+                  >
+                    Catat pelaksanaan
+                  </Button>
+
+                  <textarea
+                    rows={2}
+                    value={blockerNote}
+                    onChange={(e) => setBlockerNote(e.target.value)}
+                    placeholder="Kendala yang menahan pekerjaan — mis. alat belum tersedia."
+                    className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-caption text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={isSubmitting || blockerNote.trim().length === 0}
+                    onClick={() =>
+                      record(() => {
+                        const note = blockerNote.trim();
+                        setBlockerNote("");
+                        return recordActionBlocker(action.id, note);
+                      }, `Kendala ${action.id} tercatat.`)
+                    }
+                  >
+                    Catat kendala
+                  </Button>
+
+                  <div className="border-t border-border pt-3">
+                    <textarea
+                      rows={2}
+                      value={resultNote}
+                      onChange={(e) => setResultNote(e.target.value)}
+                      placeholder="Hasil pekerjaan — wajib diisi untuk menutup tindakan."
+                      className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-caption text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    />
+                    <p className="mt-1.5 text-caption text-paper-600">
+                      {completedCount} dari {checklist.length} butir SOP tercentang
+                      ikut tersimpan sebagai bukti kerja.
+                    </p>
+                    <Button
+                      size="sm"
+                      className="mt-2"
+                      disabled={isSubmitting || resultNote.trim().length === 0}
+                      onClick={() =>
+                        record(
+                          () =>
+                            completeAction(action.id, {
+                              resultNote: resultNote.trim(),
+                              sopCompleted: checklist.filter((i) => checkedItems[i]),
+                            }),
+                          `${action.id} ditutup dengan catatan hasil.`,
+                          { close: true },
+                        )
+                      }
+                    >
+                      Tandai selesai
+                    </Button>
+                  </div>
+                </section>
+              )}
+
+              {action.status === "completed" && action.result && (
+                <section className="space-y-2 rounded-xl border border-risk-low-br bg-risk-low-bg p-3.5">
+                  <h4 className="text-caption font-semibold text-foreground">Hasil</h4>
+                  <p className="text-caption leading-relaxed text-paper-800">
+                    {action.result.note}
+                  </p>
+                  {action.result.sopCompleted.length > 0 && (
+                    <p className="text-caption text-paper-700">
+                      Butir SOP terpenuhi: {action.result.sopCompleted.join("; ")}.
+                    </p>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={isSubmitting || progressNote.trim().length === 0}
+                    onClick={() =>
+                      record(() => {
+                        const reason = progressNote.trim();
+                        setProgressNote("");
+                        return reopenAction(action.id, reason);
+                      }, `${action.id} dibuka kembali.`)
+                    }
+                  >
+                    Buka kembali
+                  </Button>
+                  <input
+                    value={progressNote}
+                    onChange={(e) => setProgressNote(e.target.value)}
+                    placeholder="Alasan membuka kembali"
+                    className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-caption text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  />
+                </section>
+              )}
+
+              {/* F15: penerbitan ke permukaan publik adalah keputusan
+                  tersendiri. Warga hanya melihat kegiatan yang sudah ditinjau,
+                  bukan tiap usulan yang keluar dari mesin aturan. */}
+              <section className="space-y-2 rounded-xl border border-border bg-paper-50 p-3.5">
+                <h4 className="text-caption font-semibold text-foreground">
+                  Informasi publik
+                </h4>
+                <p className="text-caption leading-relaxed text-paper-700">
+                  {action.publication
+                    ? `Terbit sejak ${formatDateTime(action.publication.publishedAt)}${action.publication.publishedBy ? ` — ${action.publication.publishedBy}` : ""}.`
+                    : "Belum ditinjau untuk publikasi; halaman warga tidak menampilkannya."}
+                </p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={isSubmitting}
+                  onClick={() =>
+                    record(
+                      () => setActionPublication(action.id, !action.publication),
+                      action.publication
+                        ? `${action.id} ditarik dari halaman warga.`
+                        : `${action.id} diterbitkan ke halaman warga.`,
+                    )
+                  }
+                >
+                  {action.publication ? "Tarik dari publikasi" : "Terbitkan untuk warga"}
+                </Button>
+              </section>
+
+              {action.history.length > 0 && (
+                <section className="space-y-1.5 border-t border-border pt-3">
+                  <h4 className="text-caption font-semibold text-foreground">
+                    Riwayat
+                  </h4>
+                  <ul className="space-y-1">
+                    {action.history.map((entry) => (
+                      <li key={entry.id} className="text-caption leading-relaxed text-paper-600">
+                        {formatDateTime(entry.ts)} · {entry.event} · {entry.actor}
+                        {entry.detail ? ` — ${entry.detail}` : ""}
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+            </div>
+          )}
+
+          {/* Tab 3 — draf */}
           {activeTab === "draft" && (
             <div
               role="tabpanel"
@@ -399,8 +755,8 @@ export function DispatchActionModal({
                 <FileText className="mt-0.5 h-4 w-4 shrink-0 text-paper-600" aria-hidden="true" />
                 <span>
                   Sistem tidak mengirim pesan ke kanal mana pun. Salin draf ini ke
-                  kanal resmi dinas, lalu tandai tindakannya sebagai berjalan supaya
-                  statusnya tercatat di jejak audit.
+                  kanal resmi dinas, lalu catat di tab Pelaksanaan siapa yang
+                  ditugasi dan kapan ia membenarkan menerimanya.
                 </span>
               </div>
 
@@ -469,22 +825,25 @@ export function DispatchActionModal({
               </Link>
             </Button>
 
+            {/* Tidak ada lagi satu tombol yang menutup seluruh alur kerja.
+                Yang tersisa adalah jalan pintas ke tempat kejadiannya dicatat. */}
             <Button
               size="sm"
-              loading={isSubmitting}
-              onClick={handleDispatch}
-              disabled={isSubmitting || alreadyDispatched}
+              onClick={() => setActiveTab("execution")}
+              disabled={activeTab === "execution"}
               className="flex-1 gap-1.5 sm:flex-initial"
             >
-              {alreadyDispatched ? (
+              {action.status === "completed" ? (
                 <>
                   <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-                  <span>Dicatat berjalan</span>
+                  <span>Lihat hasil</span>
                 </>
               ) : (
                 <>
                   <Send className="h-3.5 w-3.5" aria-hidden="true" />
-                  <span>{isSubmitting ? "Menyimpan…" : "Tandai sebagai berjalan"}</span>
+                  <span>
+                    {action.assignment ? "Catat pelaksanaan" : "Tugaskan tindakan"}
+                  </span>
                 </>
               )}
             </Button>

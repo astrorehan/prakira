@@ -277,7 +277,62 @@ export type ModelFeature = {
 };
 
 export type ActionPriority = "high" | "medium" | "low";
-export type ActionStatus = "pending" | "in_progress" | "completed";
+/**
+ * Tahapan pekerjaan tindakan (audit §7.A).
+ *
+ * `assigned` adalah tahap yang dulu hilang: tindakan sudah punya pemilik tetapi
+ * belum ada yang mengerjakannya. Tanpa tahap itu, satu tombol "tandai berjalan"
+ * harus melayani dua kejadian yang berbeda.
+ */
+export type ActionStatus = "pending" | "assigned" | "in_progress" | "completed";
+
+export type ActionHistoryEvent =
+  | "ditugaskan"
+  | "dikonfirmasi"
+  | "kendala"
+  | "catatan"
+  | "selesai"
+  | "dibuka_kembali"
+  | "dipublikasikan"
+  | "publikasi_ditarik";
+
+export type ActionHistoryEntry = {
+  id: number;
+  ts: string;
+  event: ActionHistoryEvent;
+  actor: string;
+  role: string;
+  detail: string;
+};
+
+export type ActionAssignment = {
+  unit: string;
+  pic: string | null;
+  note: string | null;
+  assignedAt: string;
+  assignedBy: string | null;
+  /** Tenggat yang disepakati manusia — berbeda dari `due_date` saran aturan. */
+  agreedDueDate: string | null;
+};
+
+export type ActionAcknowledgement = {
+  at: string;
+  by: string | null;
+  /** Bagaimana konfirmasinya sampai: rapat, telepon, pesan, atau aplikasi. */
+  source: string;
+};
+
+export type ActionResult = {
+  note: string;
+  completedBy: string | null;
+  /** Butir SOP yang benar-benar dicentang saat pekerjaan ditutup. */
+  sopCompleted: string[];
+};
+
+export type ActionPublication = {
+  publishedAt: string;
+  publishedBy: string | null;
+};
 export type ActionType =
   | "fogging"
   | "psn"
@@ -314,6 +369,13 @@ export type ActionRecommendation = {
   dispatched_at: string | null;
   dispatched_by: string | null;
   completed_at: string | null;
+  assignment: ActionAssignment | null;
+  acknowledgement: ActionAcknowledgement | null;
+  /** Hambatan yang sedang dicatat; kosong bila tidak ada. */
+  blocker: { note: string; at: string } | null;
+  result: ActionResult | null;
+  publication: ActionPublication | null;
+  history: ActionHistoryEntry[];
 };
 
 export type AuditLog = {
@@ -391,7 +453,18 @@ export type GeoDistrictCollection = {
 /* ── Laporan warga ───────────────────────────────────────────────────────── */
 
 export type ReportKind = "gejala" | "jentik" | "genangan" | "sampah" | "saluran";
-export type ReportStatus = "menunggu" | "terverifikasi" | "ditolak";
+export type ReportStatus =
+  | "menunggu"
+  | "perlu_informasi"
+  | "terverifikasi"
+  | "ditolak";
+/**
+ * Keadaan penerusan ke instansi penerima (F10).
+ *
+ * Sengaja tidak punya tahap "dikerjakan" atau "selesai": Dinkes menyampaikan
+ * laporan dan mencatat penyampaiannya, tidak mengelola pekerjaan instansi lain.
+ */
+export type ForwardState = "perlu_diteruskan" | "diteruskan" | "gagal";
 export type ReportFamily = "kesehatan" | "lingkungan";
 export type EnvironmentTicketStatus =
   | "baru"
@@ -416,7 +489,27 @@ export type CitizenRouting = {
     | "rekap_evaluasi"
     | "pilih_tindak_lanjut"
     | "arahan_warga"
-    | "tiket_lingkungan";
+    | "penerusan_instansi";
+};
+
+export type ReportForwarding = {
+  state: ForwardState;
+  target: string;
+  channel: string | null;
+  reference: string | null;
+  note: string | null;
+  forwardedAt: string | null;
+};
+
+/** Kelengkapan informasi lokasi — dasar keputusan "perlu informasi" (F11). */
+export type ReportCompleteness = {
+  hasKelurahan: boolean;
+  hasRtRw: boolean;
+  hasLandmark: boolean;
+  hasPhoto: boolean;
+  /** Benar bila petugas punya cukup patokan untuk sampai ke lokasi. */
+  locatable: boolean;
+  missing: string[];
 };
 
 export type PublicEnvironmentTicket = {
@@ -466,17 +559,31 @@ export type CitizenReport = {
   reviewedAt: string | null;
   reviewer: string | null;
   reviewNote: string | null;
+  landmark: string | null;
+  rtRw: string | null;
+  /** Pertanyaan yang menunggu jawaban pelapor, bila statusnya perlu informasi. */
+  infoRequest: string | null;
+  infoRequestedAt: string | null;
+  /** Kode laporan sebelumnya yang dilengkapi atau dirujuk kiriman ini. */
+  relatedReportId: string | null;
+  completeness: ReportCompleteness;
+  forwarding: ReportForwarding | null;
   routing: CitizenRouting;
   guidance: CitizenGuidance;
+  /** Tiket DLH lama. Tidak dibuat lagi; tetap tampil sebagai riwayat. */
   ticket: PublicEnvironmentTicket | null;
 };
 
 export type QueueSummary = {
   total: number;
   menunggu: number;
+  perluInformasi: number;
   terverifikasi: number;
   ditolak: number;
   lingkunganMenunggu: number;
+  /** Sudah diputuskan perlu diteruskan, penyampaiannya belum tercatat. */
+  perluDiteruskan: number;
+  diteruskan: number;
   oldestWaitHours: number | null;
   /** Jumlah baris yang benar-benar dikirim; ada batas atas per permintaan. */
   shown?: number;
@@ -520,6 +627,8 @@ export type ManualCaseInput = {
   rainfall_mm?: number | null;
   temp_mean_c?: number | null;
   humidity_pct?: number | null;
+  /** Wajib bila mengganti angka yang sudah tersimpan dengan angka berbeda. */
+  reason?: string;
 };
 
 export type ManualCaseRecord = {
@@ -538,7 +647,77 @@ export type ManualCaseRecord = {
 export type ManualCaseResponse = {
   status: "success";
   message: string;
-  data: ManualCaseRecord;
+  data: ManualCaseRecord & {
+    /** Angka yang tergantikan, `null` bila periode ini belum pernah diisi. */
+    previous_cases: number | null;
+    replaced: boolean;
+    recorded_by: string | null;
+  };
+};
+
+/* ── Rekap kasus: kepemilikan angka dan kesiapan periode (F13, F18) ──────── */
+
+export type RecapState = "tersimpan" | "diperiksa";
+
+export type RecapEntry = ManualCaseRecord & {
+  /** Orang yang bertanggung jawab atas angka ini, bukan sekadar pengetiknya. */
+  recorded_by: string | null;
+  revision_reason: string | null;
+  recap_state: RecapState | null;
+};
+
+export type RecapRevision = {
+  previous_cases: number | null;
+  new_cases: number;
+  reason: string;
+  actor: string;
+  role: string;
+  recorded_at: string;
+};
+
+export type RecapEntryResponse = {
+  entry: RecapEntry | null;
+  revisions: RecapRevision[];
+};
+
+export type DistrictRecapStatus = {
+  kecamatan_id: string;
+  kecamatan_nama: string;
+  cases: number | null;
+  state: RecapState | "belum_dilaporkan";
+  recorded_by: string | null;
+  recorded_at: string | null;
+};
+
+export type ReadinessStage = {
+  id:
+    | "rekap_tersimpan"
+    | "diperiksa"
+    | "periode_siap"
+    | "prakiraan_diperbarui"
+    | "ditinjau";
+  label: string;
+  state: "selesai" | "berjalan" | "menunggu";
+  detail: string;
+  /** Siapa yang harus bergerak bila tahap ini belum selesai. */
+  owner: string;
+};
+
+export type PeriodReadiness = {
+  disease: string;
+  month: string;
+  totalDistricts: number;
+  saved: number;
+  checked: number;
+  missing: string[];
+  stages: ReadinessStage[];
+  forecast: {
+    month: string | null;
+    generatedAt: string | null;
+    modelVersion: string | null;
+  };
+  evaluation: { modelVersion: string | null; fetchedAt: string | null };
+  districts: DistrictRecapStatus[];
 };
 
 /* ── "Kenapa angka ini?" — kontribusi fitur per kecamatan ────────────────── */

@@ -24,7 +24,7 @@ import { Label } from "@/components/ui/label";
 import { ConsoleToast, useConsoleToast } from "@/components/console/toast";
 import { DataState } from "@/components/data-state";
 import { EscalationPanel } from "@/components/escalation-panel";
-import { EnvironmentTicketQueue } from "@/components/environment-ticket-queue";
+import { ForwardingQueue } from "@/components/forwarding-queue";
 import {
   sortForQueue,
   REPORT_KIND,
@@ -35,7 +35,13 @@ import {
   type ReportStatus,
 } from "@/lib/reports";
 import { formatDate, formatDateTime, relativeAge } from "@/lib/period";
-import { ApiError, fetchReportPhoto, fetchReportQueue, reviewReport } from "@/lib/api";
+import {
+  ApiError,
+  fetchRelatedReports,
+  fetchReportPhoto,
+  fetchReportQueue,
+  reviewReport,
+} from "@/lib/api";
 import { useApi } from "@/lib/use-api";
 import type { EnvironmentHandlingMode } from "@/types";
 
@@ -73,8 +79,15 @@ const KIND_ICON: Record<ReportKind, React.ElementType> = {
   saluran: Waves,
 };
 
+/**
+ * Urutan saringan menempatkan pekerjaan inti lebih dulu (audit F08).
+ *
+ * "Perlu diperiksa" adalah satu-satunya yang menuntut keputusan hari ini;
+ * "perlu informasi" menunggu jawaban warga, sisanya arsip.
+ */
 const STATUS_FILTERS: { key: ReportStatus | "semua"; label: string }[] = [
-  { key: "menunggu", label: "Menunggu" },
+  { key: "menunggu", label: "Perlu diperiksa" },
+  { key: "perlu_informasi", label: "Menunggu jawaban" },
   { key: "terverifikasi", label: "Terverifikasi" },
   { key: "ditolak", label: "Ditolak" },
   { key: "semua", label: "Semua" },
@@ -204,12 +217,16 @@ function ReportRow({
   report: CitizenReport;
   onDecide: (
     id: string,
-    status: "terverifikasi" | "ditolak",
+    status: "terverifikasi" | "ditolak" | "perlu_informasi",
     note?: string,
     handlingMode?: EnvironmentHandlingMode,
+    infoRequest?: string,
   ) => void | Promise<void>;
 }) {
   const [rejecting, setRejecting] = React.useState(false);
+  const [askingInfo, setAskingInfo] = React.useState(false);
+  const [infoRequest, setInfoRequest] = React.useState("");
+  const [related, setRelated] = React.useState<CitizenReport[] | null>(null);
   const [addingAdvice, setAddingAdvice] = React.useState(false);
   const [rejectionNote, setRejectionNote] = React.useState("");
   const [advice, setAdvice] = React.useState("");
@@ -220,7 +237,10 @@ function ReportRow({
   const kind = REPORT_KIND[report.kind];
   const status = REPORT_STATUS[report.status];
   const Icon = KIND_ICON[report.kind];
-  const pending = report.status === "menunggu";
+  /* Laporan yang sedang menunggu jawaban warga tetap dapat diputuskan: itu
+     justru tujuan pertanyaannya. */
+  const pending =
+    report.status === "menunggu" || report.status === "perlu_informasi";
   const environmental = kind.family === "lingkungan";
   const rejectionNoteId = `tolak-${report.id}`;
   const adviceId = `saran-${report.id}`;
@@ -288,7 +308,74 @@ function ReportRow({
         {report.description}
       </p>
 
+      {/* F11: petugas yang akan berangkat ke lapangan perlu tahu apakah lokasinya
+          bisa ditemukan sebelum ia memutuskan, bukan setelah sampai di sana. */}
+      {(report.landmark || report.rtRw || report.completeness.missing.length > 0) && (
+        <div className="mt-3 rounded-xl border border-border bg-paper-50 px-3 py-2 text-caption leading-relaxed text-paper-700">
+          {report.rtRw && <span className="mr-3">RT/RW {report.rtRw}</span>}
+          {report.landmark && <span>Patokan: {report.landmark}</span>}
+          {report.completeness.missing.length > 0 && (
+            <p className="mt-1 text-paper-600">
+              Belum ada: {report.completeness.missing.join(", ")}.
+              {!report.completeness.locatable &&
+                " Lokasi belum cukup jelas untuk ditelusuri petugas."}
+            </p>
+          )}
+        </div>
+      )}
+
+      {report.relatedReportId && (
+        <p className="mt-2 text-caption text-paper-600">
+          Melengkapi laporan{" "}
+          <span className="font-mono uppercase">{report.relatedReportId}</span>.
+        </p>
+      )}
+
+      {report.infoRequest && (
+        <p className="mt-2 rounded-xl border border-risk-medium-br bg-risk-medium-bg px-3 py-2 text-caption leading-relaxed text-foreground">
+          Diminta ke pelapor: {report.infoRequest}
+          {report.infoRequestedAt
+            ? ` · ${formatDateTime(report.infoRequestedAt)}`
+            : ""}
+        </p>
+      )}
+
       {report.hasPhoto && <ReportPhoto id={report.id} />}
+
+      {/* Duplikat digabungkan dengan menautkan, bukan dengan menghapus: setiap
+          pelapor tetap memegang kode lacaknya sendiri (F11). */}
+      <div className="mt-3">
+        {related === null ? (
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                const response = await fetchRelatedReports(report.id);
+                setRelated(response.data);
+              } catch {
+                setRelated([]);
+              }
+            }}
+            className="text-caption font-medium text-brand-700 underline-offset-2 hover:underline"
+          >
+            Lihat laporan lain di sekitar kejadian ini
+          </button>
+        ) : related.length === 0 ? (
+          <p className="text-caption text-paper-600">
+            Tidak ada laporan sejenis lain di kecamatan ini.
+          </p>
+        ) : (
+          <ul className="space-y-1">
+            {related.map((other) => (
+              <li key={other.id} className="text-caption text-paper-600">
+                <span className="font-mono uppercase">{other.id}</span> ·{" "}
+                {REPORT_STATUS[other.status].label} · masuk{" "}
+                {relativeAge(other.submittedAt)}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       {pending ? (
         <div className="mt-4 border-t border-border pt-3">
@@ -330,6 +417,50 @@ function ReportRow({
                     Alasan minimal 8 karakter.
                   </span>
                 )}
+              </div>
+            </div>
+          ) : askingInfo ? (
+            <div className="space-y-2">
+              <Label htmlFor={`info-${report.id}`} className="text-caption">
+                Informasi yang perlu dilengkapi — dibaca pelapor
+              </Label>
+              <textarea
+                id={`info-${report.id}`}
+                value={infoRequest}
+                onChange={(e) => setInfoRequest(e.target.value)}
+                rows={2}
+                placeholder="Mis. sebutkan patokan terdekat, atau RT/RW lokasi genangan."
+                className="w-full rounded-xl border border-border bg-surface px-3.5 py-2.5 text-body-sm text-foreground shadow-sm placeholder:text-paper-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              />
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  disabled={infoRequest.trim().length < 8}
+                  onClick={() =>
+                    onDecide(
+                      report.id,
+                      "perlu_informasi",
+                      undefined,
+                      undefined,
+                      infoRequest,
+                    )
+                  }
+                >
+                  Kirim permintaan
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    setAskingInfo(false);
+                    setInfoRequest("");
+                  }}
+                >
+                  Batal
+                </Button>
+                <span className="self-center text-caption text-paper-600">
+                  Pelapor menjawab dengan kode lacak yang sama.
+                </span>
               </div>
             </div>
           ) : environmental ? (
@@ -436,6 +567,14 @@ function ReportRow({
                 <Button
                   size="sm"
                   variant="outline"
+                  onClick={() => setAskingInfo(true)}
+                  className="gap-1.5"
+                >
+                  Minta informasi
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
                   onClick={() => setRejecting(true)}
                   className="gap-1.5"
                 >
@@ -506,6 +645,14 @@ function ReportRow({
               <Button
                 size="sm"
                 variant="outline"
+                onClick={() => setAskingInfo(true)}
+                className="gap-1.5"
+              >
+                Minta informasi
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
                 onClick={() => setRejecting(true)}
                 className="gap-1.5"
               >
@@ -526,7 +673,11 @@ function ReportRow({
           oleh {report.reviewer ?? "petugas"}
           {report.reviewedAt ? ` · ${formatDateTime(report.reviewedAt)}` : ""}
           {report.routing.handlingMode === "mandiri_warga" ? " · Arahan mandiri warga" : ""}
-          {report.routing.handlingMode === "dlh" ? " · Diteruskan ke DLH" : ""}
+          {report.routing.handlingMode === "dlh"
+            ? report.forwarding?.state === "diteruskan"
+              ? ` · Diteruskan ke ${report.forwarding.target}`
+              : " · Perlu diteruskan"
+            : ""}
           {report.reviewNote ? ` · ${report.reviewNote}` : ""}
         </div>
       )}
@@ -541,16 +692,18 @@ export function VerificationQueue() {
   const [status, setStatus] = React.useState<ReportStatus | "semua">("menunggu");
   const [wilayah, setWilayah] = React.useState("semua");
   const [decideError, setDecideError] = React.useState<string | null>(null);
-  const [ticketRefresh, setTicketRefresh] = React.useState(0);
   const toast = useConsoleToast();
 
   const reports = queue.data?.data ?? null;
   const summary = queue.data?.meta ?? {
     total: 0,
     menunggu: 0,
+    perluInformasi: 0,
     terverifikasi: 0,
     ditolak: 0,
     lingkunganMenunggu: 0,
+    perluDiteruskan: 0,
+    diteruskan: 0,
     oldestWaitHours: null as number | null,
   };
 
@@ -574,6 +727,8 @@ export function VerificationQueue() {
     );
     return {
       menunggu: scoped.filter((r) => r.status === "menunggu").length,
+      perlu_informasi: scoped.filter((r) => r.status === "perlu_informasi")
+        .length,
       terverifikasi: scoped.filter((r) => r.status === "terverifikasi").length,
       ditolak: scoped.filter((r) => r.status === "ditolak").length,
       semua: scoped.length,
@@ -583,23 +738,28 @@ export function VerificationQueue() {
   const decide = React.useCallback(
         async (
           id: string,
-          next: "terverifikasi" | "ditolak",
+          next: "terverifikasi" | "ditolak" | "perlu_informasi",
           note?: string,
           handlingMode?: EnvironmentHandlingMode,
+          infoRequest?: string,
         ) => {
       setDecideError(null);
       try {
-        await reviewReport(id, { status: next, note, handlingMode });
+        await reviewReport(id, { status: next, note, handlingMode, infoRequest });
         queue.reload();
-        if (handlingMode === "dlh") setTicketRefresh((value) => value + 1);
+        /* Pesan menyebut kejadian yang benar-benar tercatat (F05, F10).
+           "Tiket DLH dibuat" dulu terbaca seolah laporannya sudah sampai ke
+           instansi penerima, padahal penyampaiannya belum terjadi. */
         toast.show(
-          next === "terverifikasi"
-            ? handlingMode === "dlh"
-              ? `${id} diterima dan tiket DLH dibuat.`
-              : handlingMode === "mandiri_warga"
-                ? `${id} diterima dengan arahan mandiri warga.`
-                : `${id} diterima. Pelapor bisa melihat perubahan ini di halaman lacak.`
-            : `${id} ditolak. Alasannya terlihat pelapor.`,
+          next === "perlu_informasi"
+            ? `${id} menunggu kelengkapan dari pelapor.`
+            : next === "terverifikasi"
+              ? handlingMode === "dlh"
+                ? `${id} diterima dan masuk daftar perlu diteruskan.`
+                : handlingMode === "mandiri_warga"
+                  ? `${id} diterima dengan arahan mandiri warga.`
+                  : `${id} diterima. Pelapor bisa melihat perubahan ini di halaman lacak.`
+              : `${id} ditolak. Alasannya terlihat pelapor.`,
         );
       } catch (caught) {
         setDecideError(caught instanceof Error ? caught.message : String(caught));
@@ -632,18 +792,12 @@ export function VerificationQueue() {
           hint="Alasannya terlihat pelapor di halaman lacak."
         />
         <SummaryTile
-          label="Laporan lingkungan menunggu"
-          value={String(summary.lingkunganMenunggu)}
-          hint="Petugas memilih arahan mandiri warga atau meneruskannya ke Dinas Lingkungan Hidup."
+          label="Perlu diteruskan"
+          value={String(summary.perluDiteruskan)}
+          hint="Sudah diterima dan dirutekan ke instansi lain; penyampaiannya belum tercatat."
+          tone={summary.perluDiteruskan > 0 ? "warn" : "default"}
         />
       </div>
-
-      <EnvironmentTicketQueue refreshToken={ticketRefresh} />
-
-      {/* Pola sebelum satuan. Antrean di bawah tetap urut menunggu-terlama;
-          yang ditambahkan di sini adalah pembacaan yang tidak muncul dari
-          urutan itu — kecamatan mana yang sedang menumpuk. */}
-      <EscalationPanel onChanged={queue.reload} />
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
         <div className="flex flex-wrap gap-1.5" role="group" aria-label="Saring status">
@@ -730,6 +884,12 @@ export function VerificationQueue() {
           ))}
         </div>
       </DataState>
+
+      <ForwardingQueue reports={reports} onChanged={queue.reload} />
+
+      {/* Pola sebelum satuan, tetapi setelah pekerjaan inti: eskalasi adalah
+          penanda bahwa satu kecamatan menumpuk, bukan antrean tersendiri. */}
+      <EscalationPanel onChanged={queue.reload} onFocusDistrict={setWilayah} />
 
       <div className="flex items-start gap-2.5 rounded-xl border border-brand-300/45 bg-brand-50 p-3.5">
         <Info className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />

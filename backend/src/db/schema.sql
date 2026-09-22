@@ -219,3 +219,108 @@ UPDATE laporan_warga
    AND kind IN ('genangan', 'sampah', 'saluran')
    AND device_hash <> 'simulasi-peragaan'
    AND description NOT LIKE '[SIMULASI]%';
+
+-- ── Audit UX P1 ──────────────────────────────────────────────────────────────
+-- Penugasan sampai hasil (F04/F05). Sebelumnya tabel `tindakan` hanya tahu
+-- kapan status berubah menjadi berjalan; tidak ada tempat untuk menyimpan
+-- siapa yang mengerjakan, kapan tugas diterima, apa kendalanya, dan apa
+-- hasilnya. Tanpa kolom-kolom ini "Selesai" hanyalah klik tanpa isi.
+ALTER TABLE tindakan ADD COLUMN IF NOT EXISTS assigned_unit TEXT;
+ALTER TABLE tindakan ADD COLUMN IF NOT EXISTS assigned_pic TEXT;
+ALTER TABLE tindakan ADD COLUMN IF NOT EXISTS assignment_note TEXT;
+ALTER TABLE tindakan ADD COLUMN IF NOT EXISTS assigned_at TEXT;
+ALTER TABLE tindakan ADD COLUMN IF NOT EXISTS assigned_by TEXT;
+-- Tenggat yang disepakati saat penugasan. `due_date` tetap tenggat usulan
+-- mesin aturan; keduanya dibedakan supaya "lewat tenggat" dihitung dari
+-- kesepakatan manusia, bukan dari usulan sistem.
+ALTER TABLE tindakan ADD COLUMN IF NOT EXISTS agreed_due_date TEXT;
+ALTER TABLE tindakan ADD COLUMN IF NOT EXISTS acknowledged_at TEXT;
+ALTER TABLE tindakan ADD COLUMN IF NOT EXISTS acknowledged_by TEXT;
+-- Dari mana konfirmasi penerimaan datang: pelaksana sendiri, atau koordinator
+-- yang mencatat konfirmasi dari kanal kerja di luar aplikasi.
+ALTER TABLE tindakan ADD COLUMN IF NOT EXISTS acknowledgement_source TEXT;
+ALTER TABLE tindakan ADD COLUMN IF NOT EXISTS blocker_note TEXT;
+ALTER TABLE tindakan ADD COLUMN IF NOT EXISTS blocked_at TEXT;
+ALTER TABLE tindakan ADD COLUMN IF NOT EXISTS result_note TEXT;
+ALTER TABLE tindakan ADD COLUMN IF NOT EXISTS completed_by TEXT;
+-- Butir SOP yang benar-benar tercentang saat pekerjaan dicatat. Sebelumnya
+-- centang hanya hidup di state modal dan hilang saat dialog ditutup, padahal
+-- tampilannya menyerupai bukti pelaksanaan.
+ALTER TABLE tindakan ADD COLUMN IF NOT EXISTS sop_completed TEXT;
+-- Persetujuan publikasi (F15). Halaman publik hanya boleh menampilkan arahan
+-- yang sudah ditinjau untuk warga; selebihnya tetap usulan internal.
+ALTER TABLE tindakan ADD COLUMN IF NOT EXISTS published_at TEXT;
+ALTER TABLE tindakan ADD COLUMN IF NOT EXISTS published_by TEXT;
+
+-- Jejak pekerjaan satu tindakan. Kolom di atas menyimpan keadaan terakhir;
+-- tabel ini menyimpan urutan kejadiannya, supaya riwayat tetap menunjukkan
+-- siapa melakukan apa dan kapan.
+CREATE TABLE IF NOT EXISTS tindakan_riwayat (
+  id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  tindakan_id TEXT NOT NULL REFERENCES tindakan(id) ON DELETE CASCADE,
+  ts         TEXT NOT NULL,
+  event      TEXT NOT NULL,   -- ditugaskan | dikonfirmasi | kendala | catatan | selesai | dibuka_kembali | dipublikasikan
+  actor      TEXT NOT NULL,
+  role       TEXT NOT NULL,
+  detail     TEXT NOT NULL DEFAULT ''
+);
+
+CREATE INDEX IF NOT EXISTS idx_tindakan_riwayat
+  ON tindakan_riwayat (tindakan_id, ts);
+
+-- Penyampaian laporan ke instansi lain (F10). PRAKIRA berhenti pada
+-- penyampaian yang tercatat; pengerjaan instansi penerima berada di luar
+-- lingkup produk, jadi tidak ada kolom progres pekerjaan di sini.
+ALTER TABLE laporan_warga ADD COLUMN IF NOT EXISTS forward_state TEXT;
+ALTER TABLE laporan_warga ADD COLUMN IF NOT EXISTS forward_target TEXT;
+ALTER TABLE laporan_warga ADD COLUMN IF NOT EXISTS forward_channel TEXT;
+ALTER TABLE laporan_warga ADD COLUMN IF NOT EXISTS forward_reference TEXT;
+ALTER TABLE laporan_warga ADD COLUMN IF NOT EXISTS forward_note TEXT;
+ALTER TABLE laporan_warga ADD COLUMN IF NOT EXISTS forwarded_at TEXT;
+ALTER TABLE laporan_warga ADD COLUMN IF NOT EXISTS forwarded_by TEXT;
+
+-- Kelengkapan laporan (F11). Patokan dan RT/RW dipisahkan dari narasi supaya
+-- petugas bisa menilai apakah lokasi dapat ditelusuri tanpa membaca cerita,
+-- dan supaya "perlu informasi" punya tempat untuk pertanyaannya.
+ALTER TABLE laporan_warga ADD COLUMN IF NOT EXISTS landmark TEXT;
+ALTER TABLE laporan_warga ADD COLUMN IF NOT EXISTS rt_rw TEXT;
+ALTER TABLE laporan_warga ADD COLUMN IF NOT EXISTS info_request TEXT;
+ALTER TABLE laporan_warga ADD COLUMN IF NOT EXISTS info_requested_at TEXT;
+ALTER TABLE laporan_warga ADD COLUMN IF NOT EXISTS related_report_id TEXT;
+
+CREATE INDEX IF NOT EXISTS idx_laporan_forward
+  ON laporan_warga (forward_state, forwarded_at);
+
+-- Laporan lingkungan yang sudah memiliki tiket berarti sudah pernah disiapkan
+-- untuk DLH. Tiket dibuat di dalam aplikasi dan bukan bukti penyampaian, jadi
+-- statusnya adalah "perlu diteruskan" sampai seseorang mencatat penyampaian.
+UPDATE laporan_warga
+   SET forward_state = 'perlu_diteruskan'
+ WHERE forward_state IS NULL
+   AND handling_mode = 'dlh'
+   AND status = 'terverifikasi';
+
+-- Kepemilikan dan koreksi rekap (F13). Satu baris observasi adalah total
+-- kecamatan untuk satu penyakit pada satu bulan; menyimpannya tanpa nama
+-- pemilik membuat koreksi tidak bisa dipertanggungjawabkan.
+ALTER TABLE observasi ADD COLUMN IF NOT EXISTS recorded_by TEXT;
+ALTER TABLE observasi ADD COLUMN IF NOT EXISTS revision_reason TEXT;
+-- Status kesiapan periode (F18): rekap yang baru masuk berbeda dari rekap yang
+-- sudah diperiksa dan dinyatakan lengkap untuk periode berjalan.
+ALTER TABLE observasi ADD COLUMN IF NOT EXISTS recap_state TEXT;
+
+CREATE TABLE IF NOT EXISTS observasi_revisi (
+  id           BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  kecamatan_id TEXT NOT NULL,
+  disease      TEXT NOT NULL,
+  month_start  TEXT NOT NULL,
+  previous_cases INTEGER,
+  new_cases    INTEGER NOT NULL,
+  reason       TEXT NOT NULL DEFAULT '',
+  actor        TEXT NOT NULL,
+  role         TEXT NOT NULL,
+  recorded_at  TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_observasi_revisi
+  ON observasi_revisi (kecamatan_id, disease, month_start, recorded_at DESC);

@@ -14,17 +14,13 @@
  */
 import type {
   ActionRecommendation,
-  ActionStatus,
   AuditLog,
   BacktestMetric,
   CitizenReport,
   ClimatePoint,
   DiseaseSummary,
   DistrictTriggerSummary,
-  EnvironmentTicket,
   EnvironmentHandlingMode,
-  EnvironmentTicketPriority,
-  EnvironmentTicketStatus,
   Escalation,
   EscalationMeta,
   EscalationRules,
@@ -36,6 +32,9 @@ import type {
   ManualCaseInput,
   ManualCaseRecord,
   ManualCaseResponse,
+  PeriodReadiness,
+  RecapEntry,
+  RecapEntryResponse,
   PriorityMeta,
   PriorityPayload,
   PriorityWeighting,
@@ -229,8 +228,13 @@ export function fetchLimitations(): Promise<{ data: string[] }> {
 
 export function fetchActions(
   disease?: string,
+  /** F15: permukaan publik hanya boleh menerima kegiatan yang sudah ditinjau. */
+  options: { publishedOnly?: boolean } = {},
 ): Promise<Envelope<ActionRecommendation[], ReportingPeriod>> {
-  const query = disease ? `?disease=${encodeURIComponent(disease)}` : "";
+  const params = new URLSearchParams();
+  if (disease) params.set("disease", disease);
+  if (options.publishedOnly) params.set("published", "1");
+  const query = params.toString() ? `?${params.toString()}` : "";
   return request(`/api/actions${query}`);
 }
 
@@ -241,14 +245,67 @@ export function fetchAction(
   return request(`/api/actions/${encodeURIComponent(id)}`);
 }
 
-export function updateActionStatus(
+/**
+ * Kejadian sepanjang hidup satu tindakan (F04, F05).
+ *
+ * Dulu seluruh alur ini diwakili satu `PATCH { status }`. Satu tulisan status
+ * tidak bisa membedakan "sudah ada yang ditugasi" dari "sudah ada yang
+ * mengerjakan", dan tidak menyimpan siapa, kapan, atau hasil apa — sehingga
+ * layarnya hanya sanggup mencatat awal pekerjaan. Setiap fungsi di bawah
+ * mencatat satu kejadian yang benar-benar terjadi di lapangan.
+ */
+function actionEvent(
   id: string,
-  status: ActionStatus,
+  event: string,
+  body: Record<string, unknown>,
 ): Promise<{ data: ActionRecommendation }> {
-  return request(`/api/actions/${encodeURIComponent(id)}`, {
-    method: "PATCH",
-    body: JSON.stringify({ status }),
+  return request(`/api/actions/${encodeURIComponent(id)}/${event}`, {
+    method: "POST",
+    body: JSON.stringify(body),
   });
+}
+
+/** Menetapkan unit pelaksana, PIC, dan tenggat yang disepakati. */
+export function assignAction(
+  id: string,
+  input: { unit: string; pic?: string; dueDate?: string; note?: string },
+) {
+  return actionEvent(id, "assign", input);
+}
+
+/** Mencatat bahwa pelaksana membenarkan menerima penugasan, dan lewat apa. */
+export function acknowledgeAction(
+  id: string,
+  input: { source: string; note?: string },
+) {
+  return actionEvent(id, "acknowledge", input);
+}
+
+/** Hambatan yang menahan pekerjaan — penanda, bukan status baru. */
+export function recordActionBlocker(id: string, note: string) {
+  return actionEvent(id, "blocker", { note });
+}
+
+/** Catatan pelaksanaan; inilah yang memindahkan pekerjaan ke "dikerjakan". */
+export function recordActionProgress(id: string, note: string) {
+  return actionEvent(id, "progress", { note });
+}
+
+/** Menutup pekerjaan. Catatan hasil wajib: tanpa itu tidak ada yang tercatat. */
+export function completeAction(
+  id: string,
+  input: { resultNote: string; sopCompleted?: string[] },
+) {
+  return actionEvent(id, "complete", input);
+}
+
+export function reopenAction(id: string, reason: string) {
+  return actionEvent(id, "reopen", { reason });
+}
+
+/** Keputusan penerbitan ke permukaan publik (F15), terpisah dari status kerja. */
+export function setActionPublication(id: string, published: boolean) {
+  return actionEvent(id, "publication", { published });
 }
 
 /* ── Laporan warga ───────────────────────────────────────────────────────── */
@@ -264,6 +321,11 @@ export type NewReportInput = {
   occurredAt: string;
   description: string;
   photo?: string;
+  /** Patokan yang dikenali orang setempat; menggantikan paksaan titik GPS. */
+  landmark?: string;
+  rtRw?: string;
+  /** Kode laporan yang sedang dilengkapi, bila kiriman ini kelanjutannya. */
+  relatedReportId?: string;
 };
 
 export function submitReport(
@@ -308,39 +370,34 @@ export function fetchReportQueue(
   return request(`/api/reports${query}`);
 }
 
-export type EnvironmentTicketMeta = {
-  total: number;
-  baru: number;
-  diterima: number;
-  dikerjakan: number;
-  selesai: number;
-  ditutup: number;
-};
-
-export function fetchEnvironmentTickets(options: {
-  status?: EnvironmentTicketStatus;
-  kecamatan?: string;
-} = {}): Promise<{ data: EnvironmentTicket[]; meta: EnvironmentTicketMeta }> {
-  const params = new URLSearchParams();
-  if (options.status) params.set("status", options.status);
-  if (options.kecamatan) params.set("kecamatan", options.kecamatan);
-  const query = params.toString() ? `?${params.toString()}` : "";
-  return request(`/api/reports/environment-tickets${query}`);
+/**
+ * Mencatat penyampaian laporan ke instansi penerima (F10).
+ *
+ * Menggantikan pengelolaan tiket DLH di dalam aplikasi. Yang tercatat adalah
+ * tujuan, kanal, dan referensi penyampaian — bukan progres atau penyelesaian
+ * pekerjaan instansi lain, yang memang bukan kewenangan Dinkes.
+ */
+export function forwardReport(
+  id: string,
+  input: {
+    delivered: boolean;
+    target?: string;
+    channel?: string;
+    reference?: string;
+    note?: string;
+  },
+): Promise<Envelope<CitizenReport, QueueSummary>> {
+  return request(`/api/reports/${encodeURIComponent(id)}/forward`, {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
 }
 
-export function updateEnvironmentTicket(
+/** Laporan lain pada kejadian yang sama, untuk menautkan duplikat (F11). */
+export function fetchRelatedReports(
   id: string,
-  patch: {
-    status?: EnvironmentTicketStatus;
-    priority?: EnvironmentTicketPriority;
-    assignedTo?: string;
-    resolutionNote?: string;
-  },
-): Promise<{ data: EnvironmentTicket }> {
-  return request(`/api/reports/environment-tickets/${encodeURIComponent(id)}`, {
-    method: "PATCH",
-    body: JSON.stringify(patch),
-  });
+): Promise<{ data: CitizenReport[] }> {
+  return request(`/api/reports/${encodeURIComponent(id)}/related`);
 }
 
 /**
@@ -358,9 +415,11 @@ export function fetchReportPhoto(id: string): Promise<{ data: string }> {
 export function reviewReport(
   id: string,
   decision: {
-    status: "terverifikasi" | "ditolak";
+    status: "terverifikasi" | "ditolak" | "perlu_informasi";
     note?: string;
     handlingMode?: EnvironmentHandlingMode;
+    /** Wajib bila keputusannya "perlu informasi": apa yang harus dilengkapi. */
+    infoRequest?: string;
   },
 ): Promise<Envelope<CitizenReport, QueueSummary>> {
   return request(`/api/reports/${encodeURIComponent(id)}/review`, {
@@ -402,6 +461,16 @@ export type ImportPreview = {
   columns: { required: string[]; optional: string[]; found: string[] };
   totalRows: number;
   validRows: number;
+  /** Periode kecamatan yang belum pernah diisi. */
+  newRows: number;
+  /** Baris yang akan mengganti angka lama dengan angka berbeda (F13). */
+  replacedRows: number;
+  replacements: {
+    nama: string;
+    month: string;
+    previousCases: number | null;
+    cases: number;
+  }[];
   problems: { line: number; message: string }[];
   preview: {
     nama: string;
@@ -417,7 +486,10 @@ export type ImportResult = {
   dryRun: false;
   disease: string;
   imported: number;
+  replaced: number;
   problems: { line: number; message: string }[];
+  /** Jawaban "lalu apa" setelah impor selesai (F18). */
+  readiness: Omit<PeriodReadiness, "districts">;
 };
 
 export function previewImport(disease: string, csv: string): Promise<ImportPreview> {
@@ -451,6 +523,51 @@ export function submitManualCase(
 
 export function fetchRecentManualCases(): Promise<{ data: ManualCaseRecord[] }> {
   return request("/api/cases/recent");
+}
+
+/**
+ * Rekap yang sudah tersimpan untuk satu kecamatan-penyakit-periode (F13).
+ *
+ * Dipanggil sebelum menyimpan supaya operator melihat angka yang akan ia
+ * ganti — dan siapa pemiliknya — bukan mengetahuinya setelah tergantikan.
+ */
+export function fetchRecapEntry(
+  kecamatanId: string,
+  disease: string,
+  monthStart: string,
+): Promise<{ data: RecapEntryResponse }> {
+  const params = new URLSearchParams({
+    kecamatan_id: kecamatanId,
+    disease,
+    month_start: monthStart,
+  });
+  return request(`/api/cases/entry?${params.toString()}`);
+}
+
+/** Menandai rekap sudah diperiksa pemiliknya — kejadian lain dari menyimpan. */
+export function markRecapChecked(input: {
+  kecamatanId: string;
+  disease: string;
+  monthStart: string;
+}): Promise<{ data: RecapEntry }> {
+  return request("/api/cases/entry/checked", {
+    method: "POST",
+    body: JSON.stringify({
+      kecamatan_id: input.kecamatanId,
+      disease: input.disease,
+      month_start: input.monthStart,
+    }),
+  });
+}
+
+/** Perjalanan kesiapan layanan setelah rekap masuk (F18). */
+export function fetchPeriodReadiness(
+  disease: string,
+  monthStart?: string,
+): Promise<{ data: PeriodReadiness }> {
+  const params = new URLSearchParams({ disease });
+  if (monthStart) params.set("month_start", monthStart);
+  return request(`/api/cases/readiness?${params.toString()}`);
 }
 
 /**
