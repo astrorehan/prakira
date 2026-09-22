@@ -14,6 +14,7 @@ import { env } from "../env.js";
 import { all, closeDb, one, run, transaction, type Tx } from "./index.js";
 import { parseCsv, toNumber } from "./csv.js";
 import { hashPassword } from "../services/password.js";
+import { invalidatePeriodCache } from "../services/period.js";
 
 type GeoFeature = {
   properties: { id: string; nama: string; kode_bps: string };
@@ -140,6 +141,7 @@ export async function seedDatabase(
       latencyMs: Date.now() - startedAt.getTime(),
       detail: `${result.kecamatanCount} kecamatan, ${result.observasi} observasi bulanan (${diseases.join(", ") || "—"}).`,
     });
+    invalidatePeriodCache();
 
     return {
       kecamatan: result.kecamatanCount,

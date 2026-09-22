@@ -117,7 +117,10 @@ actionsRouter.get(
   asyncRoute(async (req, res) => {
     const disease =
       typeof req.query.disease === "string" ? req.query.disease : undefined;
-    const all = await listActions(disease);
+    const [all, meta] = await Promise.all([
+      listActions(disease),
+      reportingPeriod(disease),
+    ]);
     /* F15: permukaan publik meminta `published=1` dan hanya menerima kegiatan
        yang sudah ditinjau untuk diterbitkan. Menyaring di sini, bukan di
        peramban, supaya usulan internal tidak ikut terkirim sama sekali. */
@@ -125,6 +128,7 @@ actionsRouter.get(
       req.query.published === "1"
         ? all.filter((row) => row.published_at !== null)
         : all;
+    /* Riwayat cukup diambil untuk baris yang benar-benar akan dikirim. */
     const history = await listActionHistoryFor(rows.map((row) => row.id));
     const byAction = new Map<string, ActionHistoryRow[]>();
     for (const entry of history) {
@@ -134,7 +138,7 @@ actionsRouter.get(
     }
 
     res.json({
-      meta: await reportingPeriod(disease),
+      meta,
       data: rows.map((row) => serialize(row, byAction.get(row.id) ?? [])),
     });
   }),

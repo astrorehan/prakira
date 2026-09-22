@@ -5,6 +5,7 @@
  */
 import { Router } from "express";
 import fs from "node:fs";
+import { gzipSync } from "node:zlib";
 import { env } from "../env.js";
 import { all } from "../db/index.js";
 import { addMonths, monthLabel, reportingPeriod } from "../services/period.js";
@@ -84,16 +85,38 @@ metaRouter.get(
 );
 
 /** GeoJSON batas kecamatan — dilayani gateway supaya peta punya satu sumber. */
-metaRouter.get("/geojson", (_req, res) => {
+let geojsonText: string | null = null;
+let geojsonGzip: Buffer | null = null;
+
+metaRouter.get("/geojson", (req, res) => {
   if (!fs.existsSync(env.geojsonFile)) {
     res
       .status(503)
       .json({ error: "Berkas GeoJSON batas kecamatan tidak tersedia." });
     return;
   }
-  res
-    .type("application/geo+json")
-    .send(fs.readFileSync(env.geojsonFile, "utf8"));
+
+  if (geojsonText === null) {
+    geojsonText = fs.readFileSync(env.geojsonFile, "utf8");
+  }
+
+  res.type("application/geo+json");
+  res.set("Cache-Control", "public, max-age=3600");
+
+  /* GeoJSON ini sekitar 2,8 MB mentah. Peramban dan Next sudah mendukung gzip;
+     menyimpan hasil kompresi di memori menghindari membaca dan mengompresi
+     berkas berulang kali saat beberapa peta dibuka dalam satu demo. */
+  if (/\bgzip\b/i.test(req.header("accept-encoding") ?? "")) {
+    if (geojsonGzip === null) {
+      geojsonGzip = gzipSync(Buffer.from(geojsonText));
+    }
+    res.set("Content-Encoding", "gzip");
+    res.set("Vary", "Accept-Encoding");
+    res.send(geojsonGzip);
+    return;
+  }
+
+  res.send(geojsonText);
 });
 
 /**

@@ -76,12 +76,16 @@ districtsRouter.get(
       typeof req.query.disease === "string" ? req.query.disease : "DBD",
     );
     const status = await ensurePredictions(disease, req.query.refresh === "1");
-
-    res.json({
-      meta: { disease, ...(await reportingPeriod(disease)), ...status },
-      data: await getDistricts(disease, {
+    const [period, data] = await Promise.all([
+      reportingPeriod(disease),
+      getDistricts(disease, {
         bypassCache: req.query.refresh === "1",
       }),
+    ]);
+
+    res.json({
+      meta: { disease, ...period, ...status },
+      data,
     });
   }),
 );
@@ -94,10 +98,14 @@ districtsRouter.get(
     );
     const months = Number(req.query.months ?? 12);
     const status = await ensurePredictions(disease, false);
+    const [period, data] = await Promise.all([
+      reportingPeriod(disease),
+      getTrend(disease, Number.isFinite(months) ? months : 12),
+    ]);
 
     res.json({
-      meta: { disease, ...(await reportingPeriod(disease)), ...status },
-      data: await getTrend(disease, Number.isFinite(months) ? months : 12),
+      meta: { disease, ...period, ...status },
+      data,
     });
   }),
 );

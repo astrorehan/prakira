@@ -916,7 +916,29 @@ export type DistrictTriggerSummary = {
 export async function getTriggerSummaryByDistrict(
   kecamatanFilter?: string,
 ): Promise<DistrictTriggerSummary[]> {
-  const allKec = await listKecamatan();
+  const params: unknown[] = [];
+  let where = "WHERE status = 'terverifikasi'";
+  if (kecamatanFilter) {
+    where += " AND LOWER(kecamatan) = LOWER(?)";
+    params.push(kecamatanFilter);
+  }
+
+  /* Direktori kecamatan dan agregat laporan tidak saling bergantung. Pada
+     database remote, menjalankannya paralel menghapus satu jeda jaringan. */
+  const [allKec, rows] = await Promise.all([
+    listKecamatan(),
+    all<{
+      kecamatan: string;
+      kind: ReportKind;
+      submitted_at: string;
+    }>(
+      `SELECT kecamatan, kind, submitted_at
+         FROM laporan_warga
+        ${where}
+        ORDER BY submitted_at DESC`,
+      ...params,
+    ),
+  ]);
   const byDistrict = new Map<string, DistrictTriggerSummary>();
 
   for (const k of allKec) {
@@ -937,25 +959,6 @@ export async function getTriggerSummaryByDistrict(
       });
     }
   }
-
-  const params: unknown[] = [];
-  let where = "WHERE status = 'terverifikasi'";
-  if (kecamatanFilter) {
-    where += " AND LOWER(kecamatan) = LOWER(?)";
-    params.push(kecamatanFilter);
-  }
-
-  const rows = await all<{
-    kecamatan: string;
-    kind: ReportKind;
-    submitted_at: string;
-  }>(
-    `SELECT kecamatan, kind, submitted_at
-       FROM laporan_warga
-      ${where}
-      ORDER BY submitted_at DESC`,
-    ...params,
-  );
 
   for (const row of rows) {
     const entry = byDistrict.get(row.kecamatan);
