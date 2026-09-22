@@ -152,48 +152,127 @@ export function describeDataLag(
 export async function latestObservedMonth(
   disease?: string,
 ): Promise<string | null> {
-  const row = disease
-    ? await one<{ m: string | null }>(
-        "SELECT MAX(month_start) AS m FROM observasi WHERE disease = ?",
-        disease,
-      )
-    : await one<{ m: string | null }>(
-        "SELECT MAX(month_start) AS m FROM observasi",
-      );
-  return row?.m ?? null;
+  const key = disease?.toUpperCase() ?? "*";
+  const cached = latestCache.get(key);
+  if (cached && cached.expiresAt > Date.now()) return cached.value;
+  latestCache.delete(key);
+
+  const running = latestInFlight.get(key);
+  if (running) return running;
+
+  const task = (async () => {
+    const row = disease
+      ? await one<{ m: string | null }>(
+          "SELECT MAX(month_start) AS m FROM observasi WHERE disease = ?",
+          disease,
+        )
+      : await one<{ m: string | null }>(
+          "SELECT MAX(month_start) AS m FROM observasi",
+        );
+    const value = row?.m ?? null;
+    latestCache.set(key, {
+      expiresAt: Date.now() + PERIOD_CACHE_TTL_MS,
+      value,
+    });
+    return value;
+  })();
+
+  latestInFlight.set(key, task);
+  task.finally(() => {
+    if (latestInFlight.get(key) === task) latestInFlight.delete(key);
+  }).catch(() => {
+    /* Pemanggil menerima error dari task; finally tidak boleh membuat
+       unhandled rejection baru. */
+  });
+  return task;
 }
 
 export async function availableDiseases(): Promise<string[]> {
-  const rows = await all<{ disease: string }>(
+  if (diseasesCache && diseasesCache.expiresAt > Date.now()) {
+    return diseasesCache.value;
+  }
+  diseasesCache = null;
+  if (diseasesInFlight) return diseasesInFlight;
+
+  const task = all<{ disease: string }>(
     "SELECT DISTINCT disease FROM observasi ORDER BY disease",
-  );
-  return rows.map((r) => r.disease);
+  ).then((rows) => {
+    const value = rows.map((r) => r.disease);
+    diseasesCache = {
+      expiresAt: Date.now() + PERIOD_CACHE_TTL_MS,
+      value,
+    };
+    return value;
+  });
+
+  diseasesInFlight = task;
+  task.finally(() => {
+    if (diseasesInFlight === task) diseasesInFlight = null;
+  }).catch(() => {
+    /* Pemanggil menerima error dari task; finally tidak boleh membuat
+       unhandled rejection baru. */
+  });
+  return task;
 }
 
 export async function reportingPeriod(
   disease?: string,
   knownDiseases?: string[],
 ): Promise<ReportingPeriod> {
-  const latest = await latestObservedMonth(disease);
-  const predictionMonth = latest ? addMonths(latest, 1) : null;
+  const key = `${disease?.toUpperCase() ?? "*"}|${knownDiseases?.join(",") ?? ""}`;
+  const cached = periodCache.get(key);
+  if (cached && cached.expiresAt > Date.now()) return cached.value;
+  periodCache.delete(key);
 
-  const months = disease
-    ? await one<{ n: number }>(
-        "SELECT COUNT(DISTINCT month_start) AS n FROM observasi WHERE disease = ?",
-        disease,
-      )
-    : await one<{ n: number }>(
-        "SELECT COUNT(DISTINCT month_start) AS n FROM observasi",
-      );
+  const running = periodInFlight.get(key);
+  if (running) return running;
 
-  return {
-    latestObserved: latest,
-    predictionMonth,
-    monthYear: monthLabel(latest),
-    predictionLabel: monthLabel(predictionMonth),
-    historyMonths: months?.n ?? 0,
-    granularity: "monthly",
-    diseases: knownDiseases ?? (await availableDiseases()),
-    ...describeDataLag(latest),
-  };
+  /* Latest month, count, and disease list do not depend on one another. Running
+     them together matters when the database is remote: three serial network
+     round-trips become one latency window. */
+  const task = Promise.all([
+    latestObservedMonth(disease),
+    disease
+      ? one<{ n: number }>(
+          "SELECT COUNT(DISTINCT month_start) AS n FROM observasi WHERE disease = ?",
+          disease,
+        )
+      : one<{ n: number }>(
+          "SELECT COUNT(DISTINCT month_start) AS n FROM observasi",
+        ),
+    knownDiseases ? Promise.resolve(knownDiseases) : availableDiseases(),
+  ]).then(([latest, months, diseases]) => {
+    const predictionMonth = latest ? addMonths(latest, 1) : null;
+    const value = {
+      latestObserved: latest,
+      predictionMonth,
+      monthYear: monthLabel(latest),
+      predictionLabel: monthLabel(predictionMonth),
+      historyMonths: months?.n ?? 0,
+      granularity: "monthly" as const,
+      diseases,
+      ...describeDataLag(latest),
+    };
+    periodCache.set(key, {
+      expiresAt: Date.now() + PERIOD_CACHE_TTL_MS,
+      value,
+    });
+    return value;
+  });
+
+  periodInFlight.set(key, task);
+  task.finally(() => {
+    if (periodInFlight.get(key) === task) periodInFlight.delete(key);
+  }).catch(() => {
+    /* Pemanggil menerima error dari task; finally tidak boleh membuat
+       unhandled rejection baru. */
+  });
+  return task;
+}
+
+/** Dipanggil setelah ingest agar halaman berikutnya membaca metadata baru. */
+export function invalidatePeriodCache(): void {
+  diseasesCache = null;
+  latestCache.clear();
+  periodCache.clear();
 }
