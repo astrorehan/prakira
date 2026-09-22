@@ -124,6 +124,10 @@ async function main() {
   run("frontend", npmCmd, ["run", "dev"], {
     cwd: path.join(root, "frontend"),
     shell: isWindows,
+    /* IDE/pratinjau kadang mewariskan PORT lain ke proses anak. Demo lokal
+       harus tetap mendarat di alamat yang tertulis di dokumentasi; gunakan
+       FRONTEND_PORT bila memang ingin menggantinya secara sengaja. */
+    env: { PORT: process.env.FRONTEND_PORT ?? "3000" },
   });
 }
 

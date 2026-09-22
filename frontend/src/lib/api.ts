@@ -76,7 +76,53 @@ export type DistrictsMeta = ReportingPeriod & {
   error?: string;
 };
 
+/* Navigasi konsol sering memasang dua widget yang meminta endpoint sama (atau
+   halaman berikutnya dibuka beberapa detik kemudian). Cache proses peramban
+   yang pendek menghindari request kembar tanpa membuat data operasional lama.
+   Mutasi di bawah otomatis mengosongkannya. */
+const GET_CACHE_TTL_MS = 15_000;
+const getCache = new Map<string, { expiresAt: number; value: unknown }>();
+const getInFlight = new Map<string, Promise<unknown>>();
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const method = (init?.method ?? "GET").toUpperCase();
+  const cacheable = method === "GET" && !init?.body;
+
+  if (cacheable) {
+    const cached = getCache.get(path);
+    if (cached && cached.expiresAt > Date.now()) {
+      return cached.value as T;
+    }
+    getCache.delete(path);
+
+    const running = getInFlight.get(path);
+    if (running) return (await running) as T;
+
+    const task = requestNetwork<T>(path, init).then((value) => {
+      getCache.set(path, {
+        expiresAt: Date.now() + GET_CACHE_TTL_MS,
+        value,
+      });
+      return value;
+    });
+    getInFlight.set(path, task);
+    task.finally(() => {
+      if (getInFlight.get(path) === task) getInFlight.delete(path);
+    }).catch(() => {
+      /* Penolakan diteruskan ke pemanggil; finally tidak boleh membuat
+         unhandled rejection tambahan. */
+    });
+    return task;
+  }
+
+  const value = await requestNetwork<T>(path, init);
+  /* Login, logout, import, review, dan refresh dapat mengubah seluruh snapshot
+     baca. Membersihkan cache setelah mutasi menjaga navigasi berikutnya jujur. */
+  getCache.clear();
+  return value;
+}
+
+async function requestNetwork<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 90_000);
