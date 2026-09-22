@@ -60,7 +60,10 @@ async function ensurePredictions(
   if (!needsRefresh) return { stale: false };
 
   const outcome = await refreshPredictions(disease);
-  if (outcome.refreshed > 0) {
+  /* `refreshed > 0` saja tidak cukup: jalur prakiraan bisa tersimpan sampai
+     bulan kelima lalu gagal, dan bulan aktif yang ditampilkan halaman tetap
+     kosong. Selama ada sebab kegagalan, halaman harus mengaku basi. */
+  if (outcome.refreshed > 0 && !outcome.error) {
     invalidateDistrictViewCache(disease);
     await regenerateActions([disease]);
     return { stale: false };

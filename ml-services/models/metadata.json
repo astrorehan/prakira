@@ -4,52 +4,52 @@
     "version": "ensemble-monthly-dbd-2026.09.22",
     "granularity": "monthly",
     "is_log_transformed": true,
-    "trained_at": "2026-09-22T21:16:45.012514",
+    "trained_at": "2026-09-22T22:56:37.545823",
     "train_period": "2021-04-01 to 2024-12-01",
-    "test_period": "2025-01-01 to 2026-08-01",
+    "test_period": "2025-01-01 to 2025-12-01",
     "n_train_samples": 720,
-    "n_test_samples": 320,
+    "n_test_samples": 192,
     "metrics": {
-      "mae": 1.3016,
-      "rmse": 1.7261,
-      "r2": 0.2273
+      "mae": 1.4725,
+      "rmse": 1.9403,
+      "r2": 0.2941
     },
     "citizen_signal_comparison": null,
     "citizen_signal_family": null,
     "baselines": {
       "persistence": {
         "label": "Kasus bulan lalu",
-        "mae": 0.85,
-        "rmse": 1.7393,
-        "r2": 0.2155
+        "mae": 1.3646,
+        "rmse": 2.2032,
+        "r2": 0.0898
       },
       "seasonal_mean": {
         "label": "Rata-rata musiman",
-        "mae": 2.2375,
-        "rmse": 3.0353,
-        "r2": -1.3894
+        "mae": 1.7179,
+        "rmse": 2.3042,
+        "r2": 0.0045
       },
       "district_mean": {
         "label": "Rata-rata kecamatan",
-        "mae": 2.1167,
-        "rmse": 2.6299,
-        "r2": -0.7938
+        "mae": 1.8551,
+        "rmse": 2.4011,
+        "r2": -0.081
       }
     },
     "baseline_summary": {
       "best_baseline": "persistence",
       "best_baseline_label": "Kasus bulan lalu",
-      "best_baseline_mae": 0.85,
-      "model_mae": 1.3016,
+      "best_baseline_mae": 1.3646,
+      "model_mae": 1.4725,
       "model_beats_all_baselines": false,
-      "mae_improvement_pct": -53.13
+      "mae_improvement_pct": -7.91
     },
     "conformal": {
-      "empirical_coverage": 0.8594,
+      "empirical_coverage": 0.901,
       "target_coverage": 0.8,
-      "mean_width": 3.325,
+      "mean_width": 4.125,
       "median_width": 3.0,
-      "n_evaluated": 320,
+      "n_evaluated": 192,
       "method": "rolling_origin_conformal_normalized",
       "difficulty": "1 + cases_ma_3m",
       "alpha": 0.2,
@@ -83,10 +83,10 @@
   },
   "ispa": {
     "algorithm": "ensemble_rf_xgboost_elasticnet",
-    "version": "ensemble-monthly-ispa-2026.09.18",
+    "version": "ensemble-monthly-ispa-2026.09.22",
     "granularity": "monthly",
     "is_log_transformed": false,
-    "trained_at": "2026-09-18T07:56:19.910345",
+    "trained_at": "2026-09-22T22:56:46.089519",
     "train_period": "2025-04-01 to 2025-09-01",
     "test_period": "2025-10-01 to 2025-12-01",
     "n_train_samples": 96,
@@ -97,6 +97,7 @@
       "r2": 0.768
     },
     "citizen_signal_comparison": null,
+    "citizen_signal_family": null,
     "baselines": {
       "persistence": {
         "label": "Kasus bulan lalu",
@@ -164,58 +165,59 @@
   },
   "leptospirosis": {
     "algorithm": "ensemble_rf_et_xgb_ridge",
-    "version": "ensemble-monthly-leptospirosis-2026.09.20",
+    "version": "ensemble-monthly-leptospirosis-2026.09.22",
     "granularity": "monthly",
     "is_log_transformed": true,
-    "trained_at": "2026-09-20T21:17:00.498842",
+    "trained_at": "2026-09-22T22:57:05.691530",
     "train_period": "2021-04-01 to 2024-12-01",
-    "test_period": "2025-01-01 to 2026-09-01",
+    "test_period": "2025-01-01 to 2025-12-01",
     "n_train_samples": 720,
-    "n_test_samples": 336,
+    "n_test_samples": 192,
     "metrics": {
-      "mae": 0.333,
-      "rmse": 0.5307,
-      "r2": 0.0745
+      "mae": 0.362,
+      "rmse": 0.535,
+      "r2": -0.2939
     },
     "citizen_signal_comparison": null,
+    "citizen_signal_family": null,
     "baselines": {
       "persistence": {
         "label": "Kasus bulan lalu",
-        "mae": 0.3631,
-        "rmse": 0.622,
-        "r2": -0.2713
+        "mae": 0.3958,
+        "rmse": 0.6374,
+        "r2": -0.8362
       },
       "seasonal_mean": {
         "label": "Rata-rata musiman",
-        "mae": 0.3286,
-        "rmse": 0.5587,
-        "r2": -0.0257
+        "mae": 0.3416,
+        "rmse": 0.552,
+        "r2": -0.377
       },
       "district_mean": {
         "label": "Rata-rata kecamatan",
-        "mae": 0.3773,
-        "rmse": 0.5726,
-        "r2": -0.0773
+        "mae": 0.3312,
+        "rmse": 0.4744,
+        "r2": -0.0174
       }
     },
     "baseline_summary": {
-      "best_baseline": "seasonal_mean",
-      "best_baseline_label": "Rata-rata musiman",
-      "best_baseline_mae": 0.3286,
-      "model_mae": 0.333,
+      "best_baseline": "district_mean",
+      "best_baseline_label": "Rata-rata kecamatan",
+      "best_baseline_mae": 0.3312,
+      "model_mae": 0.362,
       "model_beats_all_baselines": false,
-      "mae_improvement_pct": -1.33
+      "mae_improvement_pct": -9.29
     },
     "conformal": {
-      "empirical_coverage": 0.9762,
+      "empirical_coverage": 0.9896,
       "target_coverage": 0.8,
-      "mean_width": 1.0149,
+      "mean_width": 1.0052,
       "median_width": 1.0,
-      "n_evaluated": 336,
+      "n_evaluated": 192,
       "method": "rolling_origin_conformal_normalized",
       "difficulty": "1 + cases_ma_3m",
       "alpha": 0.2,
-      "q_hat": 0.110654,
+      "q_hat": 0.114561,
       "n_calibration": 368,
       "n_folds": 8,
       "calibration_period": "2023-02-01 to 2024-12-01"
@@ -223,23 +225,23 @@
     "top_features": [
       {
         "feature": "month",
-        "importance": 0.3539866271117194
+        "importance": 0.3546164978792632
       },
       {
         "feature": "cases_lag1",
-        "importance": 0.11843943438277403
+        "importance": 0.11921769925553016
       },
       {
         "feature": "population",
-        "importance": 0.07907558427328866
+        "importance": 0.07906908401539747
       },
       {
         "feature": "cases_per_10k_lag1",
-        "importance": 0.06995081699326072
+        "importance": 0.06832684896613637
       },
       {
         "feature": "month_sin",
-        "importance": 0.06721714282965183
+        "importance": 0.06677162504238256
       }
     ]
   }

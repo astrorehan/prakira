@@ -34,7 +34,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
-from config import FEATURE_COLUMNS
+from config import DATASET_CLEAN_DIR, FEATURE_COLUMNS
 
 # Fitur yang boleh diubah langsung. Sisanya di FEATURE_COLUMNS adalah turunan.
 BASE_FEATURES: List[str] = [
@@ -90,7 +90,184 @@ def _month_number(target_month) -> int:
     return int(pd.Timestamp(target_month).month)
 
 
-def roll_forward(df_kec: pd.DataFrame, target_month) -> pd.DataFrame:
+_weather_cache: pd.DataFrame | None = None
+
+
+def monthly_weather() -> pd.DataFrame:
+    """Cuaca bulanan per kecamatan, termasuk bulan-bulan sesudah kasus terakhir.
+
+    Berkas fitur berhenti di bulan observasi kasus terakhir karena ia irisan
+    kasus x cuaca. Prakiraan beberapa bulan ke depan tetap butuh iklim bulan
+    antara, dan iklim itu benar-benar ada — BMKG menerbitkannya jauh lebih
+    cepat daripada rekapitulasi kasus Dinkes. `etl/merge_dataset.py`
+    menyimpannya utuh di `dataset_clean/cuaca_monthly.csv`.
+    """
+    global _weather_cache
+    if _weather_cache is None:
+        path = DATASET_CLEAN_DIR / "cuaca_monthly.csv"
+        if not path.exists():
+            _weather_cache = pd.DataFrame(
+                columns=["kecamatan_id", "month_start", "rainfall_mm", "temp_mean_c", "humidity_pct"]
+            )
+        else:
+            _weather_cache = pd.read_csv(path)
+    return _weather_cache
+
+
+# Riwayat yang sudah disambung, per (model, kecamatan, bulan terakhir).
+#
+# Rantai Januari->Oktober disusuri ulang setiap kali salah satu bulannya
+# diminta, dan semua permintaan itu menempuh jalur yang sama: riwayat
+# kecamatannya tetap, cuacanya tetap, modelnya tetap. Menyimpan potongan
+# rantainya membuat bulan ke-n cukup menambah satu langkah dari bulan ke-(n-1),
+# bukan mengulang n langkah dari awal.
+_chain_cache: dict = {}
+
+# Cuaca bulanan sebagai peta (kecamatan, bulan) -> nilai. Pencarian bertopeng
+# boolean di DataFrame dipanggil ribuan kali saat rantai disusun, dan di sanalah
+# waktunya habis — bukan di modelnya.
+_weather_index: dict | None = None
+
+
+def reload_weather() -> None:
+    """Melupakan cuaca dan rantai yang ter-cache; dipanggil setelah ingest ulang."""
+    global _weather_cache, _weather_index
+    _weather_cache = None
+    _weather_index = None
+    _chain_cache.clear()
+
+
+def _months_between(start: pd.Timestamp, end: pd.Timestamp) -> int:
+    return (end.year - start.year) * 12 + (end.month - start.month)
+
+
+def _weather_for(kecamatan_id: str, month: pd.Timestamp) -> dict:
+    """Satu baris cuaca bulanan, atau kesalahan yang menyebut bulannya."""
+    global _weather_index
+    if _weather_index is None:
+        df = monthly_weather()
+        _weather_index = {
+            (str(row.kecamatan_id), str(row.month_start)): {
+                "rainfall_mm": float(row.rainfall_mm),
+                "temp_mean_c": float(row.temp_mean_c),
+                "humidity_pct": float(row.humidity_pct),
+            }
+            for row in df.itertuples(index=False)
+        }
+
+    found = _weather_index.get((kecamatan_id, month.strftime("%Y-%m-%d")))
+    if found is None:
+        raise ValueError(
+            f"Cuaca bulanan {month:%Y-%m} belum tersedia, jadi prakiraan sampai "
+            f"bulan itu tidak bisa disusun."
+        )
+    return found
+
+
+def _append_month(
+    history: pd.DataFrame, step: pd.Timestamp, kecamatan_id: str, cases: float
+) -> pd.DataFrame:
+    """Riwayat + satu bulan: iklimnya nyata, kasusnya hasil prakiraan."""
+    weather = _weather_for(kecamatan_id, step)
+    appended = history.iloc[-1].copy()
+    appended["month_start"] = step.strftime("%Y-%m-%d")
+    appended["cases"] = float(cases)
+    for col, value in weather.items():
+        appended[col] = value
+    return pd.concat([history, appended.to_frame().T], ignore_index=True)
+
+
+def _extend_history(history: pd.DataFrame, target: pd.Timestamp, model) -> pd.DataFrame:
+    """Riwayat yang disambung sampai sebulan sebelum `target`.
+
+    Model dilatih satu langkah ke depan, jadi memprakirakan Oktober dari
+    observasi Desember hanya sah bila bulan-bulan di antaranya ikut diisi.
+    Bulan antara diisi sebagaimana adanya: iklimnya nyata (dari BMKG), jumlah
+    kasusnya prakiraan model itu sendiri, lalu dipakai sebagai lag bagi bulan
+    berikutnya. Ketidakpastiannya menumpuk — itu sifat prakiraan rekursif, dan
+    rentang konformal di `predictor.py` yang menanggungnya.
+    """
+    kecamatan_id = str(history["kecamatan_id"].iloc[-1])
+    cursor = pd.Timestamp(history["month_start"].iloc[-1])
+    frame = history
+
+    while _months_between(cursor, target) > 1:
+        step = cursor + pd.DateOffset(months=1)
+        key = (id(model), kecamatan_id, step.strftime("%Y-%m"))
+
+        cached = _chain_cache.get(key)
+        if cached is None:
+            predicted = max(0.0, float(model.predict(_assemble(frame, step))[0]))
+            cached = _append_month(frame, step, kecamatan_id, predicted)
+            _chain_cache[key] = cached
+
+        frame = cached
+        cursor = step
+
+    return frame
+
+
+def warm_forecast_chain(df_hist: pd.DataFrame, target_month, model) -> None:
+    """Melalui rantai bulan antara sekali saja, serentak untuk semua kecamatan.
+
+    `_extend_history` bekerja per kecamatan. Dipakai apa adanya untuk menyusun
+    sepuluh bulan prakiraan di 16 kecamatan, ia memanggil model ratusan kali
+    untuk baris-baris yang bentuknya sama. Di sini langkahnya dibalik: satu
+    langkah bulan untuk seluruh kota sekaligus, satu panggilan model per
+    langkah, hasilnya mengisi memo yang sama yang dibaca `_extend_history`.
+
+    Berhenti diam-diam bila ada yang kurang — cuaca bulan antara, misalnya:
+    jalur per kecamatan akan menemui hal yang sama dan melaporkannya dengan
+    bulan yang tepat.
+    """
+    if df_hist is None or df_hist.empty or model is None:
+        return
+
+    target = pd.Timestamp(target_month)
+    frames = {
+        str(kec_id): group.sort_values("month_start").reset_index(drop=True)
+        for kec_id, group in df_hist.groupby("kecamatan_id")
+    }
+    frames = {k: g for k, g in frames.items() if len(g) >= 3}
+    if not frames:
+        return
+
+    cursor = max(pd.Timestamp(g["month_start"].iloc[-1]) for g in frames.values())
+
+    while _months_between(cursor, target) > 1:
+        step = cursor + pd.DateOffset(months=1)
+        label = step.strftime("%Y-%m")
+
+        stale = [
+            kec_id
+            for kec_id, frame in frames.items()
+            if (id(model), kec_id, label) not in _chain_cache
+            and _months_between(pd.Timestamp(frame["month_start"].iloc[-1]), step) == 1
+        ]
+
+        if stale:
+            rows = [_assemble(frames[kec_id], step) for kec_id in stale]
+            try:
+                predicted = model.predict(pd.concat(rows, ignore_index=True))
+            except Exception:  # noqa: BLE001 — jalur per kecamatan yang melaporkannya
+                return
+            for kec_id, value in zip(stale, predicted):
+                try:
+                    _chain_cache[(id(model), kec_id, label)] = _append_month(
+                        frames[kec_id], step, kec_id, max(0.0, float(value))
+                    )
+                except ValueError:
+                    return
+
+        for kec_id in list(frames):
+            extended = _chain_cache.get((id(model), kec_id, label))
+            if extended is not None:
+                frames[kec_id] = extended
+
+        cursor = step
+
+
+def roll_forward(df_kec: pd.DataFrame, target_month, model=None) -> pd.DataFrame:
     """Baris fitur untuk memprakirakan `target_month`, digulirkan dari riwayat.
 
     Ini inti perbedaan antara *menjelaskan bulan terakhir* dan *memprakirakan
@@ -112,7 +289,7 @@ def roll_forward(df_kec: pd.DataFrame, target_month) -> pd.DataFrame:
     di `tests/test_feature_frame.py`: kalau ia lepas, metrik di `/model`
     berhenti menggambarkan apa yang dihitung `/predict`.
     """
-    history = df_kec.sort_values("month_start")
+    history = df_kec.sort_values("month_start").reset_index(drop=True)
     if len(history) < 3:
         raise ValueError(
             "Butuh minimal 3 bulan riwayat berturut-turut untuk menyusun fitur lag."
@@ -122,16 +299,29 @@ def roll_forward(df_kec: pd.DataFrame, target_month) -> pd.DataFrame:
     target = pd.Timestamp(target_month)
 
     # Model ini dilatih satu langkah ke depan: `cases_lag1` selalu berarti
-    # "bulan tepat sebelum bulan yang diprakirakan". Bila jaraknya bukan satu
-    # bulan, jendela lag tidak lagi bermakna — dan menjawab tetap dengan angka
-    # lebih buruk daripada menolak menjawab (PRD §7).
-    gap = (target.year - last_month.year) * 12 + (target.month - last_month.month)
-    if gap != 1:
+    # "bulan tepat sebelum bulan yang diprakirakan". Bulan yang lebih jauh
+    # dijangkau dengan menyambung riwayatnya lebih dulu (`_extend_history`),
+    # bukan dengan menyodorkan jendela lag yang jaraknya salah.
+    gap = _months_between(last_month, target)
+    if gap < 1:
         raise ValueError(
-            f"Prakiraan hanya sah untuk satu bulan setelah observasi terakhir "
+            f"Prakiraan hanya untuk bulan sesudah observasi terakhir "
             f"({last_month:%Y-%m}), sedangkan yang diminta {target:%Y-%m}."
         )
+    if gap > 1:
+        if model is None:
+            raise ValueError(
+                f"Prakiraan {target:%Y-%m} berjarak {gap} bulan dari observasi "
+                f"terakhir ({last_month:%Y-%m}) dan butuh penyambungan bertahap; "
+                f"model wajib disertakan."
+            )
+        history = _extend_history(history, target, model)
 
+    return _assemble(history, target)
+
+
+def _assemble(history: pd.DataFrame, target: pd.Timestamp) -> pd.DataFrame:
+    """Baris fitur bulan `target` dari riwayat yang lag-nya sudah tepat."""
     # Seluruh kolom dipaksa float64 sejak awal.
     #
     # `month`, `population`, `is_pancaroba`, dan `kecamatan_encoded` terbaca
@@ -155,7 +345,7 @@ def roll_forward(df_kec: pd.DataFrame, target_month) -> pd.DataFrame:
 
 
 def build_feature_row(
-    df_hist: pd.DataFrame, df_kec: pd.DataFrame, target_month
+    df_hist: pd.DataFrame, df_kec: pd.DataFrame, target_month, model=None
 ) -> pd.DataFrame:
     """Baris fitur untuk memprakirakan `target_month` di satu kecamatan.
 
@@ -174,7 +364,7 @@ def build_feature_row(
         row.loc[:, "month"] = float(_month_number(target_month))
         return recompute_derived(row)
 
-    return roll_forward(df_kec, target_month)
+    return roll_forward(df_kec, target_month, model=model)
 
 
 def recompute_derived(row: pd.DataFrame) -> pd.DataFrame:

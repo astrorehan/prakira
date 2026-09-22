@@ -39,7 +39,7 @@ async def explain(req: ExplainRequest):
                 ),
             )
 
-        feature_row = build_feature_row(df_hist, df_kec, req.month)
+        feature_row = build_feature_row(df_hist, df_kec, req.month, model=model)
         result = explain_prediction(model, df_hist, df_kec, feature_row)
 
         return ExplainResponse(

@@ -30,7 +30,6 @@ import { DistrictDetailPanel } from "@/components/district-detail-panel";
 import { DistrictRankingTable } from "@/components/district-ranking-table";
 import { DataState } from "@/components/data-state";
 import { TrendChart } from "@/components/trend-chart";
-import { DataLagNotice } from "@/components/data-lag-notice";
 import { AttentionList } from "@/components/attention-list";
 import {
   fetchActions,
@@ -281,7 +280,6 @@ export default function DashboardPrediksiPage() {
         </ConsolePageHeader>
 
         {/* Data yang tertinggal dari kalender harus tertulis, bukan disembunyikan. */}
-        <DataLagNotice period={meta} />
 
         {/* Prediksi basi harus tertulis, bukan disembunyikan. */}
         {meta?.stale && (

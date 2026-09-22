@@ -36,7 +36,6 @@ import { EarlyActionCenter } from "@/components/early-action-center";
 import { RecommendationCard } from "@/components/recommendation-card";
 import { DispatchActionModal } from "@/components/dispatch-action-modal";
 import { DataState } from "@/components/data-state";
-import { DataLagNotice } from "@/components/data-lag-notice";
 import { PeriodChip } from "@/components/console/page-header";
 import {
   fetchActions,
@@ -467,7 +466,6 @@ export default function DesignSystemPage() {
                   <div className="flex flex-wrap gap-2 items-center">
                     <PeriodChip />
                   </div>
-                  <DataLagNotice period={period} />
                   <p className="text-2xs text-muted-foreground">Chip berubah nada dan pemberitahuan muncul hanya bila kalender sudah melewati bulan prakiraan.</p>
                 </div>
               </div>

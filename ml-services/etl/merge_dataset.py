@@ -52,9 +52,11 @@ def _load_monthly_weather() -> pd.DataFrame:
                 rainfall_mm=("rainfall_mm", "sum"),    # curah hujan kumulatif per bulan
                 temp_mean_c=("temp_mean_c", "mean"),   # suhu rata-rata bulanan
                 humidity_pct=("humidity_pct", "mean"), # kelembaban rata-rata bulanan
+                days_observed=("date", "count"),
             )
             .reset_index()
         )
+        df_monthly = _scale_partial_month(df_monthly)
 
     df_monthly["month_start"] = df_monthly["month_start"].dt.strftime("%Y-%m-%d")
     df_monthly["rainfall_mm"] = df_monthly["rainfall_mm"].round(1)
@@ -62,6 +64,51 @@ def _load_monthly_weather() -> pd.DataFrame:
     df_monthly["humidity_pct"] = df_monthly["humidity_pct"].round(1)
 
     logger.info(f"Monthly weather loaded: {len(df_monthly)} rows.")
+    return df_monthly
+
+
+def _scale_partial_month(df_monthly: pd.DataFrame) -> pd.DataFrame:
+    """Menaikkan curah hujan bulan berjalan ke setara satu bulan penuh.
+
+    Berkas harian BMKG berhenti di tanggal terakhir yang sudah terbit. Bulan
+    berjalan karena itu hanya berisi sebagian hari, dan `sum` atasnya
+    menghasilkan curah hujan yang terlalu kecil — bukan karena hujannya
+    sedikit, melainkan karena bulannya belum selesai. Fitur `rainfall_lag1`
+    untuk prakiraan bulan berikutnya akan membaca angka itu apa adanya.
+
+    Suhu dan kelembaban memakai `mean`, jadi tidak terpengaruh.
+    """
+    out = df_monthly.copy()
+    days_in_month = out["month_start"].dt.days_in_month
+    partial = out["days_observed"] < days_in_month
+    if partial.any():
+        factor = days_in_month[partial] / out.loc[partial, "days_observed"]
+        out.loc[partial, "rainfall_mm"] = out.loc[partial, "rainfall_mm"] * factor
+        for _, row in out.loc[partial, ["month_start", "days_observed"]].drop_duplicates().iterrows():
+            logger.info(
+                "Bulan %s baru %s hari; curah hujannya diskalakan ke satu bulan penuh.",
+                row["month_start"].strftime("%Y-%m"),
+                int(row["days_observed"]),
+            )
+    return out.drop(columns=["days_observed"])
+
+
+def export_monthly_weather() -> pd.DataFrame:
+    """Menulis cuaca bulanan lengkap ke `dataset_clean/cuaca_monthly.csv`.
+
+    Berkas gabungan per penyakit adalah irisan kasus x cuaca, jadi ia berhenti
+    di bulan observasi kasus terakhir. Prakiraan beberapa bulan ke depan tetap
+    perlu cuaca sesudah bulan itu — lag iklimnya nyata, bukan hasil tebakan —
+    sehingga cuaca bulanan disimpan terpisah, utuh sampai bulan terakhir yang
+    datanya terbit.
+    """
+    df_monthly = _load_monthly_weather()
+    output_path = DATASET_CLEAN_DIR / "cuaca_monthly.csv"
+    df_monthly.to_csv(output_path, index=False)
+    logger.info(
+        f"Monthly weather saved: {output_path} ({len(df_monthly)} rows, "
+        f"sampai {df_monthly['month_start'].max()})"
+    )
     return df_monthly
 
 
@@ -93,7 +140,7 @@ def merge_datasets(disease: str = "dbd"):
 
     # 2. Load cuaca bulanan
     try:
-        df_cuaca = _load_monthly_weather()
+        df_cuaca = export_monthly_weather()
     except FileNotFoundError as e:
         logger.error(str(e))
         return

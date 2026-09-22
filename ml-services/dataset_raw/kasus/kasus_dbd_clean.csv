@@ -3378,7 +3378,6 @@ kecamatan_id,kecamatan_nama,week_start,disease,cases
 33.74.01,Semarang Tengah,2025-12-08,DBD,0
 33.74.01,Semarang Tengah,2025-12-15,DBD,0
 33.74.01,Semarang Tengah,2025-12-22,DBD,0
-33.74.01,Semarang Tengah,2025-12-29,DBD,0
 33.74.02,Semarang Utara,2025-01-06,DBD,1
 33.74.02,Semarang Utara,2025-01-13,DBD,0
 33.74.02,Semarang Utara,2025-01-20,DBD,0
@@ -3430,7 +3429,6 @@ kecamatan_id,kecamatan_nama,week_start,disease,cases
 33.74.02,Semarang Utara,2025-12-08,DBD,0
 33.74.02,Semarang Utara,2025-12-15,DBD,0
 33.74.02,Semarang Utara,2025-12-22,DBD,0
-33.74.02,Semarang Utara,2025-12-29,DBD,0
 33.74.03,Semarang Timur,2025-01-06,DBD,0
 33.74.03,Semarang Timur,2025-01-13,DBD,0
 33.74.03,Semarang Timur,2025-01-20,DBD,2
@@ -3482,7 +3480,6 @@ kecamatan_id,kecamatan_nama,week_start,disease,cases
 33.74.03,Semarang Timur,2025-12-08,DBD,0
 33.74.03,Semarang Timur,2025-12-15,DBD,0
 33.74.03,Semarang Timur,2025-12-22,DBD,0
-33.74.03,Semarang Timur,2025-12-29,DBD,0
 33.74.04,Semarang Selatan,2025-01-06,DBD,1
 33.74.04,Semarang Selatan,2025-01-13,DBD,1
 33.74.04,Semarang Selatan,2025-01-20,DBD,1
@@ -3534,7 +3531,6 @@ kecamatan_id,kecamatan_nama,week_start,disease,cases
 33.74.04,Semarang Selatan,2025-12-08,DBD,0
 33.74.04,Semarang Selatan,2025-12-15,DBD,0
 33.74.04,Semarang Selatan,2025-12-22,DBD,0
-33.74.04,Semarang Selatan,2025-12-29,DBD,0
 33.74.05,Semarang Barat,2025-01-06,DBD,0
 33.74.05,Semarang Barat,2025-01-13,DBD,1
 33.74.05,Semarang Barat,2025-01-20,DBD,0
@@ -3586,7 +3582,6 @@ kecamatan_id,kecamatan_nama,week_start,disease,cases
 33.74.05,Semarang Barat,2025-12-08,DBD,0
 33.74.05,Semarang Barat,2025-12-15,DBD,0
 33.74.05,Semarang Barat,2025-12-22,DBD,0
-33.74.05,Semarang Barat,2025-12-29,DBD,0
 33.74.06,Gayamsari,2025-01-06,DBD,1
 33.74.06,Gayamsari,2025-01-13,DBD,0
 33.74.06,Gayamsari,2025-01-20,DBD,1
@@ -3638,7 +3633,6 @@ kecamatan_id,kecamatan_nama,week_start,disease,cases
 33.74.06,Gayamsari,2025-12-08,DBD,0
 33.74.06,Gayamsari,2025-12-15,DBD,1
 33.74.06,Gayamsari,2025-12-22,DBD,0
-33.74.06,Gayamsari,2025-12-29,DBD,0
 33.74.07,Candisari,2025-01-06,DBD,0
 33.74.07,Candisari,2025-01-13,DBD,0
 33.74.07,Candisari,2025-01-20,DBD,2
@@ -3690,7 +3684,6 @@ kecamatan_id,kecamatan_nama,week_start,disease,cases
 33.74.07,Candisari,2025-12-08,DBD,0
 33.74.07,Candisari,2025-12-15,DBD,0
 33.74.07,Candisari,2025-12-22,DBD,0
-33.74.07,Candisari,2025-12-29,DBD,0
 33.74.08,Gajahmungkur,2025-01-06,DBD,0
 33.74.08,Gajahmungkur,2025-01-13,DBD,0
 33.74.08,Gajahmungkur,2025-01-20,DBD,1
@@ -3742,7 +3735,6 @@ kecamatan_id,kecamatan_nama,week_start,disease,cases
 33.74.08,Gajahmungkur,2025-12-08,DBD,0
 33.74.08,Gajahmungkur,2025-12-15,DBD,0
 33.74.08,Gajahmungkur,2025-12-22,DBD,0
-33.74.08,Gajahmungkur,2025-12-29,DBD,0
 33.74.09,Genuk,2025-01-06,DBD,1
 33.74.09,Genuk,2025-01-13,DBD,0
 33.74.09,Genuk,2025-01-20,DBD,1
@@ -3794,7 +3786,6 @@ kecamatan_id,kecamatan_nama,week_start,disease,cases
 33.74.09,Genuk,2025-12-08,DBD,0
 33.74.09,Genuk,2025-12-15,DBD,0
 33.74.09,Genuk,2025-12-22,DBD,0
-33.74.09,Genuk,2025-12-29,DBD,0
 33.74.10,Pedurungan,2025-01-06,DBD,2
 33.74.10,Pedurungan,2025-01-13,DBD,0
 33.74.10,Pedurungan,2025-01-20,DBD,1
@@ -3846,7 +3837,6 @@ kecamatan_id,kecamatan_nama,week_start,disease,cases
 33.74.10,Pedurungan,2025-12-08,DBD,0
 33.74.10,Pedurungan,2025-12-15,DBD,0
 33.74.10,Pedurungan,2025-12-22,DBD,0
-33.74.10,Pedurungan,2025-12-29,DBD,0
 33.74.11,Tembalang,2025-01-06,DBD,3
 33.74.11,Tembalang,2025-01-13,DBD,0
 33.74.11,Tembalang,2025-01-20,DBD,2
@@ -3898,7 +3888,6 @@ kecamatan_id,kecamatan_nama,week_start,disease,cases
 33.74.11,Tembalang,2025-12-08,DBD,0
 33.74.11,Tembalang,2025-12-15,DBD,0
 33.74.11,Tembalang,2025-12-22,DBD,0
-33.74.11,Tembalang,2025-12-29,DBD,0
 33.74.12,Banyumanik,2025-01-06,DBD,2
 33.74.12,Banyumanik,2025-01-13,DBD,0
 33.74.12,Banyumanik,2025-01-20,DBD,2
@@ -3950,7 +3939,6 @@ kecamatan_id,kecamatan_nama,week_start,disease,cases
 33.74.12,Banyumanik,2025-12-08,DBD,0
 33.74.12,Banyumanik,2025-12-15,DBD,0
 33.74.12,Banyumanik,2025-12-22,DBD,0
-33.74.12,Banyumanik,2025-12-29,DBD,0
 33.74.13,Gunungpati,2025-01-06,DBD,0
 33.74.13,Gunungpati,2025-01-13,DBD,0
 33.74.13,Gunungpati,2025-01-20,DBD,1
@@ -4002,7 +3990,6 @@ kecamatan_id,kecamatan_nama,week_start,disease,cases
 33.74.13,Gunungpati,2025-12-08,DBD,0
 33.74.13,Gunungpati,2025-12-15,DBD,0
 33.74.13,Gunungpati,2025-12-22,DBD,0
-33.74.13,Gunungpati,2025-12-29,DBD,0
 33.74.14,Mijen,2025-01-06,DBD,0
 33.74.14,Mijen,2025-01-13,DBD,2
 33.74.14,Mijen,2025-01-20,DBD,1
@@ -4054,38 +4041,37 @@ kecamatan_id,kecamatan_nama,week_start,disease,cases
 33.74.14,Mijen,2025-12-08,DBD,0
 33.74.14,Mijen,2025-12-15,DBD,1
 33.74.14,Mijen,2025-12-22,DBD,1
-33.74.14,Mijen,2025-12-29,DBD,0
-33.74.15,Ngaliyan,2025-01-06,DBD,0
-33.74.15,Ngaliyan,2025-01-13,DBD,1
-33.74.15,Ngaliyan,2025-01-20,DBD,1
+33.74.15,Ngaliyan,2025-01-06,DBD,1
+33.74.15,Ngaliyan,2025-01-13,DBD,0
+33.74.15,Ngaliyan,2025-01-20,DBD,2
 33.74.15,Ngaliyan,2025-01-27,DBD,1
-33.74.15,Ngaliyan,2025-02-03,DBD,0
-33.74.15,Ngaliyan,2025-02-10,DBD,3
-33.74.15,Ngaliyan,2025-02-17,DBD,0
-33.74.15,Ngaliyan,2025-02-24,DBD,3
-33.74.15,Ngaliyan,2025-03-03,DBD,0
-33.74.15,Ngaliyan,2025-03-10,DBD,1
+33.74.15,Ngaliyan,2025-02-03,DBD,2
+33.74.15,Ngaliyan,2025-02-10,DBD,1
+33.74.15,Ngaliyan,2025-02-17,DBD,1
+33.74.15,Ngaliyan,2025-02-24,DBD,1
+33.74.15,Ngaliyan,2025-03-03,DBD,4
+33.74.15,Ngaliyan,2025-03-10,DBD,0
 33.74.15,Ngaliyan,2025-03-17,DBD,2
-33.74.15,Ngaliyan,2025-03-24,DBD,3
+33.74.15,Ngaliyan,2025-03-24,DBD,2
 33.74.15,Ngaliyan,2025-03-31,DBD,0
 33.74.15,Ngaliyan,2025-04-07,DBD,2
-33.74.15,Ngaliyan,2025-04-14,DBD,3
+33.74.15,Ngaliyan,2025-04-14,DBD,2
 33.74.15,Ngaliyan,2025-04-21,DBD,4
-33.74.15,Ngaliyan,2025-04-28,DBD,0
-33.74.15,Ngaliyan,2025-05-05,DBD,1
-33.74.15,Ngaliyan,2025-05-12,DBD,3
-33.74.15,Ngaliyan,2025-05-19,DBD,3
-33.74.15,Ngaliyan,2025-05-26,DBD,1
-33.74.15,Ngaliyan,2025-06-02,DBD,0
+33.74.15,Ngaliyan,2025-04-28,DBD,1
+33.74.15,Ngaliyan,2025-05-05,DBD,0
+33.74.15,Ngaliyan,2025-05-12,DBD,2
+33.74.15,Ngaliyan,2025-05-19,DBD,1
+33.74.15,Ngaliyan,2025-05-26,DBD,3
+33.74.15,Ngaliyan,2025-06-02,DBD,1
 33.74.15,Ngaliyan,2025-06-09,DBD,0
 33.74.15,Ngaliyan,2025-06-16,DBD,0
 33.74.15,Ngaliyan,2025-06-23,DBD,0
 33.74.15,Ngaliyan,2025-06-30,DBD,0
 33.74.15,Ngaliyan,2025-07-07,DBD,0
-33.74.15,Ngaliyan,2025-07-14,DBD,1
-33.74.15,Ngaliyan,2025-07-21,DBD,0
+33.74.15,Ngaliyan,2025-07-14,DBD,0
+33.74.15,Ngaliyan,2025-07-21,DBD,1
 33.74.15,Ngaliyan,2025-07-28,DBD,0
-33.74.15,Ngaliyan,2025-08-04,DBD,0
+33.74.15,Ngaliyan,2025-08-04,DBD,1
 33.74.15,Ngaliyan,2025-08-11,DBD,0
 33.74.15,Ngaliyan,2025-08-18,DBD,0
 33.74.15,Ngaliyan,2025-08-25,DBD,0
@@ -4094,7 +4080,7 @@ kecamatan_id,kecamatan_nama,week_start,disease,cases
 33.74.15,Ngaliyan,2025-09-15,DBD,0
 33.74.15,Ngaliyan,2025-09-22,DBD,1
 33.74.15,Ngaliyan,2025-09-29,DBD,0
-33.74.15,Ngaliyan,2025-10-06,DBD,1
+33.74.15,Ngaliyan,2025-10-06,DBD,0
 33.74.15,Ngaliyan,2025-10-13,DBD,0
 33.74.15,Ngaliyan,2025-10-20,DBD,0
 33.74.15,Ngaliyan,2025-10-27,DBD,0
@@ -4105,31 +4091,30 @@ kecamatan_id,kecamatan_nama,week_start,disease,cases
 33.74.15,Ngaliyan,2025-12-01,DBD,0
 33.74.15,Ngaliyan,2025-12-08,DBD,0
 33.74.15,Ngaliyan,2025-12-15,DBD,0
-33.74.15,Ngaliyan,2025-12-22,DBD,1
-33.74.15,Ngaliyan,2025-12-29,DBD,0
+33.74.15,Ngaliyan,2025-12-22,DBD,0
 33.74.16,Tugu,2025-01-06,DBD,0
-33.74.16,Tugu,2025-01-13,DBD,1
+33.74.16,Tugu,2025-01-13,DBD,0
 33.74.16,Tugu,2025-01-20,DBD,0
-33.74.16,Tugu,2025-01-27,DBD,1
-33.74.16,Tugu,2025-02-03,DBD,2
+33.74.16,Tugu,2025-01-27,DBD,0
+33.74.16,Tugu,2025-02-03,DBD,0
 33.74.16,Tugu,2025-02-10,DBD,0
 33.74.16,Tugu,2025-02-17,DBD,0
 33.74.16,Tugu,2025-02-24,DBD,0
 33.74.16,Tugu,2025-03-03,DBD,1
 33.74.16,Tugu,2025-03-10,DBD,0
-33.74.16,Tugu,2025-03-17,DBD,0
+33.74.16,Tugu,2025-03-17,DBD,1
 33.74.16,Tugu,2025-03-24,DBD,0
 33.74.16,Tugu,2025-03-31,DBD,0
-33.74.16,Tugu,2025-04-07,DBD,1
+33.74.16,Tugu,2025-04-07,DBD,0
 33.74.16,Tugu,2025-04-14,DBD,0
-33.74.16,Tugu,2025-04-21,DBD,0
+33.74.16,Tugu,2025-04-21,DBD,2
 33.74.16,Tugu,2025-04-28,DBD,0
-33.74.16,Tugu,2025-05-05,DBD,0
-33.74.16,Tugu,2025-05-12,DBD,1
+33.74.16,Tugu,2025-05-05,DBD,1
+33.74.16,Tugu,2025-05-12,DBD,2
 33.74.16,Tugu,2025-05-19,DBD,0
 33.74.16,Tugu,2025-05-26,DBD,0
 33.74.16,Tugu,2025-06-02,DBD,0
-33.74.16,Tugu,2025-06-09,DBD,1
+33.74.16,Tugu,2025-06-09,DBD,0
 33.74.16,Tugu,2025-06-16,DBD,0
 33.74.16,Tugu,2025-06-23,DBD,0
 33.74.16,Tugu,2025-06-30,DBD,0
@@ -4144,7 +4129,7 @@ kecamatan_id,kecamatan_nama,week_start,disease,cases
 33.74.16,Tugu,2025-09-01,DBD,0
 33.74.16,Tugu,2025-09-08,DBD,0
 33.74.16,Tugu,2025-09-15,DBD,0
-33.74.16,Tugu,2025-09-22,DBD,0
+33.74.16,Tugu,2025-09-22,DBD,1
 33.74.16,Tugu,2025-09-29,DBD,0
 33.74.16,Tugu,2025-10-06,DBD,0
 33.74.16,Tugu,2025-10-13,DBD,0
@@ -4158,564 +4143,3 @@ kecamatan_id,kecamatan_nama,week_start,disease,cases
 33.74.16,Tugu,2025-12-08,DBD,0
 33.74.16,Tugu,2025-12-15,DBD,0
 33.74.16,Tugu,2025-12-22,DBD,0
-33.74.16,Tugu,2025-12-29,DBD,0
-33.74.01,Semarang Tengah,2026-01-05,DBD,0
-33.74.01,Semarang Tengah,2026-01-12,DBD,0
-33.74.01,Semarang Tengah,2026-01-19,DBD,0
-33.74.01,Semarang Tengah,2026-01-26,DBD,0
-33.74.01,Semarang Tengah,2026-02-02,DBD,0
-33.74.01,Semarang Tengah,2026-02-09,DBD,0
-33.74.01,Semarang Tengah,2026-02-16,DBD,0
-33.74.01,Semarang Tengah,2026-02-23,DBD,0
-33.74.01,Semarang Tengah,2026-03-02,DBD,0
-33.74.01,Semarang Tengah,2026-03-09,DBD,0
-33.74.01,Semarang Tengah,2026-03-16,DBD,0
-33.74.01,Semarang Tengah,2026-03-23,DBD,0
-33.74.01,Semarang Tengah,2026-03-30,DBD,0
-33.74.01,Semarang Tengah,2026-04-06,DBD,0
-33.74.01,Semarang Tengah,2026-04-13,DBD,0
-33.74.01,Semarang Tengah,2026-04-20,DBD,0
-33.74.01,Semarang Tengah,2026-04-27,DBD,0
-33.74.01,Semarang Tengah,2026-05-04,DBD,0
-33.74.01,Semarang Tengah,2026-05-11,DBD,0
-33.74.01,Semarang Tengah,2026-05-18,DBD,0
-33.74.01,Semarang Tengah,2026-05-25,DBD,0
-33.74.01,Semarang Tengah,2026-06-01,DBD,0
-33.74.01,Semarang Tengah,2026-06-08,DBD,0
-33.74.01,Semarang Tengah,2026-06-15,DBD,0
-33.74.01,Semarang Tengah,2026-06-22,DBD,0
-33.74.01,Semarang Tengah,2026-06-29,DBD,0
-33.74.01,Semarang Tengah,2026-07-06,DBD,0
-33.74.01,Semarang Tengah,2026-07-13,DBD,0
-33.74.01,Semarang Tengah,2026-07-20,DBD,0
-33.74.01,Semarang Tengah,2026-07-27,DBD,0
-33.74.01,Semarang Tengah,2026-08-03,DBD,0
-33.74.01,Semarang Tengah,2026-08-10,DBD,0
-33.74.01,Semarang Tengah,2026-08-17,DBD,0
-33.74.01,Semarang Tengah,2026-08-24,DBD,0
-33.74.01,Semarang Tengah,2026-08-31,DBD,0
-33.74.02,Semarang Utara,2026-01-05,DBD,0
-33.74.02,Semarang Utara,2026-01-12,DBD,0
-33.74.02,Semarang Utara,2026-01-19,DBD,0
-33.74.02,Semarang Utara,2026-01-26,DBD,0
-33.74.02,Semarang Utara,2026-02-02,DBD,0
-33.74.02,Semarang Utara,2026-02-09,DBD,0
-33.74.02,Semarang Utara,2026-02-16,DBD,0
-33.74.02,Semarang Utara,2026-02-23,DBD,0
-33.74.02,Semarang Utara,2026-03-02,DBD,0
-33.74.02,Semarang Utara,2026-03-09,DBD,0
-33.74.02,Semarang Utara,2026-03-16,DBD,0
-33.74.02,Semarang Utara,2026-03-23,DBD,0
-33.74.02,Semarang Utara,2026-03-30,DBD,0
-33.74.02,Semarang Utara,2026-04-06,DBD,0
-33.74.02,Semarang Utara,2026-04-13,DBD,0
-33.74.02,Semarang Utara,2026-04-20,DBD,1
-33.74.02,Semarang Utara,2026-04-27,DBD,0
-33.74.02,Semarang Utara,2026-05-04,DBD,0
-33.74.02,Semarang Utara,2026-05-11,DBD,0
-33.74.02,Semarang Utara,2026-05-18,DBD,0
-33.74.02,Semarang Utara,2026-05-25,DBD,0
-33.74.02,Semarang Utara,2026-06-01,DBD,0
-33.74.02,Semarang Utara,2026-06-08,DBD,0
-33.74.02,Semarang Utara,2026-06-15,DBD,0
-33.74.02,Semarang Utara,2026-06-22,DBD,0
-33.74.02,Semarang Utara,2026-06-29,DBD,0
-33.74.02,Semarang Utara,2026-07-06,DBD,0
-33.74.02,Semarang Utara,2026-07-13,DBD,0
-33.74.02,Semarang Utara,2026-07-20,DBD,0
-33.74.02,Semarang Utara,2026-07-27,DBD,0
-33.74.02,Semarang Utara,2026-08-03,DBD,0
-33.74.02,Semarang Utara,2026-08-10,DBD,0
-33.74.02,Semarang Utara,2026-08-17,DBD,0
-33.74.02,Semarang Utara,2026-08-24,DBD,0
-33.74.02,Semarang Utara,2026-08-31,DBD,1
-33.74.03,Semarang Timur,2026-01-05,DBD,0
-33.74.03,Semarang Timur,2026-01-12,DBD,0
-33.74.03,Semarang Timur,2026-01-19,DBD,0
-33.74.03,Semarang Timur,2026-01-26,DBD,0
-33.74.03,Semarang Timur,2026-02-02,DBD,0
-33.74.03,Semarang Timur,2026-02-09,DBD,0
-33.74.03,Semarang Timur,2026-02-16,DBD,0
-33.74.03,Semarang Timur,2026-02-23,DBD,0
-33.74.03,Semarang Timur,2026-03-02,DBD,0
-33.74.03,Semarang Timur,2026-03-09,DBD,0
-33.74.03,Semarang Timur,2026-03-16,DBD,0
-33.74.03,Semarang Timur,2026-03-23,DBD,0
-33.74.03,Semarang Timur,2026-03-30,DBD,0
-33.74.03,Semarang Timur,2026-04-06,DBD,0
-33.74.03,Semarang Timur,2026-04-13,DBD,0
-33.74.03,Semarang Timur,2026-04-20,DBD,0
-33.74.03,Semarang Timur,2026-04-27,DBD,0
-33.74.03,Semarang Timur,2026-05-04,DBD,0
-33.74.03,Semarang Timur,2026-05-11,DBD,1
-33.74.03,Semarang Timur,2026-05-18,DBD,0
-33.74.03,Semarang Timur,2026-05-25,DBD,0
-33.74.03,Semarang Timur,2026-06-01,DBD,0
-33.74.03,Semarang Timur,2026-06-08,DBD,0
-33.74.03,Semarang Timur,2026-06-15,DBD,0
-33.74.03,Semarang Timur,2026-06-22,DBD,0
-33.74.03,Semarang Timur,2026-06-29,DBD,0
-33.74.03,Semarang Timur,2026-07-06,DBD,0
-33.74.03,Semarang Timur,2026-07-13,DBD,0
-33.74.03,Semarang Timur,2026-07-20,DBD,0
-33.74.03,Semarang Timur,2026-07-27,DBD,0
-33.74.03,Semarang Timur,2026-08-03,DBD,0
-33.74.03,Semarang Timur,2026-08-10,DBD,0
-33.74.03,Semarang Timur,2026-08-17,DBD,0
-33.74.03,Semarang Timur,2026-08-24,DBD,0
-33.74.03,Semarang Timur,2026-08-31,DBD,0
-33.74.04,Semarang Selatan,2026-01-05,DBD,0
-33.74.04,Semarang Selatan,2026-01-12,DBD,0
-33.74.04,Semarang Selatan,2026-01-19,DBD,0
-33.74.04,Semarang Selatan,2026-01-26,DBD,0
-33.74.04,Semarang Selatan,2026-02-02,DBD,0
-33.74.04,Semarang Selatan,2026-02-09,DBD,0
-33.74.04,Semarang Selatan,2026-02-16,DBD,0
-33.74.04,Semarang Selatan,2026-02-23,DBD,0
-33.74.04,Semarang Selatan,2026-03-02,DBD,0
-33.74.04,Semarang Selatan,2026-03-09,DBD,0
-33.74.04,Semarang Selatan,2026-03-16,DBD,0
-33.74.04,Semarang Selatan,2026-03-23,DBD,0
-33.74.04,Semarang Selatan,2026-03-30,DBD,0
-33.74.04,Semarang Selatan,2026-04-06,DBD,0
-33.74.04,Semarang Selatan,2026-04-13,DBD,0
-33.74.04,Semarang Selatan,2026-04-20,DBD,0
-33.74.04,Semarang Selatan,2026-04-27,DBD,0
-33.74.04,Semarang Selatan,2026-05-04,DBD,0
-33.74.04,Semarang Selatan,2026-05-11,DBD,0
-33.74.04,Semarang Selatan,2026-05-18,DBD,0
-33.74.04,Semarang Selatan,2026-05-25,DBD,0
-33.74.04,Semarang Selatan,2026-06-01,DBD,0
-33.74.04,Semarang Selatan,2026-06-08,DBD,0
-33.74.04,Semarang Selatan,2026-06-15,DBD,0
-33.74.04,Semarang Selatan,2026-06-22,DBD,0
-33.74.04,Semarang Selatan,2026-06-29,DBD,0
-33.74.04,Semarang Selatan,2026-07-06,DBD,0
-33.74.04,Semarang Selatan,2026-07-13,DBD,0
-33.74.04,Semarang Selatan,2026-07-20,DBD,0
-33.74.04,Semarang Selatan,2026-07-27,DBD,0
-33.74.04,Semarang Selatan,2026-08-03,DBD,0
-33.74.04,Semarang Selatan,2026-08-10,DBD,0
-33.74.04,Semarang Selatan,2026-08-17,DBD,0
-33.74.04,Semarang Selatan,2026-08-24,DBD,0
-33.74.04,Semarang Selatan,2026-08-31,DBD,0
-33.74.05,Semarang Barat,2026-01-05,DBD,0
-33.74.05,Semarang Barat,2026-01-12,DBD,0
-33.74.05,Semarang Barat,2026-01-19,DBD,0
-33.74.05,Semarang Barat,2026-01-26,DBD,0
-33.74.05,Semarang Barat,2026-02-02,DBD,0
-33.74.05,Semarang Barat,2026-02-09,DBD,0
-33.74.05,Semarang Barat,2026-02-16,DBD,0
-33.74.05,Semarang Barat,2026-02-23,DBD,0
-33.74.05,Semarang Barat,2026-03-02,DBD,0
-33.74.05,Semarang Barat,2026-03-09,DBD,0
-33.74.05,Semarang Barat,2026-03-16,DBD,0
-33.74.05,Semarang Barat,2026-03-23,DBD,0
-33.74.05,Semarang Barat,2026-03-30,DBD,0
-33.74.05,Semarang Barat,2026-04-06,DBD,0
-33.74.05,Semarang Barat,2026-04-13,DBD,0
-33.74.05,Semarang Barat,2026-04-20,DBD,0
-33.74.05,Semarang Barat,2026-04-27,DBD,0
-33.74.05,Semarang Barat,2026-05-04,DBD,0
-33.74.05,Semarang Barat,2026-05-11,DBD,0
-33.74.05,Semarang Barat,2026-05-18,DBD,0
-33.74.05,Semarang Barat,2026-05-25,DBD,0
-33.74.05,Semarang Barat,2026-06-01,DBD,0
-33.74.05,Semarang Barat,2026-06-08,DBD,0
-33.74.05,Semarang Barat,2026-06-15,DBD,0
-33.74.05,Semarang Barat,2026-06-22,DBD,0
-33.74.05,Semarang Barat,2026-06-29,DBD,0
-33.74.05,Semarang Barat,2026-07-06,DBD,0
-33.74.05,Semarang Barat,2026-07-13,DBD,0
-33.74.05,Semarang Barat,2026-07-20,DBD,0
-33.74.05,Semarang Barat,2026-07-27,DBD,0
-33.74.05,Semarang Barat,2026-08-03,DBD,0
-33.74.05,Semarang Barat,2026-08-10,DBD,0
-33.74.05,Semarang Barat,2026-08-17,DBD,0
-33.74.05,Semarang Barat,2026-08-24,DBD,0
-33.74.05,Semarang Barat,2026-08-31,DBD,0
-33.74.06,Gayamsari,2026-01-05,DBD,0
-33.74.06,Gayamsari,2026-01-12,DBD,0
-33.74.06,Gayamsari,2026-01-19,DBD,0
-33.74.06,Gayamsari,2026-01-26,DBD,0
-33.74.06,Gayamsari,2026-02-02,DBD,0
-33.74.06,Gayamsari,2026-02-09,DBD,0
-33.74.06,Gayamsari,2026-02-16,DBD,0
-33.74.06,Gayamsari,2026-02-23,DBD,0
-33.74.06,Gayamsari,2026-03-02,DBD,0
-33.74.06,Gayamsari,2026-03-09,DBD,0
-33.74.06,Gayamsari,2026-03-16,DBD,0
-33.74.06,Gayamsari,2026-03-23,DBD,0
-33.74.06,Gayamsari,2026-03-30,DBD,0
-33.74.06,Gayamsari,2026-04-06,DBD,0
-33.74.06,Gayamsari,2026-04-13,DBD,0
-33.74.06,Gayamsari,2026-04-20,DBD,0
-33.74.06,Gayamsari,2026-04-27,DBD,0
-33.74.06,Gayamsari,2026-05-04,DBD,0
-33.74.06,Gayamsari,2026-05-11,DBD,0
-33.74.06,Gayamsari,2026-05-18,DBD,0
-33.74.06,Gayamsari,2026-05-25,DBD,0
-33.74.06,Gayamsari,2026-06-01,DBD,0
-33.74.06,Gayamsari,2026-06-08,DBD,0
-33.74.06,Gayamsari,2026-06-15,DBD,0
-33.74.06,Gayamsari,2026-06-22,DBD,0
-33.74.06,Gayamsari,2026-06-29,DBD,0
-33.74.06,Gayamsari,2026-07-06,DBD,0
-33.74.06,Gayamsari,2026-07-13,DBD,0
-33.74.06,Gayamsari,2026-07-20,DBD,0
-33.74.06,Gayamsari,2026-07-27,DBD,0
-33.74.06,Gayamsari,2026-08-03,DBD,0
-33.74.06,Gayamsari,2026-08-10,DBD,0
-33.74.06,Gayamsari,2026-08-17,DBD,0
-33.74.06,Gayamsari,2026-08-24,DBD,0
-33.74.06,Gayamsari,2026-08-31,DBD,0
-33.74.07,Candisari,2026-01-05,DBD,0
-33.74.07,Candisari,2026-01-12,DBD,0
-33.74.07,Candisari,2026-01-19,DBD,0
-33.74.07,Candisari,2026-01-26,DBD,0
-33.74.07,Candisari,2026-02-02,DBD,0
-33.74.07,Candisari,2026-02-09,DBD,0
-33.74.07,Candisari,2026-02-16,DBD,0
-33.74.07,Candisari,2026-02-23,DBD,0
-33.74.07,Candisari,2026-03-02,DBD,0
-33.74.07,Candisari,2026-03-09,DBD,1
-33.74.07,Candisari,2026-03-16,DBD,0
-33.74.07,Candisari,2026-03-23,DBD,0
-33.74.07,Candisari,2026-03-30,DBD,0
-33.74.07,Candisari,2026-04-06,DBD,0
-33.74.07,Candisari,2026-04-13,DBD,0
-33.74.07,Candisari,2026-04-20,DBD,0
-33.74.07,Candisari,2026-04-27,DBD,0
-33.74.07,Candisari,2026-05-04,DBD,0
-33.74.07,Candisari,2026-05-11,DBD,0
-33.74.07,Candisari,2026-05-18,DBD,0
-33.74.07,Candisari,2026-05-25,DBD,0
-33.74.07,Candisari,2026-06-01,DBD,0
-33.74.07,Candisari,2026-06-08,DBD,0
-33.74.07,Candisari,2026-06-15,DBD,0
-33.74.07,Candisari,2026-06-22,DBD,0
-33.74.07,Candisari,2026-06-29,DBD,0
-33.74.07,Candisari,2026-07-06,DBD,0
-33.74.07,Candisari,2026-07-13,DBD,0
-33.74.07,Candisari,2026-07-20,DBD,0
-33.74.07,Candisari,2026-07-27,DBD,0
-33.74.07,Candisari,2026-08-03,DBD,0
-33.74.07,Candisari,2026-08-10,DBD,0
-33.74.07,Candisari,2026-08-17,DBD,0
-33.74.07,Candisari,2026-08-24,DBD,0
-33.74.07,Candisari,2026-08-31,DBD,0
-33.74.08,Gajahmungkur,2026-01-05,DBD,0
-33.74.08,Gajahmungkur,2026-01-12,DBD,0
-33.74.08,Gajahmungkur,2026-01-19,DBD,0
-33.74.08,Gajahmungkur,2026-01-26,DBD,0
-33.74.08,Gajahmungkur,2026-02-02,DBD,0
-33.74.08,Gajahmungkur,2026-02-09,DBD,0
-33.74.08,Gajahmungkur,2026-02-16,DBD,0
-33.74.08,Gajahmungkur,2026-02-23,DBD,0
-33.74.08,Gajahmungkur,2026-03-02,DBD,0
-33.74.08,Gajahmungkur,2026-03-09,DBD,0
-33.74.08,Gajahmungkur,2026-03-16,DBD,0
-33.74.08,Gajahmungkur,2026-03-23,DBD,0
-33.74.08,Gajahmungkur,2026-03-30,DBD,0
-33.74.08,Gajahmungkur,2026-04-06,DBD,0
-33.74.08,Gajahmungkur,2026-04-13,DBD,0
-33.74.08,Gajahmungkur,2026-04-20,DBD,0
-33.74.08,Gajahmungkur,2026-04-27,DBD,0
-33.74.08,Gajahmungkur,2026-05-04,DBD,0
-33.74.08,Gajahmungkur,2026-05-11,DBD,0
-33.74.08,Gajahmungkur,2026-05-18,DBD,0
-33.74.08,Gajahmungkur,2026-05-25,DBD,0
-33.74.08,Gajahmungkur,2026-06-01,DBD,0
-33.74.08,Gajahmungkur,2026-06-08,DBD,0
-33.74.08,Gajahmungkur,2026-06-15,DBD,0
-33.74.08,Gajahmungkur,2026-06-22,DBD,0
-33.74.08,Gajahmungkur,2026-06-29,DBD,0
-33.74.08,Gajahmungkur,2026-07-06,DBD,0
-33.74.08,Gajahmungkur,2026-07-13,DBD,0
-33.74.08,Gajahmungkur,2026-07-20,DBD,0
-33.74.08,Gajahmungkur,2026-07-27,DBD,0
-33.74.08,Gajahmungkur,2026-08-03,DBD,0
-33.74.08,Gajahmungkur,2026-08-10,DBD,0
-33.74.08,Gajahmungkur,2026-08-17,DBD,0
-33.74.08,Gajahmungkur,2026-08-24,DBD,0
-33.74.08,Gajahmungkur,2026-08-31,DBD,0
-33.74.09,Genuk,2026-01-05,DBD,0
-33.74.09,Genuk,2026-01-12,DBD,0
-33.74.09,Genuk,2026-01-19,DBD,0
-33.74.09,Genuk,2026-01-26,DBD,0
-33.74.09,Genuk,2026-02-02,DBD,0
-33.74.09,Genuk,2026-02-09,DBD,0
-33.74.09,Genuk,2026-02-16,DBD,0
-33.74.09,Genuk,2026-02-23,DBD,0
-33.74.09,Genuk,2026-03-02,DBD,0
-33.74.09,Genuk,2026-03-09,DBD,0
-33.74.09,Genuk,2026-03-16,DBD,0
-33.74.09,Genuk,2026-03-23,DBD,0
-33.74.09,Genuk,2026-03-30,DBD,0
-33.74.09,Genuk,2026-04-06,DBD,0
-33.74.09,Genuk,2026-04-13,DBD,0
-33.74.09,Genuk,2026-04-20,DBD,0
-33.74.09,Genuk,2026-04-27,DBD,0
-33.74.09,Genuk,2026-05-04,DBD,0
-33.74.09,Genuk,2026-05-11,DBD,0
-33.74.09,Genuk,2026-05-18,DBD,0
-33.74.09,Genuk,2026-05-25,DBD,0
-33.74.09,Genuk,2026-06-01,DBD,0
-33.74.09,Genuk,2026-06-08,DBD,0
-33.74.09,Genuk,2026-06-15,DBD,0
-33.74.09,Genuk,2026-06-22,DBD,0
-33.74.09,Genuk,2026-06-29,DBD,0
-33.74.09,Genuk,2026-07-06,DBD,0
-33.74.09,Genuk,2026-07-13,DBD,0
-33.74.09,Genuk,2026-07-20,DBD,0
-33.74.09,Genuk,2026-07-27,DBD,0
-33.74.09,Genuk,2026-08-03,DBD,0
-33.74.09,Genuk,2026-08-10,DBD,0
-33.74.09,Genuk,2026-08-17,DBD,0
-33.74.09,Genuk,2026-08-24,DBD,0
-33.74.09,Genuk,2026-08-31,DBD,0
-33.74.10,Pedurungan,2026-01-05,DBD,0
-33.74.10,Pedurungan,2026-01-12,DBD,0
-33.74.10,Pedurungan,2026-01-19,DBD,0
-33.74.10,Pedurungan,2026-01-26,DBD,0
-33.74.10,Pedurungan,2026-02-02,DBD,0
-33.74.10,Pedurungan,2026-02-09,DBD,0
-33.74.10,Pedurungan,2026-02-16,DBD,0
-33.74.10,Pedurungan,2026-02-23,DBD,0
-33.74.10,Pedurungan,2026-03-02,DBD,0
-33.74.10,Pedurungan,2026-03-09,DBD,0
-33.74.10,Pedurungan,2026-03-16,DBD,0
-33.74.10,Pedurungan,2026-03-23,DBD,0
-33.74.10,Pedurungan,2026-03-30,DBD,0
-33.74.10,Pedurungan,2026-04-06,DBD,0
-33.74.10,Pedurungan,2026-04-13,DBD,0
-33.74.10,Pedurungan,2026-04-20,DBD,0
-33.74.10,Pedurungan,2026-04-27,DBD,0
-33.74.10,Pedurungan,2026-05-04,DBD,0
-33.74.10,Pedurungan,2026-05-11,DBD,0
-33.74.10,Pedurungan,2026-05-18,DBD,0
-33.74.10,Pedurungan,2026-05-25,DBD,0
-33.74.10,Pedurungan,2026-06-01,DBD,0
-33.74.10,Pedurungan,2026-06-08,DBD,0
-33.74.10,Pedurungan,2026-06-15,DBD,0
-33.74.10,Pedurungan,2026-06-22,DBD,0
-33.74.10,Pedurungan,2026-06-29,DBD,0
-33.74.10,Pedurungan,2026-07-06,DBD,0
-33.74.10,Pedurungan,2026-07-13,DBD,0
-33.74.10,Pedurungan,2026-07-20,DBD,0
-33.74.10,Pedurungan,2026-07-27,DBD,0
-33.74.10,Pedurungan,2026-08-03,DBD,0
-33.74.10,Pedurungan,2026-08-10,DBD,0
-33.74.10,Pedurungan,2026-08-17,DBD,0
-33.74.10,Pedurungan,2026-08-24,DBD,0
-33.74.10,Pedurungan,2026-08-31,DBD,0
-33.74.11,Tembalang,2026-01-05,DBD,0
-33.74.11,Tembalang,2026-01-12,DBD,0
-33.74.11,Tembalang,2026-01-19,DBD,0
-33.74.11,Tembalang,2026-01-26,DBD,0
-33.74.11,Tembalang,2026-02-02,DBD,0
-33.74.11,Tembalang,2026-02-09,DBD,0
-33.74.11,Tembalang,2026-02-16,DBD,0
-33.74.11,Tembalang,2026-02-23,DBD,0
-33.74.11,Tembalang,2026-03-02,DBD,0
-33.74.11,Tembalang,2026-03-09,DBD,0
-33.74.11,Tembalang,2026-03-16,DBD,0
-33.74.11,Tembalang,2026-03-23,DBD,0
-33.74.11,Tembalang,2026-03-30,DBD,0
-33.74.11,Tembalang,2026-04-06,DBD,0
-33.74.11,Tembalang,2026-04-13,DBD,0
-33.74.11,Tembalang,2026-04-20,DBD,0
-33.74.11,Tembalang,2026-04-27,DBD,0
-33.74.11,Tembalang,2026-05-04,DBD,0
-33.74.11,Tembalang,2026-05-11,DBD,0
-33.74.11,Tembalang,2026-05-18,DBD,0
-33.74.11,Tembalang,2026-05-25,DBD,0
-33.74.11,Tembalang,2026-06-01,DBD,0
-33.74.11,Tembalang,2026-06-08,DBD,0
-33.74.11,Tembalang,2026-06-15,DBD,0
-33.74.11,Tembalang,2026-06-22,DBD,0
-33.74.11,Tembalang,2026-06-29,DBD,0
-33.74.11,Tembalang,2026-07-06,DBD,0
-33.74.11,Tembalang,2026-07-13,DBD,0
-33.74.11,Tembalang,2026-07-20,DBD,0
-33.74.11,Tembalang,2026-07-27,DBD,0
-33.74.11,Tembalang,2026-08-03,DBD,0
-33.74.11,Tembalang,2026-08-10,DBD,0
-33.74.11,Tembalang,2026-08-17,DBD,0
-33.74.11,Tembalang,2026-08-24,DBD,0
-33.74.11,Tembalang,2026-08-31,DBD,0
-33.74.12,Banyumanik,2026-01-05,DBD,0
-33.74.12,Banyumanik,2026-01-12,DBD,0
-33.74.12,Banyumanik,2026-01-19,DBD,0
-33.74.12,Banyumanik,2026-01-26,DBD,0
-33.74.12,Banyumanik,2026-02-02,DBD,0
-33.74.12,Banyumanik,2026-02-09,DBD,0
-33.74.12,Banyumanik,2026-02-16,DBD,0
-33.74.12,Banyumanik,2026-02-23,DBD,0
-33.74.12,Banyumanik,2026-03-02,DBD,0
-33.74.12,Banyumanik,2026-03-09,DBD,0
-33.74.12,Banyumanik,2026-03-16,DBD,0
-33.74.12,Banyumanik,2026-03-23,DBD,0
-33.74.12,Banyumanik,2026-03-30,DBD,0
-33.74.12,Banyumanik,2026-04-06,DBD,0
-33.74.12,Banyumanik,2026-04-13,DBD,0
-33.74.12,Banyumanik,2026-04-20,DBD,0
-33.74.12,Banyumanik,2026-04-27,DBD,0
-33.74.12,Banyumanik,2026-05-04,DBD,0
-33.74.12,Banyumanik,2026-05-11,DBD,0
-33.74.12,Banyumanik,2026-05-18,DBD,0
-33.74.12,Banyumanik,2026-05-25,DBD,0
-33.74.12,Banyumanik,2026-06-01,DBD,0
-33.74.12,Banyumanik,2026-06-08,DBD,0
-33.74.12,Banyumanik,2026-06-15,DBD,0
-33.74.12,Banyumanik,2026-06-22,DBD,0
-33.74.12,Banyumanik,2026-06-29,DBD,0
-33.74.12,Banyumanik,2026-07-06,DBD,0
-33.74.12,Banyumanik,2026-07-13,DBD,0
-33.74.12,Banyumanik,2026-07-20,DBD,0
-33.74.12,Banyumanik,2026-07-27,DBD,0
-33.74.12,Banyumanik,2026-08-03,DBD,0
-33.74.12,Banyumanik,2026-08-10,DBD,0
-33.74.12,Banyumanik,2026-08-17,DBD,0
-33.74.12,Banyumanik,2026-08-24,DBD,0
-33.74.12,Banyumanik,2026-08-31,DBD,0
-33.74.13,Gunungpati,2026-01-05,DBD,0
-33.74.13,Gunungpati,2026-01-12,DBD,0
-33.74.13,Gunungpati,2026-01-19,DBD,0
-33.74.13,Gunungpati,2026-01-26,DBD,0
-33.74.13,Gunungpati,2026-02-02,DBD,0
-33.74.13,Gunungpati,2026-02-09,DBD,0
-33.74.13,Gunungpati,2026-02-16,DBD,0
-33.74.13,Gunungpati,2026-02-23,DBD,0
-33.74.13,Gunungpati,2026-03-02,DBD,0
-33.74.13,Gunungpati,2026-03-09,DBD,0
-33.74.13,Gunungpati,2026-03-16,DBD,0
-33.74.13,Gunungpati,2026-03-23,DBD,0
-33.74.13,Gunungpati,2026-03-30,DBD,0
-33.74.13,Gunungpati,2026-04-06,DBD,0
-33.74.13,Gunungpati,2026-04-13,DBD,0
-33.74.13,Gunungpati,2026-04-20,DBD,0
-33.74.13,Gunungpati,2026-04-27,DBD,0
-33.74.13,Gunungpati,2026-05-04,DBD,0
-33.74.13,Gunungpati,2026-05-11,DBD,0
-33.74.13,Gunungpati,2026-05-18,DBD,0
-33.74.13,Gunungpati,2026-05-25,DBD,0
-33.74.13,Gunungpati,2026-06-01,DBD,0
-33.74.13,Gunungpati,2026-06-08,DBD,0
-33.74.13,Gunungpati,2026-06-15,DBD,0
-33.74.13,Gunungpati,2026-06-22,DBD,0
-33.74.13,Gunungpati,2026-06-29,DBD,0
-33.74.13,Gunungpati,2026-07-06,DBD,0
-33.74.13,Gunungpati,2026-07-13,DBD,0
-33.74.13,Gunungpati,2026-07-20,DBD,0
-33.74.13,Gunungpati,2026-07-27,DBD,0
-33.74.13,Gunungpati,2026-08-03,DBD,0
-33.74.13,Gunungpati,2026-08-10,DBD,0
-33.74.13,Gunungpati,2026-08-17,DBD,0
-33.74.13,Gunungpati,2026-08-24,DBD,0
-33.74.13,Gunungpati,2026-08-31,DBD,0
-33.74.14,Mijen,2026-01-05,DBD,0
-33.74.14,Mijen,2026-01-12,DBD,0
-33.74.14,Mijen,2026-01-19,DBD,0
-33.74.14,Mijen,2026-01-26,DBD,0
-33.74.14,Mijen,2026-02-02,DBD,0
-33.74.14,Mijen,2026-02-09,DBD,0
-33.74.14,Mijen,2026-02-16,DBD,0
-33.74.14,Mijen,2026-02-23,DBD,0
-33.74.14,Mijen,2026-03-02,DBD,0
-33.74.14,Mijen,2026-03-09,DBD,0
-33.74.14,Mijen,2026-03-16,DBD,0
-33.74.14,Mijen,2026-03-23,DBD,0
-33.74.14,Mijen,2026-03-30,DBD,0
-33.74.14,Mijen,2026-04-06,DBD,0
-33.74.14,Mijen,2026-04-13,DBD,0
-33.74.14,Mijen,2026-04-20,DBD,0
-33.74.14,Mijen,2026-04-27,DBD,0
-33.74.14,Mijen,2026-05-04,DBD,0
-33.74.14,Mijen,2026-05-11,DBD,0
-33.74.14,Mijen,2026-05-18,DBD,0
-33.74.14,Mijen,2026-05-25,DBD,0
-33.74.14,Mijen,2026-06-01,DBD,0
-33.74.14,Mijen,2026-06-08,DBD,0
-33.74.14,Mijen,2026-06-15,DBD,0
-33.74.14,Mijen,2026-06-22,DBD,0
-33.74.14,Mijen,2026-06-29,DBD,0
-33.74.14,Mijen,2026-07-06,DBD,0
-33.74.14,Mijen,2026-07-13,DBD,0
-33.74.14,Mijen,2026-07-20,DBD,0
-33.74.14,Mijen,2026-07-27,DBD,0
-33.74.14,Mijen,2026-08-03,DBD,0
-33.74.14,Mijen,2026-08-10,DBD,0
-33.74.14,Mijen,2026-08-17,DBD,0
-33.74.14,Mijen,2026-08-24,DBD,0
-33.74.14,Mijen,2026-08-31,DBD,0
-33.74.15,Ngaliyan,2026-01-05,DBD,0
-33.74.15,Ngaliyan,2026-01-12,DBD,0
-33.74.15,Ngaliyan,2026-01-19,DBD,0
-33.74.15,Ngaliyan,2026-01-26,DBD,0
-33.74.15,Ngaliyan,2026-02-02,DBD,0
-33.74.15,Ngaliyan,2026-02-09,DBD,0
-33.74.15,Ngaliyan,2026-02-16,DBD,0
-33.74.15,Ngaliyan,2026-02-23,DBD,0
-33.74.15,Ngaliyan,2026-03-02,DBD,0
-33.74.15,Ngaliyan,2026-03-09,DBD,0
-33.74.15,Ngaliyan,2026-03-16,DBD,0
-33.74.15,Ngaliyan,2026-03-23,DBD,0
-33.74.15,Ngaliyan,2026-03-30,DBD,0
-33.74.15,Ngaliyan,2026-04-06,DBD,0
-33.74.15,Ngaliyan,2026-04-13,DBD,0
-33.74.15,Ngaliyan,2026-04-20,DBD,0
-33.74.15,Ngaliyan,2026-04-27,DBD,0
-33.74.15,Ngaliyan,2026-05-04,DBD,0
-33.74.15,Ngaliyan,2026-05-11,DBD,0
-33.74.15,Ngaliyan,2026-05-18,DBD,0
-33.74.15,Ngaliyan,2026-05-25,DBD,0
-33.74.15,Ngaliyan,2026-06-01,DBD,0
-33.74.15,Ngaliyan,2026-06-08,DBD,0
-33.74.15,Ngaliyan,2026-06-15,DBD,0
-33.74.15,Ngaliyan,2026-06-22,DBD,0
-33.74.15,Ngaliyan,2026-06-29,DBD,0
-33.74.15,Ngaliyan,2026-07-06,DBD,0
-33.74.15,Ngaliyan,2026-07-13,DBD,0
-33.74.15,Ngaliyan,2026-07-20,DBD,0
-33.74.15,Ngaliyan,2026-07-27,DBD,0
-33.74.15,Ngaliyan,2026-08-03,DBD,0
-33.74.15,Ngaliyan,2026-08-10,DBD,0
-33.74.15,Ngaliyan,2026-08-17,DBD,0
-33.74.15,Ngaliyan,2026-08-24,DBD,0
-33.74.15,Ngaliyan,2026-08-31,DBD,0
-33.74.16,Tugu,2026-01-05,DBD,0
-33.74.16,Tugu,2026-01-12,DBD,0
-33.74.16,Tugu,2026-01-19,DBD,0
-33.74.16,Tugu,2026-01-26,DBD,0
-33.74.16,Tugu,2026-02-02,DBD,0
-33.74.16,Tugu,2026-02-09,DBD,0
-33.74.16,Tugu,2026-02-16,DBD,0
-33.74.16,Tugu,2026-02-23,DBD,0
-33.74.16,Tugu,2026-03-02,DBD,0
-33.74.16,Tugu,2026-03-09,DBD,0
-33.74.16,Tugu,2026-03-16,DBD,0
-33.74.16,Tugu,2026-03-23,DBD,0
-33.74.16,Tugu,2026-03-30,DBD,0
-33.74.16,Tugu,2026-04-06,DBD,0
-33.74.16,Tugu,2026-04-13,DBD,0
-33.74.16,Tugu,2026-04-20,DBD,0
-33.74.16,Tugu,2026-04-27,DBD,0
-33.74.16,Tugu,2026-05-04,DBD,0
-33.74.16,Tugu,2026-05-11,DBD,0
-33.74.16,Tugu,2026-05-18,DBD,0
-33.74.16,Tugu,2026-05-25,DBD,0
-33.74.16,Tugu,2026-06-01,DBD,0
-33.74.16,Tugu,2026-06-08,DBD,0
-33.74.16,Tugu,2026-06-15,DBD,0
-33.74.16,Tugu,2026-06-22,DBD,0
-33.74.16,Tugu,2026-06-29,DBD,0
-33.74.16,Tugu,2026-07-06,DBD,0
-33.74.16,Tugu,2026-07-13,DBD,0
-33.74.16,Tugu,2026-07-20,DBD,0
-33.74.16,Tugu,2026-07-27,DBD,0
-33.74.16,Tugu,2026-08-03,DBD,0
-33.74.16,Tugu,2026-08-10,DBD,0
-33.74.16,Tugu,2026-08-17,DBD,0
-33.74.16,Tugu,2026-08-24,DBD,0
-33.74.16,Tugu,2026-08-31,DBD,0

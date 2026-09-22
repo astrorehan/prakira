@@ -1,21 +1,16 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import {
   ArrowDown,
-  ArrowRight,
   ArrowUp,
-  Info,
   Minus,
   Scale,
-  Users,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DiseaseSelector } from "@/components/disease-selector";
 import { DataState } from "@/components/data-state";
-import { ImpactCalculator } from "@/components/impact-calculator";
 import { fetchDiseases, fetchPriority } from "@/lib/api";
 import { useApi } from "@/lib/use-api";
 import { cn, diseaseLabel, formatNumber, riskConfigOf } from "@/lib/utils";
@@ -101,28 +96,6 @@ function IndexBar({ value }: { value: number | null }) {
   );
 }
 
-function StatTile({
-  label,
-  value,
-  sub,
-}: {
-  label: string;
-  value: string;
-  sub: string;
-}) {
-  return (
-    <div className="rounded-xl border border-border bg-surface p-4">
-      <p className="text-caption uppercase tracking-wide text-paper-600">
-        {label}
-      </p>
-      <p className="mt-1 font-mono text-h3 tabular-nums text-foreground">
-        {value}
-      </p>
-      <p className="mt-1 text-caption leading-snug text-paper-600">{sub}</p>
-    </div>
-  );
-}
-
 export function PriorityBoard() {
   const [disease, setDisease] = React.useState<DiseaseType | null>(null);
   const [weighting, setWeighting] =
@@ -145,17 +118,9 @@ export function PriorityBoard() {
   );
 
   const rows: PriorityRow[] = priority.data?.data.rows ?? [];
-  const summary = priority.data?.data.summary;
   const meta = priority.data?.meta;
 
   const scored = rows.filter((r) => r.indeks_prioritas !== null);
-  const biggestClimb = scored.reduce<PriorityRow | null>(
-    (best, row) =>
-      best === null || (row.pergeseran ?? 0) > (best.pergeseran ?? 0)
-        ? row
-        : best,
-    null,
-  );
 
   return (
     <div className="container space-y-6 py-8 md:py-12">
@@ -215,47 +180,8 @@ export function PriorityBoard() {
         loadingMessage="Menyusun peringkat prioritas…"
         onRetry={priority.reload}
       >
-        {meta && summary && (
+        {meta && (
           <div className="space-y-6">
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <StatTile
-                label="Jiwa di kecamatan kelas tinggi"
-                value={formatNumber(summary.jiwaKelasTinggi)}
-                sub={`Dari ${formatNumber(summary.jiwaTerhitung)} jiwa di ${summary.evaluated} kecamatan yang punya prakiraan.`}
-              />
-              <StatTile
-                label="Naik peringkat"
-                value={String(summary.naikTajam.length)}
-                sub={
-                  summary.naikTajam.length === 0
-                    ? "Tidak ada kecamatan yang naik tiga peringkat atau lebih."
-                    : `Naik ≥3 peringkat: ${summary.naikTajam.slice(0, 3).join(", ")}${summary.naikTajam.length > 3 ? ", …" : ""}.`
-                }
-              />
-              <StatTile
-                label="Turun peringkat"
-                value={String(summary.turunTajam.length)}
-                sub={
-                  summary.turunTajam.length === 0
-                    ? "Tidak ada kecamatan yang turun tiga peringkat atau lebih."
-                    : `Turun ≥3 peringkat: ${summary.turunTajam.slice(0, 3).join(", ")}${summary.turunTajam.length > 3 ? ", …" : ""}.`
-                }
-              />
-              <StatTile
-                label="Pergeseran terbesar"
-                value={
-                  biggestClimb && (biggestClimb.pergeseran ?? 0) > 0
-                    ? `+${biggestClimb.pergeseran}`
-                    : "—"
-                }
-                sub={
-                  biggestClimb && (biggestClimb.pergeseran ?? 0) > 0
-                    ? `${biggestClimb.nama}: peringkat risiko ${biggestClimb.peringkat_risiko} menjadi prioritas ${biggestClimb.peringkat_prioritas}.`
-                    : "Urutan risiko dan urutan prioritas berhimpit bulan ini."
-                }
-              />
-            </div>
-
             <Card className="overflow-hidden">
               <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border px-5 py-4">
                 <h2 className="flex items-center gap-2 text-h4 font-semibold text-foreground">
@@ -344,105 +270,6 @@ export function PriorityBoard() {
                 </table>
               </div>
             </Card>
-
-            <div className="grid gap-4 lg:grid-cols-2">
-              <Card className="p-5">
-                <h2 className="flex items-center gap-2 text-h4 font-semibold text-foreground">
-                  <Info className="h-4 w-4 text-paper-600" aria-hidden />
-                  Cara indeks ini dihitung
-                </h2>
-                <ul className="mt-3 space-y-2">
-                  {meta.method.map((line) => (
-                    <li
-                      key={line}
-                      className="flex gap-2.5 text-body-sm text-paper-700"
-                    >
-                      <span
-                        className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-300"
-                        aria-hidden
-                      />
-                      {line}
-                    </li>
-                  ))}
-                </ul>
-              </Card>
-
-              {/* Yang tidak diukur ditulis sekeras yang diukur. Indeks
-                  kerentanan yang diam soal kekosongannya mengundang pembacaan
-                  bahwa ia sudah lengkap. */}
-              <Card className="border-risk-medium-br bg-risk-medium-bg p-5">
-                <h2 className="flex items-center gap-2 text-h4 font-semibold text-foreground">
-                  <Users className="h-4 w-4 text-risk-medium" aria-hidden />
-                  Yang belum masuk indeks ini
-                </h2>
-                <ul className="mt-3 space-y-2">
-                  {meta.missingFactors.map((factor) => (
-                    <li
-                      key={factor}
-                      className="flex gap-2.5 text-body-sm text-paper-800"
-                    >
-                      <span
-                        className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-risk-medium"
-                        aria-hidden
-                      />
-                      {factor}
-                    </li>
-                  ))}
-                </ul>
-                <p className="mt-4 text-caption text-paper-700">
-                  Faktor-faktor ini tidak dikarang menjadi angka. Begitu
-                  datanya tersedia dari sumber resmi, rumusnya tinggal
-                  ditambahi — sampai saat itu, kekosongannya tercetak di sini.
-                </p>
-              </Card>
-            </div>
-
-            <Card className="p-5">
-              <p className="text-body-sm text-paper-700">
-                Peringkat risiko yang jadi masukan halaman ini berasal dari
-                model yang sama yang diuji di halaman transparansi. Angka
-                sensitivitas dan alarm palsunya apa adanya di sana.
-              </p>
-              <div className="mt-3 flex flex-wrap gap-4">
-                <Link
-                  href="/model"
-                  className="inline-flex items-center gap-1.5 text-body-sm font-medium text-brand-700 hover:underline"
-                >
-                  Transparansi model
-                  <ArrowRight className="h-3.5 w-3.5" aria-hidden />
-                </Link>
-                <Link
-                  href="/mesin-waktu"
-                  className="inline-flex items-center gap-1.5 text-body-sm font-medium text-brand-700 hover:underline"
-                >
-                  Mesin waktu — putar ulang periode uji
-                  <ArrowRight className="h-3.5 w-3.5" aria-hidden />
-                </Link>
-              </div>
-            </Card>
-
-            {/* F16: kalkulator ini menghitung skenario dari asumsi yang diketik
-                sendiri — bukan hasil yang pernah diukur sistem. Berdiri di
-                sebelah peringkat prioritas, angkanya terbaca seperti capaian;
-                karena itu ia dipisah ke bagian sendiri di bawah, dengan judul
-                yang menyebut sifatnya. */}
-            <div className="border-t border-paper-200 pt-6">
-              <p className="overline text-paper-600">
-                Bahan advokasi — skenario, bukan hasil terukur
-              </p>
-              <p className="mt-1 max-w-2xl text-body-sm text-paper-700">
-                Angka di bawah dihitung dari asumsi yang Anda isi sendiri.
-                Sistem tidak pernah mengukur efek intervensinya, jadi hasilnya
-                tidak boleh dibaca sebagai capaian program maupun dasar urutan
-                prioritas di atas.
-              </p>
-            </div>
-
-            <ImpactCalculator
-              disease={meta.disease}
-              monthLabel={meta.predictionLabel}
-              rows={rows}
-            />
           </div>
         )}
       </DataState>

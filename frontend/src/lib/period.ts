@@ -83,12 +83,12 @@ export function daysBetween(target: Date, from: Date): number {
 }
 
 /**
- * Menerjemahkan tenggat jadi tekanan waktu, **relatif terhadap periode data**.
+ * Menerjemahkan tenggat jadi tekanan waktu, **relatif terhadap acuan gateway**.
  *
- * `systemToday` adalah hari terakhir bulan observasi terakhir, dikirim gateway.
- * Memakai jam peramban akan salah: data berhenti di satu bulan tertentu, dan
- * instruksi untuk bulan berikutnya akan selalu terbaca "terlambat delapan
- * bulan" hanya karena kalender nyata sudah berjalan.
+ * `systemToday` adalah hari berjalan menurut gateway (WIB), bukan jam
+ * peramban. Instruksi disusun untuk bulan prakiraan aktif — bulan depan —
+ * jadi hitungan mundurnya memang mengacu ke kalender; yang tidak boleh adalah
+ * setiap peramban memakai acuannya sendiri.
  */
 export function describeDeadline(
   dueDate: string | null | undefined,

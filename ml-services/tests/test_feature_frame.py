@@ -147,15 +147,94 @@ def test_build_feature_row_delegates_with_month(disease):
 # ── Penolakan yang disengaja ────────────────────────────────────────────────
 
 
-@pytest.mark.parametrize("gap_months", [0, 2, 6, -1])
-def test_rejects_month_that_is_not_one_step_ahead(gap_months):
-    """Model ini satu langkah ke depan; sisanya ditolak, bukan ditebak."""
+@pytest.mark.parametrize("gap_months", [0, -1])
+def test_rejects_month_that_is_not_ahead_of_the_last_observation(gap_months):
+    """Bulan yang sudah teramati bukan prakiraan; ia ditolak, bukan dihitung."""
     history = district_frame(DISEASES[0])
     last = pd.Timestamp(history["month_start"].iloc[-1])
     target = (last + pd.DateOffset(months=gap_months)).strftime("%Y-%m-%d")
 
-    with pytest.raises(ValueError, match="satu bulan setelah observasi terakhir"):
+    with pytest.raises(ValueError, match="bulan sesudah observasi terakhir"):
         roll_forward(history, target)
+
+
+@pytest.mark.parametrize("gap_months", [2, 6])
+def test_rejects_multi_step_month_without_a_model(gap_months):
+    """Bulan yang lebih jauh butuh rantai bulan antara, dan rantai butuh model.
+
+    Menyusun jendela lag yang jaraknya salah tetap menghasilkan angka, dan
+    angka itu tidak berarti apa-apa (PRD §7). Tanpa model untuk mengisi bulan
+    antara, jawabannya adalah penolakan yang menyebutkan sebabnya.
+    """
+    history = district_frame(DISEASES[0])
+    last = pd.Timestamp(history["month_start"].iloc[-1])
+    target = (last + pd.DateOffset(months=gap_months)).strftime("%Y-%m-%d")
+
+    with pytest.raises(ValueError, match="penyambungan bertahap"):
+        roll_forward(history, target)
+
+
+# ── Rantai bulan antara ─────────────────────────────────────────────────────
+
+
+class ConstantModel:
+    """Model tiruan: berapa pun barisnya, jawabannya angka yang sama."""
+
+    def __init__(self, value: float):
+        self.value = value
+        self.rows_seen = []
+
+    def predict(self, X):
+        self.rows_seen.append(X.copy())
+        return np.full(len(X), self.value, dtype=float)
+
+
+def test_multi_step_forecast_walks_month_by_month():
+    """Bulan T+3 dijangkau lewat T+1 dan T+2, bukan dengan lag yang meleset.
+
+    Bulan antara diisi prakiraan model itu sendiri, jadi `cases_lag1` baris
+    terakhir harus berisi jawaban model untuk bulan sebelumnya — bukan kasus
+    teramati terakhir, yang sudah tiga bulan lebih tua.
+    """
+    from app.services.feature_frame import monthly_weather, reload_weather
+
+    history = district_frame(DISEASES[0])
+    last = pd.Timestamp(history["month_start"].iloc[-1])
+    kecamatan_id = str(history["kecamatan_id"].iloc[-1])
+
+    weather = monthly_weather()
+    available = set(
+        weather.loc[weather["kecamatan_id"] == kecamatan_id, "month_start"]
+    )
+    horizon = [
+        (last + pd.DateOffset(months=k)).strftime("%Y-%m-%d") for k in (1, 2)
+    ]
+    if not set(horizon).issubset(available):
+        pytest.skip("Cuaca bulan antara belum tersedia untuk kecamatan ini.")
+
+    reload_weather()
+    model = ConstantModel(4.0)
+    target = (last + pd.DateOffset(months=3)).strftime("%Y-%m-%d")
+
+    row = roll_forward(history, target, model=model)
+
+    assert row["month"].iloc[0] == pd.Timestamp(target).month
+    # Dua bulan antara diprakirakan, jadi dua lag terdekat berisi jawaban model.
+    assert row["cases_lag1"].iloc[0] == pytest.approx(4.0)
+    assert row["cases_lag2"].iloc[0] == pytest.approx(4.0)
+    assert row["cases_lag3"].iloc[0] == pytest.approx(
+        float(history["cases"].iloc[-1])
+    )
+    # Iklimnya nyata: lag bulan antara diambil dari cuaca bulanan, bukan diulang.
+    expected_rain = float(
+        weather.loc[
+            (weather["kecamatan_id"] == kecamatan_id)
+            & (weather["month_start"] == horizon[1]),
+            "rainfall_mm",
+        ].iloc[0]
+    )
+    assert row["rainfall_lag1"].iloc[0] == pytest.approx(expected_rain)
+    reload_weather()
 
 
 def test_rejects_history_shorter_than_the_lag_window():

@@ -8,7 +8,7 @@ import fs from "node:fs";
 import { gzipSync } from "node:zlib";
 import { env } from "../env.js";
 import { all } from "../db/index.js";
-import { addMonths, monthLabel, reportingPeriod } from "../services/period.js";
+import { monthLabel, reportingPeriod } from "../services/period.js";
 import { listKecamatan } from "../services/districts.js";
 import { recentAudit } from "../services/audit.js";
 import { asyncRoute } from "../middleware/error.js";
@@ -66,15 +66,15 @@ metaRouter.get(
       typeof req.query.disease === "string" ? req.query.disease : undefined;
     const period = await reportingPeriod(disease);
 
-    /* "Hari ini" menurut sistem adalah hari terakhir bulan observasi terakhir.
-     Konsol tidak boleh memakai jam peramban sebagai acuan tenggat: data
-     berhenti di satu bulan tertentu, dan hitungan mundur yang mengacu ke
-     kalender nyata akan menyatakan seluruh instruksi terlambat. */
-    const systemToday = period.latestObserved
-      ? new Date(Date.parse(addMonths(period.latestObserved, 1)) - 86_400_000)
-          .toISOString()
-          .slice(0, 10)
-      : null;
+    /* "Hari ini" menurut sistem adalah hari berjalan di Semarang.
+     Instruksi disusun untuk bulan prakiraan aktif — bulan depan — jadi
+     hitungan mundurnya memang mengacu ke kalender nyata. Acuan lama, hari
+     terakhir bulan observasi, kini akan menyatakan tenggat bulan depan masih
+     sepuluh bulan lagi. Jam peramban tetap tidak dipakai: yang dikirim
+     gateway ini yang menjadi acuan seluruh konsol. */
+    const systemToday = new Date(Date.now() + 7 * 3_600_000)
+      .toISOString()
+      .slice(0, 10);
 
     res.json({ ...period, systemToday });
   }),

@@ -43,7 +43,7 @@ const MONTHS_ID = [
 export type ReportingPeriod = {
   /** Bulan observasi terakhir yang ada datanya, `YYYY-MM-01`. */
   latestObserved: string | null;
-  /** Bulan yang diprediksi = satu bulan setelah observasi terakhir. */
+  /** Bulan prakiraan aktif = sebulan setelah bulan kalender berjalan. */
   predictionMonth: string | null;
   /** "Desember 2025" — label bulan observasi terakhir. */
   monthYear: string;
@@ -62,8 +62,8 @@ export type ReportingPeriod = {
    */
   dataLagMonths: number | null;
   /**
-   * Benar bila bulan prakiraan sudah lewat dari bulan kalender berjalan —
-   * yakni, prakiraan untuk bulan ini tidak bisa dibuat dari data yang ada.
+   * Benar bila prakiraan aktif tidak sampai ke bulan kalender berjalan —
+   * yakni, bulan ini pun tidak terjangkau oleh prakiraan yang ada.
    */
   forecastBehindCalendar: boolean;
   /** Kalimat siap tampil yang menjelaskan keterlambatan; `null` bila mutakhir. */
@@ -108,14 +108,53 @@ export type DataLag = Pick<
 >;
 
 /**
- * Seberapa jauh data tertinggal dari kalender nyata.
+ * Bulan prakiraan aktif: sebulan sesudah bulan kalender berjalan.
  *
- * Model dilatih satu langkah ke depan: ia hanya bisa memprakirakan bulan
- * tepat setelah observasi terakhir. Kalau observasi berhenti di Desember dan
- * kalender sudah September, prakiraan yang sah tetap Januari — dan halaman
- * harus mengatakannya, bukan diam-diam menampilkan Januari seolah bulan ini.
- * Menghapus pembatasnya tidak menolong: lag `cases_lag1` akan menunjuk data
- * sembilan bulan lalu dan disebut "bulan lalu".
+ * Rekapitulasi kasus Dinkes terbit jauh lebih lambat daripada data iklim
+ * BMKG, jadi observasi berhenti di Desember sementara kalender sudah
+ * September. Model tetap dilatih satu langkah ke depan; bulan yang lebih jauh
+ * dijangkau dengan menyusuri bulan antara satu per satu — iklimnya nyata,
+ * jumlah kasusnya prakiraan yang dipakai sebagai lag bulan berikutnya
+ * (`ml-services/app/services/feature_frame.py`).
+ *
+ * Yang ditampilkan halaman adalah ujung jalur itu: bulan depan. Bulan-bulan
+ * antara tetap dihitung dan tersimpan — grafik tren memakainya sebagai garis
+ * proyeksi.
+ */
+export function forecastMonthOf(
+  latestObserved: string | null,
+  now: Date = new Date(),
+): string | null {
+  if (!latestObserved) return null;
+  const nextObserved = addMonths(latestObserved, 1);
+  const horizon = addMonths(calendarMonthOf(now), 1);
+  return monthsBetween(nextObserved, horizon) > 0 ? horizon : nextObserved;
+}
+
+/** Seluruh bulan prakiraan, dari sesudah observasi terakhir sampai horizon. */
+export function forecastMonths(
+  latestObserved: string | null,
+  now: Date = new Date(),
+): string[] {
+  const last = forecastMonthOf(latestObserved, now);
+  if (!latestObserved || !last) return [];
+
+  const months: string[] = [];
+  let cursor = addMonths(latestObserved, 1);
+  while (monthsBetween(cursor, last) >= 0) {
+    months.push(cursor);
+    cursor = addMonths(cursor, 1);
+  }
+  return months;
+}
+
+/**
+ * Seberapa jauh prakiraan tertinggal dari kalender nyata.
+ *
+ * Selama jalur prakiraan sampai ke bulan berjalan, tidak ada yang perlu
+ * dikatakan halaman soal ini — dan halaman sebaiknya diam. Catatan hanya
+ * muncul bila prakiraan benar-benar tidak sampai ke bulan ini, misalnya
+ * karena data iklim bulan antara ikut berhenti.
  */
 export function describeDataLag(
   latestObserved: string | null,
@@ -132,19 +171,18 @@ export function describeDataLag(
   }
 
   const dataLagMonths = monthsBetween(latestObserved, calendarMonth);
-  const predictionMonth = addMonths(latestObserved, 1);
-  const behind = monthsBetween(predictionMonth, calendarMonth) > 0;
+  const forecastMonth = forecastMonthOf(latestObserved, now);
+  const behind = forecastMonth
+    ? monthsBetween(forecastMonth, calendarMonth) > 0
+    : true;
 
   return {
     calendarMonth,
     dataLagMonths,
     forecastBehindCalendar: behind,
     lagNotice: behind
-      ? `Data observasi terakhir ${monthLabel(latestObserved)}, tertinggal ` +
-        `${dataLagMonths} bulan dari kalender ${monthLabel(calendarMonth)}. ` +
-        `Model memprakirakan tepat satu bulan setelah observasi terakhir, jadi ` +
-        `prakiraan yang sah hanya untuk ${monthLabel(predictionMonth)}, bukan ` +
-        `${monthLabel(calendarMonth)}.`
+      ? `Prakiraan terakhir yang bisa disusun ${monthLabel(forecastMonth)}, ` +
+        `sedangkan kalender sudah ${monthLabel(calendarMonth)}.`
       : null,
   };
 }
@@ -242,7 +280,7 @@ export async function reportingPeriod(
         ),
     knownDiseases ? Promise.resolve(knownDiseases) : availableDiseases(),
   ]).then(([latest, months, diseases]) => {
-    const predictionMonth = latest ? addMonths(latest, 1) : null;
+    const predictionMonth = forecastMonthOf(latest);
     const value = {
       latestObserved: latest,
       predictionMonth,

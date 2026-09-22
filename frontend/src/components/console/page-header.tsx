@@ -27,9 +27,9 @@ import { usePeriod } from "@/lib/use-period";
  * bulan yang diprakirakan. Petugas harus bisa melihat keduanya tanpa membuka
  * halaman lain.
  *
- * Bila kalender nyata sudah jauh melewati bulan prakiraan, chip berubah nada
- * dan menyebut jaraknya. "Prakiraan Januari 2026" di bulan September tanpa
- * keterangan itu terbaca sebagai prakiraan bulan depan.
+ * Bila jalur prakiraan tidak sampai ke bulan berjalan — data iklim bulan
+ * antara ikut berhenti, misalnya — chip berubah nada dan menyebut sampai mana
+ * prakiraan itu benar-benar berlaku.
  */
 export function PeriodChip({ className }: { className?: string }) {
   const { period, loading } = usePeriod();
@@ -81,13 +81,13 @@ export function PeriodChip({ className }: { className?: string }) {
       <span className="whitespace-nowrap text-caption text-paper-600">
         Prakiraan {period.predictionLabel}
       </span>
-      {behind && period.dataLagMonths !== null && (
+      {behind && (
         <>
           <span aria-hidden="true" className="text-paper-300">
             ·
           </span>
           <span className="whitespace-nowrap text-caption font-medium text-risk-medium">
-            tertinggal {period.dataLagMonths} bulan
+            belum sampai bulan berjalan
           </span>
         </>
       )}

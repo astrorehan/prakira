@@ -8,7 +8,11 @@
  */
 import { all, one, transaction } from "../db/index.js";
 import { MlUnavailableError, mlPredictBatch, type MlPrediction } from "./ml.js";
-import { addMonths, latestObservedMonth } from "./period.js";
+import {
+  forecastMonthOf,
+  forecastMonths,
+  latestObservedMonth,
+} from "./period.js";
 import { logAudit } from "./audit.js";
 
 export type StoredPrediction = {
@@ -41,12 +45,20 @@ export type RefreshOutcome = {
    dikali jumlah widget di halaman. */
 const refreshInFlight = new Map<string, Promise<RefreshOutcome>>();
 
-/** Bulan yang diprediksi untuk sebuah penyakit: satu bulan setelah data terakhir. */
+/** Bulan prakiraan aktif sebuah penyakit: ujung jalur prakiraannya. */
 export async function predictionMonthFor(
   disease: string,
 ): Promise<string | null> {
   const latest = await latestObservedMonth(disease);
-  return latest ? addMonths(latest, 1) : null;
+  return forecastMonthOf(latest);
+}
+
+/** Seluruh bulan yang diprakirakan, dari sesudah observasi terakhir sampai horizon. */
+export async function predictionMonthsFor(
+  disease: string,
+): Promise<string[]> {
+  const latest = await latestObservedMonth(disease);
+  return forecastMonths(latest);
 }
 
 /**
@@ -74,11 +86,24 @@ export async function refreshPredictions(
   return task;
 }
 
+/**
+ * Menarik seluruh jalur prakiraan, bukan satu bulan saja.
+ *
+ * Observasi berhenti di Desember sementara kalender sudah September, jadi
+ * prakiraan bulan depan hanya masuk akal bila bulan-bulan di antaranya ikut
+ * dihitung — dan bulan-bulan itu memang berguna: grafik tren menggambarnya
+ * sebagai garis proyeksi. Bulan dihitung berurutan supaya layanan ML bisa
+ * memakai kembali rantai yang sudah disusunnya untuk bulan sebelumnya.
+ *
+ * Bulan yang gagal tidak membatalkan bulan yang sudah tersimpan; yang
+ * dilaporkan adalah bulan aktif beserta sebab kegagalan pertamanya.
+ */
 async function refreshPredictionsOnce(
   disease: string,
 ): Promise<RefreshOutcome> {
-  const month = await predictionMonthFor(disease);
-  if (!month) {
+  const months = await predictionMonthsFor(disease);
+  const active = months[months.length - 1] ?? null;
+  if (!active) {
     return {
       disease,
       month: null,
@@ -88,15 +113,46 @@ async function refreshPredictionsOnce(
     };
   }
 
-  try {
-    const predictions = await mlPredictBatch(disease, month);
-    const stored = await storePredictions(disease, month, predictions);
-    return { disease, month, refreshed: stored, source: "ml-service" };
-  } catch (error) {
-    const message =
-      error instanceof MlUnavailableError ? error.message : String(error);
-    return { disease, month, refreshed: 0, source: "cache", error: message };
+  let refreshed = 0;
+  let failure: string | undefined;
+  let modelVersion = "unknown";
+  const done: string[] = [];
+
+  for (const month of months) {
+    try {
+      const predictions = await mlPredictBatch(disease, month);
+      refreshed += await storePredictions(disease, month, predictions);
+      modelVersion = predictions[0]?.model_version ?? modelVersion;
+      done.push(month);
+    } catch (error) {
+      failure =
+        error instanceof MlUnavailableError ? error.message : String(error);
+      break;
+    }
   }
+
+  /* Satu catatan untuk satu jalur, bukan satu per bulan: sepuluh baris
+     "Inferensi DBD 2026-0x" mengubur jejak audit yang lain tanpa menambah
+     satu pun keterangan baru. */
+  if (done.length > 0) {
+    await logAudit({
+      actor: "ML Service",
+      role: "AI Service",
+      action: `Inferensi ${disease.toUpperCase()} ${done[0].slice(0, 7)}..${done[done.length - 1].slice(0, 7)}`,
+      details:
+        `${done.length} bulan prakiraan (${refreshed} baris kecamatan) ` +
+        `dihitung dengan model ${modelVersion}.`,
+      status: "success",
+    });
+  }
+
+  return {
+    disease,
+    month: active,
+    refreshed,
+    source: refreshed > 0 ? "ml-service" : "cache",
+    error: failure,
+  };
 }
 
 async function storePredictions(
@@ -125,7 +181,6 @@ async function storePredictions(
   }
 
   const generatedAt = new Date().toISOString();
-  const modelVersion = predictions[0]?.model_version ?? "unknown";
 
   /* Satu transaksi dan satu INSERT untuk seluruh batch: dashboard tidak boleh
      sempat membaca separuh kota memakai model baru dan separuhnya model lama.
@@ -172,16 +227,6 @@ async function storePredictions(
       ...params,
     );
   });
-
-  if (predictions.length > 0) {
-    await logAudit({
-      actor: "ML Service",
-      role: "AI Service",
-      action: `Inferensi ${disease.toUpperCase()} ${month}`,
-      details: `${predictions.length} kecamatan diprediksi dengan model ${modelVersion}.`,
-      status: "success",
-    });
-  }
 
   return predictions.length;
 }

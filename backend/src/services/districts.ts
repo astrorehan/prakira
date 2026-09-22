@@ -17,7 +17,11 @@ import {
   readPredictions,
   type StoredPrediction,
 } from "./predictions.js";
-import { addMonths, latestObservedMonth } from "./period.js";
+import {
+  forecastMonthOf,
+  forecastMonths,
+  latestObservedMonth,
+} from "./period.js";
 import { DRIVER_LABEL, driverUnit } from "./action-rules.js";
 
 export type Coverage = "high" | "medium" | "low" | "insufficient";
@@ -205,7 +209,7 @@ export async function getDistricts(
     }
   }
 
-  const predictionMonth = latest ? addMonths(latest, 1) : null;
+  const predictionMonth = forecastMonthOf(latest);
   let predictions = predictionMonth
     ? await readPredictions(upper, predictionMonth)
     : new Map<string, StoredPrediction>();
@@ -335,7 +339,7 @@ export async function getTrend(
   const actual = [...actualRows].reverse();
 
   const latest = await latestObservedMonth(upper);
-  const predictionMonth = latest ? addMonths(latest, 1) : null;
+  const projectedMonths = forecastMonths(latest);
 
   const points: TrendPayload = actual.map((row) => ({
     periode: row.month_start,
@@ -349,42 +353,50 @@ export async function getTrend(
     proyeksi: false,
   }));
 
-  if (predictionMonth) {
-    const stored = (await hasCompletePredictions(upper, predictionMonth))
-      ? await readPredictions(upper, predictionMonth)
-      : new Map<string, StoredPrediction>();
-    if (stored.size > 0) {
-      let predicted = 0;
-      let lower = 0;
-      let upper2 = 0;
-      for (const row of stored.values()) {
-        predicted += row.predicted_cases;
-        lower += row.lower_bound;
-        upper2 += row.upper_bound;
-      }
+  /* Seluruh jalur prakiraan digambar, bukan hanya ujungnya: observasi
+     berhenti di Desember sementara prakiraan aktif menunjuk bulan depan, dan
+     garis yang melompati sembilan bulan di antaranya tidak menggambarkan apa
+     yang sebenarnya dihitung model. Bulan yang snapshot-nya belum lengkap
+     dilewati — bukan digambar separuh kota. */
+  let attached = false;
+  for (const month of projectedMonths) {
+    if (!(await hasCompletePredictions(upper, month))) continue;
+    const stored = await readPredictions(upper, month);
+    if (stored.size === 0) continue;
 
-      /* Titik sambung: bulan aktual terakhir juga membawa nilai prediksi yang
-         sama dengan aktualnya, supaya garis prediksi bersambung dengan garis
-         aktual alih-alih melayang terputus. */
+    let predicted = 0;
+    let lower = 0;
+    let upper2 = 0;
+    for (const row of stored.values()) {
+      predicted += row.predicted_cases;
+      lower += row.lower_bound;
+      upper2 += row.upper_bound;
+    }
+
+    /* Titik sambung: bulan aktual terakhir juga membawa nilai prediksi yang
+       sama dengan aktualnya, supaya garis prediksi bersambung dengan garis
+       aktual alih-alih melayang terputus. */
+    if (!attached) {
       const last = points[points.length - 1];
       if (last) {
         last.kasus_prediksi = last.kasus_aktual;
         last.lower_bound = last.kasus_aktual;
         last.upper_bound = last.kasus_aktual;
       }
-
-      points.push({
-        periode: predictionMonth,
-        kasus_aktual: null,
-        kasus_prediksi: predicted,
-        lower_bound: lower,
-        upper_bound: upper2,
-        curah_hujan_mm: null,
-        suhu_c: null,
-        kelembaban_pct: null,
-        proyeksi: true,
-      });
+      attached = true;
     }
+
+    points.push({
+      periode: month,
+      kasus_aktual: null,
+      kasus_prediksi: predicted,
+      lower_bound: lower,
+      upper_bound: upper2,
+      curah_hujan_mm: null,
+      suhu_c: null,
+      kelembaban_pct: null,
+      proyeksi: true,
+    });
   }
 
   trendCache.set(cacheKey, {

@@ -28,7 +28,11 @@ from app.services.risk_classifier import (
     classify_risk,
 )
 from app.services.driver_extractor import extract_drivers
-from app.services.feature_frame import build_feature_row
+from app.services.feature_frame import (
+    build_feature_row,
+    reload_weather,
+    warm_forecast_chain,
+)
 from training.conformal import difficulty, interval as conformal_interval
 from training.ensemble import DBDEnsembleModel, ISPAEnsembleModel, LeptospirosisEnsembleModel
 
@@ -95,6 +99,89 @@ def get_loaded_models_info() -> dict:
     return info
 
 
+def _insufficient_result(kecamatan_id: str, disease_upper: str, month: str, version: str) -> dict:
+    """Jawaban untuk kecamatan yang cakupan datanya tidak memadai (PRD H2)."""
+    return {
+        "kecamatan_id": kecamatan_id,
+        "disease": disease_upper,
+        "month": month,
+        "predicted_cases": 0,
+        "lower_bound": 0,
+        "upper_bound": 0,
+        "risk_score": 0,
+        "risk_class": None,
+        "data_coverage": "insufficient",
+        "drivers": [],
+        "model_version": version,
+    }
+
+
+def _compose_result(
+    kecamatan_id: str,
+    disease_upper: str,
+    month: str,
+    feature_row: pd.DataFrame,
+    predicted: float,
+    bounds: Tuple[int, int],
+    coverage: str,
+    df_kec: pd.DataFrame,
+    df_hist: pd.DataFrame,
+    model,
+    model_meta: dict,
+) -> dict:
+    """Hasil satu kecamatan, dari baris fitur dan angka yang sudah dihitung.
+
+    Dipakai bersama oleh jalur satuan dan jalur sekota supaya keduanya
+    menghasilkan bentuk yang sama — termasuk aturan pembulatan yang menentukan
+    skor risiko.
+    """
+    predicted_int = int(round(max(0.0, predicted)))
+    lower, upper = bounds
+
+    # Risk score dari distribusi historis kecamatan.
+    #
+    # Yang dinilai adalah `predicted_int`, angka yang benar-benar ditampilkan —
+    # bukan `predicted` yang belum dibulatkan. Persentil atas nilai mentah
+    # membuat skor bertentangan dengan angkanya sendiri pada penyakit yang
+    # jarang: Leptospirosis di Semarang Tengah memprediksi 0,11 kasus, dan
+    # karena 50 dari 57 bulan historisnya bernilai 0, angka 0,11 mengungguli
+    # semuanya dan menghasilkan persentil 88 alias "tinggi" — dashboard
+    # memerahkan 14 dari 16 kecamatan untuk prediksi yang tertulis 0 kasus.
+    # Dinilai pada angka bulat, persentilnya 45.
+    historical_cases = (
+        df_kec["cases"].values.tolist()
+        if not df_kec.empty
+        else df_hist["cases"].values.tolist()
+    )
+    risk_score = calculate_risk_score(predicted_int, historical_cases)
+    risk_class = classify_risk(risk_score)
+
+    drivers = []
+    if hasattr(model, "feature_importances_") and not df_hist.empty:
+        drivers = extract_drivers(
+            feature_importances=model.feature_importances_,
+            feature_names=FEATURE_COLUMNS,
+            feature_values=feature_row.iloc[0].values,
+            historical_df=df_hist,
+            top_n=3,
+        )
+
+    return {
+        "kecamatan_id": kecamatan_id,
+        "disease": disease_upper,
+        "month": month,
+        "predicted_cases": predicted_int,
+        "lower_bound": lower,
+        "upper_bound": upper,
+        "risk_score": risk_score,
+        "risk_class": risk_class,
+        "data_coverage": coverage,
+        "drivers": drivers,
+        "model_version": model_meta.get("version", "unknown"),
+        **_interval_provenance(model_meta),
+    }
+
+
 def predict_single(
     kecamatan_id: str,
     disease: str,
@@ -121,76 +208,36 @@ def predict_single(
 
     # Jika data insufficient, kembalikan null risk_class (PRD H2)
     if coverage == "insufficient":
-        return {
-            "kecamatan_id": kecamatan_id,
-            "disease": disease_upper,
-            "month": month,
-            "predicted_cases": 0,
-            "lower_bound": 0,
-            "upper_bound": 0,
-            "risk_score": 0,
-            "risk_class": None,
-            "data_coverage": "insufficient",
-            "drivers": [],
-            "model_version": model_meta.get("version", "unknown"),
-        }
+        return _insufficient_result(
+            kecamatan_id, disease_upper, month, model_meta.get("version", "unknown")
+        )
 
     # Ambil baris terakhir kecamatan ini sebagai basis fitur. Perakitannya
     # dipindah ke `feature_frame` supaya `/explain` dan `/simulate` berangkat
     # dari baris yang persis sama — penjelasan yang menerangkan angka berbeda
     # dari yang tampil di dashboard lebih buruk daripada tidak ada penjelasan.
-    feature_row = build_feature_row(df_hist, df_kec, month)
+    feature_row = build_feature_row(df_hist, df_kec, month, model=model)
 
-    # Prediksi
-    pred_raw = model.predict(feature_row)
-    predicted = float(pred_raw[0])
-    predicted = max(0, predicted)
-    predicted_int = int(round(predicted))
+    predicted = max(0.0, float(model.predict(feature_row)[0]))
 
     # Rentang prakiraan. Lebarnya berasal dari galat yang benar-benar teramati
     # pada periode kalibrasi (`training/conformal.py`), bukan dari selisih
     # jawaban antar sub-model ensemble seperti sebelumnya.
-    lower, upper = _estimate_confidence(model, feature_row, cfg, model_meta)
+    bounds = _estimate_confidence(model, feature_row, cfg, model_meta)
 
-    # Risk score dari distribusi historis kecamatan.
-    #
-    # Yang dinilai adalah `predicted_int`, angka yang benar-benar ditampilkan —
-    # bukan `predicted` yang belum dibulatkan. Persentil atas nilai mentah
-    # membuat skor bertentangan dengan angkanya sendiri pada penyakit yang
-    # jarang: Leptospirosis di Semarang Tengah memprediksi 0,11 kasus, dan
-    # karena 50 dari 57 bulan historisnya bernilai 0, angka 0,11 mengungguli
-    # semuanya dan menghasilkan persentil 88 alias "tinggi" — dashboard
-    # memerahkan 14 dari 16 kecamatan untuk prediksi yang tertulis 0 kasus.
-    # Dinilai pada angka bulat, persentilnya 45.
-    historical_cases = df_kec["cases"].values.tolist() if not df_kec.empty else df_hist["cases"].values.tolist()
-    risk_score = calculate_risk_score(predicted_int, historical_cases)
-    risk_class = classify_risk(risk_score)
-
-    # Drivers
-    drivers = []
-    if hasattr(model, "feature_importances_") and not df_hist.empty:
-        drivers = extract_drivers(
-            feature_importances=model.feature_importances_,
-            feature_names=FEATURE_COLUMNS,
-            feature_values=feature_row.iloc[0].values,
-            historical_df=df_hist,
-            top_n=3,
-        )
-
-    return {
-        "kecamatan_id": kecamatan_id,
-        "disease": disease_upper,
-        "month": month,
-        "predicted_cases": predicted_int,
-        "lower_bound": lower,
-        "upper_bound": upper,
-        "risk_score": risk_score,
-        "risk_class": risk_class,
-        "data_coverage": coverage,
-        "drivers": drivers,
-        "model_version": model_meta.get("version", "unknown"),
-        **_interval_provenance(model_meta),
-    }
+    return _compose_result(
+        kecamatan_id,
+        disease_upper,
+        month,
+        feature_row,
+        predicted,
+        bounds,
+        coverage,
+        df_kec,
+        df_hist,
+        model,
+        model_meta,
+    )
 
 
 def _interval_provenance(model_meta: dict) -> dict:
@@ -221,12 +268,98 @@ def district_history(df_hist: pd.DataFrame, kecamatan_id: str) -> pd.DataFrame:
 
 
 def predict_batch(disease: str, month: str) -> list:
-    """Prediksi untuk semua 16 kecamatan Semarang."""
-    results = []
+    """Prediksi untuk semua 16 kecamatan Semarang.
+
+    Satu bulan prakiraan sekota adalah 16 baris fitur yang bentuknya sama
+    persis. Diserahkan satu per satu, tiap baris memicu panggilan ensemble
+    tersendiri — enam sub-model untuk satu baris — dan bedanya terasa begitu
+    gateway menyusun sepuluh bulan sekaligus. Dirakit dulu lalu diprediksi
+    serentak, satu bulan sekota selesai dalam satu panggilan.
+    """
+    disease_lower = disease.lower()
+    disease_upper = disease.upper()
+
+    model, df_hist = _load_model(disease_lower)
+    metadata = _load_metadata()
+    model_meta = metadata.get(disease_lower, {})
+    cfg = DISEASE_CONFIG[disease_lower]
+    version = model_meta.get("version", "unknown")
+
+    # Rantai bulan antara dilalui sekali untuk seluruh kota sebelum baris bulan
+    # tujuan dirakit; tanpa ini tiap kecamatan menyusurinya sendiri-sendiri.
+    warm_forecast_chain(df_hist, month, model)
+
+    total_expected = df_hist["month_start"].nunique() if not df_hist.empty else 0
+
+    results: dict = {}
+    pending: list = []
     for kec in KECAMATAN_SEMARANG:
-        result = predict_single(kec["id"], disease, month)
-        results.append(result)
-    return results
+        kecamatan_id = kec["id"]
+        df_kec = df_hist[df_hist["kecamatan_id"] == kecamatan_id].copy()
+        coverage = assess_data_coverage(
+            kecamatan_id, disease_upper, df_hist, total_expected
+        )
+        if coverage == "insufficient":
+            results[kecamatan_id] = _insufficient_result(
+                kecamatan_id, disease_upper, month, version
+            )
+            continue
+        feature_row = build_feature_row(df_hist, df_kec, month, model=model)
+        pending.append((kecamatan_id, df_kec, coverage, feature_row))
+
+    if pending:
+        X = pd.concat([item[3] for item in pending], ignore_index=True)
+        predictions = np.clip(np.asarray(model.predict(X), dtype=float), 0, None)
+        bounds = _estimate_confidence_many(model, X, predictions, cfg, model_meta)
+
+        for (kecamatan_id, df_kec, coverage, feature_row), predicted, bound in zip(
+            pending, predictions, bounds
+        ):
+            results[kecamatan_id] = _compose_result(
+                kecamatan_id,
+                disease_upper,
+                month,
+                feature_row,
+                float(predicted),
+                bound,
+                coverage,
+                df_kec,
+                df_hist,
+                model,
+                model_meta,
+            )
+
+    return [results[kec["id"]] for kec in KECAMATAN_SEMARANG]
+
+
+def _estimate_confidence_many(
+    model,
+    X: pd.DataFrame,
+    predictions: np.ndarray,
+    cfg: dict,
+    model_meta: Optional[dict] = None,
+) -> list:
+    """Batas bawah-atas untuk banyak baris sekaligus.
+
+    Jalur konformal memang vektor: `q_hat` dikali penaksir kesulitan tiap
+    baris. Hanya jalur cadangan — sebaran sub-model untuk model lama yang
+    belum punya blok konformal — yang masih dihitung baris demi baris.
+    """
+    conformal = (model_meta or {}).get("conformal")
+    if conformal and "q_hat" in conformal:
+        sigma = difficulty(X)
+        lower, upper = conformal_interval(
+            predictions, sigma, float(conformal["q_hat"])
+        )
+        return [
+            _bracket(float(point), float(lo), float(hi))
+            for point, lo, hi in zip(predictions, lower, upper)
+        ]
+
+    return [
+        _estimate_confidence(model, X.iloc[[i]], cfg, model_meta)
+        for i in range(len(X))
+    ]
 
 
 def _estimate_confidence(
@@ -315,4 +448,5 @@ def reload_models():
     _model_cache.clear()
     _data_cache.clear()
     _metadata_cache.clear()
+    reload_weather()
     logger.info("Model cache cleared — will reload on next request.")

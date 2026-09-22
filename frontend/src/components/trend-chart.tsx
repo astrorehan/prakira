@@ -179,7 +179,7 @@ export function TrendChart({
 
                     {isForecast && (
                       <div className="mt-2 rounded bg-risk-medium-bg px-2 py-1 text-caption font-medium text-risk-medium border border-risk-medium-br/60">
-                        Prakiraan model untuk satu bulan ke depan
+                        Prakiraan model, belum ada rekap resmi
                       </div>
                     )}
                   </div>
@@ -265,7 +265,7 @@ export function TrendChart({
                   background: `repeating-linear-gradient(to right, ${forecastColor} 0, ${forecastColor} 2.5px, transparent 2.5px, transparent 5px)`,
                 }}
               />
-              <span className="font-semibold text-risk-high">Prakiraan bulan berikutnya</span>
+              <span className="font-semibold text-risk-high">Prakiraan</span>
             </span>
             {showClimateOverlay && (
               <span className="flex items-center gap-1.5">
