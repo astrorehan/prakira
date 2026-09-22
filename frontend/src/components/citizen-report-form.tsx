@@ -151,7 +151,7 @@ function SubmittedCard({
               Jalur tindak lanjut
             </dt>
             <dd className="mt-1 text-body-sm font-medium text-foreground">
-              Setelah diverifikasi: {FAMILY_ROUTING[family]}
+              Petugas memeriksa laporan dan menentukan tindak lanjut
             </dd>
         </div>
       </dl>
@@ -335,8 +335,8 @@ export function CitizenReportForm() {
       <fieldset>
         <legend className="text-h3 text-foreground">Apa yang Anda lihat?</legend>
         <p className="mt-1 text-body-sm text-paper-600">
-          Pilih satu. Laporan lingkungan diteruskan ke {FAMILY_ROUTING.lingkungan}, bukan
-          ke puskesmas.
+          Pilih satu jenis temuan. Petugas memeriksa laporan dan menentukan tindak lanjut yang sesuai.
+
         </p>
 
         <div className="mt-4 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">

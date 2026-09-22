@@ -57,7 +57,7 @@ export const REPORT_STATUS: Record<
     label: "Terverifikasi",
     badge: "risk-low",
     blurb:
-      "Petugas membenarkan laporan ini. Arahan tindak lanjut dan, bila diteruskan, status tiketnya tercantum di bawah.",
+      "Petugas membenarkan laporan ini. Arahan tindak lanjut tercantum di bawah; bila diteruskan, penanganan menjadi kewenangan instansi penerima.",
   },
   ditolak: {
     label: "Ditolak",

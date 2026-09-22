@@ -29,7 +29,7 @@ import {
   STATUS_LABEL,
   type QueuedAction,
 } from "@/lib/action-queue";
-import { formatDateTime } from "@/lib/period";
+import { daysBetween, formatDate, formatDateTime } from "@/lib/period";
 import type { DiseaseType } from "@/types";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
@@ -87,7 +87,7 @@ const STATUS_STYLE: Record<
 };
 
 const ACTION_LABEL: Record<QueuedAction["status"], string> = {
-  pending: "Buka & tandai berjalan",
+  pending: "Tinjau tindakan",
   in_progress: "Buka protokol",
   completed: "Lihat arsip",
 };
@@ -124,7 +124,26 @@ function ActionRow({
      catatan, lencananya yang kembali netral. */
   const deadline = DEADLINE_STYLE[isOpen ? action.deadline.urgency : "ahead"];
   const DeadlineIcon = deadline.icon;
-  const deadlineLabel = isOpen ? action.deadline.label : "Tenggat terpenuhi";
+  let deadlineLabel = action.deadline.label;
+  if (!isOpen) {
+    if (action.completed_at) {
+      const completedDate = new Date(action.completed_at);
+      const dueDate = new Date(action.due_date);
+      const formattedCompleted = formatDate(action.completed_at);
+      if (!Number.isNaN(completedDate.getTime()) && !Number.isNaN(dueDate.getTime())) {
+        const days = daysBetween(dueDate, completedDate);
+        if (days >= 0) {
+          deadlineLabel = `Selesai tepat waktu (${formattedCompleted})`;
+        } else {
+          deadlineLabel = `Selesai lewat tenggat (${formattedCompleted})`;
+        }
+      } else {
+        deadlineLabel = `Selesai (${formattedCompleted})`;
+      }
+    } else {
+      deadlineLabel = "Selesai";
+    }
+  }
   const status = STATUS_STYLE[action.status];
   const StatusIcon = status.icon;
   const DiseaseIcon = DISEASE_ICON[action.disease] ?? Activity;

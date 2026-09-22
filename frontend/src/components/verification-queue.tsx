@@ -389,7 +389,7 @@ function ReportRow({
                         Teruskan ke DLH
                       </span>
                       <span className="mt-0.5 block text-caption leading-relaxed text-paper-600">
-                        Terima laporan sekaligus buat tiket operasional untuk DLH.
+                        Siapkan penerusan ke Dinas Lingkungan Hidup untuk penanganan teknis.
                       </span>
                     </span>
                   </label>
@@ -431,7 +431,7 @@ function ReportRow({
                   className="gap-1.5"
                 >
                   <Check className="h-4 w-4" aria-hidden="true" />
-                  {handlingMode === "dlh" ? "Terima & buat tiket DLH" : "Terima & kirim arahan"}
+                  {handlingMode === "dlh" ? "Terima & siapkan penerusan ke DLH" : "Terima & tampilkan arahan"}
                 </Button>
                 <Button
                   size="sm"
@@ -468,7 +468,7 @@ function ReportRow({
                   size="sm"
                   onClick={() => onDecide(report.id, "terverifikasi", advice)}
                 >
-                  Terima & kirim arahan
+                  Terima & tampilkan arahan
                 </Button>
                 <Button
                   size="sm"
@@ -481,7 +481,7 @@ function ReportRow({
                   Batal
                 </Button>
                 <span className="self-center text-caption text-paper-600">
-                  Arahan otomatis tetap dikirim jika dikosongkan.
+                  Arahan otomatis tetap ditampilkan pada pelacakan jika dikosongkan.
                 </span>
               </div>
             </div>

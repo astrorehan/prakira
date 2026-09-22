@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import { useMemo } from "react";
-import { ArrowUpRight, CloudRain, Thermometer, Droplet } from "lucide-react";
+import { ArrowUpRight, CloudRain, Thermometer, Droplet, RefreshCw, ServerCrash } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useCityData } from "@/lib/use-city-data";
 import { formatMonth } from "@/lib/period";
 import type { RiskLevel } from "@/types";
@@ -51,13 +52,11 @@ interface CityPulseProps {
  * Objek data di hero: ringkasan kota yang menunjukkan produknya bekerja sebelum
  * pembaca mengetik apa pun.
  *
- * Sebelumnya kartu ini membaca `getKecamatanDataList("DBD")` — satu penyakit,
- * datanya karangan — dan mencetak "Mg 34 · 2026" sebagai label periode. Yang
- * dibaca sekarang adalah ringkasan lintas penyakit dari gateway, dan label
- * periodenya adalah bulan data terakhir yang sungguh ada.
+ * Mengatasi temuan F02: Gagal memuat data tidak boleh menampilkan 0 kasus atau 0 siaga.
+ * Menampilkan pesan kesalahan dan tombol pemulihan saat layanan data tidak aktif.
  */
 export function CityPulse({ onSelectKecamatan }: CityPulseProps) {
-  const { byDisease, diseases, rows, summary, meta, loading, error } = useCityData();
+  const { byDisease, diseases, rows, summary, meta, loading, error, reload } = useCityData();
 
   /* Iklim dibaca dari penyakit mana pun yang tersedia: kolom cuacanya sama
      untuk seluruh penyakit pada bulan yang sama. */
@@ -117,10 +116,109 @@ export function CityPulse({ onSelectKecamatan }: CityPulseProps) {
     { key: "rendah" as const, value: counts.rendah },
   ];
 
+  /* 1. Keadaan memuat — hindari menampilkan angka 0 */
+  if (loading) {
+    return (
+      <figure className="relative rounded-3xl border border-sand-200 bg-white shadow-card">
+        <figcaption className="flex items-start justify-between gap-4 border-b border-sand-200 px-6 py-5">
+          <div>
+            <p className="font-mono text-overline uppercase text-paper-600">
+              Ringkasan kota
+            </p>
+            <h2 className="mt-1.5 text-h3 text-foreground">
+              Semarang, status risiko
+            </h2>
+          </div>
+          <span className="shrink-0 rounded-md bg-sand-100 px-2 py-1 font-mono text-3xs uppercase tracking-wider text-paper-600">
+            Memuat data…
+          </span>
+        </figcaption>
+
+        <div className="flex min-h-[320px] flex-col items-center justify-center gap-3 px-6 py-12 text-center">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-700 border-t-transparent" />
+          <p className="text-body-sm font-medium text-foreground">Memuat status risiko kota…</p>
+          <p className="text-2xs text-paper-500">Menghubungkan ke layanan data iklim dan kasus</p>
+        </div>
+      </figure>
+    );
+  }
+
+  /* 2. Keadaan gagal memuat — hindari terbaca sebagai nol kasus (F02) */
+  if (error) {
+    return (
+      <figure className="relative rounded-3xl border border-risk-high-br bg-white shadow-card overflow-hidden">
+        <figcaption className="flex items-start justify-between gap-4 border-b border-sand-200 px-6 py-5">
+          <div>
+            <p className="font-mono text-overline uppercase text-risk-high">
+              Gangguan Layanan Data
+            </p>
+            <h2 className="mt-1.5 text-h3 text-foreground">
+              Semarang, status risiko
+            </h2>
+          </div>
+          <span className="shrink-0 rounded-md bg-risk-high-bg px-2 py-1 font-mono text-3xs uppercase tracking-wider text-risk-high">
+            Data Belum Dimuat
+          </span>
+        </figcaption>
+
+        <div className="px-6 py-8 text-center space-y-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-risk-high-bg text-risk-high mx-auto">
+            <ServerCrash className="h-6 w-6" aria-hidden="true" />
+          </div>
+          <div className="space-y-1.5 max-w-sm mx-auto">
+            <h3 className="text-body font-semibold text-foreground">
+              Data risiko kota belum dapat dimuat
+            </h3>
+            <p className="text-2xs text-paper-600 leading-relaxed">
+              Layanan data tidak dapat dihubungi atau mengalami gangguan. Tidak adanya data <strong>bukan berarti nol kasus atau wilayah aman</strong>.
+            </p>
+            <p className="font-mono text-3xs text-paper-500 bg-sand-50 p-2 rounded-lg border border-sand-200 break-all text-left">
+              {error}
+            </p>
+          </div>
+          <Button size="sm" variant="outline" onClick={reload} className="gap-1.5 text-xs">
+            <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>Coba muat ulang</span>
+          </Button>
+        </div>
+      </figure>
+    );
+  }
+
+  /* 3. Keadaan data kosong */
+  if (rows.length === 0) {
+    return (
+      <figure className="relative rounded-3xl border border-sand-200 bg-white shadow-card">
+        <figcaption className="flex items-start justify-between gap-4 border-b border-sand-200 px-6 py-5">
+          <div>
+            <p className="font-mono text-overline uppercase text-paper-600">
+              Ringkasan kota
+            </p>
+            <h2 className="mt-1.5 text-h3 text-foreground">
+              Semarang, status risiko
+            </h2>
+          </div>
+          <span className="shrink-0 rounded-md bg-sand-100 px-2 py-1 font-mono text-3xs uppercase tracking-wider text-paper-600">
+            Data Belum Tersedia
+          </span>
+        </figcaption>
+
+        <div className="flex min-h-[260px] flex-col items-center justify-center gap-2 px-6 py-12 text-center">
+          <p className="text-body-sm font-medium text-foreground">
+            Belum ada data risiko untuk periode berjalan
+          </p>
+          <p className="text-2xs text-paper-500 max-w-xs mx-auto">
+            Data observasi atau pemodelan bulanan belum tercatat di sistem.
+          </p>
+        </div>
+      </figure>
+    );
+  }
+
+  /* 4. Keadaan data normal dengan baris kecamatan */
   return (
     <figure className="relative rounded-3xl border border-sand-200 bg-white shadow-card">
-      {/* Masthead — this card is a printed bulletin, so it gets a rule and a
-          mono standfirst rather than a coloured header block. */}
+      {/* Masthead */}
       <figcaption className="flex items-start justify-between gap-4 border-b border-sand-200 px-6 py-5">
         <div>
           <p className="font-mono text-overline uppercase text-paper-600">
@@ -172,11 +270,7 @@ export function CityPulse({ onSelectKecamatan }: CityPulseProps) {
 
         {hotspots.length === 0 && (
           <p className="px-3 py-3 text-2xs text-paper-600">
-            {loading
-              ? "Memuat ringkasan kota…"
-              : error
-                ? error
-                : "Belum ada kecamatan dengan prakiraan pada periode berjalan."}
+            Belum ada kecamatan dengan prakiraan pada periode berjalan.
           </p>
         )}
 

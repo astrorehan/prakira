@@ -17,7 +17,7 @@ export default function LaporPage() {
       backHref="/warga"
       backLabel="Portal warga"
       title="Laporkan yang Anda lihat"
-      lead="Genangan yang bertahan berhari-hari, tetangga yang demam bersamaan, jentik di bak rumah kosong. Petugas puskesmas memeriksanya, dan laporan yang terverifikasi diagregasikan per bulan sebagai sinyal evaluasi model pembanding."
+      lead="Genangan yang bertahan berhari-hari, tetangga yang demam bersamaan, jentik di bak rumah kosong. Laporan Anda diperiksa petugas. Pantau tindak lanjut melalui kode laporan."
     >
       <CitizenReportForm />
     </WargaShell>

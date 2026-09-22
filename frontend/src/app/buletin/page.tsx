@@ -112,14 +112,21 @@ function BuletinContent() {
     return [...rows].sort((a, b) => (b.skor_risiko ?? -1) - (a.skor_risiko ?? -1));
   }, [rows]);
 
-  const currentYear = new Date().getFullYear();
-  const documentNumber = `PKR/SKDR-SMG/${currentYear}/${activeDisease}/${meta?.predictionMonth?.replace("-", "") ?? "202609"}`;
   const publishDate = period.data?.systemToday
     ? formatDate(period.data.systemToday)
-    : "27 Agustus 2026";
+    : meta?.latestObserved
+      ? formatDate(meta.latestObserved)
+      : "—";
+
+  const draftReferenceId = `DRAF-PKR/${activeDisease}/${meta?.predictionMonth?.replace("-", "") ?? "PERIODE-AKTIF"}`;
+
+  const isLoading = districts.loading || period.loading;
+  const hasError = Boolean(districts.error || period.error);
+  const errorMessage = districts.error || period.error;
+  const hasData = !isLoading && !hasError && rows.length > 0;
 
   const handlePrint = () => {
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && hasData) {
       window.print();
     }
   };
@@ -140,7 +147,7 @@ function BuletinContent() {
             <div className="flex items-center gap-1.5">
               <FileText className="h-4 w-4 text-brand-700" />
               <span className="text-xs font-semibold text-slate-800">
-                Buletin Resmi SKDR
+                Draf Buletin PRAKIRA
               </span>
             </div>
           </div>
@@ -169,7 +176,8 @@ function BuletinContent() {
             <Button
               onClick={handlePrint}
               size="sm"
-              className="gap-1.5 bg-brand-700 hover:bg-brand-800 text-white shadow-sm font-semibold"
+              disabled={!hasData}
+              className="gap-1.5 bg-brand-700 hover:bg-brand-800 text-white shadow-sm font-semibold disabled:opacity-50 disabled:pointer-events-none"
             >
               <Printer className="h-4 w-4" />
               <span>Cetak / Simpan PDF</span>
@@ -180,7 +188,57 @@ function BuletinContent() {
 
       {/* ── Document Container (A4 Proportions on Screen & Print) ────────────── */}
       <main className="mx-auto w-full max-w-[210mm] print:max-w-none print:w-full print:p-0 print:m-0">
-        <article className="print-sheet rounded-xl border border-slate-300 bg-white p-6 sm:p-8 shadow-md print:rounded-none print:border-none print:p-0 print:shadow-none text-slate-900 print:text-black">
+        {isLoading ? (
+          <div className="rounded-xl border border-slate-300 bg-white p-12 text-center shadow-md print:hidden">
+            <div className="flex flex-col items-center justify-center gap-3">
+              <div className="h-7 w-7 animate-spin rounded-full border-2 border-brand-700 border-t-transparent" />
+              <p className="text-sm font-semibold text-slate-800">Memuat data draf buletin…</p>
+              <p className="text-xs text-slate-500">Mengambil data observasi dan prakiraan {activeDisease}...</p>
+            </div>
+          </div>
+        ) : hasError ? (
+          <div className="rounded-xl border border-rose-300 bg-white p-8 text-center shadow-md print:hidden">
+            <div className="max-w-md mx-auto space-y-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 text-rose-700 mx-auto">
+                <AlertTriangle className="h-6 w-6" aria-hidden="true" />
+              </div>
+              <h2 className="text-base font-bold text-slate-950">Data Buletin Belum Dapat Dimuat</h2>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Layanan data tidak aktif atau gagal dihubungi. Draf buletin tidak dapat ditampilkan atau dicetak dengan angka nol karena ketiadaan data bukan berarti ketiadaan risiko.
+              </p>
+              {errorMessage && (
+                <p className="font-mono text-2xs text-rose-800 bg-rose-50 p-2.5 rounded-lg border border-rose-200 text-left break-all">
+                  {errorMessage}
+                </p>
+              )}
+              <div className="pt-2">
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    districts.reload();
+                    period.reload();
+                  }}
+                  className="gap-1.5 bg-brand-700 hover:bg-brand-800 text-white font-semibold"
+                >
+                  Coba Muat Ulang
+                </Button>
+              </div>
+            </div>
+          </div>
+        ) : rows.length === 0 ? (
+          <div className="rounded-xl border border-slate-300 bg-white p-8 text-center shadow-md print:hidden">
+            <div className="max-w-md mx-auto space-y-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500 mx-auto">
+                <FileText className="h-6 w-6" aria-hidden="true" />
+              </div>
+              <h2 className="text-base font-bold text-slate-950">Data Tidak Tersedia</h2>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Belum ada data kecamatan untuk penyakit {activeDisease} pada periode ini. Draf buletin hanya dapat disusun setelah data observasi atau prakiraan tersedia.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <article className="print-sheet rounded-xl border border-slate-300 bg-white p-6 sm:p-8 shadow-md print:rounded-none print:border-none print:p-0 print:shadow-none text-slate-900 print:text-black">
           
           {/* ── Kop Surat Resmi Pemerintah Kota Semarang ────────────────────── */}
           <header className="print-keep flex items-center justify-between gap-4 border-b-[3px] border-double border-slate-900 pb-4">
@@ -218,24 +276,24 @@ function BuletinContent() {
             {/* Document Verification Code */}
             <div className="shrink-0 flex flex-col items-end text-right border-l border-slate-300 pl-3 text-[9px] text-slate-500 font-mono">
               <span className="font-bold text-slate-800">SISTEM PRAKIRA</span>
-              <span>DSDC ANFORCOM 2026</span>
               <span>SKDR DINI v0.1</span>
-              <span className="mt-1 inline-block px-1.5 py-0.5 rounded bg-slate-100 text-slate-800 font-bold border border-slate-300">
-                RESMI
+              <span className="mt-1 inline-block px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 font-bold border border-amber-300">
+                DRAF BULETIN
               </span>
+              <span className="text-[8px] text-slate-400 mt-0.5 font-sans">Belum Disahkan</span>
             </div>
           </header>
 
           {/* ── Metadata Judul & Nomor Buletin ───────────────────────────────── */}
           <div className="print-keep mt-5 text-center">
             <h1 className="text-base font-bold text-slate-950 uppercase tracking-tight underline underline-offset-4">
-              Buletin Sistem Kewaspadaan Dini & Respon Cepat (SKDR)
+              Draf Buletin Sistem Kewaspadaan Dini &amp; Respon Cepat (SKDR)
             </h1>
             <p className="text-xs font-semibold text-slate-800 mt-1 uppercase">
-              Prakiraan Risiko Penyakit {activeDisease} Berbasis Iklim & Konteks Lapangan
+              Prakiraan Risiko Penyakit {activeDisease} Berbasis Iklim &amp; Konteks Lapangan
             </p>
             <p className="text-2xs font-mono text-slate-600 mt-0.5">
-              Nomor: {documentNumber}
+              Nomor: <span className="font-sans italic text-slate-500 font-normal">Belum bernomor (Menunggu verifikasi &amp; pengesahan dinas)</span>
             </p>
           </div>
 
@@ -250,12 +308,12 @@ function BuletinContent() {
               <span className="font-bold text-slate-900">{formatMonth(meta?.latestObserved)}</span>
             </div>
             <div>
-              <span className="text-[9px] font-semibold uppercase text-slate-500 block">Tanggal Penerbitan</span>
+              <span className="text-[9px] font-semibold uppercase text-slate-500 block">Waktu Penyusunan</span>
               <span className="font-bold text-slate-900">{publishDate}</span>
             </div>
             <div>
-              <span className="text-[9px] font-semibold uppercase text-slate-500 block">Klasifikasi Dokumen</span>
-              <span className="font-bold text-rose-800">Instruksi Kesiapsiagaan</span>
+              <span className="text-[9px] font-semibold uppercase text-slate-500 block">Status Dokumen</span>
+              <span className="font-bold text-amber-800">Draf (Belum Disahkan)</span>
             </div>
           </div>
           {meta?.forecastBehindCalendar && meta.lagNotice && (
@@ -524,47 +582,59 @@ function BuletinContent() {
           {/* ── Bagian IV: Lembar Pengesahan Otorisasi ────────────────────────── */}
           <section className="print-keep mt-8 pt-4 border-t-2 border-slate-400 break-inside-avoid">
             <div className="grid grid-cols-2 gap-6 items-end">
-              <div className="text-[9.5px] text-slate-600 space-y-1">
-                <p className="font-bold text-slate-800 uppercase tracking-wider">Catatan Penting:</p>
-                <p>
-                  1. Dokumen buletin ini diterbitkan otomatis oleh Sistem Prakira sebagai instrumen pendukung keputusan (Decision Support System) kewaspadaan dini berbasis iklim.
+              <div className="text-[9.5px] text-slate-600 space-y-1.5">
+                <p className="font-bold text-slate-800 uppercase tracking-wider">
+                  Catatan Penting, Sumber &amp; Batas Penggunaan:
                 </p>
                 <p>
-                  2. Petugas surveilans dan puskesmas wajib melakukan verifikasi lapangan terhadap sinyal pemicu lingkungan terverifikasi sebelum tindakan intervensi berskala besar.
+                  1. <strong>Status Dokumen:</strong> Dokumen ini merupakan <em>Draf Buletin PRAKIRA</em> yang disusun otomatis oleh sistem sebagai instrumen pendukung keputusan (Decision Support System). Dokumen ini belum disahkan sebagai instruksi dinas resmi.
+                </p>
+                <p>
+                  2. <strong>Sumber Data:</strong> Rekapitulasi kasus Dinas Kesehatan Kota Semarang dan variabel iklim BMKG (curah hujan, suhu, kelembaban).
+                </p>
+                <p>
+                  3. <strong>Batas Penggunaan:</strong> Prakiraan risiko merupakan sinyal kewaspadaan dini berbasis pemodelan statistik, bukan diagnosis atau vonis wabah. Petugas surveilans wajib melakukan verifikasi lapangan sebelum tindakan intervensi berskala besar.
+                </p>
+                <p>
+                  4. <strong>Tahapan Otorisasi:</strong> (1) Disusun otomatis oleh sistem &bull; (2) Ditinjau petugas surveilans/epidemiolog (belum diverifikasi) &bull; (3) Disahkan oleh Kepala Dinas Kesehatan sebelum disebarluaskan.
                 </p>
               </div>
 
               <div className="text-right text-xs">
-                <p className="text-slate-700">Semarang, {publishDate}</p>
-                <p className="font-semibold text-slate-900 mt-0.5">
+                <p className="text-slate-700">Semarang, .....................................................</p>
+                <p className="font-semibold text-slate-900 mt-1">
+                  Mengetahui / Mengesahkan:
+                </p>
+                <p className="text-[11px] text-slate-700">
                   Kepala Dinas Kesehatan Kota Semarang
                 </p>
 
-                {/* Digital Signature Box */}
-                <div className="my-2.5 flex justify-end">
-                  <div className="flex flex-col items-center justify-center h-16 w-40 rounded border border-dashed border-slate-400 bg-slate-50 p-1.5 text-center">
-                    <span className="text-[8px] font-mono text-slate-400 uppercase tracking-widest">
-                      DITANDATANGANI ELEKTRONIK
+                {/* Digital/Manual Signature Blank Box */}
+                <div className="my-3 flex justify-end">
+                  <div className="flex flex-col items-center justify-center h-20 w-48 rounded border border-dashed border-slate-400 bg-slate-50 p-2 text-center">
+                    <span className="text-[8.5px] font-medium text-slate-400 italic">
+                      (Ruang tanda tangan &amp; stempel dinas pejabat berwenang)
                     </span>
-                    <span className="text-[9px] font-bold text-brand-800 mt-0.5">
-                      DINAS KESEHATAN KOTA SEMARANG
+                    <span className="text-[8px] font-mono font-bold text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded border border-amber-300 mt-1.5">
+                      BELUM DISAHKAN
                     </span>
-                    <span className="text-[7.5px] font-mono text-slate-500">
-                      ID: {documentNumber}
+                    <span className="text-[7px] font-mono text-slate-400 mt-1">
+                      Ref: {draftReferenceId}
                     </span>
                   </div>
                 </div>
 
-                <p className="font-bold text-slate-900 underline underline-offset-2">
-                  Dr. dr. Mochamad Abdul Hakam, Sp.P.D.
+                <p className="font-bold text-slate-900">
+                  ( ........................................................................ )
                 </p>
-                <p className="text-[10px] font-mono text-slate-600">
-                  NIP. 19750514 200212 1 002
+                <p className="text-[10px] font-mono text-slate-600 mt-0.5">
+                  NIP. .....................................................
                 </p>
               </div>
             </div>
           </section>
-        </article>
+          </article>
+        )}
       </main>
 
       {/* ── Exact Print CSS Rules ─────────────────────────────────────────── */}
@@ -614,7 +684,7 @@ export default function BuletinResmiPage() {
     <React.Suspense
       fallback={
         <div className="flex h-screen w-full items-center justify-center bg-slate-100 text-xs text-slate-500">
-          Memuat Buletin Resmi SKDR...
+          Memuat Draf Buletin PRAKIRA...
         </div>
       }
     >

@@ -39,7 +39,7 @@ import type { RiskLevel } from "@/types";
 
 const RISK_WORD: Record<RiskLevel, { word: string; badge: "risk-low" | "risk-medium" | "risk-high"; blurb: string }> = {
   rendah: {
-    word: "Aman",
+    word: "Risiko Rendah",
     badge: "risk-low",
     blurb: "Tidak ada indikasi lonjakan. Laporan Anda tetap berguna sebagai peringatan awal.",
   },

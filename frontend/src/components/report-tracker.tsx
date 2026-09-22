@@ -59,7 +59,7 @@ function buildSteps(report: CitizenReport): Step[] {
         ? "Petugas akan memilih apakah laporan perlu arahan warga atau diteruskan ke DLH."
         : "Setelah diterima, laporan masuk rekap evaluasi kesehatan."
       : report.routing.workflow === "tiket_lingkungan"
-      ? "Laporan diteruskan ke DLH dan status tiketnya dapat dipantau di bawah."
+      ? "Laporan diteruskan ke DLH; penanganan teknis menjadi kewenangan instansi penerima."
       : report.routing.workflow === "arahan_warga"
         ? "Petugas memilih tindak lanjut melalui arahan yang aman dilakukan warga."
         : report.routing.workflow === "rekap_evaluasi"
@@ -208,8 +208,8 @@ function ReportDetail({ report }: { report: CitizenReport }) {
                 ? "Ini laporan peragaan; tidak membuat tiket operasional."
                 : report.routing.workflow === "tiket_lingkungan"
                   ? report.ticket
-                    ? `Laporan bertipe pemicu lingkungan sudah dibuatkan tiket untuk ${FAMILY_ROUTING.lingkungan}.`
-                    : "Laporan lingkungan sudah diterima dan sedang disiapkan untuk tindak lanjut."
+                    ? `Laporan bertipe pemicu lingkungan diteruskan ke ${FAMILY_ROUTING.lingkungan}; penanganan teknis merupakan kewenangan instansi penerima.`
+                    : "Laporan lingkungan sudah diterima dan disiapkan untuk penerusan ke instansi terkait."
                   : report.routing.workflow === "arahan_warga"
                     ? "Petugas memilih arahan mandiri warga; laporan ini tidak dibuatkan tiket DLH."
                     : report.routing.workflow === "rekap_evaluasi"
@@ -229,7 +229,7 @@ function ReportDetail({ report }: { report: CitizenReport }) {
               </div>
               <p className="mt-2 leading-relaxed">
                 Tujuan: {report.ticket.destinationUnit}. Status terakhir diperbarui pada{" "}
-                {formatDateTime(report.ticket.updatedAt)}.
+                {formatDateTime(report.ticket.updatedAt)}. Penanganan teknis merupakan kewenangan instansi penerima.
               </p>
               {report.ticket.resolutionNote && (
                 <p className="mt-2 border-t border-teal-200 pt-2 leading-relaxed">

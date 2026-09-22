@@ -479,7 +479,7 @@ export function DispatchActionModal({
               {alreadyDispatched ? (
                 <>
                   <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-                  <span>Sudah diinstruksikan</span>
+                  <span>Dicatat berjalan</span>
                 </>
               ) : (
                 <>

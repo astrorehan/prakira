@@ -129,7 +129,7 @@ export function EarlyActionCenter({
     const rec = recommendations.find((r) => r.id === id);
     const targets = rec ? rec.target_kecamatan.join(", ") : "wilayah target";
     toast.show(
-      `${id} ditandai berjalan untuk ${targets}` +
+      `${id} dicatat berjalan untuk ${targets}` +
         (checklist.length > 0 ? ` - ${checklist.length} butir SOP tercentang.` : "."),
     );
     onChanged?.();
@@ -149,7 +149,7 @@ export function EarlyActionCenter({
         saved += 1;
       }
       setBatchModalOpen(false);
-      toast.show(`${saved} tindakan ditandai berjalan.`);
+      toast.show(`${saved} tindakan dicatat berjalan.`);
       onChanged?.();
     } catch (caught) {
       setBatchError(caught instanceof Error ? caught.message : String(caught));
@@ -321,7 +321,7 @@ export function EarlyActionCenter({
               </dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="text-paper-600">Warga terlindungi</dt>
+              <dt className="text-paper-600">Penduduk di wilayah sasaran</dt>
               <dd className="tabular font-medium text-foreground">
                 ~{formatNumber(summary.populationPending)} jiwa
               </dd>
@@ -362,7 +362,7 @@ export function EarlyActionCenter({
               <span>
                 {isBatchSubmitting
                   ? "Menyimpan…"
-                  : `Tandai ${summary.pending} tindakan`}
+                  : `Catat ${summary.pending} tindakan berjalan`}
               </span>
             </Button>
           </DialogFooter>

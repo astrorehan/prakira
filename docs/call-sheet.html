@@ -1,0 +1,1286 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Call Sheet PRAKIRA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Sans+3:wght@400;600&display=swap">
+
+<style>
+:root{
+  --ground:#EDF1F2;
+  --surface:#FFFFFF;
+  --surface-2:#F5F7F7;
+  --sunk:#E4EAEB;
+  --line:rgba(14,34,37,.10);
+  --line-soft:rgba(14,34,37,.06);
+  --ink:#0E2225;
+  --ink-2:#3D4E50;
+  --ink-3:#5A6C6E;
+  --ink-4:#849697;
+  --accent:#0B4A57;
+  --accent-2:#17808F;
+  --on-accent:#FFFFFF;
+  --accent-wash:#D6E9EC;
+  --accent-wash-2:#EAF4F5;
+  --ok:#1F5132;
+  --ok-wash:#EDF4EC;
+  --warn:#9A6712;
+  --warn-wash:#FDF6E9;
+  --stop:#A8442C;
+  --stop-wash:#FBECE8;
+  --shadow-card:0 1px 2px rgba(14,34,37,.04), 0 14px 32px -18px rgba(14,34,37,.22);
+  --shadow-pop:0 4px 8px rgba(14,34,37,.06), 0 28px 56px -24px rgba(14,34,37,.28);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#061E23;
+    --surface:#0B2A31;
+    --surface-2:#0F333B;
+    --sunk:#08242A;
+    --line:rgba(190,225,230,.14);
+    --line-soft:rgba(190,225,230,.08);
+    --ink:#E8F1F2;
+    --ink-2:#B9CFD2;
+    --ink-3:#8FA9AD;
+    --ink-4:#6B8589;
+    --accent:#7FD3E0;
+    --accent-2:#4FB6C6;
+    --on-accent:#062026;
+    --accent-wash:#0F3F49;
+    --accent-wash-2:#0C343C;
+    --ok:#8FCB92;
+    --ok-wash:#123322;
+    --warn:#E8B45F;
+    --warn-wash:#38290F;
+    --stop:#EE9376;
+    --stop-wash:#3B1B12;
+    --shadow-card:0 1px 2px rgba(0,0,0,.30), 0 14px 32px -18px rgba(0,0,0,.60);
+    --shadow-pop:0 4px 8px rgba(0,0,0,.34), 0 28px 56px -24px rgba(0,0,0,.66);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#061E23;
+  --surface:#0B2A31;
+  --surface-2:#0F333B;
+  --sunk:#08242A;
+  --line:rgba(190,225,230,.14);
+  --line-soft:rgba(190,225,230,.08);
+  --ink:#E8F1F2;
+  --ink-2:#B9CFD2;
+  --ink-3:#8FA9AD;
+  --ink-4:#6B8589;
+  --accent:#7FD3E0;
+  --accent-2:#4FB6C6;
+  --on-accent:#062026;
+  --accent-wash:#0F3F49;
+  --accent-wash-2:#0C343C;
+  --ok:#8FCB92;
+  --ok-wash:#123322;
+  --warn:#E8B45F;
+  --warn-wash:#38290F;
+  --stop:#EE9376;
+  --stop-wash:#3B1B12;
+  --shadow-card:0 1px 2px rgba(0,0,0,.30), 0 14px 32px -18px rgba(0,0,0,.60);
+  --shadow-pop:0 4px 8px rgba(0,0,0,.34), 0 28px 56px -24px rgba(0,0,0,.66);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--ground);
+  color:var(--ink);
+  font-family:"Source Sans 3","Segoe UI",system-ui,sans-serif;
+  font-size:17px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:"IBM Plex Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;font-variant-numeric:tabular-nums slashed-zero}
+h1,h2,h3,h4{font-family:"Archivo","Segoe UI",system-ui,sans-serif;margin:0;text-wrap:balance;letter-spacing:-.018em}
+
+.wrap{max-width:1120px;margin:0 auto;padding:0 22px}
+
+/* ---------- top bar ---------- */
+.topbar{
+  position:sticky;top:0;z-index:40;
+  background:color-mix(in srgb, var(--ground) 88%, transparent);
+  border-bottom:1px solid var(--line);
+}
+@supports not (background: color-mix(in srgb, red 50%, blue)){
+  .topbar{background:var(--ground)}
+}
+.topbar .wrap{display:flex;align-items:center;gap:18px;height:56px}
+.brandmark{display:flex;align-items:center;gap:9px;flex:none}
+.brandmark i{width:11px;height:11px;border-radius:50%;background:var(--accent);display:block}
+.brandmark span{font-family:"Archivo",sans-serif;font-weight:700;font-size:15px;letter-spacing:.09em}
+.navlinks{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;flex:1}
+.navlinks::-webkit-scrollbar{display:none}
+.navlinks a{
+  font-family:"IBM Plex Mono",monospace;font-size:12.5px;font-weight:500;
+  color:var(--ink-3);text-decoration:none;white-space:nowrap;
+  padding:6px 11px;border-radius:999px;
+}
+.navlinks a:hover{color:var(--ink);background:var(--surface)}
+.navlinks a:focus-visible{outline:2px solid var(--accent-2);outline-offset:1px}
+.clock{
+  flex:none;font-family:"IBM Plex Mono",monospace;font-size:12.5px;font-weight:500;
+  color:var(--ink-3);border:1px solid var(--line);border-radius:999px;
+  padding:5px 12px;background:var(--surface);white-space:nowrap;
+}
+.clock b{color:var(--ink);font-weight:600}
+
+/* ---------- masthead ---------- */
+.mast{padding:56px 0 8px}
+.eyebrow{
+  font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--accent-2);
+}
+.mast h1{font-size:clamp(38px,6.4vw,62px);font-weight:700;line-height:1.02;margin:14px 0 0}
+.mast .sub{font-size:19px;color:var(--ink-3);max-width:60ch;margin:16px 0 0}
+.specrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:26px}
+.spec{
+  font-family:"IBM Plex Mono",monospace;font-size:12.5px;font-weight:500;
+  background:var(--surface);border:1px solid var(--line);border-radius:999px;
+  padding:6px 14px;color:var(--ink-2);
+}
+.spec b{color:var(--ink);font-weight:600}
+
+/* ---------- status board ---------- */
+.board{
+  margin:38px 0 0;background:var(--surface);border:1px solid var(--line);
+  border-radius:16px;box-shadow:var(--shadow-card);overflow:hidden;
+}
+.board-head{
+  padding:16px 22px;border-bottom:1px solid var(--line-soft);
+  display:flex;justify-content:space-between;align-items:baseline;gap:14px;flex-wrap:wrap;
+}
+.board-head h2{font-size:17px;font-weight:600;letter-spacing:0}
+.board-head .note{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ink-4)}
+.scenegrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr))}
+.sc{padding:16px 18px 18px;border-right:1px solid var(--line-soft);border-top:1px solid var(--line-soft)}
+.sc:last-child{border-right:none}
+.sc .n{font-family:"IBM Plex Mono",monospace;font-size:11.5px;font-weight:600;letter-spacing:.1em;color:var(--ink-4)}
+.sc .t{font-size:15px;font-weight:600;margin-top:4px;line-height:1.3}
+.sc .s{
+  display:inline-flex;align-items:center;gap:6px;margin-top:10px;
+  font-family:"IBM Plex Mono",monospace;font-size:11.5px;font-weight:600;
+  padding:3px 9px;border-radius:999px;
+}
+.sc .s i{width:6px;height:6px;border-radius:50%;display:block}
+.s-done{background:var(--ok-wash);color:var(--ok)}
+.s-done i{background:var(--ok)}
+.s-todo{background:var(--stop-wash);color:var(--stop)}
+.s-todo i{background:var(--stop)}
+
+/* ---------- sections ---------- */
+section{padding:64px 0 0;scroll-margin-top:70px}
+.shead{display:flex;align-items:baseline;gap:14px;border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:30px}
+.shead .num{font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:600;color:var(--accent-2);flex:none}
+.shead h2{font-size:clamp(23px,3vw,30px);font-weight:700}
+.lede{font-size:18px;color:var(--ink-2);max-width:66ch;margin:0 0 26px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-card)}
+.pad{padding:22px 24px}
+
+.callout{border-radius:14px;padding:20px 24px;margin:0 0 26px;border:1px solid}
+.callout h3{font-size:17px;font-weight:600;margin-bottom:6px}
+.callout p{margin:0 0 10px}
+.callout p:last-child{margin-bottom:0}
+.c-stop{background:var(--stop-wash);border-color:color-mix(in srgb,var(--stop) 30%,transparent);color:var(--ink)}
+.c-warn{background:var(--warn-wash);border-color:color-mix(in srgb,var(--warn) 32%,transparent);color:var(--ink)}
+.c-acc{background:var(--accent-wash-2);border-color:color-mix(in srgb,var(--accent) 24%,transparent);color:var(--ink)}
+@supports not (background: color-mix(in srgb, red 50%, blue)){
+  .c-stop{border-color:var(--stop)}.c-warn{border-color:var(--warn)}.c-acc{border-color:var(--accent)}
+}
+
+code{font-family:"IBM Plex Mono",monospace;font-size:.88em;background:var(--sunk);padding:2px 6px;border-radius:5px;color:var(--ink)}
+.callout code{background:var(--surface)}
+
+/* ---------- tables ---------- */
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface);box-shadow:var(--shadow-card)}
+table{border-collapse:collapse;width:100%;min-width:520px}
+th,td{text-align:left;padding:12px 16px;border-bottom:1px solid var(--line-soft);vertical-align:top;font-size:15.5px}
+th{
+  font-family:"IBM Plex Mono",monospace;font-size:11.5px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--ink-4);
+  background:var(--surface-2);white-space:nowrap;
+}
+tr:last-child td{border-bottom:none}
+td.mono,th.mono{font-family:"IBM Plex Mono",monospace;font-size:14px}
+.yes{color:var(--ok);font-weight:600}
+.no{color:var(--stop);font-weight:600}
+
+/* ---------- layout diagram ---------- */
+.diagram{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:var(--shadow-card)}
+.diagram svg{display:block;width:100%;height:auto}
+.dlegend{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-top:20px}
+.dl{display:flex;gap:10px;align-items:flex-start}
+.dl i{width:10px;height:10px;border-radius:3px;flex:none;margin-top:6px}
+.dl .k{font-family:"IBM Plex Mono",monospace;font-size:12.5px;font-weight:600;color:var(--ink)}
+.dl .v{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ink-3);line-height:1.5}
+
+/* ---------- transitions ---------- */
+.trans{display:grid;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));gap:14px}
+.tr{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow-card)}
+.tr .nm{font-family:"Archivo",sans-serif;font-size:16px;font-weight:700}
+.tr .when{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--accent-2);font-weight:600;letter-spacing:.05em;margin:3px 0 9px}
+.tr p{margin:0;font-size:15px;color:var(--ink-2)}
+
+/* ---------- scene slates ---------- */
+.slate{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-card);overflow:hidden;margin-bottom:18px}
+.slate-head{
+  display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;
+  padding:13px 20px;background:var(--surface-2);border-bottom:1px solid var(--line-soft);
+  font-family:"IBM Plex Mono",monospace;font-size:12.5px;font-weight:500;color:var(--ink-3);
+}
+.slate-head .id{font-weight:600;color:var(--ink);letter-spacing:.06em}
+.slate-head .ttl{font-family:"Source Sans 3",sans-serif;font-size:16px;font-weight:600;color:var(--ink);flex:1 1 240px;letter-spacing:0}
+.slate-head .tag{padding:3px 9px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.05em}
+.tag-done{background:var(--ok-wash);color:var(--ok)}
+.tag-todo{background:var(--stop-wash);color:var(--stop)}
+.slate table{min-width:600px}
+.slate .foot{padding:12px 20px;border-top:1px solid var(--line-soft);font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ink-3);display:flex;flex-wrap:wrap;gap:6px 18px}
+.slate .foot b{color:var(--ink);font-weight:600}
+.slate .tw{border:none;border-radius:0;box-shadow:none;background:transparent}
+
+/* ---------- prompts ---------- */
+.asset{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-card);overflow:hidden;margin-bottom:16px}
+.asset-head{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:14px 20px;border-bottom:1px solid var(--line-soft)}
+.asset-head .code{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:14px;color:var(--accent-2);letter-spacing:.06em}
+.asset-head .nm{font-family:"Source Sans 3",sans-serif;font-size:16.5px;font-weight:600;flex:1 1 200px}
+.asset-head .meta{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--ink-4)}
+.pri{padding:3px 9px;border-radius:999px;font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;letter-spacing:.05em}
+.p0{background:var(--stop-wash);color:var(--stop)}
+.p1{background:var(--warn-wash);color:var(--warn)}
+.p2{background:var(--sunk);color:var(--ink-3)}
+.copybtn{
+  font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;letter-spacing:.04em;
+  background:var(--accent);color:var(--on-accent);border:none;border-radius:999px;
+  padding:7px 16px;cursor:pointer;flex:none;
+  transition:background 140ms cubic-bezier(.2,.7,.3,1);
+}
+.copybtn:hover{background:var(--accent-2)}
+.copybtn:focus-visible{outline:2px solid var(--accent-2);outline-offset:2px}
+.copybtn[data-state="ok"]{background:var(--ok)}
+pre{
+  margin:0;padding:20px;background:var(--sunk);overflow-x:auto;
+  font-family:"IBM Plex Mono",monospace;font-size:12.5px;line-height:1.62;
+  color:var(--ink-2);white-space:pre;tab-size:2;
+}
+details.asset > summary{list-style:none;cursor:pointer}
+details.asset > summary::-webkit-details-marker{display:none}
+details.asset > summary .chev{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ink-4);flex:none}
+details.asset[open] > summary .chev{color:var(--accent-2)}
+details.asset > summary:focus-visible{outline:2px solid var(--accent-2);outline-offset:-2px}
+
+/* ---------- schedule ---------- */
+.sched{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--surface);box-shadow:var(--shadow-card)}
+.blk{display:grid;grid-template-columns:118px 1fr;gap:0;border-bottom:1px solid var(--line-soft)}
+.blk:last-child{border-bottom:none}
+.blk .time{
+  font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:600;color:var(--ink-2);
+  padding:15px 16px;background:var(--surface-2);border-right:1px solid var(--line-soft);white-space:nowrap;
+}
+.blk .body{padding:15px 20px}
+.blk .body .h{font-weight:600;font-size:16px;margin-bottom:3px}
+.blk .body .d{font-size:15px;color:var(--ink-3)}
+.blk.now{background:var(--accent-wash-2)}
+.blk.now .time{background:var(--accent-wash);color:var(--accent)}
+.blk.now .body .h::after{
+  content:"SEKARANG";font-family:"IBM Plex Mono",monospace;font-size:10.5px;font-weight:600;
+  letter-spacing:.12em;color:var(--on-accent);background:var(--accent);
+  padding:2px 8px;border-radius:999px;margin-left:10px;vertical-align:2px;
+}
+.blk.gate .time{color:var(--stop)}
+.blk.gate .body .h{color:var(--stop)}
+
+/* ---------- checklist ---------- */
+.checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px}
+.cgroup{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow-card)}
+.cgroup h3{
+  font-family:"IBM Plex Mono",monospace;font-size:11.5px;font-weight:600;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--ink-4);margin-bottom:12px;
+}
+.cgroup label{display:flex;gap:11px;align-items:flex-start;padding:7px 0;cursor:pointer;font-size:15.5px;line-height:1.45}
+.cgroup input{
+  appearance:none;width:19px;height:19px;flex:none;margin-top:2px;
+  border:1.5px solid var(--ink-4);border-radius:5px;background:var(--surface);cursor:pointer;
+  transition:background 140ms,border-color 140ms;
+}
+.cgroup input:checked{background:var(--accent);border-color:var(--accent)}
+.cgroup input:checked::after{
+  content:"";display:block;width:5px;height:9px;margin:1px auto 0;
+  border:solid var(--on-accent);border-width:0 2px 2px 0;transform:rotate(42deg);
+}
+.cgroup input:focus-visible{outline:2px solid var(--accent-2);outline-offset:2px}
+.cgroup input:checked + span{color:var(--ink-4);text-decoration:line-through}
+
+.reset{
+  margin-top:20px;font-family:"IBM Plex Mono",monospace;font-size:12px;
+  background:none;border:1px solid var(--line);color:var(--ink-3);
+  border-radius:999px;padding:7px 15px;cursor:pointer;
+}
+.reset:hover{color:var(--ink);border-color:var(--ink-4)}
+.reset:focus-visible{outline:2px solid var(--accent-2);outline-offset:2px}
+
+footer{margin-top:80px;padding:28px 0 60px;border-top:1px solid var(--line)}
+footer p{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ink-4);margin:0}
+
+ul.tight{margin:0;padding-left:20px}
+ul.tight li{margin-bottom:7px}
+ul.tight li:last-child{margin-bottom:0}
+
+.twocol{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+
+@media (max-width:640px){
+  body{font-size:16px}
+  .blk{grid-template-columns:1fr}
+  .blk .time{border-right:none;border-bottom:1px solid var(--line-soft)}
+  .mast{padding-top:36px}
+  section{padding-top:48px}
+}
+@media (prefers-reduced-motion: reduce){
+  *{animation:none !important;transition:none !important}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap">
+    <div class="brandmark"><i></i><span>PRAKIRA</span></div>
+    <nav class="navlinks">
+      <a href="#branch">00 Branch</a>
+      <a href="#tata">01 Tata Letak</a>
+      <a href="#gerak">02 Gerak</a>
+      <a href="#scene">03 Scene</a>
+      <a href="#aset">04 Prompt</a>
+      <a href="#rekam">05 Rekam</a>
+      <a href="#edit">06 Editor</a>
+      <a href="#jadwal">07 Jadwal</a>
+      <a href="#cek">08 Checklist</a>
+    </nav>
+    <div class="clock" id="clock"><b>--:--</b></div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <header class="mast">
+    <div class="eyebrow">DSDC ANFORCOM 2026 · Universitas Diponegoro</div>
+    <h1>Call Sheet<br>Video Demonstrasi</h1>
+    <p class="sub">Rancangan edit bertema <b>Kanvas Buletin</b> — latar terang, satu kartu mengambang, pil putih bulat penuh. Semua token warna dan gerak diturunkan dari design system produk, supaya video dan aplikasinya terbaca sebagai satu sistem.</p>
+    <div class="specrow">
+      <span class="spec">Durasi <b>05:30</b></span>
+      <span class="spec">Rasio <b>16:9</b></span>
+      <span class="spec">Resolusi <b>1920×1080</b></span>
+      <span class="spec">FPS <b>60</b></span>
+      <span class="spec">Facecam <b>100% durasi</b></span>
+      <span class="spec">Subtema <b>2 — Eco-Health</b></span>
+    </div>
+  </header>
+
+  <div class="board">
+    <div class="board-head">
+      <h2>Status rekaman</h2>
+      <span class="note">5 dari 6 scene sudah punya VO + facecam + rekaman layar</span>
+    </div>
+    <div class="scenegrid">
+      <div class="sc"><div class="n">SC 01</div><div class="t">Masalah &amp; Konsep</div><div class="s s-done"><i></i>SUDAH</div></div>
+      <div class="sc"><div class="n">SC 02</div><div class="t">Konsol Dinkes</div><div class="s s-done"><i></i>SUDAH</div></div>
+      <div class="sc"><div class="n">SC 03</div><div class="t">Early Action Center</div><div class="s s-todo"><i></i>BELUM</div></div>
+      <div class="sc"><div class="n">SC 04</div><div class="t">Portal Warga</div><div class="s s-done"><i></i>SUDAH</div></div>
+      <div class="sc"><div class="n">SC 05</div><div class="t">Verifikasi &amp; Model</div><div class="s s-done"><i></i>SUDAH</div></div>
+      <div class="sc"><div class="n">SC 06</div><div class="t">Dampak &amp; Penutup</div><div class="s s-done"><i></i>SUDAH</div></div>
+    </div>
+  </div>
+
+  <!-- ================= 00 BRANCH ================= -->
+  <section id="branch">
+    <div class="shead"><span class="num">00</span><h2>Branch rekaman</h2></div>
+
+    <div class="callout c-stop">
+      <h3>Checkout dulu sebelum menyalakan OBS</h3>
+      <p>Semua rute di storyboard <b>benar dan ada</b>. Yang perlu diperhatikan cuma satu: rutenya hidup di branch <code>feat/explainability-simulator-prioritas</code>, bukan di <code>master</code>.</p>
+      <p><code>git checkout feat/explainability-simulator-prioritas</code></p>
+      <p>Aman dilakukan: branch ini adalah <code>master</code> <b>+ 4 commit</b>, dan <code>merge-base</code>-nya persis di <code>73cc7aa</code> — HEAD <code>master</code> sekarang. Artinya branch ini <b>superset</b>: tidak ada satu pun isi <code>master</code> yang hilang, termasuk Leptospirosis dan tile peta CARTO.</p>
+    </div>
+
+    <div class="tw" style="margin-bottom:26px">
+      <table>
+        <thead><tr><th>Rute</th><th class="mono">master</th><th class="mono">branch</th><th>Dipakai scene</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">/ · /dashboard · /tindakan · /warga* · /verifikasi · /analitik · /tentang</td><td class="mono yes">ada</td><td class="mono yes">ada</td><td>01–06</td></tr>
+          <tr><td class="mono"><b>/model</b> — Transparansi Model</td><td class="mono no">tidak</td><td class="mono yes">ada</td><td><b>05</b></td></tr>
+          <tr><td class="mono"><b>/prioritas</b> — Prioritas Terdampak</td><td class="mono no">tidak</td><td class="mono yes">ada</td><td>cadangan</td></tr>
+          <tr><td class="mono">/simulasi · /mesin-waktu · /buletin</td><td class="mono no">tidak</td><td class="mono yes">ada</td><td>belum dipakai</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="lede">Scene 05 sudah direkam dan menampilkan <code>/model</code> — berarti take itu diambil dari branch ini. <b>Scene 03 wajib direkam dari branch yang sama</b>, kalau tidak nav konsol dan daftar penyakitnya beda antar-scene dan ketahuan di video.</p>
+
+    <div class="callout c-warn">
+      <h3>Scene 03 — pakai <code>/tindakan</code>, bukan <code>/prioritas</code></h3>
+      <p>Storyboard menulis “(<code>/tindakan</code> atau <code>/prioritas</code>)”. Keduanya ada, tapi isinya berbeda:</p>
+      <ul class="tight">
+        <li><code>/tindakan</code> → <code>EarlyActionCenter</code>. Antrean tindakan, tab <b>“Selesai”</b>, tombol <b>“Tandai semua berjalan”</b>. <b>Ini yang cocok dengan naskah Scene 03.</b></li>
+        <li><code>/prioritas</code> → <code>PriorityBoard</code>, “Prioritas Terdampak”. Halaman lain: risiko × populasi, dua peringkat berdampingan + kalkulator dampak. Bukan Early Action Center.</li>
+      </ul>
+      <p style="margin-top:10px">Koreksi kecil untuk kolom Aksi Kursor: tombol aslinya berbunyi <b>“Tandai semua berjalan”</b>, bukan “Tandai Selesai / Disposisi”. Naskah suara Scene 03 tidak menyebut tombol ini, jadi VO-nya aman — cukup betulkan catatan aksi kursornya.</p>
+    </div>
+
+    <div class="callout c-acc">
+      <h3>Bonus kalau sempat</h3>
+      <p><code>/prioritas</code> kuat untuk rubrik Originalitas: halaman itu menampilkan kelemahan skor risikonya sendiri secara terbuka — persentil terhadap sejarah kecamatan bisa menaruh kecamatan 98 ribu jiwa di atas yang 192 ribu jiwa. Sisipan 6 detik di ujung Scene 03 kalau waktu memungkinkan. <b>Jangan dipaksakan.</b></p>
+    </div>
+  </section>
+
+  <!-- ================= 01 TATA LETAK ================= -->
+  <section id="tata">
+    <div class="shead"><span class="num">01</span><h2>Tata letak layar</h2></div>
+    <p class="lede">Rasio terkunci 16:9. Kanvas 1920×1080 dan kartu rekaman layar 1600×900 sama-sama tepat 16:9 — rekaman masuk <b>tanpa crop, tanpa letterbox, tanpa pillarbox</b>. Jangan pernah ubah salah satunya sendirian.</p>
+
+    <div class="diagram">
+      <svg viewBox="0 0 1920 1080" role="img" aria-label="Diagram tata letak video 1920 kali 1080: pil bab di atas tengah, kartu rekaman layar 1600 kali 900 di tengah, facecam lingkaran di kanan bawah, lower third di kiri bawah">
+        <defs>
+          <linearGradient id="bgGrad" x1="0" y1="0" x2="0.5" y2="1">
+            <stop offset="0%" stop-color="#FFFFFF"/><stop offset="100%" stop-color="#EFF5F9"/>
+          </linearGradient>
+        </defs>
+        <rect x="0" y="0" width="1920" height="1080" fill="url(#bgGrad)"/>
+        <circle cx="180" cy="120" r="430" fill="#7FB8C0" opacity="0.16"/>
+        <circle cx="1740" cy="960" r="360" fill="#0B4A57" opacity="0.09"/>
+        <rect x="0" y="0" width="1920" height="1080" fill="none" stroke="#0E2225" stroke-opacity="0.18" stroke-width="4"/>
+
+        <!-- pil bab -->
+        <rect x="680" y="32" width="560" height="68" rx="34" fill="#FFFFFF" stroke="#0E2225" stroke-opacity="0.10" stroke-width="2"/>
+        <circle cx="726" cy="66" r="9" fill="#0B4A57"/>
+        <text x="754" y="75" font-family="IBM Plex Mono, monospace" font-size="27" font-weight="600" fill="#0E2225">02 · Konsol Dinkes</text>
+
+        <!-- kartu -->
+        <rect x="160" y="132" width="1600" height="900" rx="28" fill="#FFFFFF" stroke="#0B4A57" stroke-opacity="0.34" stroke-width="3"/>
+        <text x="960" y="560" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="44" font-weight="600" fill="#0B4A57" opacity="0.62">REKAMAN LAYAR</text>
+        <text x="960" y="616" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="30" fill="#5A6C6E">1600 × 900 · radius 28 · skala 83.3%</text>
+
+        <!-- ukuran -->
+        <line x1="160" y1="1058" x2="1760" y2="1058" stroke="#5A6C6E" stroke-width="3"/>
+        <line x1="160" y1="1044" x2="160" y2="1072" stroke="#5A6C6E" stroke-width="3"/>
+        <line x1="1760" y1="1044" x2="1760" y2="1072" stroke="#5A6C6E" stroke-width="3"/>
+
+        <!-- lower third -->
+        <rect x="200" y="918" width="470" height="88" rx="44" fill="#FFFFFF" stroke="#0E2225" stroke-opacity="0.10" stroke-width="2"/>
+        <circle cx="248" cy="962" r="11" fill="#17808F"/>
+        <text x="278" y="972" font-family="IBM Plex Mono, monospace" font-size="27" font-weight="500" fill="#0E2225">Anggota 2 · Console</text>
+
+        <!-- facecam -->
+        <circle cx="1580" cy="852" r="172" fill="#FFFFFF" stroke="#0E2225" stroke-opacity="0.10" stroke-width="2"/>
+        <circle cx="1580" cy="852" r="160" fill="#D6E9EC"/>
+        <text x="1580" y="845" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="30" font-weight="600" fill="#0B4A57">FACECAM</text>
+        <text x="1580" y="885" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="25" fill="#0B4A57">344 px · 17.9%</text>
+      </svg>
+
+      <div class="dlegend">
+        <div class="dl"><i style="background:#0B4A57"></i><div><div class="k">Kartu rekaman layar</div><div class="v">1600×900 · r28<br>CapCut: Scale 83.3% · X 0 · Y +84</div></div></div>
+        <div class="dl"><i style="background:#849697"></i><div><div class="k">Pil bab (atas-tengah)</div><div class="v">auto×68 · radius penuh<br>CapCut: X 0 · Y −474</div></div></div>
+        <div class="dl"><i style="background:#D6E9EC"></i><div><div class="k">Facecam</div><div class="v">lingkaran 344 px · ring putih 6 px<br>CapCut: X +620 · Y +312</div></div></div>
+        <div class="dl"><i style="background:#17808F"></i><div><div class="k">Lower third</div><div class="v">auto×88 · radius penuh<br>CapCut: Y +422 · muncul 6 dtk</div></div></div>
+      </div>
+    </div>
+
+    <h3 style="font-size:19px;margin:34px 0 14px">Facecam berpindah per scene</h3>
+    <p class="lede">Lingkaran facecam menutupi sudut kanan-bawah kartu. Pindahkan kalau menutupi angka, tombol, atau legenda peta.</p>
+    <div class="tw">
+      <table>
+        <thead><tr><th>Scene</th><th>Konten padat</th><th>Posisi facecam</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">01</td><td>kartu penuh / landing</td><td>layar penuh atau kanan-bawah</td></tr>
+          <tr><td class="mono">02</td><td>peta kiri, panel detail kanan, grafik bawah</td><td><b>kiri-bawah</b> <span class="mono">(X −620)</span></td></tr>
+          <tr><td class="mono">03</td><td>daftar antrean kiri</td><td><b>kanan-bawah</b></td></tr>
+          <tr><td class="mono">04</td><td>form lapor tengah</td><td><b>kanan-bawah</b></td></tr>
+          <tr><td class="mono">05</td><td>tabel metrik lebar</td><td><b>kanan-atas</b> <span class="mono">(X +620 · Y −280)</span></td></tr>
+          <tr><td class="mono">06</td><td>kartu penuh</td><td>layar penuh</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout c-warn" style="margin-top:22px">
+      <h3>Dua aturan yang tidak bisa ditawar</h3>
+      <p><b>Wajah ada dari frame pertama sampai frame terakhir</b> (Rulebook §8.2 poin 4). Lingkaran facecam tetap menyala di atas semua kartu motion penuh — jangan pernah dimatikan, bahkan saat title card.</p>
+      <p><b>Jangan demokan tampilan mobile.</b> PRAKIRA adalah konsol kerja desktop. Memperkecil jendela cuma memakan detik yang mahal dan membuat teks tidak terbaca setelah diskalakan 83.3%.</p>
+    </div>
+  </section>
+
+  <!-- ================= 02 GERAK ================= -->
+  <section id="gerak">
+    <div class="shead"><span class="num">02</span><h2>Bahasa gerak</h2></div>
+    <p class="lede">Token produk 140/200/320 ms terlalu cepat untuk video — naikkan satu tingkat. Kurva tetap <code>cubic-bezier(.2,.7,.3,1)</code>. Tidak ada overshoot pada chrome; overshoot hanya boleh pada counter angka, maksimal 1.02×.</p>
+
+    <div class="twocol" style="margin-bottom:26px">
+      <div class="tw">
+        <table>
+          <thead><tr><th>Peran</th><th class="mono">Durasi</th></tr></thead>
+          <tbody>
+            <tr><td>Pil / chip masuk</td><td class="mono">320 ms</td></tr>
+            <tr><td>Kartu masuk / keluar</td><td class="mono">480 ms</td></tr>
+            <tr><td>Potong antar-scene</td><td class="mono">400 ms</td></tr>
+            <tr><td>Counter angka</td><td class="mono">1400 ms</td></tr>
+            <tr><td>Sapuan latar (aurora)</td><td class="mono">24 s loop</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout c-stop" style="margin:0">
+        <h3>Dilarang keras</h3>
+        <p>Zoom blur · glitch · RGB split · light leak · whip pan · spin · page curl · semua preset “Trending” CapCut · sound effect <i>whoosh</i>.</p>
+        <p>Kursor: pakai highlight lingkaran <code>#17808F</code> @ 25%, radius 44 px. Bukan efek klik <i>ripple</i> bawaan.</p>
+      </div>
+    </div>
+
+    <h3 style="font-size:19px;margin:0 0 14px">Empat transisi resmi — sisanya dilarang</h3>
+    <div class="trans">
+      <div class="tr">
+        <div class="nm">Card Handoff</div>
+        <div class="when">ANTAR-SCENE DEMO · S02→S03→S04→S05</div>
+        <p>Kartu turun 83.3% → 80% + opacity 100 → 0 (240 ms). Rekaman berikutnya masuk 80% → 83.3% + opacity 0 → 100 (240 ms, delay 160 ms). Pil bab wipe vertikal. <b>Latar tidak pernah ikut bergerak.</b></p>
+      </div>
+      <div class="tr">
+        <div class="nm">Plate Swap</div>
+        <div class="when">DEMO ↔ KARTU MOTION PENUH</div>
+        <p>Kartu rekaman keluar seperti di atas. Kartu motion penuh masuk opacity 0 → 100 + skala 1.02 → 1.00 (480 ms). Facecam tetap diam di tempat.</p>
+      </div>
+      <div class="tr">
+        <div class="nm">Punch-In</div>
+        <div class="when">MENYOROT DETAIL · KODE LACAK, ANGKA PREDIKSI</div>
+        <p>Skala 83.3% → 118% dengan anchor di elemen yang disorot (600 ms), tahan 1.8–2.4 s, kembali (600 ms). Ditemani satu callout chip.</p>
+      </div>
+      <div class="tr">
+        <div class="nm">Hairline Cut</div>
+        <div class="when">DALAM SATU HALAMAN · GANTI TAB / FILTER</div>
+        <p>Potong keras, tanpa transisi. Cukup pil bab yang berkedip ganti label 200 ms.</p>
+      </div>
+    </div>
+
+    <div class="callout c-acc" style="margin-top:22px">
+      <h3>Callout chip</h3>
+      <p>Chip putih + garis penunjuk <code>#17808F</code> 2 px yang menggambar diri (280 ms) dari chip ke elemen UI. <b>Maksimal 2 chip di layar bersamaan.</b> Umur hidup 3.5–4.5 s lalu keluar fade 240 ms.</p>
+    </div>
+  </section>
+
+  <!-- ================= 03 SCENE ================= -->
+  <section id="scene">
+    <div class="shead"><span class="num">03</span><h2>Sheet edit per scene</h2></div>
+    <p class="lede"><b>PLATE</b> = latar animasi (aset A1) · <b>CARD</b> = rekaman layar · <b>FULL</b> = kartu motion penuh · <b>CAM</b> = facecam. Lima scene sudah terkunci — kalau urutan aksi di take lama berbeda dari sheet ini, <b>tulis ulang sheet-nya</b>. Rekam ulang adalah pilihan terakhir.</p>
+
+    <div class="slate">
+      <div class="slate-head"><span class="id">SC 01</span><span class="ttl">Opening, Realitas Masalah &amp; Konsep Eco-Health</span><span>00:00–01:10 · 70 dtk</span><span class="tag tag-done">SUDAH</span></div>
+      <div class="tw"><table>
+        <thead><tr><th class="mono">Waktu</th><th>Lapis</th><th>Isi</th><th>Gerak</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">00:00–00:09</td><td class="mono">PLATE + A2 + CAM</td><td>Title card: wordmark PRAKIRA + subjudul + chip ANFORCOM</td><td>Plate Swap. Facecam <b>sudah menyala di detik 0</b></td></tr>
+          <tr><td class="mono">00:09–00:24</td><td class="mono">PLATE + CAM</td><td>Presenter frame besar (lingkaran 720 px, tengah-kiri), pil identitas tim di kanan</td><td>Lower third masuk 00:10, keluar 00:16</td></tr>
+          <tr><td class="mono">00:24–00:47</td><td class="mono">PLATE + A3 + CAM</td><td>Timeline lag iklim: pemicu minggu 0 → lonjakan kasus minggu 2–4</td><td>Plate Swap. Kurung “2–4 minggu” menggambar diri</td></tr>
+          <tr><td class="mono">00:47–00:59</td><td class="mono">PLATE + CARD + CAM</td><td>Landing page <code>/</code> — scroll pelan ke bagian 3 pilar</td><td>Card Handoff. Scroll konstan, <b>tanpa</b> percepatan</td></tr>
+          <tr><td class="mono">00:59–01:10</td><td class="mono">PLATE + A4 + CAM</td><td>Tiga pilar naik satu per satu</td><td>Plate Swap, stagger 180 ms. Pilar ke-3 tahan sampai potong</td></tr>
+        </tbody>
+      </table></div>
+      <div class="foot"><span>Pil bab: <b>01 · Masalah &amp; Konsep</b></span><span>Chip rute: <b>/</b></span><span>Presenter: <b>Anggota 1</b></span></div>
+    </div>
+
+    <div class="slate">
+      <div class="slate-head"><span class="id">SC 02</span><span class="ttl">Konsol Pemantauan Risiko &amp; Peta 16 Kecamatan</span><span>01:10–02:00 · 50 dtk</span><span class="tag tag-done">SUDAH</span></div>
+      <div class="tw"><table>
+        <thead><tr><th class="mono">Waktu</th><th>Isi</th><th>Gerak</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">01:10–01:14</td><td><code>/dashboard</code> muncul, peta 16 kecamatan sudah termuat</td><td>Card Handoff. <b>Jangan</b> rekam state loading</td></tr>
+          <tr><td class="mono">01:14–01:22</td><td>Ganti filter penyakit DBD → ISPA → kembali DBD</td><td>Hairline Cut, pil bab kedip</td></tr>
+          <tr><td class="mono">01:22–01:34</td><td>Klik Kecamatan Tembalang, panel detail terbuka</td><td>Callout ①: “Estimasi + interval ketidakpastian”</td></tr>
+          <tr><td class="mono">01:34–01:44</td><td>Angka estimasi + label cakupan data</td><td><b>Punch-In 118%</b>, tahan 2.2 s</td></tr>
+          <tr><td class="mono">01:44–02:00</td><td>Scroll ke grafik deret waktu curah hujan vs kasus</td><td>Callout ②: “Korelasi curah hujan ekstrem”</td></tr>
+        </tbody>
+      </table></div>
+      <div class="foot"><span>Pil bab: <b>02 · Konsol Dinkes</b></span><span>Chip rute: <b>/dashboard</b></span><span>Facecam: <b>kiri-bawah</b></span><span>Presenter: <b>Anggota 2</b></span></div>
+    </div>
+
+    <div class="slate">
+      <div class="slate-head"><span class="id">SC 03</span><span class="ttl">Early Action Center — Mesin Rekomendasi Aksi Preventif</span><span>02:00–02:50 · 50 dtk</span><span class="tag tag-todo">BELUM DIREKAM</span></div>
+      <div class="tw"><table>
+        <thead><tr><th class="mono">Waktu</th><th>Isi</th><th>Gerak</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">02:00–02:06</td><td><code>/tindakan</code> — Early Action Center</td><td>Card Handoff</td></tr>
+          <tr><td class="mono">02:06–02:16</td><td>Filter ke Level 3 (Siaga)</td><td>Hairline Cut · badge Siaga <code>#A8442C</code> sudah jadi aksen alami</td></tr>
+          <tr><td class="mono">02:16–02:34</td><td>Sorot dua cabang rekomendasi</td><td>Callout ① “Aksi Kesehatan — larvasida” · ② “Aksi Lingkungan Sirkular — drainase &amp; sampah”. <b>Dua chip bersamaan, ini satu-satunya tempat yang boleh</b></td></tr>
+          <tr><td class="mono">02:34–02:50</td><td>Klik <b>“Tandai semua berjalan”</b> → dialog konfirmasi → toast “N tindakan ditandai berjalan”</td><td>Punch-In ringan 105% ke toast, 1.2 s</td></tr>
+        </tbody>
+      </table></div>
+      <div class="foot"><span>Pil bab: <b>03 · Early Action Center</b></span><span>Chip rute: <b>/tindakan</b></span><span>Presenter: <b>Anggota 2</b></span></div>
+    </div>
+
+    <div class="callout c-warn">
+      <h3>Sebelum merekam Scene 03</h3>
+      <p>Branch <code>feat/explainability-simulator-prioritas</code> ter-checkout · zoom browser 115% · jendela penyamaran + <kbd>F11</kbd> · antrean <code>/tindakan</code> berisi ≥ 5 baris · ada ≥ 1 kecamatan Siaga. Supaya nav dan densitas UI-nya sama persis dengan Scene 02, 04, 05 yang sudah jadi.</p>
+    </div>
+
+    <div class="slate">
+      <div class="slate-head"><span class="id">SC 04</span><span class="ttl">Portal Warga &amp; Crowdsourcing Titik Pemicu</span><span>02:50–03:40 · 50 dtk</span><span class="tag tag-done">SUDAH</span></div>
+      <div class="tw"><table>
+        <thead><tr><th class="mono">Waktu</th><th>Isi</th><th>Gerak</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">02:50–02:56</td><td><code>/warga</code> — buka di jendela penyamaran untuk membuktikan tanpa login</td><td>Card Handoff · Callout ① “Tanpa login”</td></tr>
+          <tr><td class="mono">02:56–03:06</td><td>Pilih kecamatan, status kewaspadaan + tips mitigasi tampil</td><td>Hairline Cut</td></tr>
+          <tr><td class="mono">03:06–03:24</td><td><code>/warga/lapor</code> — isi form: gejala + pemicu lingkungan (genangan / sampah)</td><td>Ketik dengan kecepatan wajar, jangan tempel sekaligus</td></tr>
+          <tr><td class="mono">03:24–03:34</td><td>Submit → Kode Lacak <code>PRK-2026-XXXX</code> muncul</td><td><b>Punch-In 118%</b> ke kode, tahan 2.4 s</td></tr>
+          <tr><td class="mono">03:34–03:40</td><td><code>/warga/status</code>, tempel kode, status tampil</td><td>Hairline Cut</td></tr>
+        </tbody>
+      </table></div>
+      <div class="foot"><span>Pil bab: <b>04 · Portal Warga</b></span><span>Chip rute: <b>/warga → /warga/lapor → /warga/status</b></span><span>Presenter: <b>Anggota 3</b></span></div>
+    </div>
+
+    <div class="slate">
+      <div class="slate-head"><span class="id">SC 05</span><span class="ttl">Verifikasi Petugas &amp; Transparansi Model</span><span>03:40–04:35 · 55 dtk</span><span class="tag tag-done">SUDAH</span></div>
+      <div class="tw"><table>
+        <thead><tr><th class="mono">Waktu</th><th>Isi</th><th>Gerak</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">03:40–03:48</td><td>Diagram loop verifikasi <span class="mono">(A5)</span>: Warga → Kode Lacak → Petugas → Sinyal → Model</td><td>Plate Swap · garis loop menggambar diri</td></tr>
+          <tr><td class="mono">03:48–04:00</td><td><code>/verifikasi</code> — klik “Terima / Verifikasi Laporan”</td><td>Card Handoff · Callout ① “Laporan valid jadi sinyal lapangan”</td></tr>
+          <tr><td class="mono">04:00–04:20</td><td><code>/model</code> — algoritma, periode latih, backtest, MAE / RMSE</td><td>Hairline Cut · Punch-In ke baris metrik, 2.0 s</td></tr>
+          <tr><td class="mono">04:20–04:31</td><td>Scroll ke cakupan data per kecamatan + batasan yang berlaku</td><td>Callout ② “Dibandingkan baseline, bukan klaim kosong”</td></tr>
+          <tr><td class="mono">04:31–04:35</td><td>Batasan sistem &amp; disclaimer etika</td><td>Hairline Cut · pil bab jadi <b>05 · Batasan &amp; Etika</b></td></tr>
+        </tbody>
+      </table></div>
+      <div class="foot"><span>Pil bab: <b>05 · Verifikasi &amp; Transparansi</b></span><span>Chip rute: <b>/verifikasi → /model</b></span><span>Facecam: <b>kanan-atas</b></span><span>Presenter: <b>Anggota 3</b></span></div>
+    </div>
+
+    <div class="slate">
+      <div class="slate-head"><span class="id">SC 06</span><span class="ttl">Proyeksi Dampak &amp; Closing Pitch</span><span>04:35–05:30 · 55 dtk</span><span class="tag tag-done">SUDAH</span></div>
+      <div class="tw"><table>
+        <thead><tr><th class="mono">Waktu</th><th>Isi</th><th>Gerak</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">04:35–05:05</td><td>Tiga counter dampak <span class="mono">(A6)</span>: <b>14 hari</b> · <b>35%</b> · <b>16 kecamatan</b></td><td>Plate Swap · counter naik 1400 ms, stagger 400 ms</td></tr>
+          <tr><td class="mono">05:05–05:19</td><td>Tiga presenter frame besar (lingkaran sejajar) + kalimat penutup</td><td>Lingkaran masuk stagger 200 ms</td></tr>
+          <tr><td class="mono">05:19–05:30</td><td>Closing card <span class="mono">(A7)</span>: lockup + tagline + nama anggota + ANFORCOM 2026</td><td>Plate Swap · tagline fade terakhir, tahan 4 s penuh</td></tr>
+        </tbody>
+      </table></div>
+      <div class="foot"><span>Pil bab: <b>06 · Dampak &amp; Penutup</b></span><span>Tanpa chip rute</span><span>Presenter: <b>Seluruh anggota</b></span></div>
+    </div>
+
+    <div class="callout c-acc">
+      <h3>Frame terakhir tahan 3 detik penuh tanpa gerak</h3>
+      <p>Juri sering menjeda di frame ini. Pastikan tidak ada animasi sisa, tidak ada fade-out.</p>
+    </div>
+  </section>
+
+  <!-- ================= 04 ASET / PROMPT ================= -->
+  <section id="aset">
+    <div class="shead"><span class="num">04</span><h2>Prompt Claude Design</h2></div>
+    <p class="lede">Tujuh aset, semuanya HTML mandiri 1920×1080 yang diputar fullscreen di browser lalu direkam OBS — <b>tidak perlu chroma key sama sekali</b>. Animasi autoplay saat dimuat; tekan <kbd>R</kbd> untuk mengulang kalau take gagal. Kerjakan <b>A1 lebih dulu</b>: dia yang menentukan latar semua aset lain.</p>
+
+    <div class="callout c-warn">
+      <h3>Kalau jam 17:55 belum semua jadi</h3>
+      <p>Kerjakan <b>P0 saja</b> — A1, A2, A6, A7. A3 / A4 / A5 diganti presenter frame besar + teks pil. Video tetap lengkap dan memenuhi rubrik.</p>
+    </div>
+
+    <details class="asset" open>
+      <summary class="asset-head">
+        <span class="chev">▾</span>
+        <span class="code">A1</span>
+        <span class="nm">Frame Plate — latar animasi + sumur kartu + cangkang pil</span>
+        <span class="meta">loop 24 s · seluruh video</span>
+        <span class="pri p0">P0</span>
+        <button class="copybtn" data-copy="a1">SALIN</button>
+      </summary>
+      <pre id="a1">Buat satu halaman HTML mandiri 1920x1080 sebagai LATAR ANIMASI untuk video demo produk.
+Ini bukan halaman web biasa — ini pelat latar yang akan direkam layar lalu dipakai sebagai
+lapisan paling bawah di video editor. Rekaman layar aplikasi akan ditempel DI ATASNYA nanti.
+
+Kanvas: tepat 1920x1080, overflow hidden, tanpa scrollbar, tanpa margin body.
+
+LAPIS 1 — Latar:
+- Gradien linear 160deg dari #FFFFFF (atas) ke #EFF5F9 (bawah).
+- Dua blob aurora sangat lembut, blur 180px:
+  blob A radial #7FB8C0 opacity 0.14, diameter 1100px, mulai di (-200,-150);
+  blob B radial #0B4A57 opacity 0.08, diameter 900px, mulai di (1500,800).
+  Keduanya melayang pelan (translate maks 140px, scale 1.0-1.12) dalam loop
+  24 detik linear yang mulus dan seamless (posisi akhir = posisi awal).
+- Overlay butir halus (grain) opacity 0.035 pakai SVG feTurbulence inline, statis.
+
+LAPIS 2 — Sumur kartu (tempat rekaman layar nanti ditempel):
+- Persegi panjang 1600x900 di posisi kiri 160px, atas 132px, border-radius 28px.
+- Isi #FFFFFF, border 1px rgba(14,34,37,.06).
+- Bayangan: 0 2px 4px rgba(14,34,37,.04), 0 40px 80px -24px rgba(14,34,37,.20).
+- Di dalamnya, teks kecil di tengah warna #A3B2B3, 28px, tulisan
+  "AREA REKAMAN LAYAR" — ini penanda posisi, akan tertutup nanti.
+
+LAPIS 3 — Cangkang pil bab (kosong, hanya wadah putih):
+- Pil di tengah horizontal, atas 32px, tinggi 68px, lebar 560px, border-radius 34px.
+- Isi #FFFFFF, border 1px rgba(14,34,37,.06),
+  bayangan 0 1px 2px rgba(14,34,37,.04), 0 12px 28px -12px rgba(14,34,37,.14).
+- Kosong, tanpa teks — teksnya akan ditambah di video editor.
+
+LAPIS 4 — Lockup merek kecil:
+- Kiri-atas (48, 48): titik bulat 14px warna #0B4A57 + teks "PRAKIRA" Inter 26px bobot 700
+  warna #0E2225 tracking +0.08em, dan di bawahnya "Sistem Peringatan Dini Risiko Penyakit
+  Berbasis Iklim — Kota Semarang" Inter 18px bobot 500 warna #5A6C6E.
+
+Font: Inter dari Google Fonts, font-feature-settings: "cv05" 1,"cv08" 1,"ss03" 1,"calt" 1.
+Aturan: tanpa aset eksternal selain Google Fonts. Tanpa interaksi. Tanpa hue di luar hex
+yang disebut di atas. Animasi hanya aurora — semua elemen lain diam total.</pre>
+    </details>
+
+    <details class="asset">
+      <summary class="asset-head">
+        <span class="chev">▸</span>
+        <span class="code">A2</span>
+        <span class="nm">Title card pembuka</span>
+        <span class="meta">9 s · 00:00</span>
+        <span class="pri p0">P0</span>
+        <button class="copybtn" data-copy="a2">SALIN</button>
+      </summary>
+      <pre id="a2">Buat satu halaman HTML mandiri 1920x1080, kartu pembuka video yang beranimasi otomatis
+saat dimuat. Total durasi animasi 9 detik lalu diam.
+
+Latar: gradien linear 160deg #FFFFFF ke #EFF5F9, plus dua blob aurora blur 180px
+(#7FB8C0 opacity 0.14 dan #0B4A57 opacity 0.08) yang melayang pelan loop 24s,
+plus grain SVG opacity 0.035. Ini harus identik dengan pelat latar video.
+
+Konten, disusun rata tengah vertikal-horizontal:
+1. Chip eyebrow: pil #D6E9EC, teks "DSDC ANFORCOM 2026 · UNIVERSITAS DIPONEGORO"
+   Inter 20px bobot 600 warna #0B4A57 uppercase tracking +0.12em, padding 12px 28px.
+2. Judul "PRAKIRA" Inter 168px bobot 700 warna #0E2225 tracking -0.03em.
+3. Sub-judul "Sistem Peringatan Dini Risiko Penyakit Berbasis Iklim"
+   Inter 40px bobot 500 warna #5A6C6E.
+4. Garis rambut horizontal lebar 200px warna rgba(14,34,37,.12).
+5. Baris tiga pil putih kecil sejajar (tinggi 56px, radius 28, border 1px
+   rgba(14,34,37,.06), bayangan 0 12px 28px -12px rgba(14,34,37,.14)), masing-masing
+   dengan titik 10px berwarna dan teks Inter 24px bobot 600 warna #0E2225:
+   - titik #1F5132 — "Prediksi"
+   - titik #D4933A — "Aksi"
+   - titik #A8442C — "Umpan Balik Warga"
+
+Timeline animasi (ease cubic-bezier(.2,.7,.3,1), semua opacity 0->1 + translateY 24px->0):
+0.2s chip - 0.6s judul (durasi 700ms, tambah scale 1.03->1.00) - 1.3s sub-judul -
+1.8s garis (lebar 0->200px) - 2.2s / 2.4s / 2.6s tiga pil berurutan.
+Setelah 3.6s semua diam sampai 9s. Tanpa fade-out.
+
+Tekan tombol R untuk mengulang seluruh animasi dari awal.
+Font Inter dari Google Fonts. Tanpa aset eksternal lain. Tanpa hue di luar hex di atas.</pre>
+    </details>
+
+    <details class="asset">
+      <summary class="asset-head">
+        <span class="chev">▸</span>
+        <span class="code">A6</span>
+        <span class="nm">Counter dampak — 14 hari · 35% · 16 kecamatan</span>
+        <span class="meta">30 s · 04:35</span>
+        <span class="pri p0">P0</span>
+        <button class="copybtn" data-copy="a6">SALIN</button>
+      </summary>
+      <pre id="a6">Buat satu halaman HTML mandiri 1920x1080, animasi otomatis 30 detik: tiga kartu dampak
+dengan angka yang menghitung naik.
+
+Latar: sama dengan pelat video — gradien 160deg #FFFFFF ke #EFF5F9, dua blob aurora
+blur 180px (#7FB8C0 @0.14, #0B4A57 @0.08) loop 24s, grain SVG opacity 0.035.
+
+Judul rata tengah, y 140:
+eyebrow "PROYEKSI DAMPAK DI KOTA SEMARANG" Inter 20px 600 #0B4A57 uppercase tracking +0.12em;
+"Apa yang berubah kalau kota bertindak lebih awal" Inter 54px 700 #0E2225 tracking -0.02em.
+
+Tiga kartu putih sejajar 500x460, jarak 44px, rata tengah, y 380:
+radius 28, isi #FFFFFF, border 1px rgba(14,34,37,.06),
+bayangan 0 2px 4px rgba(14,34,37,.04), 0 40px 80px -24px rgba(14,34,37,.20).
+Isi (padding 48, rata kiri):
+- Pil label kecil di atas: teks Inter 20px 600 uppercase tracking +0.1em.
+- Angka besar Inter 128px 700 tracking -0.03em, font-variant-numeric: tabular-nums slashed-zero.
+- Satuan Inter 40px 600 #5A6C6E sejajar dasar angka.
+- Keterangan Inter 24px 500 #5A6C6E line-height 1.5.
+
+Kartu 1: pil "WAKTU RESPON" latar #D6E9EC teks #0B4A57 - angka "14" warna #0B4A57 -
+  satuan "hari" - keterangan "Lebih cepat sebelum kurva kasus mencapai puncaknya."
+Kartu 2: pil "EFISIENSI LOGISTIK" latar #FDF6E9 teks #D4933A - angka "35" warna #D4933A -
+  satuan "%" - keterangan "Alokasi abate dan fogging tepat sasaran di kecamatan paling berisiko."
+Kartu 3: pil "CAKUPAN KOTA" latar #EDF4EC teks #1F5132 - angka "16" warna #1F5132 -
+  satuan "kecamatan" - keterangan "Sinergi lintas dinas kesehatan dan kebersihan lingkungan."
+
+Di bawah tiga kartu, satu pil putih lebar rata tengah, tinggi 88, radius 44:
+"PRAKIRA — Membaca Iklim, Menggerakkan Aksi, Melindungi Semarang"
+Inter 34px 700 #0E2225, dengan titik 12px #0B4A57 di depannya.
+
+Timeline (ease cubic-bezier(.2,.7,.3,1)):
+0.2s judul - 0.9s / 1.3s / 1.7s tiga kartu masuk berurutan (opacity 0->1, translateY 40->0, 600ms).
+Setiap angka menghitung dari 0 ke nilai akhir selama 1400ms, mulai 300ms setelah kartunya masuk,
+dengan easing sama dan overshoot maksimal 1.02 pada scale kartu.
+3.6s pil tagline masuk. Setelah 4.4s semua diam sampai 30s.
+
+Tekan R untuk mengulang. Font Inter dari Google Fonts. Tanpa aset eksternal lain.
+Tanpa hue di luar hex yang disebut.</pre>
+    </details>
+
+    <details class="asset">
+      <summary class="asset-head">
+        <span class="chev">▸</span>
+        <span class="code">A7</span>
+        <span class="nm">Closing card</span>
+        <span class="meta">12 s · 05:19</span>
+        <span class="pri p0">P0</span>
+        <button class="copybtn" data-copy="a7">SALIN</button>
+      </summary>
+      <pre id="a7">Buat satu halaman HTML mandiri 1920x1080, animasi otomatis 12 detik: kartu penutup video.
+Frame terakhir harus rapi karena juri sering menjeda di sini.
+
+Latar: sama dengan pelat video — gradien 160deg #FFFFFF ke #EFF5F9, dua blob aurora
+blur 180px (#7FB8C0 @0.14, #0B4A57 @0.08) loop 24s, grain SVG opacity 0.035.
+
+Susunan rata tengah vertikal:
+1. Titik bulat 20px #0B4A57 di atas wordmark.
+2. "PRAKIRA" Inter 148px 700 #0E2225 tracking -0.03em.
+3. "Membaca Iklim - Menggerakkan Aksi - Melindungi Semarang" Inter 38px 600 #0B4A57.
+4. Garis rambut 1px lebar 520px rgba(14,34,37,.12).
+5. Blok tim: eyebrow "TIM [NAMA TIM]" Inter 20px 600 #5A6C6E uppercase tracking +0.12em,
+   lalu tiga pil putih sejajar (tinggi 64, radius 32, border 1px rgba(14,34,37,.06),
+   bayangan 0 12px 28px -12px rgba(14,34,37,.14)), masing-masing berisi lingkaran inisial
+   48px isi #D6E9EC teks #0B4A57 Inter 22px 700, plus nama Inter 26px 600 #0E2225 dan
+   peran Inter 19px 500 #5A6C6E di baris kedua:
+   "[Anggota 1] — Problem & Concept", "[Anggota 2] — Console & Action Engine",
+   "[Anggota 3] — Citizen & ML Transparency".
+6. Di paling bawah, baris pil kecil: "DSDC ANFORCOM 2026", "UNIVERSITAS DIPONEGORO",
+   "SUBTEMA 2 — ECO-HEALTH PLATFORMS", Inter 20px 600 #5A6C6E tracking +0.08em.
+
+Timeline (ease cubic-bezier(.2,.7,.3,1)):
+0.3s titik + wordmark (scale 1.04->1.00, opacity 0->1, 700ms) - 1.1s tagline -
+1.6s garis melebar 0->520px - 2.1s eyebrow tim - 2.4s/2.6s/2.8s tiga pil anggota berurutan -
+3.4s baris pil bawah.
+Setelah 4.2s benar-benar diam sampai 12s. Tanpa fade-out, tanpa gerak sisa.
+
+Tekan R untuk mengulang. Font Inter dari Google Fonts. Tanpa aset eksternal lain.
+Tanpa hue di luar hex yang disebut.</pre>
+    </details>
+
+    <details class="asset">
+      <summary class="asset-head">
+        <span class="chev">▸</span>
+        <span class="code">A3</span>
+        <span class="nm">Timeline lag iklim 2–4 minggu</span>
+        <span class="meta">23 s · 00:24</span>
+        <span class="pri p1">P1</span>
+        <button class="copybtn" data-copy="a3">SALIN</button>
+      </summary>
+      <pre id="a3">Buat satu halaman HTML mandiri 1920x1080 berisi satu diagram timeline yang menganimasikan
+dirinya sendiri saat dimuat. Total 23 detik. Ini menjelaskan bahwa pemicu iklim
+mendahului lonjakan kasus penyakit 2-4 minggu.
+
+Latar: sama persis dengan pelat video — gradien 160deg #FFFFFF ke #EFF5F9, dua blob
+aurora blur 180px (#7FB8C0 @0.14, #0B4A57 @0.08) loop 24s, grain SVG opacity 0.035.
+
+Judul kiri-atas (x 160, y 120):
+eyebrow "MENGAPA REAKTIF SELALU TERLAMBAT" Inter 20px 600 #0B4A57 uppercase tracking +0.12em;
+di bawahnya "Pemicu iklim terukur 2-4 minggu sebelum kurva kasus"
+Inter 56px 700 #0E2225 tracking -0.02em.
+
+Diagram, area x 160-1760, y 300-860:
+- Sumbu waktu horizontal, garis 2px #DFE6E6, dengan 7 penanda minggu:
+  "Minggu 0","1","2","3","4","5","6" Inter 24px 500 #5A6C6E.
+- KURVA ATAS (pemicu iklim): garis 4px warna #2E6F8E, puncak di Minggu 0,
+  lalu turun. Label pil putih "Curah hujan ekstrem - Suhu - Kelembaban" dengan
+  titik #2E6F8E, dipasang di puncak.
+- KURVA BAWAH (kasus): garis 4px warna #A8442C, datar sampai Minggu 2 lalu naik tajam
+  puncak di Minggu 3-4. Label pil putih "Lonjakan kasus DBD / ISPA" dengan titik #A8442C.
+- Area di bawah kurva kasus diisi gradien #A8442C dari opacity 0.14 ke 0.
+- KURUNG PENGUKUR antara puncak biru dan awal naiknya kurva merah: garis vertikal putus-putus
+  #A3B2B3 di kedua ujung + garis horizontal 3px #0B4A57 dengan mata panah dua arah, dan
+  label pil putih di tengahnya: "JENDELA AKSI: 2-4 MINGGU" Inter 28px 700 #0B4A57.
+- Di kanan-bawah, dua pil putih bertumpuk:
+  "Sistem lama: bertindak di sini" (titik #A8442C, menunjuk puncak merah)
+  "PRAKIRA: bertindak di sini" (titik #0B4A57, menunjuk puncak biru).
+
+Timeline animasi (ease cubic-bezier(.2,.7,.3,1)):
+0.2s judul fade+naik - 0.9s sumbu menggambar dari kiri ke kanan 800ms -
+1.8s kurva biru menggambar diri via stroke-dashoffset 1400ms - 2.4s label biru masuk -
+4.0s kurva merah menggambar diri 1600ms - 4.8s area isi merah fade-in - 5.0s label merah masuk -
+6.4s kurung pengukur menggambar diri (garis putus-putus dulu, lalu panah melebar 700ms) -
+7.4s label "JENDELA AKSI" muncul dengan scale 1.06->1.00 -
+8.4s dan 8.9s dua pil kanan-bawah berurutan.
+Setelah 9.6s semua diam sampai 23s.
+
+Tekan R untuk mengulang. Font Inter dari Google Fonts. Tanpa aset eksternal lain.
+Tanpa hue di luar hex yang disebut.</pre>
+    </details>
+
+    <details class="asset">
+      <summary class="asset-head">
+        <span class="chev">▸</span>
+        <span class="code">A4</span>
+        <span class="nm">Tiga pilar solusi</span>
+        <span class="meta">12 s · 00:59</span>
+        <span class="pri p1">P1</span>
+        <button class="copybtn" data-copy="a4">SALIN</button>
+      </summary>
+      <pre id="a4">Buat satu halaman HTML mandiri 1920x1080, animasi otomatis 12 detik, menampilkan tiga
+kartu pilar solusi yang naik berurutan.
+
+Latar: sama dengan pelat video — gradien 160deg #FFFFFF ke #EFF5F9, dua blob aurora
+blur 180px (#7FB8C0 @0.14, #0B4A57 @0.08) loop 24s, grain SVG opacity 0.035.
+
+Judul rata tengah, y 150:
+eyebrow "TIGA LAPIS SOLUSI PRAKIRA" Inter 20px 600 #0B4A57 uppercase tracking +0.12em;
+di bawahnya "Dari sinyal iklim ke tindakan di lapangan" Inter 52px 700 #0E2225 tracking -0.02em.
+
+Tiga kartu putih sejajar, masing-masing 480x420, jarak antar 40px, rata tengah, y 400:
+radius 28, isi #FFFFFF, border 1px rgba(14,34,37,.06),
+bayangan 0 2px 4px rgba(14,34,37,.04), 0 40px 80px -24px rgba(14,34,37,.20).
+Isi tiap kartu (padding 48px):
+- Lingkaran nomor 64px, isi #D6E9EC, angka "1"/"2"/"3" Inter 30px 700 #0B4A57.
+- Judul Inter 34px 700 #0E2225.
+- Deskripsi Inter 24px 500 #5A6C6E, line-height 1.5.
+- Di dasar kartu: pil kecil putih ber-border dengan titik berwarna dan label Inter 20px 600.
+
+Kartu 1 — "Prediksi Machine Learning" / "Model XGBoost dengan variabel iklim ber-lag
+2-4 minggu, dilengkapi interval ketidakpastian." / pil: titik #2E6F8E, label "Lag Iklim"
+Kartu 2 — "Mesin Rekomendasi Aksi" / "Aturan deterministik menerjemahkan kelas risiko
+menjadi antrean tindakan berprioritas." / pil: titik #D4933A, label "Aksi Preventif"
+Kartu 3 — "Loop Verifikasi Warga" / "Laporan warga diverifikasi petugas dan kembali
+menjadi sinyal lapangan bagi sistem." / pil: titik #1F5132, label "Umpan Balik"
+
+Di bawah tiga kartu, satu garis alur horizontal 3px #7FB8C0 yang menggambar diri dari
+kartu 1 ke kartu 3 dengan mata panah, dan di tengahnya pil putih
+"Prediksi > Aksi > Bukti Lapangan" Inter 26px 600 #0B4A57.
+
+Timeline (ease cubic-bezier(.2,.7,.3,1), kartu masuk opacity 0->1 + translateY 40px->0, 600ms):
+0.2s judul - 0.9s kartu 1 - 1.08s kartu 2 - 1.26s kartu 3 (stagger 180ms) -
+2.2s garis alur menggambar 900ms - 2.9s pil alur muncul.
+Setelah 3.6s diam sampai 12s.
+
+Tekan R untuk mengulang. Font Inter dari Google Fonts. Tanpa aset eksternal lain.
+Tanpa hue di luar hex yang disebut.</pre>
+    </details>
+
+    <details class="asset">
+      <summary class="asset-head">
+        <span class="chev">▸</span>
+        <span class="code">A5</span>
+        <span class="nm">Diagram loop verifikasi</span>
+        <span class="meta">9 s · 03:40</span>
+        <span class="pri p2">P2 — boleh dipotong</span>
+        <button class="copybtn" data-copy="a5">SALIN</button>
+      </summary>
+      <pre id="a5">Buat satu halaman HTML mandiri 1920x1080, animasi otomatis 9 detik: diagram alur melingkar
+yang menunjukkan laporan warga menjadi sinyal untuk model.
+
+Latar: sama dengan pelat video — gradien 160deg #FFFFFF ke #EFF5F9, dua blob aurora
+blur 180px (#7FB8C0 @0.14, #0B4A57 @0.08) loop 24s, grain SVG opacity 0.035.
+
+Judul kiri-atas (x 160, y 120):
+eyebrow "LOOP VERIFIKASI" Inter 20px 600 #0B4A57 uppercase tracking +0.12em;
+"Laporan warga menjadi bukti lapangan" Inter 56px 700 #0E2225 tracking -0.02em.
+
+Diagram melingkar di tengah (pusat 960,640, radius 300). Lima simpul, tiap simpul adalah
+pil putih (tinggi 84, radius 42, border 1px rgba(14,34,37,.06),
+bayangan 0 12px 28px -12px rgba(14,34,37,.14)) berisi lingkaran ikon 48px + teks
+Inter 28px 600 #0E2225. Urutan searah jarum jam mulai dari atas:
+1. atas — "Warga melapor" (lingkaran #D6E9EC)
+2. kanan-atas — "Kode Lacak Unik" (lingkaran #D6E9EC, baris kedua teks kecil
+   "PRK-2026-0148" Inter 20px 500 #5A6C6E)
+3. kanan-bawah — "Petugas memverifikasi" (lingkaran #D6E9EC)
+4. kiri-bawah — "Sinyal lapangan tervalidasi" (lingkaran isi #EDF4EC, titik #1F5132)
+5. kiri-atas — "Model & Antrean Aksi" (lingkaran #D6E9EC)
+
+Busur penghubung antar simpul: garis 3px #7FB8C0 dengan mata panah kecil di ujung,
+mengikuti lingkaran.
+
+Di pusat lingkaran: teks "TRANSPARAN & DAPAT DIAUDIT" Inter 26px 700 #0B4A57
+tracking +0.06em, rata tengah dua baris.
+
+Timeline (ease cubic-bezier(.2,.7,.3,1)):
+0.2s judul - 0.8s simpul 1 masuk (opacity 0->1, scale 0.94->1, 450ms) -
+lalu busur 1->2 menggambar 400ms, lalu simpul 2, dan seterusnya berantai
+sampai busur 5->1 tertutup pada 5.4s - 5.8s teks pusat muncul dengan scale 1.05->1.00.
+Setelah 6.4s diam sampai 9s.
+
+Tekan R untuk mengulang. Font Inter dari Google Fonts. Tanpa aset eksternal lain.
+Tanpa hue di luar hex yang disebut.</pre>
+    </details>
+  </section>
+
+  <!-- ================= 05 REKAM ================= -->
+  <section id="rekam">
+    <div class="shead"><span class="num">05</span><h2>Setup rekaman</h2></div>
+
+    <div class="twocol">
+      <div class="tw">
+        <table>
+          <thead><tr><th colspan="2">OBS Studio</th></tr></thead>
+          <tbody>
+            <tr><td>Base &amp; Output</td><td class="mono">1920 × 1080</td></tr>
+            <tr><td>FPS</td><td class="mono">60</td></tr>
+            <tr><td>Downscale filter</td><td class="mono">Lanczos</td></tr>
+            <tr><td>Output mode</td><td class="mono">Advanced → Recording</td></tr>
+            <tr><td>Encoder</td><td class="mono"><b>NVENC H.264</b></td></tr>
+            <tr><td>Rate control</td><td class="mono">CQP · CQ 18</td></tr>
+            <tr><td>Preset</td><td class="mono">Quality · high · KF 2 s</td></tr>
+            <tr><td>Format</td><td class="mono"><b>mkv</b>, remux ke mp4</td></tr>
+            <tr><td>Audio</td><td class="mono">48 kHz · track mic terpisah</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card pad">
+        <h3 style="font-size:17px;margin-bottom:10px">Browser</h3>
+        <ul class="tight">
+          <li>Chrome, <b>jendela penyamaran</b> — bersih dari ekstensi &amp; bookmark.</li>
+          <li><b>Zoom 115%.</b> Kartu diskalakan ke 83.3% di editor, jadi 115% × 83.3% ≈ 96% — teks tetap terbaca. Jangan 125%: lebar CSS jatuh ke 1536 px, tepat di batas breakpoint <code>2xl</code> Tailwind, bisa reflow begitu scrollbar muncul.</li>
+          <li><kbd>F11</kbd> fullscreen — tidak ada tab bar, tidak ada address bar. Rute ditampilkan lewat chip di pil bab.</li>
+          <li>Matikan notifikasi: <b>Focus Assist → Alarms only</b>.</li>
+          <li>Highlight kursor lingkaran <code>#17808F</code> @ 25%, radius 44 px.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout c-acc" style="margin-top:22px">
+      <h3>Urutan Scene 03: VO dulu, layar belakangan</h3>
+      <p>Rekam VO + facecam lebih dulu — itu yang mengunci tempo. Baru rekam layar sambil mendengarkan playback VO lewat headphone, supaya klik dan scroll jatuh tepat waktu. Kalau dibalik, VO dipaksa mengejar timing layar dan terdengar terburu-buru.</p>
+      <p>Kasih <b>tepuk tangan sekali</b> di awal tiap take untuk titik sinkron.</p>
+    </div>
+
+    <div class="callout c-warn">
+      <h3>Data sebelum take</h3>
+      <ul class="tight">
+        <li>Minimal <b>1 kecamatan Siaga</b> dan <b>1 Waspada</b>. Kalau semua Rendah, layar jadi hijau semua dan cerita risikonya hilang.</li>
+        <li>Antrean <code>/tindakan</code> berisi <b>≥ 5 baris</b>.</li>
+        <li><b>Jangan pernah merekam state loading atau skeleton.</b> Muat halaman, tunggu selesai, baru mulai rekam.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ================= 06 EDITOR ================= -->
+  <section id="edit">
+    <div class="shead"><span class="num">06</span><h2>Setup editor</h2></div>
+
+    <div class="twocol">
+      <div class="card pad">
+        <h3 style="font-size:17px;margin-bottom:12px">Susunan track</h3>
+        <pre style="background:var(--sunk);border-radius:10px;font-size:12.5px;padding:16px">V6  Callout chip + garis penunjuk
+V5  Lower third
+V4  Pil bab + chip rute
+V3  Facecam (mask lingkaran 344 + ring)
+V2  Rekaman layar / kartu motion A2-A7
+V1  A1 Frame Plate (loop menutup 5:30)
+A1  VO
+A2  Musik latar (-22 dB, ducking -6 dB)</pre>
+      </div>
+
+      <div class="card pad">
+        <h3 style="font-size:17px;margin-bottom:10px">Membulatkan sudut rekaman layar</h3>
+        <ul class="tight">
+          <li><b>CapCut Desktop</b> (paling cepat): klip → tab <b>Mask</b> → <b>Rectangle</b> → set 1600×900 → slider <b>Corner radius</b> ≈ 28 → Feather 0. Lalu Scale 83.3%, X 0, Y +84.</li>
+          <li><b>Premiere Pro</b>: shape rounded-rect 1600×900 r28 di Essential Graphics → <b>Track Matte Key</b> → Composite Using = Matte Alpha.</li>
+          <li><b>DaVinci Resolve</b>: Node → Window → Rectangle → Soft 0, atur Border Radius.</li>
+        </ul>
+        <h3 style="font-size:17px;margin:18px 0 10px">Facecam lingkaran</h3>
+        <p style="margin:0;font-size:15px;color:var(--ink-2)">Mask <b>Circle</b> 344 px, Feather 0. Ring putih 6 px = lingkaran putih 356 px di track bawahnya. Bayangan = duplikat lingkaran hitam opacity 22%, blur 40, offset Y +20.</p>
+      </div>
+    </div>
+
+    <div class="twocol" style="margin-top:16px">
+      <div class="card pad">
+        <h3 style="font-size:17px;margin-bottom:10px">Audio</h3>
+        <ul class="tight">
+          <li><b>VO:</b> High-pass 80 Hz → Compressor 3:1 threshold −18 dB → Normalize <b>−14 LUFS</b> → Limiter −1 dBTP.</li>
+          <li><b>Musik:</b> instrumental tenang bebas royalti, <b>−22 dB</b>, ducking −6 dB saat VO aktif. Storyboard menyebut BGM 10–15% — patuhi.</li>
+          <li>Fade-in musik 1.5 s, fade-out 2 s.</li>
+          <li>Senyap 0.4 s sebelum kata pertama dan setelah kata terakhir.</li>
+        </ul>
+      </div>
+      <div class="tw">
+        <table>
+          <thead><tr><th colspan="2">Ekspor</th></tr></thead>
+          <tbody>
+            <tr><td>Resolusi</td><td class="mono">1920 × 1080</td></tr>
+            <tr><td>FPS</td><td class="mono">60</td></tr>
+            <tr><td>Codec</td><td class="mono">H.264 · NVENC</td></tr>
+            <tr><td>Bitrate</td><td class="mono">VBR 2-pass · 16 / 24 Mbps</td></tr>
+            <tr><td>Audio</td><td class="mono">AAC 48 kHz · 320 kbps</td></tr>
+            <tr><td>Nama file</td><td class="mono">Anforcom2026_DSDC_[Tim]_[Karya].mp4</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 07 JADWAL ================= -->
+  <section id="jadwal">
+    <div class="shead"><span class="num">07</span><h2>Jadwal 15:00 → 24:00</h2></div>
+    <p class="lede">Posisi awal jam 15:00: Scene 01, 02, 04, 05, 06 sudah punya VO + facecam + rekaman layar. Yang belum ada: <b>Scene 03 dan seluruh aset A1–A7</b>. Blok yang sedang berjalan disorot otomatis.</p>
+
+    <div class="sched" id="sched">
+      <div class="blk" data-from="15:00" data-to="15:15"><div class="time">15:00–15:15</div><div class="body"><div class="h">Persiapan</div><div class="d"><code>git checkout feat/explainability-simulator-prioritas</code>. Nyalakan backend + frontend. Data seed: ≥1 Siaga, ≥1 Waspada, antrean ≥5 baris. Focus Assist on.</div></div></div>
+      <div class="blk" data-from="15:15" data-to="15:45"><div class="time">15:15–15:45</div><div class="body"><div class="h">Generate P0</div><div class="d">Tempel Prompt <b>A1, A2, A6, A7</b> ke Claude Design. A1 duluan.</div></div></div>
+      <div class="blk" data-from="15:45" data-to="16:05"><div class="time">15:45–16:05</div><div class="body"><div class="h">Generate P1 / P2</div><div class="d">Tempel Prompt <b>A3, A4, A5</b>.</div></div></div>
+      <div class="blk" data-from="16:05" data-to="16:25"><div class="time">16:05–16:25</div><div class="body"><div class="h">Rekam aset</div><div class="d">Buka tiap HTML, <kbd>F11</kbd>, rekam OBS. 1 take + 1 cadangan per aset.</div></div></div>
+      <div class="blk" data-from="16:25" data-to="17:10"><div class="time">16:25–17:10</div><div class="body"><div class="h">Scene 03</div><div class="d">VO + facecam dulu, baru rekam layar <code>/tindakan</code> sambil dengar playback VO. Zoom 115%, branch yang sama.</div></div></div>
+      <div class="blk" data-from="17:10" data-to="17:35"><div class="time">17:10–17:35</div><div class="body"><div class="h">Inventaris</div><div class="d">Kumpulkan semua take lama + baru di satu folder. Susun VO 6 scene, ukur total. <b>Harus ≤ 5:45</b> — kalau lebih, pangkas kalimat sekarang.</div></div></div>
+      <div class="blk" data-from="17:35" data-to="17:55"><div class="time">17:35–17:55</div><div class="body"><div class="h">Istirahat</div><div class="d">Makan. Sisa 6 jam butuh kepala jernih.</div></div></div>
+      <div class="blk gate" data-from="17:55" data-to="18:10"><div class="time">17:55–18:10</div><div class="body"><div class="h">Titik potong</div><div class="d">Kalau A3 / A4 / A5 belum jadi atau jelek — <b>buang sekarang</b>, ganti presenter frame besar. Jangan menyimpan keputusan ini untuk nanti.</div></div></div>
+      <div class="blk" data-from="18:10" data-to="19:45"><div class="time">18:10–19:45</div><div class="body"><div class="h">Rakit kasar</div><div class="d">Pasang V1 plate, V2 layar/aset, V3 facecam. Sinkronkan ke VO. Belum ada teks.</div></div></div>
+      <div class="blk" data-from="19:45" data-to="21:15"><div class="time">19:45–21:15</div><div class="body"><div class="h">Chrome &amp; gerak</div><div class="d">Pil bab tiap scene, lower third, callout, Punch-In, Card Handoff.</div></div></div>
+      <div class="blk" data-from="21:15" data-to="21:50"><div class="time">21:15–21:50</div><div class="body"><div class="h">Audio &amp; warna</div><div class="d">Normalize −14 LUFS, musik + ducking, cek kontras teks.</div></div></div>
+      <div class="blk" data-from="21:50" data-to="22:20"><div class="time">21:50–22:20</div><div class="body"><div class="h">Ekspor</div><div class="d">NVENC 1080p60. <b>Tonton penuh sekali</b> sambil isi checklist §08.</div></div></div>
+      <div class="blk" data-from="22:20" data-to="22:55"><div class="time">22:20–22:55</div><div class="body"><div class="h">Upload</div><div class="d">YouTube, judul <code>Anforcom2026_DSDC_[Tim]_[Karya]</code>, <b>visibilitas Publik</b>. Tunggu proses sampai 1080p tersedia.</div></div></div>
+      <div class="blk" data-from="22:55" data-to="23:15"><div class="time">22:55–23:15</div><div class="body"><div class="h">Submit</div><div class="d">Tempel link ke formulir. Cek link dari HP / mode penyamaran.</div></div></div>
+      <div class="blk" data-from="23:15" data-to="24:00"><div class="time">23:15–24:00</div><div class="body"><div class="h">Cadangan</div><div class="d">Buffer 45 menit. Jangan diisi pekerjaan baru.</div></div></div>
+    </div>
+
+    <div class="twocol" style="margin-top:22px">
+      <div class="callout c-warn" style="margin:0">
+        <h3>Urutan pemangkasan kalau tertinggal</h3>
+        <ol class="tight" style="padding-left:20px;margin:0">
+          <li>A5 diagram loop → potong langsung ke <code>/verifikasi</code></li>
+          <li>Callout chip → sisakan di Scene 02 dan 03 saja</li>
+          <li>A4 tiga pilar → presenter frame besar + tiga pil teks</li>
+          <li>A3 timeline lag → presenter frame besar</li>
+          <li>Musik latar → hilangkan; VO bersih tetap lolos rubrik</li>
+        </ol>
+      </div>
+      <div class="callout c-stop" style="margin:0">
+        <h3>Jangan pernah dipotong</h3>
+        <p>Facecam terus-menerus (aturan wajib) · A1 plate · A2 title · A6 impact · A7 closing · live demo Scene 02–05.</p>
+        <p>Scene 02–05 memikul bobot rubrik terbesar: <b>Progres Implementasi 20% + Impact Projection 20%</b>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 08 CHECKLIST ================= -->
+  <section id="cek">
+    <div class="shead"><span class="num">08</span><h2>Checklist sebelum upload</h2></div>
+    <p class="lede">Centangan tersimpan di browser ini saja — tidak terkirim ke mana pun, dan tidak terlihat oleh anggota tim lain yang membuka halaman ini.</p>
+
+    <div class="checks">
+      <div class="cgroup">
+        <h3>Kepatuhan aturan</h3>
+        <label><input type="checkbox" data-ck="r1"><span>Durasi antara 3:00 dan 7:00 — target 5:30</span></label>
+        <label><input type="checkbox" data-ck="r2"><span>Resolusi 1920×1080, rasio 16:9</span></label>
+        <label><input type="checkbox" data-ck="r3"><span><b>Wajah terlihat dari frame 0:00 sampai frame terakhir, tanpa putus</b></span></label>
+        <label><input type="checkbox" data-ck="r4"><span>Judul file &amp; judul YouTube: <code>Anforcom2026_DSDC_[Tim]_[Karya]</code></span></label>
+        <label><input type="checkbox" data-ck="r5"><span>Visibilitas YouTube: <b>Publik</b>, bukan Unlisted</span></label>
+        <label><input type="checkbox" data-ck="r6"><span>Link diuji di mode penyamaran / HP orang lain</span></label>
+      </div>
+
+      <div class="cgroup">
+        <h3>Isi</h3>
+        <label><input type="checkbox" data-ck="i1"><span>Semua take dari branch yang sama — nav konsol identik di semua scene</span></label>
+        <label><input type="checkbox" data-ck="i2"><span>Tidak ada frame berisi skeleton / spinner / state kosong</span></label>
+        <label><input type="checkbox" data-ck="i3"><span>Interval ketidakpastian &amp; label cakupan data terlihat minimal sekali</span></label>
+        <label><input type="checkbox" data-ck="i4"><span>Kalimat “alat pendukung keputusan, bukan pengganti diagnosa medis” terdengar <b>dan</b> terlihat</span></label>
+        <label><input type="checkbox" data-ck="i5"><span>Kode Lacak terbaca jelas saat Punch-In</span></label>
+        <label><input type="checkbox" data-ck="i6"><span>Hubungan genangan / sampah ↔ DBD / ISPA disebut eksplisit</span></label>
+      </div>
+
+      <div class="cgroup">
+        <h3>Visual</h3>
+        <label><input type="checkbox" data-ck="v1"><span>Tidak ada hue di luar palet</span></label>
+        <label><input type="checkbox" data-ck="v2"><span>Facecam tidak menutupi angka, tombol, atau legenda peta di scene mana pun</span></label>
+        <label><input type="checkbox" data-ck="v3"><span>Semua teks terbaca saat video diputar di jendela kecil</span></label>
+        <label><input type="checkbox" data-ck="v4"><span>Tidak ada transisi dari daftar terlarang</span></label>
+        <label><input type="checkbox" data-ck="v5"><span>Frame terakhir diam 3 detik penuh</span></label>
+      </div>
+
+      <div class="cgroup">
+        <h3>Audio</h3>
+        <label><input type="checkbox" data-ck="a1"><span>Loudness −14 LUFS, peak ≤ −1 dBTP</span></label>
+        <label><input type="checkbox" data-ck="a2"><span>Musik ≤ 15% dari level VO</span></label>
+        <label><input type="checkbox" data-ck="a3"><span>Tidak ada klik / pop / napas keras di sambungan potongan</span></label>
+      </div>
+    </div>
+
+    <button class="reset" id="reset">KOSONGKAN CENTANG</button>
+  </section>
+
+  <footer>
+    <p>Call Sheet PRAKIRA · Kanvas Buletin · token diturunkan dari docs/DESIGN-SYSTEM.md · rev 31 Agustus 2026</p>
+  </footer>
+</div>
+
+<script>
+(function(){
+  /* ---- jam + blok berjalan ---- */
+  function toMin(hhmm){var p=hhmm.split(":");return (+p[0])*60+(+p[1]);}
+  var blocks=[].slice.call(document.querySelectorAll("#sched .blk"));
+  var clock=document.getElementById("clock");
+
+  function tick(){
+    var now=new Date();
+    var mins=now.getHours()*60+now.getMinutes();
+    var hh=String(now.getHours()).padStart(2,"0");
+    var mm=String(now.getMinutes()).padStart(2,"0");
+
+    var endMin=24*60, left=endMin-mins;
+    if(left>0 && left<=9*60){
+      var lh=Math.floor(left/60), lm=left%60;
+      clock.innerHTML="<b>"+hh+":"+mm+"</b> · sisa "+lh+"j "+String(lm).padStart(2,"0")+"m";
+    } else {
+      clock.innerHTML="<b>"+hh+":"+mm+"</b>";
+    }
+
+    blocks.forEach(function(b){
+      var f=toMin(b.dataset.from), t=toMin(b.dataset.to);
+      b.classList.toggle("now", mins>=f && mins<t);
+    });
+  }
+  tick();
+  setInterval(tick,20000);
+
+  /* ---- salin prompt ---- */
+  document.querySelectorAll(".copybtn").forEach(function(btn){
+    btn.addEventListener("click",function(e){
+      e.preventDefault(); e.stopPropagation();
+      var pre=document.getElementById(btn.dataset.copy);
+      if(!pre) return;
+      var text=pre.textContent;
+      var done=function(){
+        var old=btn.textContent;
+        btn.textContent="TERSALIN"; btn.dataset.state="ok";
+        setTimeout(function(){btn.textContent=old; btn.removeAttribute("data-state");},1600);
+      };
+      var fallback=function(){
+        var sel=window.getSelection(), r=document.createRange();
+        r.selectNodeContents(pre); sel.removeAllRanges(); sel.addRange(r);
+        btn.textContent="TEKAN CTRL+C";
+        setTimeout(function(){btn.textContent="SALIN";},2600);
+      };
+      try{
+        if(navigator.clipboard && navigator.clipboard.writeText){
+          navigator.clipboard.writeText(text).then(done).catch(fallback);
+        } else { fallback(); }
+      }catch(err){ fallback(); }
+    });
+  });
+
+  /* ---- chevron details ---- */
+  document.querySelectorAll("details.asset").forEach(function(d){
+    d.addEventListener("toggle",function(){
+      var c=d.querySelector(".chev"); if(c) c.textContent=d.open?"▾":"▸";
+    });
+  });
+
+  /* ---- checklist tersimpan ---- */
+  var KEY="prakira-callsheet-v1";
+  function load(){ try{ return JSON.parse(localStorage.getItem(KEY)||"{}"); }catch(e){ return {}; } }
+  function save(s){ try{ localStorage.setItem(KEY,JSON.stringify(s)); }catch(e){} }
+
+  var state=load();
+  var boxes=[].slice.call(document.querySelectorAll("[data-ck]"));
+  boxes.forEach(function(b){
+    if(state[b.dataset.ck]) b.checked=true;
+    b.addEventListener("change",function(){
+      var s=load();
+      if(b.checked){ s[b.dataset.ck]=1; } else { delete s[b.dataset.ck]; }
+      save(s);
+    });
+  });
+  document.getElementById("reset").addEventListener("click",function(){
+    boxes.forEach(function(b){b.checked=false;});
+    save({});
+  });
+})();
+</script>
+</body>
+</html>

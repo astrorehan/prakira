@@ -72,7 +72,7 @@ export function SignInForm({
         <div className="flex items-baseline justify-between gap-3">
           <Label htmlFor="password">Kata sandi</Label>
           <Link
-            href="/hubungi-kami"
+            href="/hubungi-kami#bantuan-akun"
             className="text-caption font-medium text-brand-600 underline-offset-4 hover:underline"
           >
             Lupa kata sandi?

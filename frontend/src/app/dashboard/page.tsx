@@ -225,7 +225,7 @@ export default function DashboardPrediksiPage() {
             >
               <Link href={`/buletin?disease=${encodeURIComponent(selectedDisease ?? "DBD")}`}>
                 <Printer className="h-3.5 w-3.5" aria-hidden />
-                <span>Cetak Buletin</span>
+                <span>Draf Buletin</span>
               </Link>
             </Button>
           </div>

@@ -108,10 +108,14 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
 
   if (!response.ok) {
-    const message =
-      payload && typeof payload === "object" && "error" in payload
-        ? String((payload as { error: unknown }).error)
-        : `Gateway menjawab ${response.status}.`;
+    let message: string;
+    if (payload && typeof payload === "object" && "error" in payload) {
+      message = String((payload as { error: unknown }).error);
+    } else if (response.status >= 500) {
+      message = "Data belum dapat dimuat. Coba lagi; detail gangguan tersedia bagi pengelola.";
+    } else {
+      message = `Permintaan tidak dapat diproses (${response.status}).`;
+    }
     throw new ApiError(response.status, message);
   }
 

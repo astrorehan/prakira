@@ -49,7 +49,7 @@ const LEVEL_STYLE: Record<RiskLevel, { rail: string; tag: string; word: string }
 };
 
 const STATUS_LABEL: Record<ActionRecommendation["status"], string> = {
-  pending: "Menunggu pelaksanaan",
+  pending: "Usulan tindakan internal",
   in_progress: "Sedang dilaksanakan",
   completed: "Selesai dilaksanakan",
 };

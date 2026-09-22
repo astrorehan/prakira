@@ -37,7 +37,7 @@ const STATUS: Record<
   }
 > = {
   rendah: {
-    word: "Aman",
+    word: "Risiko Rendah",
     lead: "Tidak ada indikasi lonjakan pada bulan yang diprakirakan.",
     ink: "text-risk-low",
     surface: "bg-grad-risk-low",
