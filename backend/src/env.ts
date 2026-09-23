@@ -129,6 +129,17 @@ export const env = {
     windowHours: Number(process.env.REPORT_RATE_WINDOW_HOURS ?? 24),
   },
 
+  /** Pengiriman rujukan laporan lingkungan lewat SMTP. */
+  smtp: {
+    host: process.env.SMTP_HOST?.trim() ?? "",
+    port: Number(process.env.SMTP_PORT ?? 587),
+    secure: (process.env.SMTP_SECURE ?? "false").toLowerCase() === "true",
+    user: process.env.SMTP_USER?.trim() ?? "",
+    pass: process.env.SMTP_PASS ?? "",
+    from: process.env.SMTP_FROM?.trim() ?? "",
+  },
+  reportEmailTo: process.env.REPORT_EMAIL_TO?.trim() ?? "",
+
   /* Batas percobaan masuk per alamat. Lima percobaan per seperempat jam
      longgar untuk petugas yang salah ketik dan sempit untuk yang menebak:
      ruang kata sandi apa pun yang layak disebut kata sandi tidak habis pada

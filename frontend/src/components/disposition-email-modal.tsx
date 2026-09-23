@@ -54,7 +54,11 @@ export function DispositionEmailModal({
   const target =
     report.forwarding?.target ?? report.routing.agency?.name ?? "Instansi terkait";
   const delivered = report.forwarding?.state === "diteruskan";
-  const reference = report.forwarding?.reference ?? null;
+  /* ID pesan email internal bukan nomor rujukan instansi. */
+  const reference =
+    report.forwarding?.channel === "Email internal"
+      ? null
+      : report.forwarding?.reference ?? null;
   const pattern = report.forwarding?.pattern ?? null;
 
   /* Inti rujukan dari Dinkes: kenapa lokasi ini perlu didahulukan. */

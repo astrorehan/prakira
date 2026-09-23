@@ -520,6 +520,15 @@ export function forwardReport(
   });
 }
 
+/** Mengirim rujukan lewat SMTP dan mencatatnya setelah server email menerimanya. */
+export function sendReportEmail(
+  id: string,
+): Promise<Envelope<CitizenReport, QueueSummary> & { recipient: string }> {
+  return request(`/api/reports/${encodeURIComponent(id)}/send-email`, {
+    method: "POST",
+  });
+}
+
 /** Laporan lain pada kejadian yang sama, untuk menautkan duplikat (F11). */
 export function fetchRelatedReports(
   id: string,

@@ -310,6 +310,14 @@ UPDATE laporan_warga
    AND handling_mode = 'dlh'
    AND status = 'terverifikasi';
 
+-- Email internal hanya sampai ke inbox pengelola, bukan ke instansi. Baris
+-- yang sempat tercatat "diteruskan" karena email itu dikembalikan ke antrean.
+UPDATE laporan_warga
+   SET forward_state = 'perlu_diteruskan', forward_target = NULL,
+       forwarded_at = NULL, forwarded_by = NULL
+ WHERE forward_state = 'diteruskan'
+   AND forward_channel = 'Email internal';
+
 -- Kepemilikan dan koreksi rekap (F13). Satu baris observasi adalah total
 -- kecamatan untuk satu penyakit pada satu bulan; menyimpannya tanpa nama
 -- pemilik membuat koreksi tidak bisa dipertanggungjawabkan.

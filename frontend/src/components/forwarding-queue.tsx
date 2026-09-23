@@ -1,12 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { Loader2, Mail, MapPin, Repeat, Send } from "lucide-react";
+import { Check, Loader2, Mail, MapPin, Repeat, Send } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { DispositionEmailModal } from "@/components/disposition-email-modal";
-import { forwardReport } from "@/lib/api";
+import { forwardReport, sendReportEmail } from "@/lib/api";
 import { formatDateTime } from "@/lib/period";
 import { REPORT_KIND } from "@/lib/reports";
 import { diseaseLabel } from "@/lib/utils";
@@ -18,7 +18,8 @@ import type { CitizenReport, ReportRiskContext } from "@/types";
  * Dinkes tidak mengelola pekerjaan instansi lain; yang dicatat hanya
  * penyampaiannya. Nilai yang ditambahkan Dinkes di sini adalah konteks risiko
  * penyakit, supaya instansi penerima tahu lokasi mana yang didahulukan.
- * Kartunya sengaja ringkas: satu baris inti, satu kolom kanal, dua tombol.
+ * Dua langkah: kirim ringkasan ke inbox pengelola, lalu catat penerusannya
+ * ke instansi. Email saja tidak membuat laporan keluar dari antrean.
  */
 
 const RISK_BADGE = {
@@ -59,10 +60,6 @@ function ForwardCard({
   report: CitizenReport;
   onChanged: () => void;
 }) {
-  const [channel, setChannel] = React.useState("");
-  const [reference, setReference] = React.useState("");
-  const [note, setNote] = React.useState("");
-  const [failing, setFailing] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [draftOpen, setDraftOpen] = React.useState(false);
@@ -70,29 +67,25 @@ function ForwardCard({
   const agency = report.routing.agency;
   const target = report.forwarding?.target ?? agency?.name ?? "instansi penerima";
   const failed = report.forwarding?.state === "gagal";
+  const emailed =
+    report.forwarding?.state === "perlu_diteruskan" &&
+    report.forwarding.channel === "Email internal";
+  /* Laporan simulasi tidak pernah dikirim lewat email; langsung ke langkah kedua. */
+  const readyToForward = emailed || report.simulated;
+  const [channel, setChannel] = React.useState("Email");
 
-  const submit = async (delivered: boolean) => {
+  const run = async (work: () => Promise<unknown>) => {
     setBusy(true);
     setError(null);
     try {
-      await forwardReport(report.id, {
-        delivered,
-        channel: channel.trim() || undefined,
-        reference: reference.trim() || undefined,
-        note: note.trim() || undefined,
-      });
+      await work();
       onChanged();
     } catch (caught) {
-      setError(
-        caught instanceof Error ? caught.message : "Catatan tidak tersimpan.",
-      );
+      setError(caught instanceof Error ? caught.message : "Gagal menyimpan.");
     } finally {
       setBusy(false);
     }
   };
-
-  const inputClass =
-    "min-w-0 rounded-xl border border-border bg-surface px-3 py-2 text-body-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
   return (
     <Card className="border-teal-200 bg-white p-4">
@@ -109,6 +102,7 @@ function ForwardCard({
         <span className="ml-auto flex flex-wrap gap-1.5">
           <RiskChip risk={report.risk} />
           <PatternChip count={report.forwarding?.pattern} />
+          {emailed && <Badge variant="secondary">Email terkirim</Badge>}
           {failed && <Badge variant="risk-high">Belum berhasil</Badge>}
         </span>
       </div>
@@ -124,69 +118,55 @@ function ForwardCard({
       />
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        {failing ? (
+        <Button
+          size="sm"
+          variant="outline"
+          className="gap-1.5"
+          onClick={() => setDraftOpen(true)}
+        >
+          <Mail className="h-4 w-4" aria-hidden />
+          Surat
+        </Button>
+        {readyToForward ? (
           <>
-            <input
-              value={note}
-              onChange={(event) => setNote(event.target.value)}
-              placeholder="Alasan belum berhasil"
-              aria-label="Alasan penyampaian belum berhasil"
-              className={`${inputClass} flex-1`}
-            />
-            <Button
-              size="sm"
-              variant="danger"
-              disabled={busy || note.trim().length < 8}
-              onClick={() => submit(false)}
-            >
-              Simpan
-            </Button>
-            <Button size="sm" variant="ghost" onClick={() => setFailing(false)}>
-              Batal
-            </Button>
-          </>
-        ) : (
-          <>
-            <Button
-              size="sm"
-              variant="outline"
-              className="gap-1.5"
-              onClick={() => setDraftOpen(true)}
-            >
-              <Mail className="h-4 w-4" aria-hidden />
-              Surat
-            </Button>
             <input
               value={channel}
               onChange={(event) => setChannel(event.target.value)}
-              placeholder="Kanal (surat, WA piket…)"
-              aria-label="Kanal penyampaian"
-              className={`${inputClass} w-44 flex-1`}
-            />
-            <input
-              value={reference}
-              onChange={(event) => setReference(event.target.value)}
-              placeholder="No. rujukan"
-              aria-label="Nomor rujukan dari instansi"
-              className={`${inputClass} w-28`}
+              aria-label="Kanal penerusan"
+              className="w-32 min-w-0 rounded-xl border border-border bg-surface px-3 py-2 text-body-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
             <Button
               size="sm"
               className="gap-1.5"
               disabled={busy || channel.trim().length === 0}
-              onClick={() => submit(true)}
+              onClick={() =>
+                run(() =>
+                  forwardReport(report.id, { delivered: true, channel: channel.trim() }),
+                )
+              }
             >
               {busy ? (
                 <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
               ) : (
-                <Send className="h-4 w-4" aria-hidden />
+                <Check className="h-4 w-4" aria-hidden />
               )}
-              Sudah diteruskan
-            </Button>
-            <Button size="sm" variant="ghost" onClick={() => setFailing(true)}>
-              Gagal
+              Sudah diteruskan ke {agency?.short ?? "instansi"}
             </Button>
           </>
+        ) : (
+          <Button
+            size="sm"
+            className="gap-1.5"
+            disabled={busy}
+            onClick={() => run(() => sendReportEmail(report.id))}
+          >
+            {busy ? (
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+            ) : (
+              <Send className="h-4 w-4" aria-hidden />
+            )}
+            Kirim email
+          </Button>
         )}
       </div>
 
@@ -282,7 +262,7 @@ function ArchiveRow({ report }: { report: CitizenReport }) {
         onClick={() => setOpen(true)}
         className="ml-auto font-medium text-brand-700 hover:underline"
       >
-        Surat
+        Ringkasan
       </button>
       <DispositionEmailModal open={open} onOpenChange={setOpen} report={report} />
     </li>

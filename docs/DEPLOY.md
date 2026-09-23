@@ -81,6 +81,16 @@ Variabel bertanda `sync: false` harus diisi tangan di dasbor:
 | | `SEED_ADMIN_EMAIL` | Email akun dinas |
 | | `SEED_ADMIN_PASSWORD` | Kata sandi akun dinas |
 | | `CORS_ORIGINS` | Asal frontend Vercel, mis. `https://prakira.vercel.app` |
+| | `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | Server, akun, kata sandi, dan alamat pengirim email rujukan. `SMTP_PORT` bawaan 587 dengan STARTTLS; untuk port 465 isi `SMTP_PORT=465` dan `SMTP_SECURE=true`. |
+| | `REPORT_EMAIL_TO` | Inbox satu-satunya penerima email laporan. Wajib diisi agar tombol kirim email berfungsi. |
+
+Semua rujukan lingkungan dikirim hanya ke inbox pengelola PRAKIRA
+(`REPORT_EMAIL_TO`). Email mencantumkan DLH atau DPU sebagai instansi yang
+perlu ditindaklanjuti, tetapi sistem tidak mengirim email langsung ke instansi.
+Tanpa konfigurasi SMTP, tombol Kirim email mengembalikan galat konfigurasi dan
+laporan tetap berada di antrean penerusan.
+Setelah email terkirim, laporan tetap di antrean sampai petugas menekan
+"Sudah diteruskan" untuk mencatat penyampaian ke instansi.
 
 Sisanya diisi Blueprint: `SESSION_SECRET` dan `ML_API_TOKEN` dibangkitkan,
 `ML_SERVICE_URL` ditulis apa adanya karena `fromService property: host` hanya

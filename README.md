@@ -23,7 +23,8 @@ Tiga lapis solusi:
 3. **Umpan balik warga** — warga melaporkan gejala dan pemicu lingkungan,
    petugas memverifikasi, laporan yang diterima mendapat arahan keselamatan,
    dan laporan lingkungan dipilih tindak lanjutnya: arahan mandiri warga atau
-   tiket Dinas Lingkungan Hidup. Data terverifikasi juga tersedia sebagai sinyal
+   email internal untuk pengelola setelah keputusan petugas, beserta instansi
+   yang disarankan untuk tindak lanjut. Data terverifikasi juga tersedia sebagai sinyal
    evaluasi retraining.
 
 > PRAKIRA bukan alat diagnosis, bukan rekam medis, dan bukan pengganti
@@ -226,6 +227,7 @@ disengaja — tidak ada jalur cadangan yang diam-diam mengisi angka palsu.
 | `GET` | `/api/reports/triggers` | — | agregasi pemicu lingkungan terverifikasi per kecamatan |
 | `GET` | `/api/reports` | ✓ | antrean verifikasi laporan warga lengkap |
 | `PATCH` | `/api/reports/:id/review` | ✓ | putuskan verifikasi; laporan lingkungan memilih `mandiri_warga` atau `dlh` |
+| `POST` | `/api/reports/:id/send-email` | ✓ | kirim ringkasan laporan lingkungan ke email internal pengelola lewat SMTP |
 | `GET` | `/api/reports/environment-tickets` | ✓ | antrean tiket DLH untuk laporan lingkungan yang dipilih diteruskan |
 | `PATCH` | `/api/reports/environment-tickets/:id` | ✓ | tetapkan PIC dan majukan status tiket sampai ditutup |
 | `GET` | `/api/reports/escalations` | ✓ | deteksi eskalasi S4 (volume, konsentrasi, antrean) |

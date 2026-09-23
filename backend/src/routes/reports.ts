@@ -41,10 +41,17 @@ import {
 } from "../services/escalation.js";
 import { requireRole } from "../middleware/auth.js";
 import { asyncRoute, HttpError } from "../middleware/error.js";
+import {
+  sendReportEmail,
+  ReportEmailConfigError,
+  ReportEmailDeliveryError,
+} from "../services/report-email.js";
 
 export const reportsRouter = Router();
 
 const REVIEW_ROLES = ["admin", "dinas", "analis", "puskesmas"];
+/* Penyampaian ke DLH/DPU adalah surat-menyurat antardinas. */
+const FORWARD_ROLES = ["admin", "dinas"];
 
 /** Foto dikirim sebagai data URL yang sudah dikecilkan klien. Batas keras
  *  supaya satu unggahan tidak membengkakkan database. */
@@ -265,16 +272,42 @@ reportsRouter.get(
 );
 
 /**
- * Penyampaian laporan ke instansi penerima (F10, audit §7.E).
+ * Mengirim ringkasan laporan ke inbox internal pengelola (F10, audit §7.E).
  *
- * Menggantikan antrean pengelolaan tiket DLH. Dinkes menyampaikan informasi
- * dan mencatat penyampaiannya; menetapkan PIC, memulai, atau menyatakan
- * pekerjaan instansi lain selesai bukan kewenangan yang dimodelkan produk ini,
- * jadi kendalinya tidak ada lagi di sini.
+ * Nama instansi tetap dicatat sebagai tujuan tindak lanjut yang disarankan.
+ * Email ini tidak dikirim langsung ke DLH/DPU dan bukan bukti bahwa instansi
+ * tersebut sudah menerima laporan.
  */
 reportsRouter.post(
+  "/:id/send-email",
+  requireRole(...FORWARD_ROLES),
+  asyncRoute(async (req, res) => {
+    let sent;
+    try {
+      sent = await sendReportEmail(
+        req.params.id,
+        req.session!.label,
+        req.session!.role,
+      );
+    } catch (error) {
+      if (error instanceof ForwardStateError) throw new HttpError(409, error.message);
+      if (error instanceof ReportEmailConfigError) throw new HttpError(503, error.message);
+      if (error instanceof ReportEmailDeliveryError) throw new HttpError(502, error.message);
+      throw error;
+    }
+    if (!sent) throw new HttpError(404, "Laporan tidak ditemukan.");
+    const risk = await riskContextFor([sent.row]);
+    res.json({
+      meta: await summarizeQueue(),
+      data: publicView(sent.row, null, risk.get(riskKey(sent.row))),
+      recipient: sent.recipient,
+    });
+  }),
+);
+
+reportsRouter.post(
   "/:id/forward",
-  requireRole(...REVIEW_ROLES),
+  requireRole(...FORWARD_ROLES),
   asyncRoute(async (req, res) => {
     const body = req.body ?? {};
     if (typeof body.delivered !== "boolean") {
