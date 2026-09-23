@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Search, Check, Clock, X, MapPin, Info, ArrowRight } from "lucide-react";
+import { Search, Check, Clock, X, MapPin, Info, ArrowRight, Bookmark } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +16,67 @@ import {
 } from "@/lib/reports";
 import { formatDate, formatDateTime } from "@/lib/period";
 import { ApiError, trackReport } from "@/lib/api";
+import { forgetReport, saveReport, useSavedReports } from "@/lib/saved-reports";
 import type { CitizenReport } from "@/types";
+
+/**
+ * Kode yang diingat perangkat ini. Satu ketukan membuka statusnya; tombol
+ * lupakan ada untuk perangkat yang dipakai bergantian.
+ */
+function SavedReports({
+  activeId,
+  onOpen,
+}: {
+  activeId: string | null;
+  onOpen: (id: string) => void;
+}) {
+  const saved = useSavedReports();
+  if (saved.length === 0) return null;
+
+  return (
+    <section aria-labelledby="laporan-tersimpan" className="max-w-xl">
+      <div className="flex items-center gap-2">
+        <Bookmark className="h-4 w-4 text-paper-600" aria-hidden="true" />
+        <h2 id="laporan-tersimpan" className="text-overline uppercase tracking-[0.1em] text-paper-600">
+          Tersimpan di perangkat ini
+        </h2>
+      </div>
+      <ul className="mt-3 divide-y divide-sand-200 rounded-2xl border border-sand-200 bg-white">
+        {saved.map((r) => (
+          <li key={r.id} className="flex items-center gap-2 pr-2">
+            <button
+              type="button"
+              onClick={() => onOpen(r.id)}
+              aria-current={r.id === activeId ? "true" : undefined}
+              className={cn(
+                "flex min-w-0 flex-1 flex-wrap items-baseline gap-x-3 gap-y-0.5 rounded-2xl px-4 py-3 text-left transition-colors hover:bg-sand-50",
+                r.id === activeId && "bg-sand-50",
+              )}
+            >
+              <span className="tabular font-mono text-body-sm font-semibold tracking-[0.08em] text-foreground">
+                {r.id}
+              </span>
+              <span className="truncate text-caption text-paper-600">
+                {REPORT_KIND[r.kind]?.label ?? r.kind} · {r.kecamatan} · {formatDate(r.submittedAt)}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => forgetReport(r.id)}
+              aria-label={`Lupakan kode ${r.id} dari perangkat ini`}
+              className="shrink-0 rounded-full p-2 text-paper-600 transition-colors hover:bg-sand-100 hover:text-foreground"
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-2 text-caption text-paper-600">
+        Hanya kode, jenis, dan wilayah yang disimpan — bukan isi laporan atau foto.
+      </p>
+    </section>
+  );
+}
 
 /**
  * Pelacak laporan — PRD §5.4.
@@ -344,6 +404,8 @@ export function ReportTracker() {
     try {
       const found = await trackReport(id);
       setResult(found.data);
+      /* Kode yang terbukti ada ikut diingat, termasuk yang diketik dari catatan. */
+      saveReport(found.data);
     } catch (caught) {
       if (caught instanceof ApiError && caught.status === 404) {
         setResult(null);
@@ -399,6 +461,14 @@ export function ReportTracker() {
           Huruf besar-kecil dan tanda hubung tidak masalah.
         </p>
       </form>
+
+      <SavedReports
+        activeId={result?.id ?? null}
+        onOpen={(id) => {
+          setCode(id);
+          lookup(id);
+        }}
+      />
 
       {failure ? (
         <div

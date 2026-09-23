@@ -33,6 +33,7 @@ import type { CitizenReport, RateLimitState } from "@/types";
 import { ApiError, fetchRateLimit, submitReport } from "@/lib/api";
 import { preparePhoto, formatBytes, ACCEPTED_IMAGE_TYPES } from "@/lib/photo";
 import { useRememberedKecamatan, withKecamatan } from "@/lib/kecamatan-selection";
+import { saveReport } from "@/lib/saved-reports";
 import { useLocateArea } from "@/hooks/use-locate-area";
 import type { LocateStatus } from "@/hooks/use-locate-kecamatan";
 import type { LocatedArea } from "@/lib/locate-area";
@@ -99,9 +100,12 @@ const LOCATE_MESSAGE: Record<LocateStatus, string> = {
 
 function SubmittedCard({
   report,
+  saved,
   onAgain,
 }: {
   report: CitizenReport;
+  /** Benar bila kode berhasil diingat perangkat ini (lihat `saved-reports`). */
+  saved: boolean;
   onAgain: () => void;
 }) {
   const [copied, setCopied] = React.useState<"idle" | "done" | "failed">("idle");
@@ -133,6 +137,11 @@ function SubmittedCard({
       <p className="mt-2 max-w-lg text-body text-paper-700">
         Kode ini satu-satunya cara melacak laporan Anda. Kami tidak meminta nama
         maupun nomor telepon, jadi tidak ada cara lain menemukannya kembali.
+      </p>
+      <p className="mt-2 max-w-lg text-body-sm text-paper-700">
+        {saved
+          ? "Kode ini juga tersimpan di perangkat ini dan muncul di halaman lacak. Tetap catat atau salin bila Anda memakai perangkat lain atau membersihkan data peramban."
+          : "Peramban ini tidak mengizinkan penyimpanan, jadi kode tidak akan diingat setelah halaman ditutup. Catat atau salin sekarang."}
       </p>
 
       <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -207,6 +216,7 @@ export function CitizenReportForm() {
 
   const [submitting, setSubmitting] = React.useState(false);
   const [submitted, setSubmitted] = React.useState<CitizenReport | null>(null);
+  const [savedOnDevice, setSavedOnDevice] = React.useState(false);
   const [limit, setLimit] = React.useState<RateLimitState | null>(null);
   const [submitError, setSubmitError] = React.useState<string | null>(null);
   const [showErrors, setShowErrors] = React.useState(false);
@@ -296,6 +306,7 @@ export function CitizenReportForm() {
       });
       chooseKecamatan(kecamatan);
       setLimit(result.rateLimit);
+      setSavedOnDevice(saveReport(result.data));
       setSubmitted(result.data);
     } catch (caught) {
       if (caught instanceof ApiError && caught.status === 429) {
@@ -328,7 +339,7 @@ export function CitizenReportForm() {
   };
 
   if (submitted) {
-    return <SubmittedCard report={submitted} onAgain={reset} />;
+    return <SubmittedCard report={submitted} saved={savedOnDevice} onAgain={reset} />;
   }
 
   return (
