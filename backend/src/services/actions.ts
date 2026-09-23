@@ -87,6 +87,26 @@ export type ActionHistoryEvent =
   | "dipublikasikan"
   | "publikasi_ditarik";
 
+/**
+ * Bagian satu kecamatan dari tindakan kota. Setiap puskesmas menerima,
+ * mengerjakan, dan menyelesaikan bagiannya sendiri; tindakan baru selesai
+ * ketika seluruh kecamatan sasarannya selesai.
+ */
+export type ActionPartRow = {
+  tindakan_id: string;
+  kecamatan: string;
+  status: "assigned" | "in_progress" | "completed";
+  acknowledged_at: string | null;
+  acknowledged_by: string | null;
+  acknowledgement_source: string | null;
+  blocker_note: string | null;
+  blocked_at: string | null;
+  result_note: string | null;
+  sop_completed: string | null;
+  completed_at: string | null;
+  completed_by: string | null;
+};
+
 export type ActionHistoryRow = {
   id: number;
   tindakan_id: string;
@@ -218,13 +238,21 @@ async function upsertAction(
     basis,
   });
 
-  const existing = await one<{ id: string }>(
-    "SELECT id FROM tindakan WHERE id = ?",
+  const existing = await one<{ id: string; assigned_at: string | null; target_kecamatan: string }>(
+    "SELECT id, assigned_at, target_kecamatan FROM tindakan WHERE id = ?",
     id,
   );
   const generatedAt = new Date().toISOString();
 
   if (existing) {
+    /* Wilayah yang sudah ditugaskan tidak dicabut saat prediksi diperbarui —
+       puskesmasnya mungkin sudah bekerja. Wilayah yang baru masuk kelas risiko
+       ini ditambahkan dan langsung mendapat bagiannya. */
+    if (existing.assigned_at) {
+      for (const name of JSON.parse(existing.target_kecamatan) as string[]) {
+        if (!names.includes(name)) names.push(name);
+      }
+    }
     await run(
       `UPDATE tindakan SET
          priority = ?, title = ?, description = ?, basis = ?,
@@ -252,6 +280,10 @@ async function upsertAction(
       generatedAt,
       id,
     );
+    if (existing.assigned_at) {
+      await ensureParts(id, names);
+      await syncActionStatus(id);
+    }
     return;
   }
 
@@ -423,6 +455,90 @@ export function getAction(id: string): Promise<ActionRow | null> {
   return one<ActionRow>("SELECT * FROM tindakan WHERE id = ?", id);
 }
 
+/* ── Bagian per kecamatan ────────────────────────────────────────────────── */
+
+export function listActionParts(id: string): Promise<ActionPartRow[]> {
+  return all<ActionPartRow>(
+    "SELECT * FROM tindakan_wilayah WHERE tindakan_id = ? ORDER BY kecamatan",
+    id,
+  );
+}
+
+export async function listActionPartsFor(ids: string[]): Promise<ActionPartRow[]> {
+  if (ids.length === 0) return [];
+  return all<ActionPartRow>(
+    `SELECT * FROM tindakan_wilayah
+      WHERE tindakan_id = ANY(?::text[])
+      ORDER BY kecamatan`,
+    ids,
+  );
+}
+
+/** Membuka bagian untuk kecamatan sasaran yang belum punya. Bagian lama tidak disentuh. */
+async function ensureParts(id: string, kecamatan: string[]): Promise<void> {
+  for (const name of kecamatan) {
+    await run(
+      `INSERT INTO tindakan_wilayah (tindakan_id, kecamatan, status)
+       VALUES (?, ?, 'assigned')
+       ON CONFLICT (tindakan_id, kecamatan) DO NOTHING`,
+      id,
+      name,
+    );
+  }
+}
+
+/**
+ * Menurunkan status tindakan dari bagian-bagiannya: selesai hanya bila semua
+ * kecamatan selesai, dikerjakan bila ada yang sudah mulai. Kolom status di
+ * `tindakan` tetap diisi supaya penghitung dan halaman publik tidak perlu
+ * tahu soal bagian.
+ */
+async function syncActionStatus(id: string): Promise<void> {
+  const parts = await listActionParts(id);
+  if (parts.length === 0) return;
+  const allDone = parts.every((p) => p.status === "completed");
+  const started = parts.some((p) => p.status !== "assigned");
+  const stamps = (values: (string | null)[]) =>
+    values.filter((v): v is string => v !== null).sort();
+
+  await run(
+    `UPDATE tindakan
+        SET status = ?, completed_at = ?, acknowledged_at = ?
+      WHERE id = ?`,
+    allDone ? "completed" : started ? "in_progress" : "assigned",
+    allDone ? (stamps(parts.map((p) => p.completed_at)).at(-1) ?? null) : null,
+    stamps(parts.map((p) => p.acknowledged_at))[0] ?? null,
+    id,
+  );
+}
+
+/**
+ * Bagian milik satu kecamatan, dengan pesan yang menyebut kenapa tidak ada.
+ * Semua kejadian pelaksanaan lewat sini: puskesmas hanya pernah menyentuh
+ * bagian wilayahnya sendiri.
+ */
+async function requirePart(
+  existing: ActionRow,
+  kecamatan: string,
+): Promise<ActionPartRow> {
+  if (existing.status === "pending" || !existing.assigned_at) {
+    throw new ActionTransitionError(
+      "Tindakan belum ditugaskan. Tetapkan unit pelaksana lebih dulu.",
+    );
+  }
+  const part = await one<ActionPartRow>(
+    "SELECT * FROM tindakan_wilayah WHERE tindakan_id = ? AND kecamatan = ?",
+    existing.id,
+    kecamatan,
+  );
+  if (!part) {
+    throw new ActionTransitionError(
+      `Kecamatan ${kecamatan} tidak termasuk sasaran tindakan ini.`,
+    );
+  }
+  return part;
+}
+
 export class ActionTransitionError extends Error {
   constructor(message: string) {
     super(message);
@@ -478,6 +594,9 @@ export async function assignAction(
     id,
   );
 
+  await ensureParts(id, JSON.parse(existing.target_kecamatan) as string[]);
+  await syncActionStatus(id);
+
   await appendHistory(id, "ditugaskan", actor, role, {
     detail:
       `Ditugaskan ke ${unit}${pic ? ` (${pic})` : ""}` +
@@ -498,25 +617,22 @@ export async function assignAction(
 }
 
 /**
- * Konfirmasi penerimaan tugas. `source` membedakan pengakuan pelaksana sendiri
- * dari konfirmasi yang dicatat koordinator dari kanal kerja di luar aplikasi —
- * audit §7.A.6 menuntut sumber konfirmasi itu disebut, bukan disamarkan.
+ * Konfirmasi penerimaan tugas oleh puskesmas satu kecamatan. `source`
+ * membedakan pengakuan pelaksana sendiri dari konfirmasi yang dicatat dari
+ * kanal kerja di luar aplikasi — audit §7.A.6 menuntut sumber itu disebut.
  */
 export async function acknowledgeAction(
   id: string,
+  kecamatan: string,
   input: { source: string; note?: string | null },
   actor: string,
   role: string,
 ): Promise<ActionRow | null> {
   const existing = await getAction(id);
   if (!existing) return null;
-  if (existing.status === "pending") {
-    throw new ActionTransitionError(
-      "Tindakan belum ditugaskan. Tetapkan unit pelaksana lebih dulu.",
-    );
-  }
-  if (existing.status === "completed") {
-    throw new ActionTransitionError("Tindakan sudah berstatus selesai.");
+  const part = await requirePart(existing, kecamatan);
+  if (part.status === "completed") {
+    throw new ActionTransitionError(`Bagian ${kecamatan} sudah berstatus selesai.`);
   }
 
   const now = new Date().toISOString();
@@ -524,34 +640,38 @@ export async function acknowledgeAction(
   const note = input.note?.trim() || null;
 
   await run(
-    `UPDATE tindakan
+    `UPDATE tindakan_wilayah
         SET status = 'in_progress',
             acknowledged_at = COALESCE(acknowledged_at, ?),
             acknowledged_by = ?, acknowledgement_source = ?
-      WHERE id = ?`,
+      WHERE tindakan_id = ? AND kecamatan = ?`,
     now,
     actor,
     source,
     id,
+    kecamatan,
   );
+  await syncActionStatus(id);
 
   await appendHistory(id, "dikonfirmasi", actor, role, {
-    detail: `Penerimaan tugas dikonfirmasi — sumber: ${source}${note ? `. ${note}` : "."}`,
+    detail: `${kecamatan}: penerimaan tugas dikonfirmasi — sumber: ${source}${note ? `. ${note}` : "."}`,
     now,
   });
 
   return getAction(id);
 }
 
-/** Kendala pelaksanaan. Statusnya tidak berubah: tugas tetap terbuka. */
+/** Kendala pelaksanaan di satu kecamatan. Statusnya tidak berubah: tugas tetap terbuka. */
 export async function recordActionBlocker(
   id: string,
+  kecamatan: string,
   note: string,
   actor: string,
   role: string,
 ): Promise<ActionRow | null> {
   const existing = await getAction(id);
   if (!existing) return null;
+  await requirePart(existing, kecamatan);
 
   const text = note.trim();
   if (!text) {
@@ -560,12 +680,14 @@ export async function recordActionBlocker(
   const now = new Date().toISOString();
 
   await run(
-    "UPDATE tindakan SET blocker_note = ?, blocked_at = ? WHERE id = ?",
+    `UPDATE tindakan_wilayah SET blocker_note = ?, blocked_at = ?
+      WHERE tindakan_id = ? AND kecamatan = ?`,
     text,
     now,
     id,
+    kecamatan,
   );
-  await appendHistory(id, "kendala", actor, role, { detail: text, now });
+  await appendHistory(id, "kendala", actor, role, { detail: `${kecamatan}: ${text}`, now });
 
   return getAction(id);
 }
@@ -573,39 +695,37 @@ export async function recordActionBlocker(
 /** Catatan perkembangan. Hanya menambah riwayat — tidak mengubah keadaan. */
 export async function recordActionProgress(
   id: string,
+  kecamatan: string,
   note: string,
   actor: string,
   role: string,
 ): Promise<ActionRow | null> {
   const existing = await getAction(id);
   if (!existing) return null;
+  await requirePart(existing, kecamatan);
   const text = note.trim();
   if (!text) {
     throw new ActionTransitionError("Catatan pelaksanaan tidak boleh kosong.");
   }
-  await appendHistory(id, "catatan", actor, role, { detail: text });
+  await appendHistory(id, "catatan", actor, role, { detail: `${kecamatan}: ${text}` });
   return getAction(id);
 }
 
 /**
- * Penyelesaian tugas. Hasil wajib ditulis: audit §5.F04 menolak "Selesai" yang
- * hanya berarti seseorang menekan tombol. Butir SOP yang tercentang ikut
- * disimpan di sini — selama ia hanya hidup di state modal, tampilannya
- * menyerupai bukti pelaksanaan yang tidak pernah tersimpan.
+ * Penyelesaian bagian satu kecamatan. Hasil wajib ditulis: audit §5.F04
+ * menolak "Selesai" yang hanya berarti seseorang menekan tombol. Tindakan
+ * kota ikut selesai hanya bila bagian ini yang terakhir.
  */
 export async function completeAction(
   id: string,
+  kecamatan: string,
   input: { resultNote: string; sopCompleted?: string[] },
   actor: string,
   role: string,
 ): Promise<ActionRow | null> {
   const existing = await getAction(id);
   if (!existing) return null;
-  if (existing.status === "pending") {
-    throw new ActionTransitionError(
-      "Tindakan belum ditugaskan. Tetapkan unit pelaksana lebih dulu.",
-    );
-  }
+  await requirePart(existing, kecamatan);
 
   const result = input.resultNote.trim();
   if (!result) {
@@ -618,62 +738,87 @@ export async function completeAction(
   const checked = input.sopCompleted ?? [];
 
   await run(
-    `UPDATE tindakan
+    `UPDATE tindakan_wilayah
         SET status = 'completed', completed_at = COALESCE(completed_at, ?),
+            acknowledged_at = COALESCE(acknowledged_at, ?),
             completed_by = ?, result_note = ?, sop_completed = ?,
             blocker_note = NULL, blocked_at = NULL
-      WHERE id = ?`,
+      WHERE tindakan_id = ? AND kecamatan = ?`,
+    now,
     now,
     actor,
     result,
     JSON.stringify(checked),
     id,
+    kecamatan,
   );
+  await syncActionStatus(id);
 
   await appendHistory(id, "selesai", actor, role, {
     detail:
-      `Hasil: ${result}` +
+      `${kecamatan}: ${result}` +
       (checked.length > 0
         ? ` — ${checked.length} butir SOP tercatat terlaksana.`
         : " — tanpa butir SOP yang dicentang."),
     now,
   });
 
+  const updated = await getAction(id);
   await logAudit({
     actor,
     role,
     action: `Penyelesaian tindakan ${id}`,
-    details: `${existing.title} diselesaikan. ${result}`,
+    details:
+      `${existing.title} — bagian ${kecamatan} diselesaikan. ${result}` +
+      (updated?.status === "completed" ? " Seluruh kecamatan sasaran selesai." : ""),
     status: "success",
   });
 
-  return getAction(id);
+  return updated;
 }
 
-/** Membuka kembali tugas yang ditutup terlalu cepat. Alasan wajib. */
+/**
+ * Membuka kembali bagian satu kecamatan yang ditutup terlalu cepat. Alasan
+ * wajib. Kecamatan boleh dikosongkan hanya bila tepat satu bagian yang selesai.
+ */
 export async function reopenAction(
   id: string,
+  kecamatan: string | null,
   reason: string,
   actor: string,
   role: string,
 ): Promise<ActionRow | null> {
   const existing = await getAction(id);
   if (!existing) return null;
-  if (existing.status !== "completed") {
-    throw new ActionTransitionError("Tindakan ini belum berstatus selesai.");
-  }
   const text = reason.trim();
   if (!text) {
     throw new ActionTransitionError("Membuka kembali tugas wajib menyertakan alasan.");
   }
 
+  const done = (await listActionParts(id)).filter((p) => p.status === "completed");
+  let target: string;
+  if (kecamatan) {
+    if (!done.some((p) => p.kecamatan === kecamatan)) {
+      throw new ActionTransitionError(`Bagian ${kecamatan} belum berstatus selesai.`);
+    }
+    target = kecamatan;
+  } else if (done.length === 1) {
+    target = done[0].kecamatan;
+  } else if (done.length === 0) {
+    throw new ActionTransitionError("Belum ada kecamatan yang berstatus selesai.");
+  } else {
+    throw new ActionTransitionError("Pilih kecamatan yang dibuka kembali.");
+  }
+
   await run(
-    `UPDATE tindakan
+    `UPDATE tindakan_wilayah
         SET status = 'in_progress', completed_at = NULL, completed_by = NULL
-      WHERE id = ?`,
+      WHERE tindakan_id = ? AND kecamatan = ?`,
     id,
+    target,
   );
-  await appendHistory(id, "dibuka_kembali", actor, role, { detail: text });
+  await syncActionStatus(id);
+  await appendHistory(id, "dibuka_kembali", actor, role, { detail: `${target}: ${text}` });
 
   return getAction(id);
 }

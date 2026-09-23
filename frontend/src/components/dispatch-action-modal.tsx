@@ -7,7 +7,8 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { BroadcastKit } from "@/components/broadcast-kit";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import type { ActionRecommendation } from "@/types";
+import type { ActionPart, ActionRecommendation } from "@/types";
+import { useSessionContext } from "@/components/session-provider";
 import { cn, formatNumber } from "@/lib/utils";
 import { describeDeadline, formatDateTime } from "@/lib/period";
 import { effectiveDueDate, PRIORITY_LABEL } from "@/lib/action-queue";
@@ -50,6 +51,66 @@ interface DispatchActionModalProps {
 
 const inputClass =
   "w-full min-w-0 rounded-lg border border-border bg-surface px-3 py-2 text-body-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+
+const PART_STATUS: Record<ActionPart["status"], string> = {
+  assigned: "Belum diterima",
+  in_progress: "Dikerjakan",
+  completed: "Selesai",
+};
+
+/**
+ * Kemajuan tiap kecamatan untuk Dinkes. Satu tindakan kota dikerjakan banyak
+ * puskesmas; Dinkes perlu melihat wilayah mana yang belum bergerak, bukan satu
+ * status yang menyamarkan semuanya.
+ */
+function PartsProgress({
+  parts,
+  onReopen,
+}: {
+  parts: ActionPart[];
+  onReopen?: (kecamatan: string) => void;
+}) {
+  const done = parts.filter((part) => part.status === "completed").length;
+  return (
+    <div className="space-y-2">
+      <p className="text-caption font-semibold text-foreground">
+        {done} dari {parts.length} kecamatan selesai
+      </p>
+      <ul className="divide-y divide-border rounded-lg border border-border bg-surface">
+        {parts.map((part) => (
+          <li key={part.kecamatan} className="space-y-1 px-3 py-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-body-sm font-medium text-foreground">{part.kecamatan}</span>
+              <span className="flex items-center gap-2">
+                <Badge variant={part.status === "completed" ? "risk-low" : "outline"}>
+                  {PART_STATUS[part.status]}
+                </Badge>
+                {onReopen && part.status === "completed" && (
+                  <button
+                    type="button"
+                    onClick={() => onReopen(part.kecamatan)}
+                    className="text-caption font-medium text-brand-700 hover:underline"
+                  >
+                    Buka kembali
+                  </button>
+                )}
+              </span>
+            </div>
+            {part.blocker && (
+              <p className="flex items-start gap-1.5 text-caption text-risk-high">
+                <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
+                {part.blocker.note}
+              </p>
+            )}
+            {part.result && (
+              <p className="text-caption text-paper-700">{part.result.note}</p>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 function Steps({ current }: { current: number }) {
   const steps = ["Ditugaskan", "Diterima", "Selesai"];
@@ -112,10 +173,12 @@ export function DispatchActionModal({
   const [unit, setUnit] = React.useState("");
   const [agreedDue, setAgreedDue] = React.useState("");
   const [note, setNote] = React.useState("");
-  const [reopening, setReopening] = React.useState(false);
+  const [reopening, setReopening] = React.useState<string | null>(null);
   const [broadcastOpen, setBroadcastOpen] = React.useState(false);
 
   const id = recommendation?.id;
+  const { session } = useSessionContext();
+  const workArea = session?.role === "puskesmas" ? session.kecamatan : null;
 
   React.useEffect(() => {
     setIsSubmitting(false);
@@ -124,7 +187,7 @@ export function DispatchActionModal({
     setEditingAssignment(false);
     setAgreedDue("");
     setNote("");
-    setReopening(false);
+    setReopening(null);
   }, [id]);
 
   /* Centang SOP dibaca dari yang tersimpan, supaya petugas berikutnya tahu
@@ -140,6 +203,7 @@ export function DispatchActionModal({
   const action = recommendation;
   const checklist = action.sop_checklist;
   const deadline = describeDeadline(effectiveDueDate(action), systemToday);
+  const noteText = note.trim();
   const completed = action.status === "completed";
   const step = completed ? 3 : action.acknowledgement ? 2 : action.assignment ? 1 : 0;
   const lastEvent = action.history.reduce<(typeof action.history)[number] | null>(
@@ -147,6 +211,35 @@ export function DispatchActionModal({
     null,
   );
   const showAssignForm = canAssign && !completed && (!action.assignment || editingAssignment);
+  const parts = action.parts;
+  const otherAreas = parts.length - 1;
+  const reopenForm = reopening && (
+    <div className="flex gap-2">
+      <input
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
+        placeholder={`Alasan membuka kembali ${reopening}`}
+        aria-label="Alasan membuka kembali"
+        className={inputClass}
+      />
+      <Button
+        size="sm"
+        variant="outline"
+        disabled={isSubmitting || noteText.length === 0}
+        onClick={() =>
+          record(
+            () => reopenAction(action.id, noteText, reopening),
+            `${reopening} dibuka kembali.`,
+          )
+        }
+      >
+        Buka
+      </Button>
+      <Button size="sm" variant="ghost" onClick={() => setReopening(null)}>
+        Batal
+      </Button>
+    </div>
+  );
 
   const handleCopyDraft = async () => {
     try {
@@ -170,7 +263,7 @@ export function DispatchActionModal({
       await run();
       setNote("");
       setEditingAssignment(false);
-      setReopening(false);
+      setReopening(null);
       onChanged(message);
       if (close) onOpenChange(false);
     } catch (caught) {
@@ -179,8 +272,6 @@ export function DispatchActionModal({
       setIsSubmitting(false);
     }
   };
-
-  const noteText = note.trim();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -241,6 +332,14 @@ export function DispatchActionModal({
               </p>
             )}
 
+            {canWork && workArea && action.assignment && (
+              <p className="text-caption text-paper-700">
+                Bagian Anda: <strong className="text-foreground">{workArea}</strong>
+                {otherAreas > 0 &&
+                  ` · ${otherAreas} kecamatan lain dikerjakan puskesmas masing-masing.`}
+              </p>
+            )}
+
             {showAssignForm ? (
               <>
                 <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
@@ -288,22 +387,22 @@ export function DispatchActionModal({
               </>
             ) : !action.assignment ? (
               <p className="text-body-sm text-paper-700">Menunggu penugasan dari Dinkes.</p>
-            ) : !completed && !canWork ? (
-              /* Dinkes memantau, bukan mengerjakan: tombol pelaksanaan milik
-                 puskesmas wilayah yang ditugaskan. */
+            ) : !canWork && parts.length > 0 ? (
+              /* Dinkes memantau, bukan mengerjakan: tiap kecamatan dikerjakan
+                 puskesmasnya sendiri, dan Dinkes melihat kemajuannya satu per satu. */
               <>
-                {action.blocker && (
-                  <p className="flex items-start gap-2 rounded-lg border border-risk-high-br bg-risk-high-bg px-3 py-2 text-caption text-risk-high">
-                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                    {action.blocker.note}
-                  </p>
-                )}
-                <p className="text-body-sm text-paper-700">
-                  {action.acknowledgement
-                    ? "Sedang dikerjakan puskesmas wilayah. Hasilnya tercatat di sini setelah ditandai selesai."
-                    : "Menunggu puskesmas wilayah menerima tugas."}
-                </p>
+                <PartsProgress
+                  parts={parts}
+                  onReopen={canAssign ? (kecamatan) => setReopening(kecamatan) : undefined}
+                />
+                {reopenForm}
               </>
+            ) : !completed && !canWork ? (
+              <p className="text-body-sm text-paper-700">
+                {action.acknowledgement
+                  ? "Sedang dikerjakan puskesmas wilayah. Hasilnya tercatat di sini setelah ditandai selesai."
+                  : "Menunggu puskesmas wilayah menerima tugas."}
+              </p>
             ) : !action.acknowledgement && !completed ? (
               <Button
                 size="sm"
@@ -367,7 +466,7 @@ export function DispatchActionModal({
                             resultNote: noteText,
                             sopCompleted: checklist.filter((i) => checkedItems[i]),
                           }),
-                        "Tindakan selesai.",
+                        otherAreas > 0 ? `Bagian ${workArea ?? "wilayah Anda"} selesai.` : "Tindakan selesai.",
                         { close: true },
                       )
                     }
@@ -398,37 +497,14 @@ export function DispatchActionModal({
               </>
             ) : (
               <>
-                <p className="text-body-sm text-paper-800">{action.result?.note}</p>
-                {canAssign &&
-                  (reopening ? (
-                    <div className="flex gap-2">
-                      <input
-                        value={note}
-                        onChange={(e) => setNote(e.target.value)}
-                        placeholder="Alasan membuka kembali"
-                        aria-label="Alasan membuka kembali"
-                        className={inputClass}
-                      />
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={isSubmitting || noteText.length === 0}
-                        onClick={() =>
-                          record(() => reopenAction(action.id, noteText), "Dibuka kembali.")
-                        }
-                      >
-                        Buka
-                      </Button>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => setReopening(true)}
-                      className="text-caption font-medium text-brand-700 hover:underline"
-                    >
-                      Buka kembali
-                    </button>
-                  ))}
+                <p className="whitespace-pre-line text-body-sm text-paper-800">
+                  {action.result?.note}
+                </p>
+                {canWork && otherAreas > 0 && (
+                  <p className="text-caption text-paper-600">
+                    Bagian Anda selesai. Tindakan ditutup setelah semua kecamatan selesai.
+                  </p>
+                )}
               </>
             )}
           </section>

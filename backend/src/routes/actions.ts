@@ -17,12 +17,15 @@ import {
   getAction,
   listActionHistory,
   listActionHistoryFor,
+  listActionParts,
+  listActionPartsFor,
   listActions,
   recordActionBlocker,
   recordActionProgress,
   reopenAction,
   setActionPublication,
   type ActionHistoryRow,
+  type ActionPartRow,
 } from "../services/actions.js";
 import { requireRole, sessionScope } from "../middleware/auth.js";
 import { asyncRoute, HttpError } from "../middleware/error.js";
@@ -51,16 +54,105 @@ function parseList(raw: string | null): string[] {
   }
 }
 
+function serializePart(part: ActionPartRow) {
+  return {
+    kecamatan: part.kecamatan,
+    status: part.status,
+    acknowledgement: part.acknowledged_at && part.acknowledgement_source
+      ? {
+          at: part.acknowledged_at,
+          by: part.acknowledged_by,
+          source: part.acknowledgement_source,
+        }
+      : null,
+    blocker: part.blocker_note
+      ? { note: part.blocker_note, at: part.blocked_at }
+      : null,
+    result: part.result_note
+      ? {
+          note: part.result_note,
+          completedBy: part.completed_by,
+          sopCompleted: parseList(part.sop_completed),
+        }
+      : null,
+    completedAt: part.completed_at,
+  };
+}
+
+type SerializedPart = ReturnType<typeof serializePart>;
+
+/**
+ * Keadaan pelaksanaan yang dilihat pembaca. Akun puskesmas melihat bagian
+ * wilayahnya sendiri — itulah tugas yang ia kerjakan. Dinkes dan permukaan
+ * lain melihat ringkasan seluruh kecamatan: diterima bila semua sudah
+ * menerima, selesai bila semua sudah selesai.
+ */
+function progressView(
+  row: { status: string; completed_at: string | null },
+  parts: SerializedPart[],
+  scope: string | undefined,
+) {
+  if (scope) {
+    const own = parts.find((part) => part.kecamatan === scope);
+    return {
+      status: own ? own.status : row.status,
+      completed_at: own ? own.completedAt : row.completed_at,
+      acknowledgement: own?.acknowledgement ?? null,
+      blocker: own?.blocker ?? null,
+      result: own?.result ?? null,
+    };
+  }
+
+  const latest = (values: (string | null | undefined)[]) =>
+    values.filter((v): v is string => !!v).sort().at(-1) ?? null;
+  const acknowledged = parts.length > 0 && parts.every((part) => part.acknowledgement);
+  const done = parts.length > 0 && parts.every((part) => part.result);
+  const blocked = parts.filter((part) => part.blocker);
+  return {
+    status: row.status,
+    completed_at: row.completed_at,
+    acknowledgement: acknowledged
+      ? {
+          at: latest(parts.map((part) => part.acknowledgement?.at)) as string,
+          by: null,
+          source: `${parts.length} puskesmas wilayah`,
+        }
+      : null,
+    blocker: blocked.length > 0
+      ? {
+          note: blocked.map((part) => `${part.kecamatan}: ${part.blocker!.note}`).join(" · "),
+          at: latest(blocked.map((part) => part.blocker!.at)),
+        }
+      : null,
+    result: done
+      ? {
+          note: parts.map((part) => `${part.kecamatan}: ${part.result!.note}`).join("\n"),
+          completedBy: null,
+          /* Butir yang terlaksana di semua kecamatan. */
+          sopCompleted: parts.reduce<string[]>(
+            (common, part, index) =>
+              index === 0
+                ? part.result!.sopCompleted
+                : common.filter((item) => part.result!.sopCompleted.includes(item)),
+            [],
+          ),
+        }
+      : null,
+  };
+}
+
 function serialize(
   row: Awaited<ReturnType<typeof listActions>>[number],
   history: ActionHistoryRow[] = [],
+  partRows: ActionPartRow[] = [],
+  scope?: string,
 ) {
+  const parts = partRows.map(serializePart);
   return {
     id: row.id,
     disease: row.disease,
     action_type: row.action_type,
     priority: row.priority,
-    status: row.status,
     title: row.title,
     description: row.description,
     basis: row.basis,
@@ -80,7 +172,6 @@ function serialize(
     generated_at: row.generated_at,
     dispatched_at: row.dispatched_at,
     dispatched_by: row.dispatched_by,
-    completed_at: row.completed_at,
     /* Penugasan sampai hasil. Tenggat yang disepakati dipisahkan dari
        `due_date` usulan mesin aturan supaya ketepatan waktu dihitung dari
        kesepakatan manusia. */
@@ -94,23 +185,9 @@ function serialize(
           agreedDueDate: row.agreed_due_date,
         }
       : null,
-    acknowledgement: row.acknowledged_at && row.acknowledgement_source
-      ? {
-          at: row.acknowledged_at,
-          by: row.acknowledged_by,
-          source: row.acknowledgement_source,
-        }
-      : null,
-    blocker: row.blocker_note
-      ? { note: row.blocker_note, at: row.blocked_at }
-      : null,
-    result: row.result_note
-      ? {
-          note: row.result_note,
-          completedBy: row.completed_by,
-          sopCompleted: parseList(row.sop_completed),
-        }
-      : null,
+    ...progressView(row, parts, scope),
+    /* Bagian per kecamatan: tiap puskesmas mengerjakan wilayahnya sendiri. */
+    parts,
     publication: row.published_at
       ? {
           publishedAt: row.published_at,
@@ -162,7 +239,17 @@ actionsRouter.get(
         (!scope || targets(row, scope)),
     );
     /* Riwayat cukup diambil untuk baris yang benar-benar akan dikirim. */
-    const history = await listActionHistoryFor(rows.map((row) => row.id));
+    const ids = rows.map((row) => row.id);
+    const [history, partRows] = await Promise.all([
+      listActionHistoryFor(ids),
+      listActionPartsFor(ids),
+    ]);
+    const partsByAction = new Map<string, ActionPartRow[]>();
+    for (const part of partRows) {
+      const bucket = partsByAction.get(part.tindakan_id);
+      if (bucket) bucket.push(part);
+      else partsByAction.set(part.tindakan_id, [part]);
+    }
     const byAction = new Map<string, ActionHistoryRow[]>();
     for (const entry of history) {
       const bucket = byAction.get(entry.tindakan_id);
@@ -172,7 +259,14 @@ actionsRouter.get(
 
     res.json({
       meta,
-      data: rows.map((row) => serialize(row, byAction.get(row.id) ?? [])),
+      data: rows.map((row) =>
+        serialize(
+          row,
+          byAction.get(row.id) ?? [],
+          partsByAction.get(row.id) ?? [],
+          scope,
+        ),
+      ),
     });
   }),
 );
@@ -188,7 +282,7 @@ actionsRouter.get(
     if (!row) throw new HttpError(404, "Tindakan tidak ditemukan.");
     res.json({
       meta: await reportingPeriod(row.disease),
-      data: serialize(row, await listActionHistory(row.id)),
+      data: await present(row, sessionScope(req)),
     });
   }),
 );
@@ -221,6 +315,31 @@ async function guarded<T>(work: () => Promise<T>): Promise<T> {
   }
 }
 
+/** Satu tindakan lengkap dengan riwayat dan bagiannya, dilihat dari sesi ini. */
+async function present(
+  row: Awaited<ReturnType<typeof listActions>>[number],
+  scope: string | undefined,
+) {
+  const [history, parts] = await Promise.all([
+    listActionHistory(row.id),
+    listActionParts(row.id),
+  ]);
+  return serialize(row, history, parts, scope);
+}
+
+/**
+ * Kecamatan yang dikerjakan akun puskesmas ini. Tanpa wilayah kerja, akun
+ * tidak bisa mengerjakan bagian mana pun — lebih baik ditolak daripada
+ * menebak atas nama wilayah lain.
+ */
+function workArea(req: Parameters<typeof sessionScope>[0]): string {
+  const scope = sessionScope(req);
+  if (!scope) {
+    throw new HttpError(403, "Akun puskesmas ini belum punya wilayah kerja.");
+  }
+  return scope;
+}
+
 actionsRouter.post(
   "/:id/assign",
   requireRole("dinas"),
@@ -246,7 +365,7 @@ actionsRouter.post(
       ),
     );
     if (!updated) throw new HttpError(404, "Tindakan tidak ditemukan.");
-    res.json({ data: serialize(updated, await listActionHistory(updated.id)) });
+    res.json({ data: await present(updated, sessionScope(req)) });
   }),
 );
 
@@ -258,6 +377,7 @@ actionsRouter.post(
     const updated = await guarded(() =>
       acknowledgeAction(
         req.params.id,
+        workArea(req),
         {
           source: requireText(body.source, "Sumber konfirmasi"),
           note: optionalText(body.note, "Catatan konfirmasi"),
@@ -267,7 +387,7 @@ actionsRouter.post(
       ),
     );
     if (!updated) throw new HttpError(404, "Tindakan tidak ditemukan.");
-    res.json({ data: serialize(updated, await listActionHistory(updated.id)) });
+    res.json({ data: await present(updated, sessionScope(req)) });
   }),
 );
 
@@ -279,13 +399,14 @@ actionsRouter.post(
     const updated = await guarded(() =>
       recordActionBlocker(
         req.params.id,
+        workArea(req),
         note,
         req.session!.label,
         req.session!.role,
       ),
     );
     if (!updated) throw new HttpError(404, "Tindakan tidak ditemukan.");
-    res.json({ data: serialize(updated, await listActionHistory(updated.id)) });
+    res.json({ data: await present(updated, sessionScope(req)) });
   }),
 );
 
@@ -297,13 +418,14 @@ actionsRouter.post(
     const updated = await guarded(() =>
       recordActionProgress(
         req.params.id,
+        workArea(req),
         note,
         req.session!.label,
         req.session!.role,
       ),
     );
     if (!updated) throw new HttpError(404, "Tindakan tidak ditemukan.");
-    res.json({ data: serialize(updated, await listActionHistory(updated.id)) });
+    res.json({ data: await present(updated, sessionScope(req)) });
   }),
 );
 
@@ -323,6 +445,7 @@ actionsRouter.post(
     const updated = await guarded(() =>
       completeAction(
         req.params.id,
+        workArea(req),
         {
           resultNote: requireText(body.resultNote, "Catatan hasil"),
           sopCompleted: sop as string[] | undefined,
@@ -332,7 +455,7 @@ actionsRouter.post(
       ),
     );
     if (!updated) throw new HttpError(404, "Tindakan tidak ditemukan.");
-    res.json({ data: serialize(updated, await listActionHistory(updated.id)) });
+    res.json({ data: await present(updated, sessionScope(req)) });
   }),
 );
 
@@ -341,16 +464,18 @@ actionsRouter.post(
   requireRole("dinas"),
   asyncRoute(async (req, res) => {
     const reason = requireText((req.body ?? {}).reason, "Alasan membuka kembali");
+    const kecamatan = optionalText((req.body ?? {}).kecamatan, "Kecamatan");
     const updated = await guarded(() =>
       reopenAction(
         req.params.id,
+        kecamatan,
         reason,
         req.session!.label,
         req.session!.role,
       ),
     );
     if (!updated) throw new HttpError(404, "Tindakan tidak ditemukan.");
-    res.json({ data: serialize(updated, await listActionHistory(updated.id)) });
+    res.json({ data: await present(updated, sessionScope(req)) });
   }),
 );
 
@@ -376,6 +501,6 @@ actionsRouter.post(
       ),
     );
     if (!updated) throw new HttpError(404, "Tindakan tidak ditemukan.");
-    res.json({ data: serialize(updated, await listActionHistory(updated.id)) });
+    res.json({ data: await present(updated, sessionScope(req)) });
   }),
 );

@@ -287,6 +287,41 @@ CREATE TABLE IF NOT EXISTS tindakan_riwayat (
 CREATE INDEX IF NOT EXISTS idx_tindakan_riwayat
   ON tindakan_riwayat (tindakan_id, ts);
 
+-- Bagian kerja per kecamatan. Satu tindakan kota mencakup beberapa kecamatan,
+-- dan tiap kecamatan dikerjakan puskesmasnya sendiri. Tanpa tabel ini satu
+-- puskesmas bisa menerima dan menandai selesai tugas atas nama semua wilayah.
+-- Status tindakan di tabel `tindakan` diturunkan dari bagian-bagian ini.
+CREATE TABLE IF NOT EXISTS tindakan_wilayah (
+  tindakan_id            TEXT NOT NULL REFERENCES tindakan(id) ON DELETE CASCADE,
+  kecamatan              TEXT NOT NULL,
+  status                 TEXT NOT NULL,   -- assigned | in_progress | completed
+  acknowledged_at        TEXT,
+  acknowledged_by        TEXT,
+  acknowledgement_source TEXT,
+  blocker_note           TEXT,
+  blocked_at             TEXT,
+  result_note            TEXT,
+  sop_completed          TEXT,            -- JSON array
+  completed_at           TEXT,
+  completed_by           TEXT,
+  PRIMARY KEY (tindakan_id, kecamatan)
+);
+
+-- Tindakan yang sudah ditugaskan sebelum tabel di atas ada: keadaan tunggalnya
+-- disalin ke setiap kecamatan sasaran, supaya tidak ada yang tampak mundur.
+INSERT INTO tindakan_wilayah
+  (tindakan_id, kecamatan, status, acknowledged_at, acknowledged_by,
+   acknowledgement_source, blocker_note, blocked_at, result_note, sop_completed,
+   completed_at, completed_by)
+SELECT t.id, k.nama, t.status, t.acknowledged_at, t.acknowledged_by,
+       t.acknowledgement_source, t.blocker_note, t.blocked_at, t.result_note,
+       t.sop_completed, t.completed_at, t.completed_by
+  FROM tindakan t
+ CROSS JOIN LATERAL jsonb_array_elements_text(t.target_kecamatan::jsonb) AS k(nama)
+ WHERE t.assigned_at IS NOT NULL
+   AND t.status IN ('assigned', 'in_progress', 'completed')
+   AND NOT EXISTS (SELECT 1 FROM tindakan_wilayah w WHERE w.tindakan_id = t.id);
+
 -- Penyampaian laporan ke instansi lain (F10). PRAKIRA berhenti pada
 -- penyampaian yang tercatat; pengerjaan instansi penerima berada di luar
 -- lingkup produk, jadi tidak ada kolom progres pekerjaan di sini.

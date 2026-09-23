@@ -343,6 +343,7 @@ function normalizeAction(action: ActionRecommendation): ActionRecommendation {
           publishedBy: string(publication?.publishedBy, publication?.published_by),
         }
       : null,
+    parts: Array.isArray(action.parts) ? action.parts : [],
     history: action.history.map((entry, index) => ({
       ...entry,
       id: typeof entry.id === "number" ? entry.id : index,
@@ -426,8 +427,9 @@ export function completeAction(
   return actionEvent(id, "complete", input);
 }
 
-export function reopenAction(id: string, reason: string) {
-  return actionEvent(id, "reopen", { reason });
+/** Membuka kembali bagian satu kecamatan yang sudah ditandai selesai. */
+export function reopenAction(id: string, reason: string, kecamatan?: string) {
+  return actionEvent(id, "reopen", { reason, kecamatan });
 }
 
 /** Keputusan penerbitan ke permukaan publik (F15), terpisah dari status kerja. */

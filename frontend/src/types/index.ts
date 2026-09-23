@@ -329,6 +329,19 @@ export type ActionResult = {
   sopCompleted: string[];
 };
 
+/**
+ * Bagian satu kecamatan dari tindakan kota. Tiap puskesmas menerima dan
+ * menyelesaikan bagiannya sendiri; tindakan selesai bila semua bagian selesai.
+ */
+export type ActionPart = {
+  kecamatan: string;
+  status: "assigned" | "in_progress" | "completed";
+  acknowledgement: ActionAcknowledgement | null;
+  blocker: { note: string; at: string | null } | null;
+  result: ActionResult | null;
+  completedAt: string | null;
+};
+
 export type ActionPublication = {
   publishedAt: string;
   publishedBy: string | null;
@@ -374,6 +387,9 @@ export type ActionRecommendation = {
   /** Hambatan yang sedang dicatat; kosong bila tidak ada. */
   blocker: { note: string; at: string } | null;
   result: ActionResult | null;
+  /** Kosong sebelum ditugaskan. Untuk akun puskesmas, kolom status di atas
+      adalah bagian wilayahnya sendiri. */
+  parts: ActionPart[];
   publication: ActionPublication | null;
   history: ActionHistoryEntry[];
 };
