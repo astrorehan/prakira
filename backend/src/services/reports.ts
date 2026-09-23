@@ -972,7 +972,7 @@ export type QueueSummary = {
   oldestWaitHours: number | null;
 };
 
-export async function summarizeQueue(): Promise<QueueSummary> {
+export async function summarizeQueue(kecamatan?: string): Promise<QueueSummary> {
   const rows = await all<{
     status: ReportStatus;
     kind: ReportKind;
@@ -980,7 +980,9 @@ export async function summarizeQueue(): Promise<QueueSummary> {
     handling_mode: ReportHandlingMode | null;
     forward_state: ForwardState | null;
   }>(
-    "SELECT status, kind, submitted_at, handling_mode, forward_state FROM laporan_warga",
+    `SELECT status, kind, submitted_at, handling_mode, forward_state FROM laporan_warga
+      ${kecamatan ? "WHERE kecamatan = ?" : ""}`,
+    ...(kecamatan ? [kecamatan] : []),
   );
 
   const pending = rows.filter((r) => r.status === "menunggu");

@@ -27,6 +27,8 @@ export default function KasusPage() {
   const [activeTab, setActiveTab] = React.useState<"manual" | "csv">("manual");
 
   const isAdmin = session?.role === "admin";
+  /* Impor CSV untuk rekap lintas kecamatan; akun berwilayah cukup formulir. */
+  const scoped = Boolean(session?.kecamatanId);
 
   React.useEffect(() => {
     if (!loading && session && isAdmin) {
@@ -61,6 +63,7 @@ export default function KasusPage() {
         />
 
         {/* Tab Switcher: Manual vs CSV */}
+        {!scoped && (
         <div className="flex border-b border-border">
           <button
             type="button"
@@ -90,9 +93,10 @@ export default function KasusPage() {
             <span>Impor Rekapitulasi Berkas (CSV)</span>
           </button>
         </div>
+        )}
 
         {/* Tab Content */}
-        {activeTab === "manual" ? (
+        {scoped || activeTab === "manual" ? (
           <ManualCaseEntryCard />
         ) : (
           <div className="max-w-4xl">

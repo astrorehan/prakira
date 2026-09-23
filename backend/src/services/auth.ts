@@ -26,6 +26,7 @@ export type UserRow = {
   label: string;
   home: string;
   created_at: string;
+  kecamatan_id: string | null;
 };
 
 export type SessionUser = {
@@ -34,6 +35,9 @@ export type SessionUser = {
   label: string;
   home: string;
   signedInAt: string;
+  /** Wilayah kerja akun puskesmas; null untuk peran lintas wilayah. */
+  kecamatanId: string | null;
+  kecamatan: string | null;
 };
 
 export async function signIn(
@@ -41,8 +45,10 @@ export async function signIn(
   password: string,
 ): Promise<{ token: string; user: SessionUser } | null> {
   const normalized = email.trim().toLowerCase();
-  const user = await one<UserRow>(
-    "SELECT * FROM users WHERE email = ?",
+  const user = await one<UserRow & { kecamatan: string | null }>(
+    `SELECT u.*, k.nama AS kecamatan
+       FROM users u LEFT JOIN kecamatan k ON k.id = u.kecamatan_id
+      WHERE u.email = ?`,
     normalized,
   );
 
@@ -94,6 +100,8 @@ export async function signIn(
       label: user.label,
       home: user.home,
       signedInAt: createdAt.toISOString(),
+      kecamatanId: user.kecamatan_id,
+      kecamatan: user.kecamatan,
     },
   };
 }
@@ -110,9 +118,13 @@ export async function resolveSession(
     home: string;
     created_at: string;
     expires_at: string;
+    kecamatan_id: string | null;
+    kecamatan: string | null;
   }>(
-    `SELECT u.email, u.role, u.label, u.home, s.created_at, s.expires_at
+    `SELECT u.email, u.role, u.label, u.home, s.created_at, s.expires_at,
+            u.kecamatan_id, k.nama AS kecamatan
        FROM sessions s JOIN users u ON u.id = s.user_id
+       LEFT JOIN kecamatan k ON k.id = u.kecamatan_id
       WHERE s.token = ?`,
     token,
   );
@@ -130,6 +142,8 @@ export async function resolveSession(
     label: row.label,
     home: row.home,
     signedInAt: row.created_at,
+    kecamatanId: row.kecamatan_id,
+    kecamatan: row.kecamatan,
   };
 }
 

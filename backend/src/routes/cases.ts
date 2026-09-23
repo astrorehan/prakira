@@ -7,11 +7,11 @@
  * - Kasus disimpan/di-upsert ke tabel `observasi` dengan label source = 'manual'.
  * - Setiap entri tercatat secara transparan di `audit_log`.
  */
-import { Router } from "express";
+import { Router, type Request } from "express";
 import { all, one, run, transaction } from "../db/index.js";
 import { parseCsv, parseCsvHeader, toNumber } from "../db/csv.js";
 import { startIngestJob, finishIngestJob } from "../db/seed.js";
-import { requireAuth, requireRole } from "../middleware/auth.js";
+import { requireAuth, requireRole, sessionScopeId } from "../middleware/auth.js";
 import { asyncRoute, HttpError } from "../middleware/error.js";
 import { logAudit } from "../services/audit.js";
 import {
@@ -53,6 +53,14 @@ function normalizeMonthStart(input: string): string {
  * POST /api/cases/manual
  * Input data kasus resmi secara manual oleh Nakes (Puskesmas / Dinas / Admin).
  */
+/** Akun puskesmas hanya menulis dan membaca rekap wilayahnya sendiri. */
+function assertOwnKecamatan(req: Request, kecamatanId: string): void {
+  const scope = sessionScopeId(req);
+  if (scope && scope !== kecamatanId) {
+    throw new HttpError(403, "Kecamatan ini di luar wilayah akun Anda.");
+  }
+}
+
 casesRouter.post(
   "/manual",
   requireAuth,
@@ -85,6 +93,7 @@ casesRouter.post(
         `Kecamatan '${cleanKecamatan}' tidak ditemukan dalam 16 kecamatan Kota Semarang.`,
       );
     }
+    assertOwnKecamatan(req, resolvedKecamatan.id);
 
     // 2. Validasi Penyakit
     if (!disease || typeof disease !== "string") {
@@ -198,6 +207,7 @@ casesRouter.get(
         "Kecamatan, penyakit, dan periode wajib disertakan.",
       );
     }
+    assertOwnKecamatan(req, kecamatanId);
     const month = normalizeMonthStart(rawMonth);
     const entry = await findRecapEntry(kecamatanId, disease, month);
     res.json({
@@ -228,6 +238,7 @@ casesRouter.post(
     if (!kecamatanId || !disease) {
       throw new HttpError(400, "Kecamatan dan penyakit wajib disertakan.");
     }
+    assertOwnKecamatan(req, kecamatanId);
     const month = normalizeMonthStart(String(body.month_start ?? ""));
     const entry = await markRecapChecked(
       kecamatanId,
@@ -285,7 +296,8 @@ casesRouter.get(
   "/recent",
   requireAuth,
   requireRole("puskesmas", "dinas", "admin"),
-  asyncRoute(async (_req, res) => {
+  asyncRoute(async (req, res) => {
+    const scope = sessionScopeId(req);
     const rows = await all<{
       kecamatan_id: string;
       kecamatan_nama: string;
@@ -302,9 +314,10 @@ casesRouter.get(
               o.cases, o.rainfall_mm, o.temp_mean_c, o.humidity_pct, o.source, o.recorded_at
          FROM observasi o
          JOIN kecamatan k ON o.kecamatan_id = k.id
-        WHERE o.source = 'manual'
+        WHERE o.source = 'manual'${scope ? " AND o.kecamatan_id = ?" : ""}
         ORDER BY o.recorded_at DESC
         LIMIT 20`,
+      ...(scope ? [scope] : []),
     );
     res.json({ data: rows });
   }),
@@ -367,6 +380,14 @@ casesRouter.post(
         problems.push({
           line,
           message: `Kecamatan '${row.kecamatan_nama}' tidak dikenal.`,
+        });
+        return;
+      }
+      const scope = sessionScopeId(req);
+      if (scope && kecamatanId !== scope) {
+        problems.push({
+          line,
+          message: `Kecamatan '${row.kecamatan_nama}' di luar wilayah akun Anda.`,
         });
         return;
       }

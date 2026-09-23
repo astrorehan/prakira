@@ -364,7 +364,7 @@ async function seedAdminUser(tx: Tx): Promise<void> {
     const { hash, salt } = await hashPassword("dinkes123");
     await tx.run(
       `INSERT INTO users (id, email, password_hash, salt, role, label, home, created_at)
-       VALUES (?, ?, ?, ?, 'puskesmas', 'Petugas Nakes Dinkes', '/dashboard', ?)`,
+       VALUES (?, ?, ?, ?, 'dinas', 'Dinas Kesehatan Kota Semarang', '/dashboard', ?)`,
       crypto.randomUUID(),
       dinkesEmail,
       hash,
@@ -381,8 +381,9 @@ async function seedAdminUser(tx: Tx): Promise<void> {
   if (!existingPuskesmas) {
     const { hash, salt } = await hashPassword("puskesmas123");
     await tx.run(
-      `INSERT INTO users (id, email, password_hash, salt, role, label, home, created_at)
-       VALUES (?, ?, ?, ?, 'puskesmas', 'Puskesmas Pandanaran', '/dashboard', ?)`,
+      `INSERT INTO users (id, email, password_hash, salt, role, label, home, created_at, kecamatan_id)
+       VALUES (?, ?, ?, ?, 'puskesmas', 'Puskesmas Pandanaran', '/dashboard', ?,
+               (SELECT id FROM kecamatan WHERE nama = 'Semarang Selatan'))`,
       crypto.randomUUID(),
       puskesmasEmail,
       hash,

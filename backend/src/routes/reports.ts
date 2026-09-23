@@ -39,7 +39,7 @@ import {
   DEFAULT_RULES,
   detectEscalations,
 } from "../services/escalation.js";
-import { requireRole } from "../middleware/auth.js";
+import { requireRole, sessionScope } from "../middleware/auth.js";
 import { asyncRoute, HttpError } from "../middleware/error.js";
 import {
   sendReportEmail,
@@ -52,6 +52,22 @@ export const reportsRouter = Router();
 const REVIEW_ROLES = ["admin", "dinas", "analis", "puskesmas"];
 /* Penyampaian ke DLH/DPU adalah surat-menyurat antardinas. */
 const FORWARD_ROLES = ["admin", "dinas"];
+
+/* Akun puskesmas hanya melihat laporan wilayahnya. Laporan di luar wilayah
+   dijawab 404, sama seperti laporan yang tidak ada. */
+reportsRouter.param("id", (req, _res, next, id: string) => {
+  const scope = sessionScope(req);
+  if (!scope) return next();
+  findReport(id)
+    .then((row) => {
+      if (row && row.kecamatan !== scope) {
+        next(new HttpError(404, "Laporan tidak ditemukan."));
+      } else {
+        next();
+      }
+    })
+    .catch(next);
+});
 
 /** Foto dikirim sebagai data URL yang sudah dikecilkan klien. Batas keras
  *  supaya satu unggahan tidak membengkakkan database. */
@@ -246,11 +262,12 @@ reportsRouter.get(
   "/",
   requireRole(...REVIEW_ROLES),
   asyncRoute(async (req, res) => {
+    const scope = sessionScope(req);
     const kecamatan =
-      typeof req.query.kecamatan === "string" ? req.query.kecamatan : undefined;
+      scope ?? (typeof req.query.kecamatan === "string" ? req.query.kecamatan : undefined);
     const rows = await listReports({ kecamatan });
     const page = rows.slice(0, MAX_QUEUE_ROWS);
-    const summary = await summarizeQueue();
+    const summary = await summarizeQueue(scope);
     const tickets = await listEnvironmentTicketsByReportIds(page.map((row) => row.id));
     const ticketByReport = new Map(tickets.map((ticket) => [ticket.report_id, ticket]));
     const risk = await riskContextFor(page);
@@ -298,7 +315,7 @@ reportsRouter.post(
     if (!sent) throw new HttpError(404, "Laporan tidak ditemukan.");
     const risk = await riskContextFor([sent.row]);
     res.json({
-      meta: await summarizeQueue(),
+      meta: await summarizeQueue(sessionScope(req)),
       data: publicView(sent.row, null, risk.get(riskKey(sent.row))),
       recipient: sent.recipient,
     });
@@ -346,7 +363,7 @@ reportsRouter.post(
     if (!updated) throw new HttpError(404, "Laporan tidak ditemukan.");
     const risk = await riskContextFor([updated]);
     res.json({
-      meta: await summarizeQueue(),
+      meta: await summarizeQueue(sessionScope(req)),
       data: publicView(updated, null, risk.get(riskKey(updated))),
     });
   }),
@@ -466,7 +483,7 @@ reportsRouter.patch(
     const ticket = await findEnvironmentTicketByReportId(updated.id);
     const risk = await riskContextFor([updated]);
     res.json({
-      meta: await summarizeQueue(),
+      meta: await summarizeQueue(sessionScope(req)),
       data: publicView(updated, ticket, risk.get(riskKey(updated))),
     });
   }),
@@ -514,7 +531,10 @@ reportsRouter.get(
           "Eskalasi menandai wilayah untuk dilihat manusia. Ia tidak menerbitkan tindakan dan tidak mengubah kelas risiko model.",
         ],
       },
-      data: escalations,
+      data: (() => {
+        const scope = sessionScope(req);
+        return scope ? escalations.filter((e) => e.kecamatan === scope) : escalations;
+      })(),
     });
   }),
 );

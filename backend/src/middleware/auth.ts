@@ -48,6 +48,22 @@ export function requireAuth(
   next();
 }
 
+/**
+ * Kecamatan yang boleh disentuh sesi ini: wilayah akun puskesmas, atau
+ * `undefined` untuk peran lintas wilayah.
+ */
+export function sessionScope(req: Request): string | undefined {
+  return req.session?.role === "puskesmas" && req.session.kecamatan
+    ? req.session.kecamatan
+    : undefined;
+}
+
+export function sessionScopeId(req: Request): string | undefined {
+  return req.session?.role === "puskesmas" && req.session.kecamatanId
+    ? req.session.kecamatanId
+    : undefined;
+}
+
 export function requireRole(...roles: string[]) {
   return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.session) {

@@ -34,6 +34,8 @@ interface EarlyActionCenterProps {
   onChanged?: () => void;
   /** Hanya peran lapangan yang membutuhkan saringan tugas pribadi. */
   showMineFilter?: boolean;
+  /** Menugaskan pelaksana adalah wewenang Dinkes. */
+  canAssign?: boolean;
   className?: string;
 }
 
@@ -110,10 +112,14 @@ export function EarlyActionCenter({
   operator,
   onChanged,
   showMineFilter = true,
+  canAssign = true,
   className,
 }: EarlyActionCenterProps) {
   const [chosenFilter, setChosenFilter] = React.useState<StatusFilter | null>(null);
-  const [activeModalRec, setActiveModalRec] = React.useState<ActionRecommendation | null>(null);
+  /* Simpan id-nya, bukan salinan objek: setelah satu kejadian tercatat dan
+     antrean dimuat ulang, modal harus membaca tindakan yang segar supaya
+     tahapnya ikut maju. */
+  const [activeModalId, setActiveModalId] = React.useState<string | null>(null);
   const [batchModalOpen, setBatchModalOpen] = React.useState(false);
   const [isBatchSubmitting, setIsBatchSubmitting] = React.useState(false);
   const [batchError, setBatchError] = React.useState<string | null>(null);
@@ -131,16 +137,16 @@ export function EarlyActionCenter({
 
   const summary = React.useMemo(() => summarizeQueue(queue), [queue]);
 
+  const activeModalRec = React.useMemo(
+    () => recommendations.find((r) => r.id === activeModalId) ?? null,
+    [recommendations, activeModalId],
+  );
+
+  /* Akun puskesmas hanya menerima tindakan di wilayahnya (disaring gateway),
+     jadi tugasnya adalah yang sudah ditugaskan Dinkes. */
   const isMine = React.useCallback(
-    (rec: ActionRecommendation) => {
-      const who = operator?.trim().toLowerCase();
-      if (!who || !rec.assignment) return false;
-      return (
-        rec.assignment.unit.toLowerCase().includes(who) ||
-        (rec.assignment.pic ?? "").toLowerCase().includes(who)
-      );
-    },
-    [operator],
+    (rec: ActionRecommendation) => rec.assignment !== null,
+    [],
   );
 
   const mineCount = React.useMemo(
@@ -216,7 +222,7 @@ export function EarlyActionCenter({
   };
 
   const filters: { id: StatusFilter; label: string; count: number; alert?: boolean }[] = [
-    ...(showMineFilter && operator
+    ...(showMineFilter
       ? [
           {
             id: "mine" as const,
@@ -319,7 +325,7 @@ export function EarlyActionCenter({
           })}
         </div>
 
-        {summary.pending > 0 && (
+        {canAssign && summary.pending > 0 && (
           <Button
             size="sm"
             variant={selectedIds.length > 0 ? "primary" : "outline"}
@@ -340,7 +346,7 @@ export function EarlyActionCenter({
       {/* Pemilihan sadar: satu baris satu centang, dengan judul dan wilayahnya
           terbaca, supaya penugasan massal tetap keputusan atas pekerjaan yang
           dilihat — bukan atas jumlah. */}
-      {pendingActions.length > 0 && (
+      {canAssign && pendingActions.length > 0 && (
         <fieldset className="space-y-2 rounded-xl border border-border bg-surface p-3.5">
           <legend className="overline">Pilih rekomendasi untuk ditugaskan</legend>
           {pendingActions.map((rec) => (
@@ -388,7 +394,7 @@ export function EarlyActionCenter({
           </Button>
         </div>
       ) : (
-        <ActionQueue actions={filtered} onOpen={(a: QueuedAction) => setActiveModalRec(a)} />
+        <ActionQueue actions={filtered} onOpen={(a: QueuedAction) => setActiveModalId(a.id)} />
       )}
 
       {/* 4. Modal instruksi tunggal */}
@@ -396,11 +402,12 @@ export function EarlyActionCenter({
         recommendation={activeModalRec}
         open={Boolean(activeModalRec)}
         onOpenChange={(open) => {
-          if (!open) setActiveModalRec(null);
+          if (!open) setActiveModalId(null);
         }}
         onChanged={handleActionChanged}
         systemToday={systemToday}
         operator={operator}
+        canAssign={canAssign}
       />
 
       {/* 5. Konfirmasi instruksi massal.

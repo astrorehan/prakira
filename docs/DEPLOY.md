@@ -35,7 +35,8 @@ iklim, dan batas wilayah ikut di dalam image gateway; model `.pkl` ikut di
 image layanan ML. Tidak ada langkah manual di antara `up` dan dashboard yang
 hidup.
 
-Masuk konsol memakai `dinkes@prakira.id` / `prakira2026`. Nilai itu tertulis
+Masuk konsol memakai `admin@prakira.id` / `prakira2026`, `dinkes@prakira.id` /
+`dinkes123`, atau `puskesmas@prakira.id` / `puskesmas123`. Nilai admin tertulis
 apa adanya di `docker-compose.yml` dengan sengaja: tumpukan ini hanya
 mendengarkan di localhost dan tidak pernah dipasang di internet.
 

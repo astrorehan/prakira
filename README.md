@@ -159,8 +159,15 @@ cp frontend/.env.local.example frontend/.env.local
 Isi `DATABASE_URL` pada `backend/.env` dengan connection string PostgreSQL Supabase
 (Session Pooler port `5432`).
 
-Akun awal dibuat gateway saat seeding: **`dinkes@prakira.id` / `prakira2026`**. Ganti lewat
-`SEED_ADMIN_EMAIL` dan `SEED_ADMIN_PASSWORD` sebelum dipakai di luar
+Akun awal dibuat gateway saat seeding:
+
+| Akun | Peran | Kata sandi |
+|---|---|---|
+| `admin@prakira.id` | Administrator | `SEED_ADMIN_PASSWORD` |
+| `dinkes@prakira.id` | Dinas Kesehatan — menugaskan tindakan, meneruskan laporan ke DLH/DPU | `dinkes123` |
+| `puskesmas@prakira.id` | Puskesmas Pandanaran — wilayah Semarang Selatan | `puskesmas123` |
+
+Ganti akun admin lewat `SEED_ADMIN_EMAIL` dan `SEED_ADMIN_PASSWORD` sebelum dipakai di luar
 pengembangan — di `NODE_ENV=production`, gateway menolak jalan tanpa
 `SESSION_SECRET` dan `SEED_ADMIN_PASSWORD`.
 

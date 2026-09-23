@@ -43,6 +43,7 @@ import type {
 } from "@/types";
 import { useApi } from "@/lib/use-api";
 import { invalidatePeriod } from "@/lib/use-period";
+import { useSessionContext } from "@/components/session-provider";
 
 export type ManualCaseEntryCardProps = {
   diseases?: DiseaseSummary[];
@@ -76,9 +77,12 @@ export function ManualCaseEntryCard({
     [propDiseases, fetchedDiseases.data],
   );
 
+  const { session } = useSessionContext();
+  const ownKecamatan = session?.kecamatanId ?? null;
   const kecamatanList = React.useMemo(
-    () => kecamatanApi.data ?? [],
-    [kecamatanApi.data],
+    () =>
+      (kecamatanApi.data ?? []).filter((k) => !ownKecamatan || k.id === ownKecamatan),
+    [kecamatanApi.data, ownKecamatan],
   );
 
   // Form states

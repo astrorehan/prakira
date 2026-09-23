@@ -181,6 +181,18 @@ CREATE TABLE IF NOT EXISTS users (
   created_at    TEXT NOT NULL
 );
 
+-- Wilayah kerja akun puskesmas. Kosong untuk peran lintas wilayah.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS kecamatan_id TEXT REFERENCES kecamatan(id);
+UPDATE users
+   SET kecamatan_id = (SELECT id FROM kecamatan WHERE nama = 'Semarang Selatan')
+ WHERE email = 'puskesmas@prakira.id' AND kecamatan_id IS NULL;
+
+-- Akun dinkes@ dulu tersemai berperan puskesmas, sehingga tidak ada akun
+-- koordinator yang bisa menugaskan tindakan atau meneruskan laporan.
+UPDATE users
+   SET role = 'dinas', label = 'Dinas Kesehatan Kota Semarang'
+ WHERE email = 'dinkes@prakira.id' AND role = 'puskesmas';
+
 CREATE TABLE IF NOT EXISTS sessions (
   token      TEXT PRIMARY KEY,
   user_id    TEXT NOT NULL REFERENCES users(id),

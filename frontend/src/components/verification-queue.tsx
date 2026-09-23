@@ -26,6 +26,7 @@ import { DataState } from "@/components/data-state";
 import { QueueSkeleton } from "@/components/console/console-skeleton";
 import { EscalationPanel } from "@/components/escalation-panel";
 import { ForwardingQueue, RiskChip } from "@/components/forwarding-queue";
+import { useSessionContext } from "@/components/session-provider";
 import {
   sortForQueue,
   REPORT_KIND,
@@ -687,6 +688,8 @@ export function VerificationQueue() {
   const [wilayah, setWilayah] = React.useState("semua");
   const [decideError, setDecideError] = React.useState<string | null>(null);
   const toast = useConsoleToast();
+  const { session } = useSessionContext();
+  const canForward = session?.role === "dinas" || session?.role === "admin";
 
   const reports = queue.data?.data ?? null;
   const summary = queue.data?.meta ?? {
@@ -889,7 +892,7 @@ export function VerificationQueue() {
         </div>
       </DataState>
 
-      <ForwardingQueue reports={reports} onChanged={queue.reload} />
+      {canForward && <ForwardingQueue reports={reports} onChanged={queue.reload} />}
 
       {/* Pola sebelum satuan, tetapi setelah pekerjaan inti: eskalasi adalah
           penanda bahwa satu kecamatan menumpuk, bukan antrean tersendiri. */}

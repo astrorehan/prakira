@@ -80,7 +80,7 @@ services:
       # Semuanya lokal, jadi tidak perlu menunggu layanan bangun dari tidur.
       ML_TIMEOUT_MS: "20000"
       SESSION_SECRET: prakira-luring-session-secret
-      SEED_ADMIN_EMAIL: dinkes@prakira.id
+      SEED_ADMIN_EMAIL: admin@prakira.id
       SEED_ADMIN_PASSWORD: prakira2026
       CORS_ORIGINS: http://localhost:3000
       # Tidak ada proksi di depan gateway di sini; membaca `X-Forwarded-For`

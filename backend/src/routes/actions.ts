@@ -24,7 +24,7 @@ import {
   setActionPublication,
   type ActionHistoryRow,
 } from "../services/actions.js";
-import { requireAuth } from "../middleware/auth.js";
+import { requireAuth, requireRole, sessionScope } from "../middleware/auth.js";
 import { asyncRoute, HttpError } from "../middleware/error.js";
 import { reportingPeriod } from "../services/period.js";
 
@@ -121,6 +121,25 @@ function serialize(
   };
 }
 
+/** Tindakan mencakup beberapa kecamatan; akun puskesmas melihat yang memuat wilayahnya. */
+function targets(row: { target_kecamatan: string }, kecamatan: string): boolean {
+  return (JSON.parse(row.target_kecamatan) as string[]).includes(kecamatan);
+}
+
+actionsRouter.param("id", (req, _res, next, id: string) => {
+  const scope = sessionScope(req);
+  if (!scope) return next();
+  getAction(id)
+    .then((row) => {
+      if (row && !targets(row, scope)) {
+        next(new HttpError(404, "Tindakan tidak ditemukan."));
+      } else {
+        next();
+      }
+    })
+    .catch(next);
+});
+
 actionsRouter.get(
   "/",
   asyncRoute(async (req, res) => {
@@ -133,10 +152,12 @@ actionsRouter.get(
     /* F15: permukaan publik meminta `published=1` dan hanya menerima kegiatan
        yang sudah ditinjau untuk diterbitkan. Menyaring di sini, bukan di
        peramban, supaya usulan internal tidak ikut terkirim sama sekali. */
-    const rows =
-      req.query.published === "1"
-        ? all.filter((row) => row.published_at !== null)
-        : all;
+    const scope = sessionScope(req);
+    const rows = all.filter(
+      (row) =>
+        (req.query.published !== "1" || row.published_at !== null) &&
+        (!scope || targets(row, scope)),
+    );
     /* Riwayat cukup diambil untuk baris yang benar-benar akan dikirim. */
     const history = await listActionHistoryFor(rows.map((row) => row.id));
     const byAction = new Map<string, ActionHistoryRow[]>();
@@ -199,7 +220,7 @@ async function guarded<T>(work: () => Promise<T>): Promise<T> {
 
 actionsRouter.post(
   "/:id/assign",
-  requireAuth,
+  requireRole("dinas", "admin"),
   asyncRoute(async (req, res) => {
     const body = req.body ?? {};
     const unit = requireText(body.unit, "Unit pelaksana");
@@ -337,7 +358,7 @@ actionsRouter.post(
  */
 actionsRouter.post(
   "/:id/publication",
-  requireAuth,
+  requireRole("dinas", "admin"),
   asyncRoute(async (req, res) => {
     const published = (req.body ?? {}).published;
     if (typeof published !== "boolean") {

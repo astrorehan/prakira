@@ -93,6 +93,7 @@ export default function TindakanPage() {
             systemToday={period?.systemToday ?? null}
             operator={session?.label ?? null}
             showMineFilter={isPuskesmas}
+            canAssign={session?.role === "dinas"}
             onChanged={actions.reload}
           />
         </DataState>

@@ -626,6 +626,9 @@ export type Session = {
   label: string;
   home: string;
   signedInAt: string;
+  /** Wilayah kerja akun puskesmas; null untuk peran lintas wilayah. */
+  kecamatanId: string | null;
+  kecamatan: string | null;
 };
 
 /* ── Kasus manual resmi (Nakes) ─────────────────────────────────────────── */
