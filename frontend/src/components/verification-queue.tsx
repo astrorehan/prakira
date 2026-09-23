@@ -34,6 +34,8 @@ import {
   REPORT_KIND,
   REPORT_STATUS,
   FAMILY_ROUTING,
+  mapLink,
+  photoTimingNote,
   type CitizenReport,
   type ReportKind,
   type ReportStatus,
@@ -335,10 +337,37 @@ function ReportRow({
 
       {/* F11: petugas yang akan berangkat ke lapangan perlu tahu apakah lokasinya
           bisa ditemukan sebelum ia memutuskan, bukan setelah sampai di sana. */}
-      {(report.landmark || report.rtRw || report.completeness.missing.length > 0) && (
+      {(report.landmark ||
+        report.rtRw ||
+        report.location ||
+        report.photoMeta ||
+        report.completeness.missing.length > 0) && (
         <div className="mt-3 rounded-xl border border-border bg-paper-50 px-3 py-2 text-caption leading-relaxed text-paper-700">
+          {report.location && (
+            <a
+              href={mapLink(report.location)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mr-3 font-medium text-brand-700 hover:underline"
+            >
+              Titik lokasi di peta
+              {report.location.accuracyM ? ` (±${report.location.accuracyM} m)` : ""}
+            </a>
+          )}
           {report.rtRw && <span className="mr-3">RT/RW {report.rtRw}</span>}
           {report.landmark && <span>Patokan: {report.landmark}</span>}
+          {report.photoMeta && (
+            <p className="mt-1">
+              Foto
+              {report.photoMeta.takenAt
+                ? ` diambil ${formatDateTime(report.photoMeta.takenAt)}`
+                : ""}
+              {report.photoMeta.device ? ` · ${report.photoMeta.device}` : ""}
+            </p>
+          )}
+          {photoTimingNote(report) && (
+            <p className="mt-1 font-medium text-risk-high">{photoTimingNote(report)}</p>
+          )}
           {report.completeness.missing.length > 0 && (
             <p className="mt-1 text-paper-600">
               Belum ada: {report.completeness.missing.join(", ")}.

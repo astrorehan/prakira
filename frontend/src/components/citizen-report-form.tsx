@@ -36,7 +36,8 @@ import { useRememberedKecamatan, withKecamatan } from "@/lib/kecamatan-selection
 import { saveReport } from "@/lib/saved-reports";
 import { useLocateArea } from "@/hooks/use-locate-area";
 import type { LocateStatus } from "@/hooks/use-locate-kecamatan";
-import type { LocatedArea } from "@/lib/locate-area";
+import type { LocatedPoint } from "@/hooks/use-locate-area";
+import type { PhotoMeta } from "@/lib/exif";
 
 /**
  * Formulir laporan warga — PRD §5.4 (M6).
@@ -89,7 +90,7 @@ const PHOTO_ERROR: Record<string, string> = {
 };
 
 const LOCATE_MESSAGE: Record<LocateStatus, string> = {
-  idle: "Koordinat tidak dikirim, hanya nama wilayahnya.",
+  idle: "Titik lokasi ikut terkirim, hanya terlihat petugas.",
   locating: "Izinkan akses lokasi bila peramban bertanya.",
   denied: "Lokasi tidak didapat. Pilih kecamatan secara manual.",
   outside: "Lokasi Anda di luar Kota Semarang. Pilih kecamatan secara manual.",
@@ -210,7 +211,11 @@ export function CitizenReportForm() {
   const [relatedReportId, setRelatedReportId] = React.useState<string | null>(null);
   const [occurredAt, setOccurredAt] = React.useState(todayValue());
   const [description, setDescription] = React.useState("");
-  const [photo, setPhoto] = React.useState<{ dataUrl: string; bytes: number } | null>(null);
+  const [photo, setPhoto] = React.useState<{
+    dataUrl: string;
+    bytes: number;
+    meta: PhotoMeta;
+  } | null>(null);
   const [photoError, setPhotoError] = React.useState<string | null>(null);
   const [photoBusy, setPhotoBusy] = React.useState(false);
 
@@ -224,11 +229,11 @@ export function CitizenReportForm() {
   const fileRef = React.useRef<HTMLInputElement>(null);
   const directory = useKecamatanDirectory();
 
-  /* Isi otomatis dari lokasi perangkat. Yang disimpan hanya hasilnya — dua
-     nama wilayah — supaya catatan "terisi dari lokasi" bisa hilang begitu
-     pembaca mengganti salah satunya sendiri. */
-  const [located, setLocated] = React.useState<LocatedArea | null>(null);
-  const applyLocation = React.useCallback((area: LocatedArea) => {
+  /* Isi otomatis dari lokasi perangkat. Titiknya ikut terkirim hanya selama
+     kecamatan dan kelurahan masih hasil lokasi itu: begitu pembaca menggantinya
+     sendiri, titik itu tidak lagi menggambarkan tempat yang dilaporkan. */
+  const [located, setLocated] = React.useState<LocatedPoint | null>(null);
+  const applyLocation = React.useCallback((area: LocatedPoint) => {
     setKecamatan(area.kecamatan);
     setKelurahan(area.kelurahan);
     setLocated(area);
@@ -277,7 +282,7 @@ export function CitizenReportForm() {
     const result = await preparePhoto(file);
     setPhotoBusy(false);
     if (result.ok) {
-      setPhoto({ dataUrl: result.dataUrl, bytes: result.bytes });
+      setPhoto({ dataUrl: result.dataUrl, bytes: result.bytes, meta: result.meta });
     } else {
       setPhoto(null);
       setPhotoError(PHOTO_ERROR[result.reason]);
@@ -303,6 +308,15 @@ export function CitizenReportForm() {
         occurredAt,
         description,
         photo: photo?.dataUrl,
+        photoMeta: photo && (photo.meta.device || photo.meta.takenAt) ? photo.meta : undefined,
+        location:
+          fromLocation && located
+            ? {
+                latitude: located.latitude,
+                longitude: located.longitude,
+                accuracyM: located.accuracyM,
+              }
+            : undefined,
       });
       chooseKecamatan(kecamatan);
       setLimit(result.rateLimit);
@@ -507,7 +521,16 @@ export function CitizenReportForm() {
             {fromLocation ? (
               <p className="flex items-center gap-1.5 text-caption text-brand-700">
                 <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
-                Terisi dari lokasi perangkat. Periksa, ganti bila keliru.
+                Terisi dari lokasi perangkat
+                {located?.accuracyM ? ` (±${Math.round(located.accuracyM)} m)` : ""}. Titiknya
+                ikut terkirim agar petugas bisa menemukan lokasi.{" "}
+                <button
+                  type="button"
+                  onClick={() => setLocated(null)}
+                  className="font-medium underline underline-offset-2"
+                >
+                  Jangan kirim titik
+                </button>
               </p>
             ) : prefilled ? (
               <p className="flex items-center gap-1.5 text-caption text-brand-700">
@@ -668,6 +691,18 @@ export function CitizenReportForm() {
               <div className="text-caption text-paper-600">
                 <p className="font-medium text-foreground">Siap dikirim</p>
                 <p className="tabular">{formatBytes(photo.bytes)} setelah dikecilkan</p>
+                {(photo.meta.takenAt || photo.meta.device) && (
+                  <p>
+                    Ikut terkirim:{" "}
+                    {[
+                      photo.meta.takenAt && "jam pemotretan",
+                      photo.meta.device && "tipe ponsel",
+                    ]
+                      .filter(Boolean)
+                      .join(" dan ")}
+                    . Lokasi di dalam foto dibuang.
+                  </p>
+                )}
               </div>
               <button
                 type="button"

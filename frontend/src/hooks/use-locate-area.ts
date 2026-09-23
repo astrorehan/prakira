@@ -11,10 +11,18 @@ import type { LocateStatus } from "@/hooks/use-locate-kecamatan";
  *
  * Kembaran `useLocateKecamatan` untuk formulir laporan: pencocokannya memakai
  * poligon kelurahan, bukan sentroid, karena laporan yang salah kecamatan
- * masuk ke antrean petugas yang salah. Koordinat tidak pernah keluar dari
- * callback ini; pemanggil hanya menerima nama wilayah.
+ * masuk ke antrean petugas yang salah. Pemanggil menerima nama wilayah
+ * beserta titiknya; formulir mengirim titik itu supaya petugas bisa menemukan
+ * lokasi kejadian.
  */
-export function useLocateArea(onFound: (area: LocatedArea) => void) {
+export type LocatedPoint = LocatedArea & {
+  latitude: number;
+  longitude: number;
+  /** Radius ketidakpastian dari peramban, dalam meter. */
+  accuracyM: number | null;
+};
+
+export function useLocateArea(onFound: (area: LocatedPoint) => void) {
   const [status, setStatus] = useState<LocateStatus>("idle");
 
   const locate = useCallback(() => {
@@ -34,7 +42,12 @@ export function useLocateArea(onFound: (area: LocatedArea) => void) {
               return;
             }
             setStatus("idle");
-            onFound(area);
+            onFound({
+              ...area,
+              latitude: coords.latitude,
+              longitude: coords.longitude,
+              accuracyM: Number.isFinite(coords.accuracy) ? coords.accuracy : null,
+            });
           })
           .catch(() => setStatus("denied"));
       },

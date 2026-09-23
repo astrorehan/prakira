@@ -114,6 +114,34 @@ const STATUS_RANK: Record<ReportStatus, number> = {
  * hanya urutannya. Laporan kurang lengkap yang sudah menunggu lebih dari
  * `STALE_HOURS` naik ke tingkat biasa supaya tidak terlupakan selamanya.
  */
+/** Tautan peta untuk titik laporan. */
+export function mapLink(location: { latitude: number; longitude: number }): string {
+  return `https://www.google.com/maps?q=${location.latitude},${location.longitude}`;
+}
+
+/**
+ * Peringatan bila jam pemotretan tidak cocok dengan kejadian: foto yang
+ * diambil jauh sebelum tanggal kejadian kemungkinan foto lama yang diunggah
+ * ulang. Toleransi tiga hari untuk laporan yang ditulis belakangan.
+ */
+export function photoTimingNote(report: CitizenReport): string | null {
+  const takenAt = report.photoMeta?.takenAt;
+  if (!takenAt) return null;
+  const taken = new Date(takenAt).getTime();
+  const occurred = new Date(`${report.occurredAt}T00:00:00`).getTime();
+  const submitted = new Date(report.submittedAt).getTime();
+  if (!Number.isFinite(taken)) return null;
+  const DAY = 86_400_000;
+  if (taken < occurred - 3 * DAY) {
+    const days = Math.round((occurred - taken) / DAY);
+    return `Foto diambil ${days} hari sebelum tanggal kejadian — mungkin foto lama.`;
+  }
+  if (taken > submitted + DAY) {
+    return "Jam pemotretan setelah laporan dikirim — jam ponsel mungkin keliru.";
+  }
+  return null;
+}
+
 export type ReportPriority = "didahulukan" | "biasa" | "kurang_lengkap";
 
 const STALE_HOURS = 72;

@@ -12,10 +12,17 @@
  * bisa kelewatan satu tag, melainkan penyalinan yang secara bentuk tidak bisa
  * membawa metadata.
  *
+ * Sebelum digambar ulang, dua keterangan dibaca dari EXIF berkas asli —
+ * merek/tipe ponsel dan jam pemotretan (`lib/exif.ts`) — lalu dikirim sebagai
+ * bidang terpisah. Koordinat GPS di EXIF tidak ikut dibaca; titik lokasi
+ * laporan datang dari perangkat atas permintaan pelapor.
+ *
  * Pengecilan ke sisi terpanjang 720 piksel dilakukan di langkah yang sama.
  * Tanpa backend, foto menumpang `localStorage` (kuota sekitar 5 MB) sebagai
  * base64, dan foto ponsel mentah 4 MB akan mengisi kuota itu sendirian.
  */
+
+import { readPhotoMeta, type PhotoMeta } from "@/lib/exif";
 
 const MAX_EDGE = 720;
 const JPEG_QUALITY = 0.72;
@@ -26,7 +33,7 @@ export const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
 export const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 export type PhotoResult =
-  | { ok: true; dataUrl: string; bytes: number }
+  | { ok: true; dataUrl: string; bytes: number; meta: PhotoMeta }
   | { ok: false; reason: "type" | "size" | "decode" };
 
 function loadImage(dataUrl: string): Promise<HTMLImageElement> {
@@ -52,6 +59,7 @@ export async function preparePhoto(file: File): Promise<PhotoResult> {
   if (file.size > MAX_UPLOAD_BYTES) return { ok: false, reason: "size" };
 
   try {
+    const meta = await readPhotoMeta(file);
     const raw = await readAsDataUrl(file);
     const img = await loadImage(raw);
 
@@ -77,7 +85,7 @@ export async function preparePhoto(file: File): Promise<PhotoResult> {
        memberi tahu pengguna ukuran yang benar-benar tersimpan. */
     const bytes = Math.round(((dataUrl.length - dataUrl.indexOf(",") - 1) * 3) / 4);
 
-    return { ok: true, dataUrl, bytes };
+    return { ok: true, dataUrl, bytes, meta };
   } catch {
     return { ok: false, reason: "decode" };
   }

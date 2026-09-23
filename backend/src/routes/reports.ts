@@ -88,6 +88,62 @@ const MAX_PHOTO_CHARS = 400_000;
 const PHOTO_DATA_URL =
   /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/;
 
+/* Kotak batas Kota Semarang, sedikit dilonggarkan. Titik di luarnya bukan
+   lokasi kejadian yang bisa ditangani petugas kota. */
+const SEMARANG_BOUNDS = { minLat: -7.2, maxLat: -6.9, minLon: 110.2, maxLon: 110.6 };
+
+/** Titik perangkat, dibulatkan ke 5 desimal (±1 m) — presisi lebih dari itu hanya derau. */
+function parseLocation(
+  raw: unknown,
+  errors: string[],
+): { latitude: number; longitude: number; accuracyM: number | null } | null {
+  if (raw === undefined || raw === null) return null;
+  const value = raw as Record<string, unknown>;
+  const lat = value.latitude;
+  const lon = value.longitude;
+  const accuracy = value.accuracyM;
+  if (
+    typeof lat !== "number" || typeof lon !== "number" ||
+    !Number.isFinite(lat) || !Number.isFinite(lon) ||
+    lat < SEMARANG_BOUNDS.minLat || lat > SEMARANG_BOUNDS.maxLat ||
+    lon < SEMARANG_BOUNDS.minLon || lon > SEMARANG_BOUNDS.maxLon
+  ) {
+    errors.push("Titik lokasi di luar Kota Semarang.");
+    return null;
+  }
+  const round = (n: number) => Math.round(n * 1e5) / 1e5;
+  return {
+    latitude: round(lat),
+    longitude: round(lon),
+    accuracyM:
+      typeof accuracy === "number" && Number.isFinite(accuracy) && accuracy >= 0
+        ? Math.min(Math.round(accuracy), 100_000)
+        : null,
+  };
+}
+
+/**
+ * Keterangan EXIF yang dibaca klien sebelum fotonya digambar ulang. Hanya
+ * dua bidang yang diterima, dengan bentuk yang ketat: teks ini tampil di
+ * antrean petugas. Nilai yang tidak dikenali dibuang, bukan menolak laporan:
+ * warga tidak bisa memperbaiki EXIF ponselnya.
+ */
+function parsePhotoMeta(raw: unknown): { device: string | null; takenAt: string | null } {
+  if (raw === undefined || raw === null) return { device: null, takenAt: null };
+  const value = raw as Record<string, unknown>;
+  let device: string | null = null;
+  let takenAt: string | null = null;
+  if (typeof value.device === "string") {
+    device = value.device.replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 80) || null;
+  }
+  if (typeof value.takenAt === "string") {
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}([+-]\d{2}:\d{2})?$/.test(value.takenAt)) {
+      takenAt = value.takenAt;
+    }
+  }
+  return { device, takenAt };
+}
+
 function hashOf(req: Request): string {
   const ip = req.ip ?? req.socket?.remoteAddress ?? "unknown";
   const agent = req.get("user-agent") ?? "unknown";
@@ -160,6 +216,8 @@ reportsRouter.post(
     ) {
       errors.push("Kode laporan terkait tidak valid.");
     }
+    const location = parseLocation(body.location, errors);
+    const photoMeta = parsePhotoMeta(body.photoMeta);
 
     if (errors.length > 0) throw new HttpError(400, errors.join(" "));
 
@@ -188,6 +246,9 @@ reportsRouter.post(
           typeof body.relatedReportId === "string"
             ? body.relatedReportId
             : undefined,
+        location: location ?? undefined,
+        photoDevice: photoMeta.device ?? undefined,
+        photoTakenAt: photoMeta.takenAt ?? undefined,
       },
       hash,
     );
@@ -285,7 +346,7 @@ reportsRouter.get(
         truncated: rows.length > page.length,
       },
       data: page.map((row) =>
-        publicView(row, ticketByReport.get(row.id), risk.get(riskKey(row))),
+        publicView(row, ticketByReport.get(row.id), risk.get(riskKey(row)), "staff"),
       ),
     });
   }),
@@ -319,7 +380,7 @@ reportsRouter.post(
     const risk = await riskContextFor([sent.row]);
     res.json({
       meta: await summarizeQueue(sessionScope(req)),
-      data: publicView(sent.row, null, risk.get(riskKey(sent.row))),
+      data: publicView(sent.row, null, risk.get(riskKey(sent.row)), "staff"),
       recipient: sent.recipient,
     });
   }),
@@ -367,7 +428,7 @@ reportsRouter.post(
     const risk = await riskContextFor([updated]);
     res.json({
       meta: await summarizeQueue(sessionScope(req)),
-      data: publicView(updated, null, risk.get(riskKey(updated))),
+      data: publicView(updated, null, risk.get(riskKey(updated)), "staff"),
     });
   }),
 );
@@ -381,7 +442,7 @@ reportsRouter.get(
   requireRole(...REVIEW_ROLES),
   asyncRoute(async (req, res) => {
     const rows = await listRelatedReports(req.params.id);
-    res.json({ data: rows.map((row) => publicView(row)) });
+    res.json({ data: rows.map((row) => publicView(row, null, null, "staff")) });
   }),
 );
 
@@ -487,7 +548,7 @@ reportsRouter.patch(
     const risk = await riskContextFor([updated]);
     res.json({
       meta: await summarizeQueue(sessionScope(req)),
-      data: publicView(updated, ticket, risk.get(riskKey(updated))),
+      data: publicView(updated, ticket, risk.get(riskKey(updated)), "staff"),
     });
   }),
 );

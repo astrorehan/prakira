@@ -345,6 +345,17 @@ ALTER TABLE laporan_warga ADD COLUMN IF NOT EXISTS related_report_id TEXT;
 -- karena berulang di kecamatan yang sama. NULL untuk laporan biasa.
 ALTER TABLE laporan_warga ADD COLUMN IF NOT EXISTS forward_pattern INTEGER;
 
+-- Titik lokasi perangkat dan keterangan foto. Titik hanya terisi bila pelapor
+-- menekan "Isi dari lokasi saya"; hanya petugas yang melihatnya, untuk
+-- menemukan lokasi di lapangan. Dari EXIF foto hanya diambil merek/tipe ponsel
+-- dan jam pemotretan — untuk menilai apakah foto memang baru; GPS di EXIF
+-- tetap dibuang karena titiknya sudah datang dari perangkat.
+ALTER TABLE laporan_warga ADD COLUMN IF NOT EXISTS latitude DOUBLE PRECISION;
+ALTER TABLE laporan_warga ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION;
+ALTER TABLE laporan_warga ADD COLUMN IF NOT EXISTS location_accuracy_m DOUBLE PRECISION;
+ALTER TABLE laporan_warga ADD COLUMN IF NOT EXISTS photo_device TEXT;
+ALTER TABLE laporan_warga ADD COLUMN IF NOT EXISTS photo_taken_at TEXT;
+
 CREATE INDEX IF NOT EXISTS idx_laporan_forward
   ON laporan_warga (forward_state, forwarded_at);
 

@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { REPORT_KIND } from "@/lib/reports";
+import { REPORT_KIND, mapLink } from "@/lib/reports";
 import { formatDateTime, formatMonth } from "@/lib/period";
 import { diseaseLabel } from "@/lib/utils";
 import type { CitizenReport } from "@/types";
@@ -77,6 +77,22 @@ export function DispositionEmailModal({
   ]
     .filter(Boolean)
     .join(", ");
+  const point = report.location
+    ? mapLink(report.location) +
+      (report.location.accuracyM ? ` (akurasi ±${report.location.accuracyM} m)` : "")
+    : null;
+  /* Butir bernomor dari baris yang benar-benar ada, supaya nomor tidak loncat. */
+  const details = [
+    `Kode lacak warga : ${report.id}`,
+    `Lokasi kejadian  : ${where}`,
+    report.landmark ? `Patokan          : ${report.landmark}` : null,
+    point ? `Titik peta       : ${point}` : null,
+    `Kategori temuan  : ${kindLabel}`,
+    `Keterangan warga : "${report.description}"`,
+  ]
+    .filter(Boolean)
+    .map((line, index) => `${index + 1}. ${line}`)
+    .join("\n");
 
   const emailText = `
 SURAT RUJUKAN LINTAS INSTANSI (DRAF)
@@ -91,10 +107,7 @@ Yth. Pimpinan ${target},
 
 Berdasarkan pemeriksaan petugas atas laporan masyarakat di sistem PRAKIRA, kami meneruskan temuan pemicu lingkungan berikut:
 
-1. Kode lacak warga : ${report.id}
-2. Lokasi kejadian  : ${where}${report.landmark ? `\n3. Patokan          : ${report.landmark}` : ""}
-${report.landmark ? "4" : "3"}. Kategori temuan  : ${kindLabel}
-${report.landmark ? "5" : "4"}. Keterangan warga : "${report.description}"
+${details}
 
 ${contextText ? `Konteks kesehatan: ${contextText}\n\n` : ""}Temuan ini dapat menjadi habitat vektor atau sumber penularan penyakit berbasis lingkungan. Kami mohon bantuan penjadwalan pemeriksaan dan penanganan di lokasi tersebut.
 
@@ -182,6 +195,19 @@ Dinas Kesehatan Kota Semarang
               {report.landmark && (
                 <p>
                   <strong className="text-paper-700">Patokan:</strong> {report.landmark}
+                </p>
+              )}
+              {report.location && (
+                <p>
+                  <strong className="text-paper-700">Titik:</strong>{" "}
+                  <a
+                    href={mapLink(report.location)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-brand-700 hover:underline"
+                  >
+                    buka di peta
+                  </a>
                 </p>
               )}
               <p>

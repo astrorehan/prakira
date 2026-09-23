@@ -63,6 +63,11 @@ function messageText(row: ReportRow, target: string, risk: RiskContext | null, h
     row.rt_rw && `RT/RW ${row.rt_rw}`,
     row.landmark && `Patokan: ${row.landmark}`,
   ].filter(Boolean).join(", ");
+  const point =
+    row.latitude !== null && row.longitude !== null
+      ? `Titik lokasi: https://www.google.com/maps?q=${row.latitude},${row.longitude}` +
+        (row.location_accuracy_m ? ` (akurasi ±${Math.round(row.location_accuracy_m)} m)` : "")
+      : "";
 
   return [
     "Yth. Pengelola PRAKIRA,",
@@ -72,6 +77,7 @@ function messageText(row: ReportRow, target: string, risk: RiskContext | null, h
     `Kode laporan: ${row.id}`,
     `Jenis: ${KIND_LABEL[row.kind]}`,
     `Lokasi: ${location}`,
+    point,
     `Tanggal kejadian: ${row.occurred_at}`,
     `Keterangan warga: ${row.description}`,
     risk ? `Konteks kesehatan: risiko ${risk.disease} ${risk.riskClass} di Kec. ${row.kecamatan} untuk ${risk.month}.` : "",

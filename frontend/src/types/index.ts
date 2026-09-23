@@ -534,6 +534,7 @@ export type ReportCompleteness = {
   hasRtRw: boolean;
   hasLandmark: boolean;
   hasPhoto: boolean;
+  hasCoordinates: boolean;
   /** Benar bila petugas punya cukup patokan untuk sampai ke lokasi. */
   locatable: boolean;
   missing: string[];
@@ -588,6 +589,10 @@ export type CitizenReport = {
   reviewNote: string | null;
   landmark: string | null;
   rtRw: string | null;
+  /** Titik perangkat — hanya dikirim ke petugas, null di halaman lacak. */
+  location: { latitude: number; longitude: number; accuracyM: number | null } | null;
+  /** Dari EXIF foto: merek/tipe ponsel dan jam pemotretan. Hanya untuk petugas. */
+  photoMeta: { device: string | null; takenAt: string | null } | null;
   /** Pertanyaan yang menunggu jawaban pelapor, bila statusnya perlu informasi. */
   infoRequest: string | null;
   infoRequestedAt: string | null;

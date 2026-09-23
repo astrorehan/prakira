@@ -4,10 +4,9 @@
  * Kecamatan dan kelurahan untuk satu titik — dihitung sepenuhnya di peramban.
  *
  * Formulir laporan warga memakai ini untuk mengisi bidang tempat dari lokasi
- * perangkat. Koordinatnya berhenti di sini: yang keluar hanya dua nama, dan
- * hanya nama itu yang ikut terkirim bersama laporan. Karena itu pencocokannya
- * harus lokal; menanyakan titik ke server — sekalipun server sendiri — berarti
- * mengirim lokasi rumah pelapor ke tempat yang tidak perlu mengetahuinya.
+ * perangkat. Pencocokannya tetap lokal supaya nama wilayah langsung terisi
+ * tanpa menunggu server; titiknya sendiri ikut terkirim bersama laporan dan
+ * hanya terlihat petugas, untuk menemukan lokasi kejadian di lapangan.
  *
  * Pencarian sentroid terdekat (`nearestKecamatan`) cukup untuk menyarankan
  * kecamatan di halaman depan, tetapi di perbatasan ia bisa memilih tetangga.

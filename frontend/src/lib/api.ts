@@ -455,6 +455,10 @@ export type NewReportInput = {
   rtRw?: string;
   /** Kode laporan yang sedang dilengkapi, bila kiriman ini kelanjutannya. */
   relatedReportId?: string;
+  /** Titik perangkat, hanya bila pelapor memakai "Isi dari lokasi saya". */
+  location?: { latitude: number; longitude: number; accuracyM: number | null };
+  /** Dari EXIF foto: merek/tipe ponsel dan jam pemotretan. */
+  photoMeta?: { device: string | null; takenAt: string | null };
 };
 
 export function submitReport(

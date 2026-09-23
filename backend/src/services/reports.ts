@@ -300,6 +300,11 @@ export type ReportRow = {
   device_hash: string;
   landmark: string | null;
   rt_rw: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  location_accuracy_m: number | null;
+  photo_device: string | null;
+  photo_taken_at: string | null;
   info_request: string | null;
   info_requested_at: string | null;
   related_report_id: string | null;
@@ -320,7 +325,8 @@ export type ReportRow = {
    tadi. `photo` hanya muncul sebagai uji keberadaan. */
 export const REPORT_COLUMNS = `id, kind, kecamatan, kelurahan, occurred_at,
         description, submitted_at, status, reviewed_at, reviewer, review_note,
-        handling_mode, device_hash, landmark, rt_rw, info_request,
+        handling_mode, device_hash, landmark, rt_rw, latitude, longitude,
+        location_accuracy_m, photo_device, photo_taken_at, info_request,
         info_requested_at, related_report_id, forward_state, forward_target,
         forward_channel, forward_reference, forward_note, forwarded_at,
         forwarded_by, forward_pattern, (photo IS NOT NULL) AS has_photo`;
@@ -394,6 +400,11 @@ export type NewReport = {
      apakah lokasi dapat ditelusuri tanpa membaca ulang ceritanya. */
   landmark?: string;
   rtRw?: string;
+  /* Titik perangkat, hanya bila pelapor memakai lokasinya. */
+  location?: { latitude: number; longitude: number; accuracyM: number | null };
+  /* Keterangan foto dari EXIF: merek/tipe ponsel dan jam pemotretan. */
+  photoDevice?: string;
+  photoTakenAt?: string;
   /* Pengiriman ulang atas laporan yang sama tetap terhubung ke kode lacak
      sebelumnya, bukan memulai kejadian baru tanpa jejak. */
   relatedReportId?: string;
@@ -414,8 +425,9 @@ export async function createReport(
   await run(
     `INSERT INTO laporan_warga
        (id, kind, kecamatan, kelurahan, occurred_at, description, submitted_at,
-        photo, status, device_hash, landmark, rt_rw, related_report_id)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'menunggu', ?, ?, ?, ?)`,
+        photo, status, device_hash, landmark, rt_rw, related_report_id,
+        latitude, longitude, location_accuracy_m, photo_device, photo_taken_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'menunggu', ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     id,
     input.kind,
     input.kecamatan,
@@ -428,6 +440,11 @@ export async function createReport(
     input.landmark?.trim() || null,
     input.rtRw?.trim() || null,
     relatedId,
+    input.location?.latitude ?? null,
+    input.location?.longitude ?? null,
+    input.location?.accuracyM ?? null,
+    input.photo ? input.photoDevice ?? null : null,
+    input.photo ? input.photoTakenAt ?? null : null,
   );
 
   await logAudit({
@@ -536,7 +553,8 @@ export type ReportCompleteness = {
   hasRtRw: boolean;
   hasLandmark: boolean;
   hasPhoto: boolean;
-  /** Benar bila ada kelurahan/RT-RW/patokan — cukup untuk dicari di lapangan. */
+  hasCoordinates: boolean;
+  /** Benar bila ada titik/kelurahan/RT-RW/patokan — cukup untuk dicari di lapangan. */
   locatable: boolean;
   missing: string[];
 };
@@ -545,6 +563,7 @@ export function describeCompleteness(row: ReportRow): ReportCompleteness {
   const hasKelurahan = Boolean(row.kelurahan?.trim());
   const hasRtRw = Boolean(row.rt_rw?.trim());
   const hasLandmark = Boolean(row.landmark?.trim());
+  const hasCoordinates = row.latitude !== null && row.longitude !== null;
   const missing: string[] = [];
   if (!hasKelurahan) missing.push("kelurahan");
   if (!hasRtRw) missing.push("RT/RW");
@@ -555,16 +574,46 @@ export function describeCompleteness(row: ReportRow): ReportCompleteness {
     hasRtRw,
     hasLandmark,
     hasPhoto: row.has_photo,
-    locatable: hasKelurahan || hasRtRw || hasLandmark,
+    hasCoordinates,
+    locatable: hasCoordinates || hasKelurahan || hasRtRw || hasLandmark,
     missing,
   };
 }
 
+/** Titik lokasi dan keterangan foto — hanya untuk petugas. */
+export type StaffDetail = {
+  location: { latitude: number; longitude: number; accuracyM: number | null } | null;
+  photoMeta: { device: string | null; takenAt: string | null } | null;
+};
+
+function staffDetail(row: ReportRow): StaffDetail {
+  return {
+    location:
+      row.latitude !== null && row.longitude !== null
+        ? {
+            latitude: row.latitude,
+            longitude: row.longitude,
+            accuracyM: row.location_accuracy_m,
+          }
+        : null,
+    photoMeta:
+      row.photo_device || row.photo_taken_at
+        ? { device: row.photo_device, takenAt: row.photo_taken_at }
+        : null,
+  };
+}
+
+/**
+ * Tampilan laporan. `staff` menambahkan titik lokasi dan keterangan foto;
+ * halaman lacak publik hanya berbekal kode lacak, dan kode bisa berpindah
+ * tangan, jadi titik rumah pelapor tidak ikut di sana.
+ */
 export function toPublicView(
   row: ReportRow,
   ticket?: EnvironmentTicket | null,
   risk?: RiskContext | null,
-): {
+  audience: "public" | "staff" = "public",
+): StaffDetail & {
   simulated: boolean;
   id: string;
   kind: ReportKind;
@@ -632,6 +681,7 @@ export function toPublicView(
           ? "Warga/pelapor"
           : "Menunggu pilihan tindak lanjut";
   return {
+    ...(audience === "staff" ? staffDetail(row) : { location: null, photoMeta: null }),
     simulated: isSimulated(row),
     id: row.id,
     kind: row.kind,
