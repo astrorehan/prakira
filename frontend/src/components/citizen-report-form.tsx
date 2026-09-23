@@ -16,6 +16,8 @@ import {
   AlertTriangle,
   X,
   ArrowRight,
+  LocateFixed,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -31,6 +33,9 @@ import type { CitizenReport, RateLimitState } from "@/types";
 import { ApiError, fetchRateLimit, submitReport } from "@/lib/api";
 import { preparePhoto, formatBytes, ACCEPTED_IMAGE_TYPES } from "@/lib/photo";
 import { useRememberedKecamatan, withKecamatan } from "@/lib/kecamatan-selection";
+import { useLocateArea } from "@/hooks/use-locate-area";
+import type { LocateStatus } from "@/hooks/use-locate-kecamatan";
+import type { LocatedArea } from "@/lib/locate-area";
 
 /**
  * Formulir laporan warga — PRD §5.4 (M6).
@@ -80,6 +85,14 @@ const PHOTO_ERROR: Record<string, string> = {
   type: "Format tidak didukung. Gunakan JPG, PNG, atau WebP.",
   size: "Berkas terlalu besar. Maksimal 8 MB.",
   decode: "Foto tidak bisa dibaca. Coba ambil ulang atau pilih berkas lain.",
+};
+
+const LOCATE_MESSAGE: Record<LocateStatus, string> = {
+  idle: "Koordinat tidak dikirim, hanya nama wilayahnya.",
+  locating: "Izinkan akses lokasi bila peramban bertanya.",
+  denied: "Lokasi tidak didapat. Pilih kecamatan secara manual.",
+  outside: "Lokasi Anda di luar Kota Semarang. Pilih kecamatan secara manual.",
+  unsupported: "Peramban ini tidak mendukung lokasi. Pilih secara manual.",
 };
 
 /* ── Hasil kiriman ────────────────────────────────────────────────────────── */
@@ -201,6 +214,19 @@ export function CitizenReportForm() {
   const fileRef = React.useRef<HTMLInputElement>(null);
   const directory = useKecamatanDirectory();
 
+  /* Isi otomatis dari lokasi perangkat. Yang disimpan hanya hasilnya — dua
+     nama wilayah — supaya catatan "terisi dari lokasi" bisa hilang begitu
+     pembaca mengganti salah satunya sendiri. */
+  const [located, setLocated] = React.useState<LocatedArea | null>(null);
+  const applyLocation = React.useCallback((area: LocatedArea) => {
+    setKecamatan(area.kecamatan);
+    setKelurahan(area.kelurahan);
+    setLocated(area);
+  }, []);
+  const { status: locateStatus, locate } = useLocateArea(applyLocation);
+  const fromLocation =
+    !!located && located.kecamatan === kecamatan && located.kelurahan === kelurahan;
+
   /* Kuota dihitung server dari sidik jari perangkat, bukan dari `localStorage`
      yang bisa dibersihkan dengan satu klik. Dibaca sebelum orang mengetik,
      bukan setelah mereka selesai menulis dan menekan kirim. */
@@ -229,7 +255,7 @@ export function CitizenReportForm() {
     if (remembered) setKecamatan((current) => current || remembered);
   }, [remembered]);
 
-  const prefilled = !!remembered && kecamatan === remembered;
+  const prefilled = !!remembered && kecamatan === remembered && !fromLocation;
   const descriptionOk = description.trim().length >= MIN_DESCRIPTION;
   const valid = !!kind && !!kecamatan && !!occurredAt && descriptionOk;
   const blocked = limit?.blocked ?? false;
@@ -430,6 +456,25 @@ export function CitizenReportForm() {
       <fieldset>
         <legend className="text-h3 text-foreground">Di mana?</legend>
 
+        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+          <button
+            type="button"
+            onClick={locate}
+            disabled={locateStatus === "locating" || directory.loading}
+            className="inline-flex items-center gap-1.5 rounded-full border border-brand-300 bg-white px-3.5 py-1.5 text-body-sm font-semibold text-brand-700 transition-colors duration-fast hover:border-brand-500 hover:bg-brand-50 focus-visible:outline-none focus-visible:shadow-focus disabled:opacity-60"
+          >
+            {locateStatus === "locating" ? (
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <LocateFixed className="h-4 w-4" aria-hidden="true" />
+            )}
+            {locateStatus === "locating" ? "Mencari lokasi…" : "Isi dari lokasi saya"}
+          </button>
+          <span role="status" className="text-caption text-paper-600">
+            {LOCATE_MESSAGE[locateStatus]}
+          </span>
+        </div>
+
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label htmlFor="kecamatan">Kecamatan</Label>
@@ -448,7 +493,12 @@ export function CitizenReportForm() {
                 </option>
               ))}
             </select>
-            {prefilled ? (
+            {fromLocation ? (
+              <p className="flex items-center gap-1.5 text-caption text-brand-700">
+                <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
+                Terisi dari lokasi perangkat. Periksa, ganti bila keliru.
+              </p>
+            ) : prefilled ? (
               <p className="flex items-center gap-1.5 text-caption text-brand-700">
                 <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
                 Terisi dari kecamatan yang Anda cek sebelumnya. Ganti bila keliru.
@@ -508,8 +558,9 @@ export function CitizenReportForm() {
           </div>
 
           <p className="text-caption text-paper-600">
-            Petugas mencari lokasi dari patokan dan RT/RW ini. Anda tidak perlu
-            membagikan titik GPS.
+            Petugas mencari lokasi dari patokan dan RT/RW ini. Titik GPS tidak
+            pernah dikirim — tombol lokasi hanya dipakai untuk memilih kecamatan
+            dan kelurahan di perangkat Anda.
           </p>
         </div>
       </fieldset>
