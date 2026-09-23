@@ -11,7 +11,21 @@
  */
 
 import * as React from "react";
-import { ApiError } from "@/lib/api";
+import { ApiError, getApiCacheGeneration } from "@/lib/api";
+
+type CacheOptions = { cacheKey: string; cacheTimeMs: number };
+const responseCache = new Map<string, { value: unknown; expiresAt: number; generation: number }>();
+
+function cachedResponse<T>(key: string | undefined): T | null {
+  if (!key) return null;
+  const entry = responseCache.get(key);
+  if (!entry) return null;
+  if (entry.expiresAt <= Date.now() || entry.generation !== getApiCacheGeneration()) {
+    responseCache.delete(key);
+    return null;
+  }
+  return entry.value as T;
+}
 
 export type AsyncState<T> = {
   data: T | null;
@@ -27,6 +41,7 @@ export type AsyncState<T> = {
 export function useApi<T>(
   fetcher: () => Promise<T>,
   deps: React.DependencyList = [],
+  cache?: CacheOptions,
 ): AsyncState<T> {
   const [data, setData] = React.useState<T | null>(null);
   const [error, setError] = React.useState<string | null>(null);
@@ -34,6 +49,7 @@ export function useApi<T>(
   const [loading, setLoading] = React.useState(true);
   const [refreshing, setRefreshing] = React.useState(false);
   const [nonce, setNonce] = React.useState(0);
+  const [dataKey, setDataKey] = React.useState<string | null>(null);
 
   /* `fetcher` biasanya arrow function baru tiap render; yang menentukan kapan
      data ditarik ulang adalah `deps` yang ditulis pemanggil. */
@@ -51,12 +67,25 @@ export function useApi<T>(
 
   React.useEffect(() => {
     let alive = true;
+    const requestGeneration = getApiCacheGeneration();
 
     const dependencyChanged =
       previousDeps.current === null ||
       previousDeps.current.length !== deps.length ||
       deps.some((value, index) => !Object.is(value, previousDeps.current?.[index]));
     previousDeps.current = [...deps];
+
+    const cached = dependencyChanged ? cachedResponse<T>(cache?.cacheKey) : null;
+    if (cached !== null) {
+      hasData.current = true;
+      setData(cached);
+      setDataKey(cache?.cacheKey ?? null);
+      setError(null);
+      setRefreshError(null);
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
 
     setError(null);
     setRefreshError(null);
@@ -66,6 +95,7 @@ export function useApi<T>(
          dependency yang sama tetap memakai stale-while-revalidate. */
       hasData.current = false;
       setData(null);
+      setDataKey(cache?.cacheKey ?? null);
       setLoading(true);
       setRefreshing(false);
     } else if (hasData.current) setRefreshing(true);
@@ -77,6 +107,14 @@ export function useApi<T>(
         if (!alive) return;
         hasData.current = true;
         setData(result);
+        setDataKey(cache?.cacheKey ?? null);
+        if (cache?.cacheKey && result !== null && requestGeneration === getApiCacheGeneration()) {
+          responseCache.set(cache.cacheKey, {
+            value: result,
+            expiresAt: Date.now() + cache.cacheTimeMs,
+            generation: requestGeneration,
+          });
+        }
         setError(null);
         setRefreshError(null);
       })
@@ -115,5 +153,17 @@ export function useApi<T>(
 
   const reload = React.useCallback(() => setNonce((n) => n + 1), []);
 
-  return { data, error, refreshError, loading, refreshing, reload };
+  const cacheKey = cache?.cacheKey;
+  const cached = cachedResponse<T>(cacheKey);
+  const visibleData = cacheKey ? cached ?? (dataKey === cacheKey ? data : null) : data;
+  const awaitingKey = !!cacheKey && visibleData === null && dataKey !== cacheKey;
+
+  return {
+    data: visibleData,
+    error: awaitingKey ? null : error,
+    refreshError,
+    loading: cached !== null ? false : loading || awaitingKey,
+    refreshing,
+    reload,
+  };
 }

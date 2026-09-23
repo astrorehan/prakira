@@ -1,39 +1,55 @@
 "use client";
 
 import * as React from "react";
-import { Loader2, Mail, MapPin, Send, ShieldQuestion } from "lucide-react";
+import { Loader2, Mail, MapPin, Repeat, Send } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 import { DispositionEmailModal } from "@/components/disposition-email-modal";
 import { forwardReport } from "@/lib/api";
 import { formatDateTime } from "@/lib/period";
 import { REPORT_KIND } from "@/lib/reports";
-import type { CitizenReport } from "@/types";
+import { diseaseLabel } from "@/lib/utils";
+import type { CitizenReport, ReportRiskContext } from "@/types";
 
 /**
  * Penerusan laporan lingkungan ke instansi penerima (audit F08, F10, §7.E).
  *
- * Menggantikan antrean tiket DLH yang dulu ada di ruang kerja Dinkes. Antrean
- * itu menampilkan tombol "Terima", "Mulai tangani", dan "Tandai selesai" atas
- * nama unit lain — pekerjaan yang tidak pernah tercatat di aplikasi ini dan
- * tidak berada dalam kewenangan siapa pun yang membuka layar ini. Yang tersisa
- * adalah satu kejadian yang benar-benar dilakukan Dinkes: menyampaikan laporan
- * dan mencatat penyampaiannya.
- *
- * Karena itu tidak ada kolom progres, PIC instansi penerima, atau penyelesaian
- * di sini. Yang diminta hanyalah kanal yang dipakai — supaya catatan ini bisa
- * diperiksa kembali — dan nomor rujukan bila instansi penerima memberikannya.
+ * Dinkes tidak mengelola pekerjaan instansi lain; yang dicatat hanya
+ * penyampaiannya. Nilai yang ditambahkan Dinkes di sini adalah konteks risiko
+ * penyakit, supaya instansi penerima tahu lokasi mana yang didahulukan.
+ * Kartunya sengaja ringkas: satu baris inti, satu kolom kanal, dua tombol.
  */
 
-function summaryLine(report: CitizenReport): string {
-  const kind = REPORT_KIND[report.kind].label;
-  const where = report.kelurahan
-    ? `${report.kecamatan} · ${report.kelurahan}`
-    : report.kecamatan;
-  const landmark = report.landmark ? ` (patokan: ${report.landmark})` : "";
-  return `${kind} di ${where}${landmark}. ${report.description}`;
+const RISK_BADGE = {
+  tinggi: "risk-high",
+  sedang: "risk-medium",
+  rendah: "risk-low",
+} as const;
+
+export function RiskChip({ risk }: { risk: ReportRiskContext | null | undefined }) {
+  if (!risk) return null;
+  return (
+    <Badge variant={RISK_BADGE[risk.riskClass]}>
+      Risiko {diseaseLabel(risk.disease)} {risk.riskClass}
+    </Badge>
+  );
+}
+
+function PatternChip({ count }: { count: number | null | undefined }) {
+  if (!count) return null;
+  return (
+    <Badge variant="outline" className="gap-1">
+      <Repeat className="h-3 w-3" aria-hidden />
+      {count} laporan serupa
+    </Badge>
+  );
+}
+
+/** Urutan penerusan: risiko tinggi dan pola berulang didahulukan. */
+function urgency(report: CitizenReport): number {
+  const risk = { tinggi: 3, sedang: 2, rendah: 1 }[report.risk?.riskClass ?? "rendah"] ?? 0;
+  return risk * 10 + (report.forwarding?.pattern ? 5 : 0);
 }
 
 function ForwardCard({
@@ -51,8 +67,8 @@ function ForwardCard({
   const [error, setError] = React.useState<string | null>(null);
   const [draftOpen, setDraftOpen] = React.useState(false);
 
-  const target = report.forwarding?.target ?? "Dinas Lingkungan Hidup";
-  const summary = summaryLine(report);
+  const agency = report.routing.agency;
+  const target = report.forwarding?.target ?? agency?.name ?? "instansi penerima";
   const failed = report.forwarding?.state === "gagal";
 
   const submit = async (delivered: boolean) => {
@@ -75,58 +91,31 @@ function ForwardCard({
     }
   };
 
+  const inputClass =
+    "min-w-0 rounded-xl border border-border bg-surface px-3 py-2 text-body-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+
   return (
     <Card className="border-teal-200 bg-white p-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="font-mono text-overline uppercase text-paper-600">
-              {report.id}
-            </span>
-            <Badge variant={failed ? "risk-high" : "risk-medium"}>
-              {failed ? "Penyampaian belum berhasil" : "Perlu diteruskan"}
-            </Badge>
-          </div>
-          <p className="mt-2 flex items-center gap-1.5 text-body-sm font-semibold text-foreground">
-            <MapPin className="h-3.5 w-3.5 text-paper-600" aria-hidden />
-            {report.kecamatan}
-            {report.kelurahan ? ` · ${report.kelurahan}` : ""}
-          </p>
-          <p className="mt-1 text-caption text-paper-600">
-            {REPORT_KIND[report.kind].label} · diterima{" "}
-            {report.reviewedAt ? formatDateTime(report.reviewedAt) : "—"} · tujuan{" "}
-            {target}
-          </p>
-        </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-body-sm font-semibold text-foreground">
+          {REPORT_KIND[report.kind].label}
+        </span>
+        <span className="flex items-center gap-1 text-body-sm text-paper-700">
+          <MapPin className="h-3.5 w-3.5 text-paper-600" aria-hidden />
+          {report.kecamatan}
+          {report.kelurahan ? ` · ${report.kelurahan}` : ""}
+        </span>
+        <span className="text-caption text-paper-600">→ {agency?.short ?? target}</span>
+        <span className="ml-auto flex flex-wrap gap-1.5">
+          <RiskChip risk={report.risk} />
+          <PatternChip count={report.forwarding?.pattern} />
+          {failed && <Badge variant="risk-high">Belum berhasil</Badge>}
+        </span>
       </div>
 
-      {/* "Siapkan ringkasan" membuka draf surat rujukan yang akan dikirim
-          lewat kanal instansi penerima. Aplikasi ini tidak punya sambungan ke
-          kanal itu, jadi ia tidak berpura-pura mengirimkannya sendiri: yang
-          disediakan adalah teksnya, dan penyampaiannya dicatat terpisah. */}
-      <div className="mt-3 rounded-xl border border-border bg-paper-50 p-3">
-        <p className="text-caption font-medium text-paper-700">
-          Ringkasan untuk disampaikan
-        </p>
-        <p className="mt-1.5 text-body-sm leading-relaxed text-paper-700">
-          {summary}
-        </p>
-        {report.completeness.missing.length > 0 && (
-          <p className="mt-2 flex items-start gap-1.5 text-caption leading-relaxed text-paper-600">
-            <ShieldQuestion className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
-            Belum ada: {report.completeness.missing.join(", ")}.
-          </p>
-        )}
-        <Button
-          size="sm"
-          variant="outline"
-          className="mt-3 gap-1.5"
-          onClick={() => setDraftOpen(true)}
-        >
-          <Mail className="h-4 w-4" aria-hidden />
-          Siapkan ringkasan
-        </Button>
-      </div>
+      {failed && report.forwarding?.note && (
+        <p className="mt-2 text-caption text-risk-high">{report.forwarding.note}</p>
+      )}
 
       <DispositionEmailModal
         open={draftOpen}
@@ -134,93 +123,78 @@ function ForwardCard({
         report={report}
       />
 
-      {failed && report.forwarding?.note && (
-        <p className="mt-3 text-caption leading-relaxed text-risk-high">
-          Percobaan sebelumnya: {report.forwarding.note}
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        {failing ? (
+          <>
+            <input
+              value={note}
+              onChange={(event) => setNote(event.target.value)}
+              placeholder="Alasan belum berhasil"
+              aria-label="Alasan penyampaian belum berhasil"
+              className={`${inputClass} flex-1`}
+            />
+            <Button
+              size="sm"
+              variant="danger"
+              disabled={busy || note.trim().length < 8}
+              onClick={() => submit(false)}
+            >
+              Simpan
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setFailing(false)}>
+              Batal
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5"
+              onClick={() => setDraftOpen(true)}
+            >
+              <Mail className="h-4 w-4" aria-hidden />
+              Surat
+            </Button>
+            <input
+              value={channel}
+              onChange={(event) => setChannel(event.target.value)}
+              placeholder="Kanal (surat, WA piket…)"
+              aria-label="Kanal penyampaian"
+              className={`${inputClass} w-44 flex-1`}
+            />
+            <input
+              value={reference}
+              onChange={(event) => setReference(event.target.value)}
+              placeholder="No. rujukan"
+              aria-label="Nomor rujukan dari instansi"
+              className={`${inputClass} w-28`}
+            />
+            <Button
+              size="sm"
+              className="gap-1.5"
+              disabled={busy || channel.trim().length === 0}
+              onClick={() => submit(true)}
+            >
+              {busy ? (
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+              ) : (
+                <Send className="h-4 w-4" aria-hidden />
+              )}
+              Sudah diteruskan
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setFailing(true)}>
+              Gagal
+            </Button>
+          </>
+        )}
+      </div>
+
+      {error && (
+        <p role="alert" className="mt-2 text-caption text-risk-high">
+          {error}
         </p>
       )}
-
-      <div className="mt-4 space-y-2 border-t border-border pt-3">
-        <Label htmlFor={`kanal-${report.id}`} className="text-caption">
-          Kanal penyampaian
-        </Label>
-        <div className="grid gap-2 sm:grid-cols-2">
-          <input
-            id={`kanal-${report.id}`}
-            value={channel}
-            onChange={(event) => setChannel(event.target.value)}
-            placeholder="Mis. surat dinas, WhatsApp piket DLH, rapat koordinasi"
-            className="min-w-0 rounded-xl border border-border bg-surface px-3 py-2 text-body-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          />
-          <input
-            value={reference}
-            onChange={(event) => setReference(event.target.value)}
-            placeholder="Nomor rujukan dari instansi (bila ada)"
-            className="min-w-0 rounded-xl border border-border bg-surface px-3 py-2 text-body-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          />
-        </div>
-
-        {failing && (
-          <textarea
-            value={note}
-            onChange={(event) => setNote(event.target.value)}
-            rows={2}
-            placeholder="Alasan penyampaian belum berhasil — mis. kanal tidak menjawab, berkas kurang."
-            className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-body-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          />
-        )}
-
-        {error && (
-          <p role="alert" className="text-caption text-risk-high">
-            {error}
-          </p>
-        )}
-
-        <div className="flex flex-wrap items-center gap-2">
-          {failing ? (
-            <>
-              <Button
-                size="sm"
-                variant="danger"
-                disabled={busy || note.trim().length < 8}
-                onClick={() => submit(false)}
-              >
-                Simpan catatan kegagalan
-              </Button>
-              <Button size="sm" variant="ghost" onClick={() => setFailing(false)}>
-                Batal
-              </Button>
-              <span className="text-caption text-paper-600">
-                Laporan tetap berada di daftar ini sampai penyampaiannya tercatat.
-              </span>
-            </>
-          ) : (
-            <>
-              <Button
-                size="sm"
-                className="gap-1.5"
-                disabled={busy || channel.trim().length === 0}
-                onClick={() => submit(true)}
-              >
-                {busy ? (
-                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-                ) : (
-                  <Send className="h-4 w-4" aria-hidden />
-                )}
-                Catat sudah diteruskan
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => setFailing(true)}>
-                Belum berhasil disampaikan
-              </Button>
-              {channel.trim().length === 0 && (
-                <span className="text-caption text-paper-600">
-                  Sebutkan kanalnya supaya catatan ini dapat diperiksa kembali.
-                </span>
-              )}
-            </>
-          )}
-        </div>
-      </div>
     </Card>
   );
 }
@@ -234,42 +208,32 @@ export function ForwardingQueue({
 }) {
   const [showArchive, setShowArchive] = React.useState(false);
 
-  const pending = (reports ?? []).filter(
-    (r) =>
-      r.forwarding &&
-      (r.forwarding.state === "perlu_diteruskan" || r.forwarding.state === "gagal"),
-  );
+  const pending = (reports ?? [])
+    .filter(
+      (r) =>
+        r.forwarding &&
+        (r.forwarding.state === "perlu_diteruskan" || r.forwarding.state === "gagal"),
+    )
+    .sort((a, b) => urgency(b) - urgency(a));
   const forwarded = (reports ?? []).filter(
     (r) => r.forwarding?.state === "diteruskan",
   );
 
   return (
-    <section className="space-y-4 rounded-2xl border border-teal-200 bg-teal-50/40 p-4 sm:p-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="text-h3 text-foreground">Penerusan ke instansi</h2>
-          <p className="mt-1 max-w-3xl text-body-sm leading-relaxed text-paper-700">
-            Laporan yang sudah diperiksa dan diputuskan perlu diteruskan. Yang
-            dicatat di sini adalah penyampaiannya; penanganan di lapangan menjadi
-            kewenangan instansi penerima dan tidak dilacak dari layar ini.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-1.5 text-caption">
-          <span className="rounded-full border border-teal-200 bg-white/70 px-2.5 py-1">
-            {pending.length} perlu diteruskan
-          </span>
-          <span className="rounded-full border border-teal-200 bg-white/70 px-2.5 py-1">
-            {forwarded.length} sudah diteruskan
-          </span>
-        </div>
+    <section className="space-y-3 rounded-2xl border border-teal-200 bg-teal-50/40 p-4 sm:p-5">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-h3 text-foreground">Penerusan ke instansi</h2>
+        <span className="text-caption text-paper-700">
+          {pending.length} perlu diteruskan · {forwarded.length} sudah
+        </span>
       </div>
 
       {pending.length === 0 ? (
         <p className="rounded-xl border border-dashed border-teal-200 bg-white/60 px-3.5 py-3 text-body-sm text-paper-700">
-          Tidak ada laporan yang menunggu diteruskan.
+          Tidak ada yang menunggu diteruskan.
         </p>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {pending.map((report) => (
             <ForwardCard key={report.id} report={report} onChanged={onChanged} />
           ))}
@@ -283,8 +247,7 @@ export function ForwardingQueue({
             variant="ghost"
             onClick={() => setShowArchive((value) => !value)}
           >
-            {showArchive ? "Sembunyikan" : "Lihat"} arsip penerusan (
-            {forwarded.length})
+            {showArchive ? "Sembunyikan" : "Lihat"} arsip ({forwarded.length})
           </Button>
           {showArchive && (
             <ul className="space-y-1.5">
@@ -304,33 +267,24 @@ function ArchiveRow({ report }: { report: CitizenReport }) {
   const [open, setOpen] = React.useState(false);
 
   return (
-    <li className="rounded-xl border border-border bg-white px-3 py-2 text-caption leading-relaxed text-paper-700">
-      <ArchiveLine report={report} />
+    <li className="flex flex-wrap items-center gap-x-2 rounded-xl border border-border bg-white px-3 py-2 text-caption text-paper-700">
+      <span className="font-mono uppercase">{report.id}</span>
+      <span>
+        {report.kecamatan} → {report.routing.agency?.short ?? report.forwarding?.target}
+        {report.forwarding?.channel ? ` · ${report.forwarding.channel}` : ""}
+        {report.forwarding?.forwardedAt
+          ? ` · ${formatDateTime(report.forwarding.forwardedAt)}`
+          : ""}
+        {report.forwarding?.reference ? ` · ${report.forwarding.reference}` : ""}
+      </span>
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="mt-1 font-medium text-brand-700 hover:underline"
+        className="ml-auto font-medium text-brand-700 hover:underline"
       >
-        Lihat surat yang disampaikan
+        Surat
       </button>
       <DispositionEmailModal open={open} onOpenChange={setOpen} report={report} />
     </li>
-  );
-}
-
-function ArchiveLine({ report }: { report: CitizenReport }) {
-  return (
-    <span>
-      <span className="font-mono uppercase">{report.id}</span> ·{" "}
-      {report.kecamatan} · diteruskan ke{" "}
-      {report.forwarding?.target ?? "instansi penerima"}
-      {report.forwarding?.channel ? ` lewat ${report.forwarding.channel}` : ""}
-      {report.forwarding?.forwardedAt
-        ? ` · ${formatDateTime(report.forwarding.forwardedAt)}`
-        : ""}
-      {report.forwarding?.reference
-        ? ` · rujukan ${report.forwarding.reference}`
-        : ""}
-    </span>
   );
 }

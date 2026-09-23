@@ -32,6 +32,8 @@ interface EarlyActionCenterProps {
   operator: string | null;
   /** Dipanggil setelah status berubah, supaya halaman menarik data segar. */
   onChanged?: () => void;
+  /** Hanya peran lapangan yang membutuhkan saringan tugas pribadi. */
+  showMineFilter?: boolean;
   className?: string;
 }
 
@@ -107,6 +109,7 @@ export function EarlyActionCenter({
   systemToday,
   operator,
   onChanged,
+  showMineFilter = true,
   className,
 }: EarlyActionCenterProps) {
   const [chosenFilter, setChosenFilter] = React.useState<StatusFilter | null>(null);
@@ -147,7 +150,8 @@ export function EarlyActionCenter({
 
   /* Antrean terbuka pada tugas sendiri bila ada; kalau tidak ada, pada seluruh
      antrean. Pilihan petugas selalu menang atas keduanya. */
-  const statusFilter: StatusFilter = chosenFilter ?? (mineCount > 0 ? "mine" : "all");
+  const statusFilter: StatusFilter =
+    chosenFilter ?? (showMineFilter && mineCount > 0 ? "mine" : "all");
   const setStatusFilter = setChosenFilter;
 
   const filtered = React.useMemo(
@@ -202,7 +206,7 @@ export function EarlyActionCenter({
       }
       setBatchModalOpen(false);
       setSelected({});
-      toast.show(`${saved} tindakan ditugaskan ke ${batchUnit.trim()}.`);
+      toast.show(`Penugasan ${saved} rekomendasi ke ${batchUnit.trim()} dicatat.`);
       onChanged?.();
     } catch (caught) {
       setBatchError(caught instanceof Error ? caught.message : String(caught));
@@ -212,7 +216,7 @@ export function EarlyActionCenter({
   };
 
   const filters: { id: StatusFilter; label: string; count: number; alert?: boolean }[] = [
-    ...(operator
+    ...(showMineFilter && operator
       ? [
           {
             id: "mine" as const,
@@ -225,7 +229,7 @@ export function EarlyActionCenter({
     { id: "all", label: "Semua", count: summary.total },
     {
       id: "pending",
-      label: "Perlu keputusan",
+      label: "Belum ditugaskan",
       count: summary.pending,
       alert: summary.pending > 0,
     },
@@ -246,7 +250,7 @@ export function EarlyActionCenter({
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <SummaryTile
           icon={Zap}
-          label="Perlu keputusan"
+          label="Belum ditugaskan"
           value={String(summary.pending)}
           note={`dari ${summary.total} rekomendasi`}
           tone={summary.pending > 0 ? "warn" : "neutral"}
@@ -263,12 +267,12 @@ export function EarlyActionCenter({
             diukur sistem ini. */}
         <SummaryTile
           icon={Users}
-          label="Penduduk wilayah belum diputuskan"
+          label="Penduduk sasaran"
           value={formatNumber(summary.populationPending)}
           note={
             summary.districtsPending.length > 0
-              ? `${summary.districtsPending.length} kecamatan`
-              : "Semua wilayah tercakup"
+              ? `${summary.districtsPending.length} kecamatan belum ditugaskan`
+              : "Tidak ada wilayah menunggu"
           }
         />
         <SummaryTile
@@ -326,8 +330,8 @@ export function EarlyActionCenter({
             <Zap className="h-3.5 w-3.5" aria-hidden="true" />
             <span>
               {selectedIds.length === 0
-                ? "Pilih tindakan untuk ditugaskan"
-                : `Tugaskan ${selectedIds.length} tindakan`}
+                ? "Pilih rekomendasi"
+                : `Tugaskan ${selectedIds.length} rekomendasi`}
             </span>
           </Button>
         )}
@@ -338,7 +342,7 @@ export function EarlyActionCenter({
           dilihat — bukan atas jumlah. */}
       {pendingActions.length > 0 && (
         <fieldset className="space-y-2 rounded-xl border border-border bg-surface p-3.5">
-          <legend className="overline">Pilih tindakan yang akan ditugaskan</legend>
+          <legend className="overline">Pilih rekomendasi untuk ditugaskan</legend>
           {pendingActions.map((rec) => (
             <label
               key={rec.id}
@@ -370,13 +374,17 @@ export function EarlyActionCenter({
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-paper-100 text-paper-600">
             <Info className="h-6 w-6" aria-hidden="true" />
           </div>
-          <h3 className="text-h3 text-foreground">Tidak ada tindakan berstatus ini</h3>
+          <h3 className="text-h3 text-foreground">
+            {statusFilter === "mine" ? "Belum ada tugas untuk Anda" : "Tidak ada rekomendasi di sini"}
+          </h3>
           <p className="text-body-sm text-paper-600">
-            Antrean berisi {summary.total} rekomendasi pada periode berjalan.
+            {statusFilter === "mine"
+              ? "Dinkes belum mencatat penugasan ke unit atau PIC Anda."
+              : "Pilih status lain untuk melihat rekomendasi."}
           </p>
           <Button variant="outline" size="sm" onClick={() => setStatusFilter("all")} className="gap-1.5">
             <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
-            <span>Tampilkan semua</span>
+            <span>Lihat semua rekomendasi</span>
           </Button>
         </div>
       ) : (
@@ -407,9 +415,9 @@ export function EarlyActionCenter({
                 <Zap className="h-5 w-5" aria-hidden="true" />
               </span>
               <div className="min-w-0">
-                <DialogTitle className="text-h3">Tugaskan tindakan terpilih</DialogTitle>
+                <DialogTitle className="text-h3">Tugaskan rekomendasi</DialogTitle>
                 <DialogDescription className="text-caption">
-                  Menyerahkan {selectedIds.length} tindakan ke satu unit pelaksana.
+                  {selectedIds.length} rekomendasi · satu unit pelaksana.
                 </DialogDescription>
               </div>
             </div>
@@ -419,19 +427,19 @@ export function EarlyActionCenter({
               kecamatan dan populasinya tidak bisa melenceng dari datanya. */}
           <dl className="space-y-2 rounded-xl border border-border bg-paper-50 p-3.5 text-body-sm">
             <div className="flex justify-between gap-4">
-              <dt className="text-paper-600">Tindakan terpilih</dt>
+              <dt className="text-paper-600">Rekomendasi</dt>
               <dd className="tabular font-semibold text-risk-high">
                 {selectedIds.length}
               </dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="shrink-0 text-paper-600">Kecamatan target</dt>
+              <dt className="shrink-0 text-paper-600">Sasaran</dt>
               <dd className="text-right font-medium text-foreground">
                 {summary.districtsPending.join(", ")}
               </dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="text-paper-600">Penduduk di wilayah sasaran</dt>
+              <dt className="text-paper-600">Penduduk</dt>
               <dd className="tabular font-medium text-foreground">
                 ~{formatNumber(summary.populationPending)} jiwa
               </dd>
@@ -445,16 +453,11 @@ export function EarlyActionCenter({
             <input
               value={batchUnit}
               onChange={(e) => setBatchUnit(e.target.value)}
-              placeholder="Unit pelaksana"
+              placeholder="Pilih unit pelaksana"
               className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-caption text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
-            {/* Yang tercatat adalah penyerahan pekerjaan, bukan pelaksanaannya.
-                Konfirmasi penerimaan dan catatan lapangan tetap per tindakan,
-                karena keduanya datang dari orang yang mengerjakannya. */}
             <p className="text-caption leading-relaxed text-paper-600">
-              Tindakan terpilih dicatat ditugaskan ke unit ini atas nama{" "}
-              {operator ?? "petugas yang masuk"}. Konfirmasi penerimaan, tenggat
-              yang disepakati, dan catatan pelaksanaan dicatat per tindakan.
+              Catat di aplikasi, teruskan instruksi lewat kanal dinas.
             </p>
           </div>
 
@@ -484,7 +487,7 @@ export function EarlyActionCenter({
               <span>
                 {isBatchSubmitting
                   ? "Menyimpan…"
-                  : `Tugaskan ${selectedIds.length} tindakan`}
+                  : "Catat penugasan"}
               </span>
             </Button>
           </DialogFooter>

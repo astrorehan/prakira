@@ -197,9 +197,9 @@ export function DispatchActionModal({
   };
 
   const tabs: { id: TabId; label: string }[] = [
-    { id: "protocol", label: `1. Protokol & SOP (${completedCount}/${checklist.length})` },
-    { id: "execution", label: "2. Pelaksanaan" },
-    { id: "draft", label: "3. Draf pesan" },
+    { id: "protocol", label: "Ringkasan" },
+    { id: "execution", label: action.assignment ? "Pelaksanaan" : "Penugasan" },
+    { id: "draft", label: "Pesan" },
   ];
 
   return (
@@ -209,9 +209,6 @@ export function DispatchActionModal({
         <div className="shrink-0 border-b border-border bg-paper-50 p-5 pb-3.5">
           <div className="mb-1.5 flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="tabular rounded bg-paper-200/70 px-2 py-0.5 font-mono text-overline text-paper-600">
-                {recommendation.id}
-              </span>
               <Badge variant="outline">{recommendation.disease}</Badge>
               <Badge variant={recommendation.priority === "high" ? "risk-high" : "risk-medium"}>
                 {PRIORITY_LABEL[recommendation.priority]}
@@ -230,23 +227,16 @@ export function DispatchActionModal({
             {recommendation.title}
           </DialogTitle>
 
-          <div className="mt-3 grid grid-cols-1 gap-2 border-t border-border pt-2.5 sm:grid-cols-3">
+          <div className="mt-3 grid grid-cols-1 gap-2 border-t border-border pt-2.5 sm:grid-cols-2">
             <FactTile
               icon={Calendar}
-              label="Lead time"
-              value={`${recommendation.lead_time_days} hari sebelum ${formatMonth(recommendation.prediction_month)}`}
+              label="Persiapan"
+              value={`${recommendation.lead_time_days} hari · target ${formatMonth(recommendation.prediction_month)}`}
             />
             <FactTile
               icon={Users}
-              label="Populasi target"
-              value={`${formatNumber(recommendation.target_population)} jiwa`}
-            />
-            <FactTile
-              icon={ShieldAlert}
-              label="Cakupan data"
-              value={
-                COVERAGE_LABEL[recommendation.data_coverage] ?? recommendation.data_coverage
-              }
+              label="Sasaran"
+              value={`${recommendation.target_kecamatan.length} kecamatan · ${formatNumber(recommendation.target_population)} jiwa`}
             />
           </div>
         </div>
@@ -254,7 +244,7 @@ export function DispatchActionModal({
         {/* Tab */}
         <div
           role="tablist"
-          aria-label="Bagian instruksi"
+          aria-label="Bagian rekomendasi"
           className="flex shrink-0 items-center overflow-x-auto border-b border-border bg-surface px-5"
         >
           {tabs.map((tab) => (
@@ -287,117 +277,102 @@ export function DispatchActionModal({
               aria-labelledby="dispatch-tab-protocol"
               className="space-y-4 p-6"
             >
-              {/* Kalimat "Dasar:" dari mesin aturan. §5.2 melarang rekomendasi
-                  tanpa alasan muncul sama sekali, jadi tempatnya di paling atas. */}
-              <div className="flex items-start gap-3 rounded-xl border border-border bg-paper-50 p-3.5">
-                <Info className="mt-0.5 h-4 w-4 shrink-0 text-brand-700" aria-hidden="true" />
-                <p className="text-caption leading-relaxed text-paper-800">
-                  {recommendation.basis}
-                </p>
-              </div>
-
               <div className="flex items-start gap-3 rounded-xl border border-border bg-surface p-3.5">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-brand-700" aria-hidden="true" />
                 <div>
                   <h4 className="text-caption font-semibold text-foreground">
-                    Kecamatan target
+                    Wilayah sasaran
                   </h4>
                   <p className="mt-0.5 text-caption leading-relaxed text-paper-700">
-                    {recommendation.target_kecamatan.join(", ")}
+                    {recommendation.target_kecamatan.length} kecamatan · {recommendation.target_kecamatan.join(", ")}
                   </p>
                 </div>
               </div>
 
-              {recommendation.climate_trigger && (
-                <div className="flex items-start gap-3 rounded-xl border border-brand-300/45 bg-brand-50 p-3.5">
-                  <CloudRain className="mt-0.5 h-4 w-4 shrink-0 text-brand-700" aria-hidden="true" />
-                  <div>
-                    <h4 className="text-caption font-semibold text-brand-900">
-                      Kondisi iklim bulan observasi
-                    </h4>
-                    <p className="mt-0.5 text-caption leading-relaxed text-brand-800">
-                      {recommendation.climate_trigger}
+              <details className="rounded-xl border border-border bg-paper-50 p-3.5">
+                <summary className="cursor-pointer text-caption font-semibold text-foreground">
+                  Dasar prakiraan
+                </summary>
+                <div className="mt-3 space-y-3 text-caption leading-relaxed text-paper-700">
+                  <p>{recommendation.basis}</p>
+                  {recommendation.climate_trigger && (
+                    <p className="flex items-start gap-2">
+                      <CloudRain className="mt-0.5 h-4 w-4 shrink-0 text-brand-700" aria-hidden="true" />
+                      <span>{recommendation.climate_trigger}</span>
                     </p>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex items-start gap-3 rounded-xl border border-risk-medium-br bg-risk-medium-bg p-3.5">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-risk-medium" aria-hidden="true" />
-                <div>
-                  {/* "Proyeksi efektivitas intervensi" adalah klaim yang tidak
-                      pernah diukur. Yang bisa dikatakan sistem adalah beban
-                      yang diproyeksikan bila tidak ada intervensi. */}
-                  <h4 className="text-caption font-semibold text-foreground">
-                    Beban yang diproyeksikan tanpa intervensi
-                  </h4>
-                  <p className="mt-0.5 text-caption leading-relaxed text-paper-700">
+                  )}
+                  <p>
+                    <span className="font-semibold">Tanpa intervensi:</span>{" "}
                     {recommendation.estimated_impact}
                   </p>
+                  <p>
+                    <span className="font-semibold">Cakupan data:</span>{" "}
+                    {COVERAGE_LABEL[recommendation.data_coverage] ?? recommendation.data_coverage}
+                  </p>
                 </div>
-              </div>
+              </details>
 
-              <fieldset className="space-y-2.5 pt-2">
-                <div className="flex items-center justify-between gap-3">
-                  <legend className="overline">Checklist kesiapan lapangan</legend>
-                  <span className="tabular text-caption font-semibold text-paper-600">
-                    {completedCount} dari {checklist.length} terverifikasi ({progressPct}%)
-                  </span>
-                </div>
+              <details open={Boolean(recommendation.assignment)} className="rounded-xl border border-border bg-surface p-3.5">
+                <summary className="cursor-pointer text-caption font-semibold text-foreground">
+                  Langkah pelaksanaan ({completedCount}/{checklist.length})
+                </summary>
+                <fieldset className="mt-3 space-y-2.5">
+                  <legend className="sr-only">Langkah pelaksanaan</legend>
 
-                <div
-                  role="progressbar"
-                  aria-valuenow={progressPct}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-label="Kesiapan checklist"
-                  className="h-2 w-full overflow-hidden rounded-full bg-paper-200"
-                >
                   <div
-                    className="h-full rounded-full bg-brand-700 transition-[width] duration-base ease-out"
-                    style={{ width: `${progressPct}%` }}
-                  />
-                </div>
+                    role="progressbar"
+                    aria-valuenow={progressPct}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label="Langkah pelaksanaan dipilih"
+                    className="h-2 w-full overflow-hidden rounded-full bg-paper-200"
+                  >
+                    <div
+                      className="h-full rounded-full bg-brand-700 transition-[width] duration-base ease-out"
+                      style={{ width: `${progressPct}%` }}
+                    />
+                  </div>
 
-                <div className="mt-3 space-y-2">
-                  {checklist.map((item) => (
-                    <label
-                      key={item}
-                      className={cn(
-                        "flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-colors duration-fast ease-out",
-                        checkedItems[item]
-                          ? "border-brand-300 bg-brand-50/60 text-foreground"
-                          : "border-border bg-surface text-paper-700 hover:bg-paper-50",
-                      )}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={Boolean(checkedItems[item])}
-                        onChange={() => toggleCheck(item)}
-                        className="peer sr-only"
-                      />
-                      <span
-                        aria-hidden="true"
+                  <div className="space-y-2">
+                    {checklist.map((item) => (
+                      <label
+                        key={item}
                         className={cn(
-                          "mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors peer-focus-visible:shadow-focus",
+                          "flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-colors duration-fast ease-out",
                           checkedItems[item]
-                            ? "border-brand-700 bg-brand-700 text-white"
-                            : "border-paper-400 bg-surface",
+                            ? "border-brand-300 bg-brand-50/60 text-foreground"
+                            : "border-border bg-surface text-paper-700 hover:bg-paper-50",
                         )}
                       >
-                        {checkedItems[item] && <Check className="h-3 w-3 stroke-[3]" />}
-                      </span>
-                      <span className="select-none text-caption font-medium leading-snug">
-                        {item}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </fieldset>
+                        <input
+                          type="checkbox"
+                          checked={Boolean(checkedItems[item])}
+                          onChange={() => toggleCheck(item)}
+                          className="peer sr-only"
+                        />
+                        <span
+                          aria-hidden="true"
+                          className={cn(
+                            "mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors peer-focus-visible:shadow-focus",
+                            checkedItems[item]
+                              ? "border-brand-700 bg-brand-700 text-white"
+                              : "border-paper-400 bg-surface",
+                          )}
+                        >
+                          {checkedItems[item] && <Check className="h-3 w-3 stroke-[3]" />}
+                        </span>
+                        <span className="select-none text-caption font-medium leading-snug">
+                          {item}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+              </details>
             </div>
           )}
 
-          {/* Tab 2 — pelaksanaan (F04): satu alur dari penugasan sampai hasil */}
+          {/* Penugasan dan catatan pelaksanaan. */}
           {activeTab === "execution" && (
             <div
               role="tabpanel"
@@ -417,54 +392,57 @@ export function DispatchActionModal({
                   siapa pun yang bisa ditanya kabarnya. */}
               <section className="space-y-2.5 rounded-xl border border-border bg-surface p-3.5">
                 <h4 className="text-caption font-semibold text-foreground">
-                  {action.assignment ? "Penugasan" : "Tugaskan tindakan ini"}
+                  {action.assignment ? "Penugasan" : "Pilih pelaksana"}
                 </h4>
                 {action.assignment ? (
                   <p className="text-caption leading-relaxed text-paper-700">
                     {action.assignment.unit}
-                    {action.assignment.pic ? ` · ${action.assignment.pic}` : ""} —
-                    ditugaskan {formatDateTime(action.assignment.assignedAt)}
-                    {action.assignment.assignedBy
-                      ? ` oleh ${action.assignment.assignedBy}`
-                      : ""}
+                    {action.assignment.pic ? ` · ${action.assignment.pic}` : ""}
                     {action.assignment.agreedDueDate
-                      ? `. Tenggat disepakati ${action.assignment.agreedDueDate}.`
-                      : "."}
-                    {action.assignment.note ? ` ${action.assignment.note}` : ""}
+                      ? ` · tenggat ${action.assignment.agreedDueDate}`
+                      : ""}
                   </p>
                 ) : null}
 
                 <div className="grid gap-2 sm:grid-cols-2">
-                  <input
-                    value={unit}
-                    onChange={(e) => setUnit(e.target.value)}
-                    placeholder="Unit pelaksana"
-                    className="min-w-0 rounded-lg border border-border bg-surface px-3 py-2 text-caption text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  />
-                  <input
-                    value={pic}
-                    onChange={(e) => setPic(e.target.value)}
-                    placeholder="Nama PIC (opsional)"
-                    className="min-w-0 rounded-lg border border-border bg-surface px-3 py-2 text-caption text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  />
-                  <input
-                    type="date"
-                    value={agreedDue}
-                    onChange={(e) => setAgreedDue(e.target.value)}
-                    aria-label="Tenggat yang disepakati"
-                    className="min-w-0 rounded-lg border border-border bg-surface px-3 py-2 text-caption text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  />
-                  <input
-                    value={assignNote}
-                    onChange={(e) => setAssignNote(e.target.value)}
-                    placeholder="Catatan penugasan (opsional)"
-                    className="min-w-0 rounded-lg border border-border bg-surface px-3 py-2 text-caption text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  />
+                  <label className="space-y-1 text-caption font-medium text-paper-700">
+                    <span>Unit atau puskesmas pelaksana</span>
+                    <input
+                      value={unit}
+                      onChange={(e) => setUnit(e.target.value)}
+                      aria-label="Unit atau puskesmas pelaksana"
+                      className="w-full min-w-0 rounded-lg border border-border bg-surface px-3 py-2 font-normal text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    />
+                  </label>
+                  <label className="space-y-1 text-caption font-medium text-paper-700">
+                    <span>Penanggung jawab (opsional)</span>
+                    <input
+                      value={pic}
+                      onChange={(e) => setPic(e.target.value)}
+                      className="w-full min-w-0 rounded-lg border border-border bg-surface px-3 py-2 font-normal text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    />
+                  </label>
+                  <label className="space-y-1 text-caption font-medium text-paper-700">
+                    <span>Tenggat</span>
+                    <input
+                      type="date"
+                      value={agreedDue}
+                      onChange={(e) => setAgreedDue(e.target.value)}
+                      className="w-full min-w-0 rounded-lg border border-border bg-surface px-3 py-2 font-normal text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    />
+                  </label>
+                  <label className="space-y-1 text-caption font-medium text-paper-700">
+                    <span>Catatan (opsional)</span>
+                    <input
+                      value={assignNote}
+                      onChange={(e) => setAssignNote(e.target.value)}
+                      className="w-full min-w-0 rounded-lg border border-border bg-surface px-3 py-2 font-normal text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    />
+                  </label>
                 </div>
                 <p className="text-caption leading-relaxed text-paper-600">
-                  Tenggat saran mesin aturan {deadline.date}. Tenggat yang
-                  disepakati bersama pelaksana dipakai untuk menilai ketepatan
-                  waktu.
+                  Batas saran {deadline.date}. Catat di aplikasi, teruskan instruksi
+                  lewat kanal dinas.
                 </p>
                 <Button
                   size="sm"
@@ -478,11 +456,11 @@ export function DispatchActionModal({
                           dueDate: agreedDue || undefined,
                           note: assignNote.trim() || undefined,
                         }),
-                      `${action.id} ditugaskan ke ${unit.trim()}.`,
+                      `Penugasan ke ${unit.trim()} dicatat.`,
                     )
                   }
                 >
-                  {action.assignment ? "Perbarui penugasan" : "Tugaskan"}
+                  {action.assignment ? "Simpan perubahan" : "Catat penugasan"}
                 </Button>
               </section>
 
@@ -754,9 +732,7 @@ export function DispatchActionModal({
               <div className="flex items-start gap-2 rounded-xl border border-border bg-paper-50 p-3 text-caption text-paper-700">
                 <FileText className="mt-0.5 h-4 w-4 shrink-0 text-paper-600" aria-hidden="true" />
                 <span>
-                  Sistem tidak mengirim pesan ke kanal mana pun. Salin draf ini ke
-                  kanal resmi dinas, lalu catat di tab Pelaksanaan siapa yang
-                  ditugasi dan kapan ia membenarkan menerimanya.
+                  Aplikasi belum mengirim pesan. Salin draf ini ke kanal dinas.
                 </span>
               </div>
 
@@ -766,7 +742,7 @@ export function DispatchActionModal({
                   kalimatnya harus berbeda. */}
               <div className="border-t border-border pt-4">
                 <h3 className="text-body-sm font-semibold text-foreground">
-                  Kit siaran warga per kecamatan
+                  Pesan untuk warga
                 </h3>
                 <div className="mt-3">
                   <BroadcastKit action={recommendation} />
@@ -781,11 +757,14 @@ export function DispatchActionModal({
           <div className="space-y-1">
             <span className="flex items-center gap-2 text-caption text-paper-600">
               <ShieldAlert className="h-4 w-4 text-brand-700" aria-hidden="true" />
-              <span>Unit pelaksana: {recommendation.pic_unit}</span>
+              <span>
+                {action.assignment ? "Pelaksana" : "Saran unit"}: {action.assignment?.unit ?? recommendation.pic_unit}
+                {action.assignment?.pic ? ` · ${action.assignment.pic}` : ""}
+              </span>
             </span>
             {operator && (
               <span className="block text-caption text-paper-600">
-                Tercatat atas nama {operator}
+                Pencatat: {operator}
               </span>
             )}
             {error && (
@@ -842,7 +821,7 @@ export function DispatchActionModal({
                 <>
                   <Send className="h-3.5 w-3.5" aria-hidden="true" />
                   <span>
-                    {action.assignment ? "Catat pelaksanaan" : "Tugaskan tindakan"}
+                    {action.assignment ? "Catat pelaksanaan" : "Atur penugasan"}
                   </span>
                 </>
               )}

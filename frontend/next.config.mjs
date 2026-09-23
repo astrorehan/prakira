@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  /* The dev server and `scripts/dev.mjs --production-frontend` may run side by
+     side. Give the production demo its own output so `next build` cannot replace
+     the dev server's live CSS and JS chunks in `.next`. */
+  distDir: process.env.PRAKIRA_NEXT_DIST_DIR ?? ".next",
   reactStrictMode: false,
   poweredByHeader: false,
   productionBrowserSourceMaps: false,

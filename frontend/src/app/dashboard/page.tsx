@@ -4,7 +4,6 @@ import * as React from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import {
-  Activity,
   ArrowRight,
   ChevronDown,
   CloudOff,
@@ -27,6 +26,8 @@ import { DistrictDetailPanel } from "@/components/district-detail-panel";
 import { DistrictPriorityList } from "@/components/district-priority-list";
 import { DistrictRankingTable } from "@/components/district-ranking-table";
 import { DataState } from "@/components/data-state";
+import { DashboardDataSkeleton } from "@/components/console/console-skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 import { TrendChart } from "@/components/trend-chart";
 import {
   fetchActions,
@@ -50,14 +51,8 @@ const MAP_HEIGHT = "h-[420px] lg:h-[560px]";
 const ChoroplethMap = dynamic(() => import("@/components/choropleth-map"), {
   ssr: false,
   loading: () => (
-    <div
-      className={cn(
-        MAP_HEIGHT,
-        "w-full rounded-2xl border border-paper-200 bg-paper-100 flex flex-col items-center justify-center text-muted-foreground text-xs animate-pulse gap-2",
-      )}
-    >
-      <Activity className="h-6 w-6 text-primary animate-spin" />
-      <span>Memuat peta Kota Semarang…</span>
+    <div role="status" aria-label="Memuat peta Kota Semarang">
+      <Skeleton className={cn(MAP_HEIGHT, "w-full rounded-2xl")} />
     </div>
   ),
 });
@@ -116,11 +111,13 @@ export default function DashboardPrediksiPage() {
         ? fetchDistricts(selectedDisease)
         : Promise.resolve(null as never),
     [selectedDisease],
+    { cacheKey: selectedDisease ? `dashboard:districts:${selectedDisease}` : "", cacheTimeMs: 60 * 60 * 1000 },
   );
 
   const trend = useApi(
     () => (selectedDisease ? fetchTrend(selectedDisease, 12) : Promise.resolve(null as never)),
     [selectedDisease],
+    { cacheKey: selectedDisease ? `dashboard:trend:${selectedDisease}` : "", cacheTimeMs: 60 * 60 * 1000 },
   );
 
   const geo = useApi(() => fetchGeoJson(), []);
@@ -190,6 +187,8 @@ export default function DashboardPrediksiPage() {
   const pendingActions = allActions.filter((a) => a.status === "pending").length;
 
   const forecastHidden = totals.predictedCount === 0 || totals.coverage === "insufficient";
+  const initialDataLoading = diseases.loading || (!selectedDisease && !!diseases.data?.length);
+  const districtLoading = districts.loading || initialDataLoading;
 
   return (
     <div className="min-h-screen bg-background py-8 px-4 sm:px-6 lg:px-8 bg-mesh-blue">
@@ -199,9 +198,11 @@ export default function DashboardPrediksiPage() {
           description="Peta risiko per kecamatan dan wilayah yang perlu didahulukan."
           actions={
             <>
+              {/* Utilitas, bukan ajakan: ghost kecil, tanpa isian warna.
+                  Perhatian di halaman ini milik peta dan daftar prioritas. */}
               <Button
-                size="sm"
-                variant="outline"
+                size="icon-sm"
+                variant="ghost"
                 onClick={() => {
                   districts.reload();
                   trend.reload();
@@ -209,16 +210,21 @@ export default function DashboardPrediksiPage() {
                   triggers.reload();
                 }}
                 disabled={districts.refreshing}
-                className="gap-1.5"
+                title="Segarkan data"
+                aria-label="Segarkan data"
+                className="h-9 w-9 text-paper-500"
               >
                 <RefreshCw
                   className={districts.refreshing ? "h-4 w-4 animate-spin" : "h-4 w-4"}
                   aria-hidden
                 />
-                <span>Segarkan</span>
               </Button>
-              {/* Satu tombol utama per halaman (§10.8). */}
-              <Button asChild size="sm" className="gap-1.5">
+              <Button
+                asChild
+                size="sm"
+                variant="ghost"
+                className="h-9 gap-1.5 px-3 font-medium text-paper-600"
+              >
                 <Link href={`/buletin?disease=${encodeURIComponent(selectedDisease ?? "DBD")}`}>
                   <Printer className="h-3.5 w-3.5" aria-hidden />
                   <span>Draf Buletin</span>
@@ -244,15 +250,21 @@ export default function DashboardPrediksiPage() {
 
         {/* Kendali + angka ringkas, tepat di atas peta. */}
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <DiseaseSelector
-            className="max-w-full overflow-x-auto"
-            options={(diseases.data ?? []).map((d) => d.disease)}
-            selected={selectedDisease}
-            onSelect={(d) => {
-              setSelectedDisease(d);
-              setSelectedDistrictId(null);
-            }}
-          />
+          {initialDataLoading ? (
+            <div role="status" aria-label="Memuat pilihan penyakit" className="flex gap-2">
+              {[0, 1, 2].map((item) => <Skeleton key={item} className="h-10 w-24 rounded-xl" />)}
+            </div>
+          ) : (
+            <DiseaseSelector
+              className="max-w-full overflow-x-auto"
+              options={(diseases.data ?? []).map((d) => d.disease)}
+              selected={selectedDisease}
+              onSelect={(d) => {
+                setSelectedDisease(d);
+                setSelectedDistrictId(null);
+              }}
+            />
+          )}
           {rows.length > 0 && (
             <dl className="grid grid-cols-3 divide-x divide-border rounded-xl border border-border bg-surface shadow-xs">
               <Stat
@@ -276,12 +288,16 @@ export default function DashboardPrediksiPage() {
               />
             </dl>
           )}
+          {districtLoading && rows.length === 0 && (
+            <Skeleton className="h-[76px] w-full rounded-xl lg:w-96" />
+          )}
         </div>
 
         <DataState
-          loading={districts.loading || diseases.loading || !selectedDisease}
+          loading={districtLoading}
+          loadingFallback={<DashboardDataSkeleton />}
           error={districts.error ?? diseases.error}
-          empty={!districts.loading && !!selectedDisease && rows.length === 0}
+          empty={!districts.loading && (diseases.data?.length === 0 || (!!selectedDisease && rows.length === 0))}
           emptyMessage="Belum ada kecamatan yang terdaftar di gateway."
           onRetry={() => {
             diseases.reload();

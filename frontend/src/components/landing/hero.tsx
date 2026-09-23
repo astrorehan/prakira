@@ -319,7 +319,7 @@ export function Hero({ selectedKecamatan, onSelectKecamatan }: HeroProps) {
                   aria-hidden
                   className="absolute inset-x-0 bottom-[0.08em] -z-0 h-[0.2em] rounded-full bg-risk-medium-fill/40"
                 />
-              </span>?
+              </span>
             </h1>
 
             <p className="animate-fade-in-up stagger-2 mt-6 max-w-xl text-body-lg text-paper-600">

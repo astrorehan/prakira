@@ -13,7 +13,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { REPORT_KIND } from "@/lib/reports";
-import { formatDateTime } from "@/lib/period";
+import { formatDateTime, formatMonth } from "@/lib/period";
+import { diseaseLabel } from "@/lib/utils";
 import type { CitizenReport } from "@/types";
 
 /**
@@ -50,9 +51,20 @@ export function DispositionEmailModal({
   if (!report) return null;
 
   const kindLabel = REPORT_KIND[report.kind]?.label ?? report.kind;
-  const target = report.forwarding?.target ?? "Dinas Lingkungan Hidup Kota Semarang";
+  const target =
+    report.forwarding?.target ?? report.routing.agency?.name ?? "Instansi terkait";
   const delivered = report.forwarding?.state === "diteruskan";
   const reference = report.forwarding?.reference ?? null;
+  const pattern = report.forwarding?.pattern ?? null;
+
+  /* Inti rujukan dari Dinkes: kenapa lokasi ini perlu didahulukan. */
+  const riskLine = report.risk
+    ? `Prakiraan risiko ${diseaseLabel(report.risk.disease)} di Kec. ${report.kecamatan} periode ${formatMonth(report.risk.month)}: ${report.risk.riskClass.toUpperCase()}.`
+    : null;
+  const patternLine = pattern
+    ? `Temuan serupa dilaporkan ${pattern} kali di kecamatan ini dalam 14 hari terakhir.`
+    : null;
+  const contextText = [riskLine, patternLine].filter(Boolean).join(" ");
 
   const where = [
     `Kec. ${report.kecamatan}`,
@@ -80,7 +92,7 @@ Berdasarkan pemeriksaan petugas atas laporan masyarakat di sistem PRAKIRA, kami 
 ${report.landmark ? "4" : "3"}. Kategori temuan  : ${kindLabel}
 ${report.landmark ? "5" : "4"}. Keterangan warga : "${report.description}"
 
-Catatan: temuan fisik seperti ini dapat menjadi habitat perkembangbiakan vektor atau sumber penularan penyakit berbasis lingkungan. Kami mohon bantuan penjadwalan pemeriksaan dan pembersihan di lokasi tersebut.
+${contextText ? `Konteks kesehatan: ${contextText}\n\n` : ""}Temuan ini dapat menjadi habitat vektor atau sumber penularan penyakit berbasis lingkungan. Kami mohon bantuan penjadwalan pemeriksaan dan penanganan di lokasi tersebut.
 
 Penanganan teknis di lapangan sepenuhnya menjadi kewenangan instansi penerima.
 
@@ -185,10 +197,14 @@ Dinas Kesehatan Kota Semarang
             <div className="flex items-start gap-2 rounded-lg border border-teal-200/80 bg-teal-50/70 p-3 text-caption text-teal-950">
               <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-teal-700" aria-hidden="true" />
               <div>
-                <strong>Catatan epidemiologis:</strong> temuan genangan atau sampah
-                di lokasi ini dapat menjadi habitat perkembangbiakan vektor maupun
-                sumber penularan penyakit berbasis lingkungan. Mohon bantuan
-                penjadwalan pemeriksaan dan pembersihan di lokasi tersebut.
+                {contextText && (
+                  <p className="mb-1">
+                    <strong>Konteks kesehatan:</strong> {contextText}
+                  </p>
+                )}
+                Temuan ini dapat menjadi habitat vektor atau sumber penularan
+                penyakit berbasis lingkungan. Mohon bantuan penjadwalan
+                pemeriksaan dan penanganan di lokasi tersebut.
               </div>
             </div>
 

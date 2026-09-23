@@ -22,6 +22,7 @@ type DataStateProps = {
   empty?: boolean;
   emptyMessage?: string;
   loadingMessage?: string;
+  loadingFallback?: React.ReactNode;
   onRetry?: () => void;
   className?: string;
   children: React.ReactNode;
@@ -33,11 +34,15 @@ export function DataState({
   empty = false,
   emptyMessage = "Belum ada data untuk ditampilkan.",
   loadingMessage = "Memuat data…",
+  loadingFallback,
   onRetry,
   className,
   children,
 }: DataStateProps) {
   if (loading) {
+    if (loadingFallback) {
+      return <>{loadingFallback}</>;
+    }
     return (
       <div
         role="status"

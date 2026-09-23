@@ -78,7 +78,7 @@ export const REPORT_STATUS: Record<
 
 export const FAMILY_ROUTING: Record<ReportFamily, string> = {
   kesehatan: "Puskesmas wilayah",
-  lingkungan: "Dinas Lingkungan Hidup",
+  lingkungan: "Instansi lingkungan (DLH/DPU)",
 };
 
 /** Menerima ketikan longgar: spasi, huruf kecil, prefiks yang lupa ditulis. */

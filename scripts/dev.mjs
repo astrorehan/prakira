@@ -14,6 +14,7 @@ import { fileURLToPath } from "node:url";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const isWindows = process.platform === "win32";
 const useProductionFrontend = process.argv.includes("--production-frontend");
+const frontendBuildDir = useProductionFrontend ? "next-demo" : undefined;
 
 const COLORS = {
   gateway: "\x1b[36m",
@@ -185,7 +186,11 @@ async function main() {
       {
         cwd: root,
         shell: isWindows,
-        env: { ...process.env, API_PROXY_TARGET: gatewayUrl },
+        env: {
+          ...process.env,
+          API_PROXY_TARGET: gatewayUrl,
+          PRAKIRA_NEXT_DIST_DIR: frontendBuildDir,
+        },
         stdio: "inherit",
       },
     );
@@ -242,6 +247,9 @@ async function main() {
     env: {
       PORT: String(frontendPort),
       API_PROXY_TARGET: gatewayUrl,
+      ...(frontendBuildDir
+        ? { PRAKIRA_NEXT_DIST_DIR: frontendBuildDir }
+        : {}),
     },
   });
 

@@ -32,6 +32,8 @@ import {
 import { cn } from "@/lib/utils";
 import { ROLE_LABEL } from "@/lib/auth";
 import { useSessionContext } from "@/components/session-provider";
+import { SidebarSkeleton } from "@/components/console/console-skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 import { fetchActions, fetchReportQueue } from "@/lib/api";
 import { readWorkContext, withWorkParams } from "@/lib/work-context";
 
@@ -82,7 +84,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = React.useState(false);
-  const { session, signOut } = useSessionContext();
+  const { session, loading, signOut } = useSessionContext();
   const [pendingReports, setPendingReports] = React.useState<number | null>(null);
   const [pendingActions, setPendingActions] = React.useState<number | null>(null);
 
@@ -93,21 +95,23 @@ export function Sidebar() {
      dinas membuka pekerjaan lintas wilayah; analis membuka pintu evaluasi.
      Petugas puskesmas mengerjakan tugas wilayahnya; alat evaluasi model bukan
      pekerjaannya, jadi kelompok Evaluasi tidak ikut tampil di relnya. */
-  const canEvaluate = userRole !== "puskesmas";
+  const canEvaluate = !!session && userRole !== "puskesmas";
   const consoleSubline = isAdmin
     ? "Konsol Administrator"
     : userRole === "puskesmas"
       ? "Konsol Petugas Puskesmas"
       : userRole === "analis"
         ? "Konsol Analis"
-        : "Konsol Dinas Kesehatan";
+      : userRole === "dinas"
+        ? "Konsol Dinas Kesehatan"
+        : "Konsol";
 
   /* Kedua angka berubah saat petugas memutuskan sesuatu di /verifikasi atau
      /tindakan, dan sidebar tetap terpasang selama itu. Ditarik ulang tiap kali
      rute berganti — cukup untuk lencana, tanpa menambah kanal antar-komponen.
      Hanya dijalankan untuk nakes/petugas lapangan, bukan admin IT. */
   React.useEffect(() => {
-    if (!session || isAdmin) {
+    if (loading || !session || isAdmin) {
       setPendingReports(null);
       setPendingActions(null);
       return;
@@ -130,14 +134,14 @@ export function Sidebar() {
     return () => {
       alive = false;
     };
-  }, [pathname, session, isAdmin]);
+  }, [pathname, session, loading, isAdmin]);
 
   const consoleItems: NavItem[] = React.useMemo(() => {
     /* F06/F08: satu pintu keputusan untuk semua peran, dan namanya menyebut
        pekerjaan — bukan "dashboard prediksi", yang menjanjikan bahan analisis. */
     const home: NavItem = {
       href: "/dashboard",
-      label: "Beranda / Prioritas",
+      label: userRole === "dinas" ? "Prioritas" : "Beranda / Prioritas",
       icon: Home,
     };
 
@@ -201,10 +205,10 @@ export function Sidebar() {
       home,
       {
         href: "/tindakan",
-        label: "Aksi Dini",
+        label: "Rekomendasi aksi",
         icon: Siren,
         badge: pendingActions ?? undefined,
-        badgeLabel: "menunggu keputusan",
+        badgeLabel: "belum ditugaskan",
       },
       {
         href: "/verifikasi",
@@ -422,6 +426,16 @@ export function Sidebar() {
     </div>
   );
 
+  const accountSkeleton = () => (
+    <div role="status" aria-label="Memuat akun" aria-busy="true" className="space-y-2">
+      <div className="space-y-2 rounded-xl border border-border bg-paper-50 p-3">
+        <Skeleton className="h-3.5 w-28" />
+        <Skeleton className="h-3 w-40 max-w-full" />
+      </div>
+      <Skeleton className="h-9 w-full rounded-xl" />
+    </div>
+  );
+
   return (
     <>
       {/* Desktop */}
@@ -434,12 +448,16 @@ export function Sidebar() {
           aria-label="Navigasi konsol"
           className="flex-1 overflow-y-auto px-4 py-3"
         >
-          <div className="space-y-1">{navLinks()}</div>
-          {canEvaluate && evaluationLinks()}
-          {publicDoor()}
+          {loading ? <SidebarSkeleton /> : session ? (
+            <>
+              <div className="space-y-1">{navLinks()}</div>
+              {canEvaluate && evaluationLinks()}
+              {publicDoor()}
+            </>
+          ) : null}
         </nav>
 
-        <div className="border-t border-border p-4">{accountBlock()}</div>
+        <div className="border-t border-border p-4">{loading ? accountSkeleton() : accountBlock()}</div>
       </aside>
 
       {/* Mobile */}
@@ -457,12 +475,16 @@ export function Sidebar() {
               <Wordmark href="/dashboard" subline={consoleSubline} />
             </div>
             <nav aria-label="Navigasi konsol" className="flex flex-col gap-1">
-              {navLinks(() => setMobileOpen(false))}
-              {canEvaluate && evaluationLinks(() => setMobileOpen(false))}
-              {publicDoor(() => setMobileOpen(false))}
+              {loading ? <SidebarSkeleton /> : session ? (
+                <>
+                  {navLinks(() => setMobileOpen(false))}
+                  {canEvaluate && evaluationLinks(() => setMobileOpen(false))}
+                  {publicDoor(() => setMobileOpen(false))}
+                </>
+              ) : null}
             </nav>
             <div className="mt-8 border-t border-border pt-4">
-              {accountBlock(() => setMobileOpen(false))}
+              {loading ? accountSkeleton() : accountBlock(() => setMobileOpen(false))}
             </div>
           </SheetContent>
         </Sheet>

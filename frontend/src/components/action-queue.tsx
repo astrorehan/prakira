@@ -10,7 +10,6 @@ import {
   CheckCircle2,
   Circle,
   Clock,
-  FileText,
   HelpCircle,
   Loader,
   MapPin,
@@ -25,13 +24,12 @@ import { formatNumber } from "@/lib/utils";
 import type { DeadlineUrgency } from "@/lib/period";
 import {
   ACTION_TYPE_LABEL,
-  COVERAGE_LABEL,
   effectiveDueDate,
   PRIORITY_LABEL,
   STATUS_LABEL,
   type QueuedAction,
 } from "@/lib/action-queue";
-import { daysBetween, formatDate, formatDateTime } from "@/lib/period";
+import { daysBetween, formatDate } from "@/lib/period";
 import type { DiseaseType } from "@/types";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
@@ -97,7 +95,7 @@ const STATUS_STYLE: Record<
  * bahwa pekerjaan sudah berjalan.
  */
 const ACTION_LABEL: Record<QueuedAction["status"], string> = {
-  pending: "Tinjau tindakan",
+  pending: "Tinjau & tugaskan",
   assigned: "Buka penugasan",
   in_progress: "Catat pelaksanaan",
   completed: "Lihat arsip",
@@ -180,54 +178,20 @@ function ActionRow({
               <Badge variant={action.priority === "high" ? "risk-high" : "risk-medium"}>
                 {PRIORITY_LABEL[action.priority]}
               </Badge>
-              <span className="tabular font-mono text-overline text-paper-600">
-                #{action.id}
-              </span>
             </div>
 
             <h3 className="text-h3 text-foreground">{action.title}</h3>
 
-            {/* Alasan tindakan ini ada. Rekomendasi tanpa pemicunya adalah
-                perintah, bukan keputusan yang bisa ditimbang — §5.2 melarang
-                rekomendasi tanpa kalimat "Dasar:" muncul sama sekali. */}
-            <p className="max-w-3xl text-body-sm leading-relaxed text-paper-700">
-              {action.basis}
-            </p>
-
-            {action.climate_trigger && (
-              <p className="max-w-3xl text-caption leading-relaxed text-paper-600">
-                {action.climate_trigger}
-              </p>
-            )}
-
             <div className="flex flex-wrap gap-x-5 gap-y-1.5 pt-0.5">
-              <Fact icon={MapPin} label="Wilayah">
-                {action.target_kecamatan.join(", ")}
+              <Fact icon={MapPin} label="Sasaran">
+                {action.target_kecamatan.length} kecamatan · {action.target_kecamatan.join(", ")}
               </Fact>
 
               {action.target_population > 0 && (
-                <Fact icon={Users} label="Populasi">
+                <Fact icon={Users} label="Penduduk">
                   {formatNumber(action.target_population)} jiwa
                 </Fact>
               )}
-
-              {/* Bidang opsional hanya tampil kalau datanya ada. Versi
-                  sebelumnya memasang nilai cadangan (`|| 94.2`, `|| "120k"`),
-                  yaitu mengarang angka untuk mengisi kotak — persis yang
-                  dilarang §10.9. */}
-              {typeof action.lead_time_days === "number" && (
-                <Fact icon={Clock} label="Lead time">
-                  {action.lead_time_days} hari
-                </Fact>
-              )}
-
-              {/* Menggantikan "Keyakinan model 94,2%", angka yang dulu
-                  ditulis tangan di berkas mock dan tidak pernah keluar dari
-                  model mana pun. Cakupan data dihitung layanan ML dari
-                  kelengkapan riwayat kecamatan target. */}
-              <Fact icon={FileText} label="Cakupan">
-                {COVERAGE_LABEL[action.data_coverage] ?? action.data_coverage}
-              </Fact>
             </div>
 
             {/* Penanda tidak menggantikan tahap: tindakan yang terkendala tetap
@@ -251,19 +215,12 @@ function ActionRow({
                 <span className="font-medium text-paper-700">Pelaksana:</span>{" "}
                 {action.assignment.unit}
                 {action.assignment.pic ? ` · ${action.assignment.pic}` : ""}
-                {action.assignment.agreedDueDate
-                  ? ` · tenggat disepakati ${formatDate(action.assignment.agreedDueDate)}`
-                  : ""}
               </p>
             )}
-
-            {action.estimated_impact && (
+            {!action.assignment && (
               <p className="text-caption leading-relaxed text-paper-600">
-                {/* Bukan "proyeksi dampak": sistem tidak pernah mengukur efek
-                    intervensinya sendiri. Yang bisa dikatakan adalah beban yang
-                    diproyeksikan bila tidak ada yang dikerjakan. */}
-                <span className="font-medium text-paper-700">Tanpa intervensi:</span>{" "}
-                {action.estimated_impact}
+                <span className="font-medium text-paper-700">Saran unit:</span>{" "}
+                {action.pic_unit}
               </p>
             )}
           </div>
@@ -293,21 +250,6 @@ function ActionRow({
               <StatusIcon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               <span>{STATUS_LABEL[action.status]}</span>
             </span>
-
-            {action.assignment && (
-              <span className="text-caption text-paper-600 lg:text-right">
-                Ditugaskan {formatDateTime(action.assignment.assignedAt)}
-                {action.assignment.assignedBy
-                  ? ` · ${action.assignment.assignedBy}`
-                  : ""}
-              </span>
-            )}
-
-            {action.acknowledgement && (
-              <span className="text-caption text-paper-600 lg:text-right">
-                Dikonfirmasi lewat {action.acknowledgement.source}
-              </span>
-            )}
 
             <div className="flex w-full items-center gap-2 lg:w-auto lg:justify-end">
               <Button

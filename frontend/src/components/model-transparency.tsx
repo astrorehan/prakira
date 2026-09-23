@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ArrowRight, History, ShieldAlert, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, History, ShieldAlert, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -102,17 +102,14 @@ export function ModelTransparency() {
     <div className="container space-y-12 py-12 md:py-16">
       {/* Kepala halaman */}
       <header className="mx-auto max-w-3xl space-y-5 text-center">
-        <div className="eyebrow mx-auto">
-          <Sparkles className="h-3 w-3" aria-hidden="true" />
-          Transparansi Model
-        </div>
         <h1 className="text-3xl font-semibold leading-tight tracking-tight text-balance text-foreground md:text-5xl">
           Seberapa jauh angka prakiraan ini boleh dipercaya
         </h1>
         <p className="text-base leading-relaxed text-muted-foreground md:text-lg">
-          Halaman ini memuat metrik uji setiap model apa adanya — termasuk yang
-          hasilnya biasa saja — beserta data yang melatihnya, kecamatan mana yang
-          datanya tipis, dan hal-hal yang tidak bisa dijawab sistem ini.
+          Halaman ini memuat metrik uji setiap model apa adanya, termasuk hasil
+          yang biasa saja. Halaman ini juga menjelaskan data yang melatihnya,
+          kecamatan dengan data tipis, dan hal-hal yang tidak bisa dijawab sistem
+          ini.
         </p>
 
         {metrics.length > 0 && (

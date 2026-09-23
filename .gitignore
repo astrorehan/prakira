@@ -8,6 +8,7 @@ coverage/
 
 # next.js
 .next/
+frontend/next-demo/
 out/
 
 # production

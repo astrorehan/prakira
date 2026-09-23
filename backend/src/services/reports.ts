@@ -74,6 +74,109 @@ export const REPORT_DESTINATION: Record<
   lingkungan: "Dinas Lingkungan Hidup",
 };
 
+/**
+ * Instansi penerima per jenis laporan lingkungan. Sampah adalah urusan DLH,
+ * sedangkan genangan dan saluran (drainase) berada di Dinas Pekerjaan Umum.
+ * Nilai `handling_mode = 'dlh'` di basis data tetap berarti "teruskan ke
+ * instansi"; tujuannya ditentukan dari sini.
+ */
+export const AGENCY_BY_KIND: Partial<
+  Record<ReportKind, { name: string; short: string }>
+> = {
+  genangan: { name: "Dinas Pekerjaan Umum", short: "DPU" },
+  saluran: { name: "Dinas Pekerjaan Umum", short: "DPU" },
+  sampah: { name: "Dinas Lingkungan Hidup", short: "DLH" },
+};
+
+export function agencyFor(kind: ReportKind): { name: string; short: string } {
+  return AGENCY_BY_KIND[kind] ?? { name: REPORT_DESTINATION.lingkungan, short: "DLH" };
+}
+
+/**
+ * Laporan mandiri yang berulang di satu kecamatan tidak lagi masalah kecil.
+ * Begitu laporan mandiri sejenis mencapai ambang ini dalam jendelanya, laporan
+ * terakhir dinaikkan ke antrean penerusan dengan jumlah polanya.
+ */
+export const MANDIRI_PATTERN = { minReports: 3, windowDays: 14 };
+
+/** Penyakit yang relevan untuk tiap pemicu lingkungan, urut prioritas. */
+const RISK_DISEASES: Partial<Record<ReportKind, string[]>> = {
+  genangan: ["DBD", "LEPTOSPIROSIS"],
+  saluran: ["LEPTOSPIROSIS", "DBD"],
+  sampah: ["DBD", "LEPTOSPIROSIS", "DIARE"],
+};
+
+export type RiskContext = {
+  disease: string;
+  riskClass: "rendah" | "sedang" | "tinggi";
+  month: string;
+};
+
+const RISK_RANK = { rendah: 0, sedang: 1, tinggi: 2 } as const;
+
+export function riskKey(row: { kind: ReportKind; kecamatan: string }): string {
+  return `${row.kind}|${row.kecamatan.toLowerCase()}`;
+}
+
+/**
+ * Kelas risiko prakiraan terbaru yang paling tinggi di antara penyakit yang
+ * relevan untuk sebuah laporan lingkungan. Inilah nilai yang ditambahkan
+ * Dinkes saat meneruskan: instansi penerima tahu lokasi mana yang paling
+ * berisiko menjadi sumber penyakit.
+ */
+export async function riskContextFor(
+  rows: { kind: ReportKind; kecamatan: string }[],
+): Promise<Map<string, RiskContext>> {
+  const result = new Map<string, RiskContext>();
+  const wanted = rows.filter((r) => RISK_DISEASES[r.kind]);
+  if (wanted.length === 0) return result;
+
+  const predictions = await all<{
+    kecamatan: string;
+    kecamatan_id: string;
+    disease: string;
+    month_start: string;
+    risk_class: RiskContext["riskClass"] | null;
+  }>(
+    `SELECT k.nama AS kecamatan, p.kecamatan_id, p.disease, p.month_start, p.risk_class
+       FROM prediksi p
+       JOIN kecamatan k ON k.id = p.kecamatan_id
+       JOIN (SELECT disease, MAX(month_start) AS m FROM prediksi GROUP BY disease) latest
+         ON latest.disease = p.disease AND latest.m = p.month_start
+      WHERE p.risk_class IS NOT NULL`,
+  );
+  const byPlace = new Map<string, typeof predictions>();
+  for (const p of predictions) {
+    for (const key of [p.kecamatan.toLowerCase(), p.kecamatan_id.toLowerCase()]) {
+      const list = byPlace.get(key) ?? [];
+      list.push(p);
+      byPlace.set(key, list);
+    }
+  }
+
+  for (const row of wanted) {
+    const key = riskKey(row);
+    if (result.has(key)) continue;
+    const diseases = RISK_DISEASES[row.kind]!;
+    let best: RiskContext | null = null;
+    for (const p of byPlace.get(row.kecamatan.toLowerCase()) ?? []) {
+      const disease = p.disease.toUpperCase();
+      const order = diseases.indexOf(disease);
+      if (order < 0 || !p.risk_class) continue;
+      if (
+        !best ||
+        RISK_RANK[p.risk_class] > RISK_RANK[best.riskClass] ||
+        (RISK_RANK[p.risk_class] === RISK_RANK[best.riskClass] &&
+          order < diseases.indexOf(best.disease))
+      ) {
+        best = { disease, riskClass: p.risk_class, month: p.month_start };
+      }
+    }
+    if (best) result.set(key, best);
+  }
+  return result;
+}
+
 export type CitizenGuidance = {
   title: string;
   steps: string[];
@@ -207,6 +310,8 @@ export type ReportRow = {
   forward_note: string | null;
   forwarded_at: string | null;
   forwarded_by: string | null;
+  /** Jumlah laporan mandiri serupa bila laporan ini naik karena berulang. */
+  forward_pattern: number | null;
 };
 
 /* Proyeksi kolom yang dipakai setiap kueri baca laporan. Ditulis sekali di
@@ -218,7 +323,7 @@ export const REPORT_COLUMNS = `id, kind, kecamatan, kelurahan, occurred_at,
         handling_mode, device_hash, landmark, rt_rw, info_request,
         info_requested_at, related_report_id, forward_state, forward_target,
         forward_channel, forward_reference, forward_note, forwarded_at,
-        forwarded_by, (photo IS NOT NULL) AS has_photo`;
+        forwarded_by, forward_pattern, (photo IS NOT NULL) AS has_photo`;
 
 /* Tanpa 0/O dan 1/I/L: kode ini diketik ulang orang dari layar ponsel, dan
    satu karakter ambigu mengubah "laporan saya hilang" jadi keluhan. */
@@ -415,6 +520,8 @@ export type PublicForwarding = {
   reference: string | null;
   note: string | null;
   forwardedAt: string | null;
+  /** Terisi bila laporan mandiri naik karena berulang di wilayah yang sama. */
+  pattern: number | null;
 };
 
 /**
@@ -456,6 +563,7 @@ export function describeCompleteness(row: ReportRow): ReportCompleteness {
 export function toPublicView(
   row: ReportRow,
   ticket?: EnvironmentTicket | null,
+  risk?: RiskContext | null,
 ): {
   simulated: boolean;
   id: string;
@@ -477,9 +585,12 @@ export function toPublicView(
   relatedReportId: string | null;
   completeness: ReportCompleteness;
   forwarding: PublicForwarding | null;
+  risk: RiskContext | null;
   routing: {
     family: "kesehatan" | "lingkungan";
     destination: string;
+    /** Instansi penerima bila laporan ini diteruskan; null untuk kesehatan. */
+    agency: { name: string; short: string } | null;
     handlingMode: ReportHandlingMode | null;
     workflow:
       | "rekap_evaluasi"
@@ -497,27 +608,28 @@ export function toPublicView(
     family === "lingkungan"
       ? row.handling_mode ?? (ticket ? "dlh" : null)
       : null;
-  const workflow =
-    family === "kesehatan"
-      ? "rekap_evaluasi"
-      : handlingMode === "mandiri_warga"
-        ? "arahan_warga"
-        : handlingMode === "dlh"
-          ? "penerusan_instansi"
-          : "pilih_tindak_lanjut";
-
   /* Baris lama yang sudah dirutekan ke DLH sebelum kolom penerusan ada tetap
      berarti "perlu diteruskan": membuat tiket di dalam aplikasi bukan bukti
      bahwa laporannya sudah sampai ke instansi penerima. */
   const forwardState: ForwardState | null =
     row.forward_state ?? (handlingMode === "dlh" ? "perlu_diteruskan" : null);
+
+  /* Laporan mandiri yang naik karena berulang ikut jalur penerusan. */
+  const workflow =
+    family === "kesehatan"
+      ? "rekap_evaluasi"
+      : forwardState
+        ? "penerusan_instansi"
+        : handlingMode === "mandiri_warga"
+          ? "arahan_warga"
+          : "pilih_tindak_lanjut";
   const destination =
     family === "kesehatan"
       ? REPORT_DESTINATION.kesehatan
-      : handlingMode === "mandiri_warga"
-        ? "Warga/pelapor"
-        : handlingMode === "dlh"
-          ? REPORT_DESTINATION.lingkungan
+      : forwardState
+        ? row.forward_target ?? agencyFor(row.kind).name
+        : handlingMode === "mandiri_warga"
+          ? "Warga/pelapor"
           : "Menunggu pilihan tindak lanjut";
   return {
     simulated: isSimulated(row),
@@ -542,16 +654,19 @@ export function toPublicView(
     forwarding: forwardState
       ? {
           state: forwardState,
-          target: row.forward_target ?? REPORT_DESTINATION.lingkungan,
+          target: row.forward_target ?? agencyFor(row.kind).name,
           channel: row.forward_channel,
           reference: row.forward_reference,
           note: row.forward_note,
           forwardedAt: row.forwarded_at,
+          pattern: row.forward_pattern ?? null,
         }
       : null,
+    risk: risk ?? null,
     routing: {
       family,
       destination,
+      agency: family === "lingkungan" ? agencyFor(row.kind) : null,
       handlingMode,
       workflow,
     },
@@ -605,6 +720,7 @@ export async function reviewReport(
 ): Promise<ReportRow | null> {
   let updated: ReportRow | null = null;
   let selectedHandlingMode: ReportHandlingMode | null = null;
+  let escalatedPattern: number | null = null;
   const reviewedAt = new Date().toISOString();
   const note = decision.note?.trim() || null;
 
@@ -663,11 +779,48 @@ export async function reviewReport(
       note,
       handlingMode,
       forwardState,
-      forwardState ? REPORT_DESTINATION.lingkungan : null,
+      forwardState ? agencyFor(existing.kind).name : null,
       infoRequest,
       decision.status === "perlu_informasi" ? reviewedAt : null,
       id,
     );
+
+    /* Laporan mandiri yang berulang naik ke antrean penerusan. Hanya satu
+       laporan per pola yang naik: bila laporan sejenis di kecamatan ini sudah
+       ada di jalur penerusan dalam jendela yang sama, instansi penerima sudah
+       tahu, dan kartu kedua hanya menjadi duplikat. */
+    if (handlingMode === "mandiri_warga") {
+      const cutoff = new Date(
+        Date.parse(reviewedAt) - MANDIRI_PATTERN.windowDays * 86_400_000,
+      ).toISOString();
+      const similar = await tx.all<{
+        handling_mode: ReportHandlingMode | null;
+        forward_state: ForwardState | null;
+      }>(
+        `SELECT handling_mode, forward_state FROM laporan_warga
+          WHERE kecamatan = ? AND kind = ? AND status = 'terverifikasi'
+            AND submitted_at > ?`,
+        existing.kecamatan,
+        existing.kind,
+        cutoff,
+      );
+      const alreadyForwarded = similar.some((r) => r.forward_state !== null);
+      const mandiriCount = similar.filter(
+        (r) => r.handling_mode === "mandiri_warga",
+      ).length;
+      if (!alreadyForwarded && mandiriCount >= MANDIRI_PATTERN.minReports) {
+        escalatedPattern = mandiriCount;
+        await tx.run(
+          `UPDATE laporan_warga
+              SET forward_state = 'perlu_diteruskan', forward_target = ?,
+                  forward_pattern = ?
+            WHERE id = ?`,
+          agencyFor(existing.kind).name,
+          mandiriCount,
+          id,
+        );
+      }
+    }
 
     updated = await tx.one<ReportRow>(
       `SELECT ${REPORT_COLUMNS} FROM laporan_warga WHERE id = ?`,
@@ -686,7 +839,7 @@ export async function reviewReport(
     actor: reviewer,
     role,
     action: `Verifikasi laporan ${id}`,
-    details: `Diputuskan ${decision.status}${selectedHandlingMode ? ` — rute ${selectedHandlingMode}` : ""}${note ? ` — ${note}` : ""}.`,
+    details: `Diputuskan ${decision.status}${selectedHandlingMode ? ` — rute ${selectedHandlingMode}` : ""}${escalatedPattern ? ` — naik ke penerusan (${escalatedPattern} laporan mandiri serupa)` : ""}${note ? ` — ${note}` : ""}.`,
     status: decision.status === "terverifikasi" ? "success" : "warning",
   });
 
@@ -718,7 +871,10 @@ export async function recordForwarding(
   if (!existing) return null;
 
   const family = REPORT_FAMILY[existing.kind];
-  if (family !== "lingkungan" || existing.handling_mode !== "dlh") {
+  if (
+    family !== "lingkungan" ||
+    (existing.handling_mode !== "dlh" && existing.forward_state === null)
+  ) {
     throw new ForwardStateError(
       "Hanya laporan lingkungan yang dirutekan ke instansi lain yang dapat dicatat penerusannya.",
     );
@@ -733,7 +889,8 @@ export async function recordForwarding(
   }
 
   const now = new Date().toISOString();
-  const target = input.target?.trim() || REPORT_DESTINATION.lingkungan;
+  const target =
+    input.target?.trim() || existing.forward_target || agencyFor(existing.kind).name;
   const channel = input.channel?.trim() || null;
   const note = input.note?.trim() || null;
 
@@ -838,7 +995,7 @@ export async function summarizeQueue(): Promise<QueueSummary> {
     const awaitingForward = rows.filter(
     (r) =>
       r.status === "terverifikasi" &&
-      r.handling_mode === "dlh" &&
+      (r.handling_mode === "dlh" || r.forward_state !== null) &&
       (r.forward_state ?? "perlu_diteruskan") !== "diteruskan",
   ).length;
 

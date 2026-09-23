@@ -7,6 +7,7 @@ import { MapPin, ShieldAlert } from "lucide-react";
 import { ConsolePageHeader } from "@/components/console/page-header";
 import { EarlyActionCenter } from "@/components/early-action-center";
 import { DataState } from "@/components/data-state";
+import { QueueSkeleton } from "@/components/console/console-skeleton";
 import { Button } from "@/components/ui/button";
 import { useSessionContext } from "@/components/session-provider";
 import { fetchActions } from "@/lib/api";
@@ -33,6 +34,7 @@ export default function TindakanPage() {
   const actions = useApi(() => fetchActions(), []);
 
   const isAdmin = session?.role === "admin";
+  const isPuskesmas = session?.role === "puskesmas";
 
   React.useEffect(() => {
     if (!loading && session && isAdmin) {
@@ -62,8 +64,12 @@ export default function TindakanPage() {
     <div className="min-h-screen bg-background bg-mesh-blue px-4 py-8 sm:px-6 lg:px-8">
       <div className="container mx-auto max-w-7xl space-y-6">
         <ConsolePageHeader
-          title="Aksi Dini"
-          description="Instruksi intervensi untuk puskesmas dan satgas, disusun sebelum bulan yang diprakirakan tiba. Antrean terurut: yang lewat tenggat lebih dulu."
+          title={isPuskesmas ? "Tugas saya" : "Rekomendasi aksi"}
+          description={
+            isPuskesmas
+              ? "Lihat rekomendasi wilayah dan panduan pelaksanaannya."
+              : "Rekomendasi dari prakiraan risiko. Dinkes memilih unit atau puskesmas pelaksana dan mencatat penugasan."
+          }
           actions={
             <Button asChild variant="outline" size="sm" className="gap-1.5">
               <Link href="/dashboard">
@@ -76,15 +82,17 @@ export default function TindakanPage() {
 
         <DataState
           loading={actions.loading}
+          loadingFallback={<QueueSkeleton kind="actions" />}
           error={actions.error}
           empty={!actions.loading && (actions.data?.data.length ?? 0) === 0}
-          emptyMessage="Belum ada rekomendasi tindakan. Mesin aturan hanya menerbitkan instruksi untuk kecamatan berkelas risiko sedang atau tinggi pada bulan prakiraan berjalan."
+          emptyMessage="Belum ada rekomendasi untuk periode prakiraan ini."
           onRetry={actions.reload}
         >
           <EarlyActionCenter
             recommendations={actions.data?.data ?? []}
             systemToday={period?.systemToday ?? null}
             operator={session?.label ?? null}
+            showMineFilter={isPuskesmas}
             onChanged={actions.reload}
           />
         </DataState>

@@ -4,6 +4,7 @@ import * as React from "react";
 import { CalendarDays, Info, TriangleAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePeriod } from "@/lib/use-period";
+import { Skeleton } from "@/components/ui/skeleton";
 
 /**
  * Kepala halaman konsol — satu bentuk untuk semua rute nakes.
@@ -37,19 +38,20 @@ export function PeriodChip({ className }: { className?: string }) {
   if (loading || !period) {
     return (
       <span
-        className={cn(
-          "inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1.5 shadow-hairline",
-          className,
-        )}
+        className={cn("inline-flex h-4 items-center gap-2", className)}
+        role="status"
+        aria-label="Memuat periode"
       >
-        <CalendarDays className="h-3.5 w-3.5 shrink-0 text-paper-600" aria-hidden="true" />
-        <span className="text-caption text-paper-600">Memuat periode…</span>
+        <Skeleton className="h-3 w-3 shrink-0 rounded" />
+        <Skeleton className="h-3 w-40" />
       </span>
     );
   }
 
   const behind = period.forecastBehindCalendar;
 
+  /* Keterangan, bukan tombol: tanpa bingkai, tanpa latar. Chip berbingkai di
+     sebelah tombol terbaca sebagai kendali ketiga dan ikut berebut perhatian. */
   return (
     <span
       role="status"
@@ -60,27 +62,20 @@ export function PeriodChip({ className }: { className?: string }) {
           : `Data terakhir ${period.monthYear}, prakiraan ${period.predictionLabel}`
       }
       className={cn(
-        "inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-0.5 rounded-full border px-3 py-1.5 shadow-hairline",
-        behind
-          ? "border-risk-medium-br bg-risk-medium-bg"
-          : "border-border bg-surface",
+        "inline-flex max-w-full flex-wrap items-center gap-x-1.5 gap-y-0.5 text-caption text-paper-500",
         className,
       )}
     >
       {behind ? (
-        <TriangleAlert className="h-3.5 w-3.5 shrink-0 text-risk-medium" aria-hidden="true" />
+        <TriangleAlert className="h-3 w-3 shrink-0 text-risk-medium" aria-hidden="true" />
       ) : (
-        <CalendarDays className="h-3.5 w-3.5 shrink-0 text-brand-700" aria-hidden="true" />
+        <CalendarDays className="h-3 w-3 shrink-0" aria-hidden="true" />
       )}
-      <span className="tabular whitespace-nowrap text-caption font-medium text-foreground">
-        Data {period.monthYear}
-      </span>
+      <span className="tabular whitespace-nowrap">Data s.d. {period.monthYear}</span>
       <span aria-hidden="true" className="text-paper-300">
         ·
       </span>
-      <span className="whitespace-nowrap text-caption text-paper-600">
-        Prakiraan {period.predictionLabel}
-      </span>
+      <span className="tabular whitespace-nowrap">Prakiraan {period.predictionLabel}</span>
       {behind && (
         <>
           <span aria-hidden="true" className="text-paper-300">
@@ -123,7 +118,7 @@ function PeriodInfo({
       <span
         role="tooltip"
         id={id}
-        className="pointer-events-none invisible absolute right-0 top-full z-50 mt-2 w-72 rounded-xl border border-border bg-surface p-3 text-left text-caption leading-relaxed text-paper-700 opacity-0 shadow-card transition-opacity duration-fast group-hover/info:visible group-hover/info:opacity-100 group-focus-within/info:visible group-focus-within/info:opacity-100"
+        className="pointer-events-none invisible absolute left-0 top-full z-50 mt-2 w-72 rounded-xl border border-border bg-surface p-3 text-left text-caption leading-relaxed text-paper-700 opacity-0 shadow-card transition-opacity duration-fast group-hover/info:visible group-hover/info:opacity-100 group-focus-within/info:visible group-focus-within/info:opacity-100"
       >
         Rekap kasus resmi terakhir: <strong className="font-semibold text-foreground">{monthYear}</strong>.
         Model memprakirakan bulan demi bulan sampai{" "}
@@ -164,15 +159,16 @@ export function ConsolePageHeader({
           {description && (
             <p className="max-w-2xl text-body-sm text-paper-600">{description}</p>
           )}
+          {/* Periode ikut judul sebagai keterangan, bukan di barisan tombol. */}
+          <PeriodChip className="pt-0.5" />
         </div>
 
-        {/* F17: baris kendali boleh membungkus. Dengan `shrink-0`, chip
-            periode dan dua tombol memakan 700 px dan judul halaman terpaksa
-            patah jadi tiga baris di layar 1280 px. */}
-        <div className="flex min-w-0 flex-wrap items-center gap-2.5 md:justify-end">
-          <PeriodChip />
-          {actions}
-        </div>
+        {/* F17: baris kendali boleh membungkus supaya judul tidak patah. */}
+        {actions && (
+          <div className="flex min-w-0 flex-wrap items-center gap-1 md:justify-end">
+            {actions}
+          </div>
+        )}
       </div>
 
       {children && <div className="mt-4">{children}</div>}

@@ -12,10 +12,11 @@
 
 import * as React from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Activity, LogIn, ServerCrash } from "lucide-react";
+import { LogIn, ServerCrash } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useSessionContext } from "@/components/session-provider";
+import { ConsolePageSkeleton } from "@/components/console/console-skeleton";
 
 export function ConsoleGuard({ children }: { children: React.ReactNode }) {
   const { session, loading, error } = useSessionContext();
@@ -29,14 +30,7 @@ export function ConsoleGuard({ children }: { children: React.ReactNode }) {
   }, [loading, session, error, router, pathname]);
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center px-6">
-        <p className="flex items-center gap-2 text-body-sm text-paper-600">
-          <Activity className="h-4 w-4 animate-spin" aria-hidden />
-          Memeriksa sesi…
-        </p>
-      </div>
-    );
+    return <ConsolePageSkeleton />;
   }
 
   /* Gateway padam bukan "belum masuk": mengarahkan ke halaman masuk di sini

@@ -1,7 +1,15 @@
+"use client";
+
 import * as React from "react";
+import { usePathname } from "next/navigation";
 import { BrandMark } from "@/components/brand-mark";
+import { ConsolePageSkeleton } from "@/components/console/console-skeleton";
+import { isConsoleRoute } from "@/lib/routes";
 
 export default function Loading() {
+  const pathname = usePathname();
+  if (isConsoleRoute(pathname ?? "")) return <ConsolePageSkeleton />;
+
   return (
     <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 bg-transparent">
       <div className="relative flex items-center justify-center">

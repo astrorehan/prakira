@@ -30,7 +30,7 @@ const PRIORITY_RANK: Record<ActionRecommendation["priority"], number> = {
  * belum tentu dikerjakan siapa pun. Dua keadaan itu kini punya nama sendiri.
  */
 export const STATUS_LABEL: Record<ActionRecommendation["status"], string> = {
-  pending: "Perlu keputusan",
+  pending: "Belum ditugaskan",
   assigned: "Ditugaskan",
   in_progress: "Dikerjakan",
   completed: "Selesai",

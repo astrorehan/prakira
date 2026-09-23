@@ -294,6 +294,9 @@ ALTER TABLE laporan_warga ADD COLUMN IF NOT EXISTS rt_rw TEXT;
 ALTER TABLE laporan_warga ADD COLUMN IF NOT EXISTS info_request TEXT;
 ALTER TABLE laporan_warga ADD COLUMN IF NOT EXISTS info_requested_at TEXT;
 ALTER TABLE laporan_warga ADD COLUMN IF NOT EXISTS related_report_id TEXT;
+-- Jumlah laporan mandiri serupa saat laporan ini dinaikkan ke penerusan
+-- karena berulang di kecamatan yang sama. NULL untuk laporan biasa.
+ALTER TABLE laporan_warga ADD COLUMN IF NOT EXISTS forward_pattern INTEGER;
 
 CREATE INDEX IF NOT EXISTS idx_laporan_forward
   ON laporan_warga (forward_state, forwarded_at);

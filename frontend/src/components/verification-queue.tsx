@@ -23,8 +23,9 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ConsoleToast, useConsoleToast } from "@/components/console/toast";
 import { DataState } from "@/components/data-state";
+import { QueueSkeleton } from "@/components/console/console-skeleton";
 import { EscalationPanel } from "@/components/escalation-panel";
-import { ForwardingQueue } from "@/components/forwarding-queue";
+import { ForwardingQueue, RiskChip } from "@/components/forwarding-queue";
 import {
   sortForQueue,
   REPORT_KIND,
@@ -242,6 +243,7 @@ function ReportRow({
   const pending =
     report.status === "menunggu" || report.status === "perlu_informasi";
   const environmental = kind.family === "lingkungan";
+  const agencyShort = report.routing.agency?.short ?? "instansi";
   const rejectionNoteId = `tolak-${report.id}`;
   const adviceId = `saran-${report.id}`;
 
@@ -297,9 +299,10 @@ function ReportRow({
           {kind.family === "lingkungan" && (
             <Badge variant="outline" className="gap-1">
               <Recycle className="h-3 w-3" aria-hidden="true" />
-              {FAMILY_ROUTING.lingkungan}
+              {report.routing.agency?.short ?? FAMILY_ROUTING.lingkungan}
             </Badge>
           )}
+          <RiskChip risk={report.risk} />
           <Badge variant={status.badge}>{status.label}</Badge>
         </div>
       </div>
@@ -466,11 +469,8 @@ function ReportRow({
           ) : environmental ? (
             <div className="space-y-3">
               <div>
-                <p className="text-caption font-medium text-paper-700">
-                  Pilih tindak lanjut setelah laporan diterima
-                </p>
                 <div
-                  className="mt-2 grid gap-2 sm:grid-cols-2"
+                  className="grid gap-2 sm:grid-cols-2"
                   role="radiogroup"
                   aria-label="Pilihan tindak lanjut laporan lingkungan"
                 >
@@ -494,8 +494,8 @@ function ReportRow({
                       <span className="block text-body-sm font-medium text-foreground">
                         Arahan mandiri warga
                       </span>
-                      <span className="mt-0.5 block text-caption leading-relaxed text-paper-600">
-                        Tidak membuat tiket DLH; warga mendapat langkah yang aman dilakukan sendiri.
+                      <span className="mt-0.5 block text-caption text-paper-600">
+                        Kecil &amp; aman ditangani warga
                       </span>
                     </span>
                   </label>
@@ -517,10 +517,10 @@ function ReportRow({
                     />
                     <span>
                       <span className="block text-body-sm font-medium text-foreground">
-                        Teruskan ke DLH
+                        Teruskan ke {agencyShort}
                       </span>
-                      <span className="mt-0.5 block text-caption leading-relaxed text-paper-600">
-                        Siapkan penerusan ke Dinas Lingkungan Hidup untuk penanganan teknis.
+                      <span className="mt-0.5 block text-caption text-paper-600">
+                        Meluas, berulang, atau berbahaya
                       </span>
                     </span>
                   </label>
@@ -541,9 +541,6 @@ function ReportRow({
                     placeholder="Mis. bersihkan wadah penampung air dan periksa jentik setiap minggu."
                     className="w-full rounded-xl border border-border bg-surface px-3.5 py-2.5 text-body-sm text-foreground shadow-sm placeholder:text-paper-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   />
-                  <p className="text-caption leading-relaxed text-paper-600">
-                    Arahan otomatis tetap ditampilkan jika kolom ini dikosongkan.
-                  </p>
                 </div>
               )}
 
@@ -562,7 +559,7 @@ function ReportRow({
                   className="gap-1.5"
                 >
                   <Check className="h-4 w-4" aria-hidden="true" />
-                  {handlingMode === "dlh" ? "Terima & siapkan penerusan ke DLH" : "Terima & tampilkan arahan"}
+                  {handlingMode === "dlh" ? `Terima & teruskan ke ${agencyShort}` : "Terima"}
                 </Button>
                 <Button
                   size="sm"
@@ -581,11 +578,6 @@ function ReportRow({
                   <X className="h-4 w-4" aria-hidden="true" />
                   Tolak
                 </Button>
-                {!handlingMode && (
-                  <span className="text-caption text-paper-600">
-                    Pilih salah satu rute sebelum menerima laporan.
-                  </span>
-                )}
               </div>
             </div>
           ) : addingAdvice ? (
@@ -673,10 +665,12 @@ function ReportRow({
           oleh {report.reviewer ?? "petugas"}
           {report.reviewedAt ? ` · ${formatDateTime(report.reviewedAt)}` : ""}
           {report.routing.handlingMode === "mandiri_warga" ? " · Arahan mandiri warga" : ""}
-          {report.routing.handlingMode === "dlh"
-            ? report.forwarding?.state === "diteruskan"
-              ? ` · Diteruskan ke ${report.forwarding.target}`
-              : " · Perlu diteruskan"
+          {report.forwarding
+            ? report.forwarding.state === "diteruskan"
+              ? ` · Diteruskan ke ${report.routing.agency?.short ?? report.forwarding.target}`
+              : report.forwarding.pattern
+                ? ` · Perlu diteruskan (${report.forwarding.pattern} laporan serupa)`
+                : " · Perlu diteruskan"
             : ""}
           {report.reviewNote ? ` · ${report.reviewNote}` : ""}
         </div>
@@ -745,8 +739,14 @@ export function VerificationQueue() {
         ) => {
       setDecideError(null);
       try {
-        await reviewReport(id, { status: next, note, handlingMode, infoRequest });
+        const { data: reviewed } = await reviewReport(id, {
+          status: next,
+          note,
+          handlingMode,
+          infoRequest,
+        });
         queue.reload();
+        const pattern = reviewed.forwarding?.pattern;
         /* Pesan menyebut kejadian yang benar-benar tercatat (F05, F10).
            "Tiket DLH dibuat" dulu terbaca seolah laporannya sudah sampai ke
            instansi penerima, padahal penyampaiannya belum terjadi. */
@@ -755,9 +755,11 @@ export function VerificationQueue() {
             ? `${id} menunggu kelengkapan dari pelapor.`
             : next === "terverifikasi"
               ? handlingMode === "dlh"
-                ? `${id} diterima dan masuk daftar perlu diteruskan.`
+                ? `${id} diterima dan masuk daftar penerusan.`
                 : handlingMode === "mandiri_warga"
-                  ? `${id} diterima dengan arahan mandiri warga.`
+                  ? pattern
+                    ? `${pattern} laporan serupa di wilayah ini — ${id} naik ke daftar penerusan.`
+                    : `${id} diterima dengan arahan mandiri warga.`
                   : `${id} diterima. Pelapor bisa melihat perubahan ini di halaman lacak.`
               : `${id} ditolak. Alasannya terlihat pelapor.`,
         );
@@ -767,6 +769,8 @@ export function VerificationQueue() {
     },
     [queue, toast],
   );
+
+  if (queue.loading) return <QueueSkeleton kind="reports" />;
 
   return (
     <div className="space-y-6">

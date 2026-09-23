@@ -48,6 +48,7 @@ function row(overrides: Partial<ReportRow> = {}): ReportRow {
     forward_note: null,
     forwarded_at: null,
     forwarded_by: null,
+    forward_pattern: null,
     ...overrides,
   };
 }
@@ -73,7 +74,8 @@ test("keputusan publik menyertakan jalur dan arahan yang dapat ditindaklanjuti",
 
   assert.deepEqual(view.routing, {
     family: "lingkungan",
-    destination: "Dinas Lingkungan Hidup",
+    destination: "Dinas Pekerjaan Umum",
+    agency: { name: "Dinas Pekerjaan Umum", short: "DPU" },
     handlingMode: "dlh",
     workflow: "penerusan_instansi",
   });
@@ -98,6 +100,40 @@ test("keputusan mandiri warga tidak mengisyaratkan tiket DLH", () => {
   assert.equal(view.reviewNote, "Bersihkan sumbatan kecil dari tempat yang aman.");
   assert.doesNotMatch(view.guidance.steps.join(" "), /kode tiket/i);
   assert.equal(view.ticket, null);
+});
+
+test("instansi penerima mengikuti jenis laporan", () => {
+  const target = (kind: ReportRow["kind"]) =>
+    toPublicView(row({ kind, status: "terverifikasi", handling_mode: "dlh" }))
+      .forwarding?.target;
+
+  assert.equal(target("sampah"), "Dinas Lingkungan Hidup");
+  assert.equal(target("genangan"), "Dinas Pekerjaan Umum");
+  assert.equal(target("saluran"), "Dinas Pekerjaan Umum");
+  assert.equal(toPublicView(row({ kind: "gejala" })).routing.agency, null);
+});
+
+test("laporan mandiri yang naik karena berulang ikut jalur penerusan", () => {
+  const view = toPublicView(
+    row({
+      kind: "saluran",
+      status: "terverifikasi",
+      handling_mode: "mandiri_warga",
+      forward_state: "perlu_diteruskan",
+      forward_target: "Dinas Pekerjaan Umum",
+      forward_pattern: 3,
+    }),
+  );
+
+  assert.equal(view.routing.workflow, "penerusan_instansi");
+  assert.equal(view.routing.destination, "Dinas Pekerjaan Umum");
+  assert.equal(view.forwarding?.pattern, 3);
+});
+
+test("konteks risiko dibawa apa adanya", () => {
+  const risk = { disease: "DBD", riskClass: "tinggi" as const, month: "2026-10-01" };
+  assert.deepEqual(toPublicView(row(), null, risk).risk, risk);
+  assert.equal(toPublicView(row()).risk, null);
 });
 
 test("laporan lingkungan yang belum diputuskan menunggu pilihan tindak lanjut", () => {

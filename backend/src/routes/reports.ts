@@ -18,6 +18,8 @@ import {
   listRelatedReports,
   recordForwarding,
   reviewReport,
+  riskContextFor,
+  riskKey,
   summarizeQueue,
   toPublicView as publicView,
   ForwardStateError,
@@ -244,6 +246,7 @@ reportsRouter.get(
     const summary = await summarizeQueue();
     const tickets = await listEnvironmentTicketsByReportIds(page.map((row) => row.id));
     const ticketByReport = new Map(tickets.map((ticket) => [ticket.report_id, ticket]));
+    const risk = await riskContextFor(page);
 
     res.json({
       meta: {
@@ -254,7 +257,9 @@ reportsRouter.get(
            sudah habis. */
         truncated: rows.length > page.length,
       },
-      data: page.map((row) => publicView(row, ticketByReport.get(row.id))),
+      data: page.map((row) =>
+        publicView(row, ticketByReport.get(row.id), risk.get(riskKey(row))),
+      ),
     });
   }),
 );
@@ -306,7 +311,11 @@ reportsRouter.post(
     }
 
     if (!updated) throw new HttpError(404, "Laporan tidak ditemukan.");
-    res.json({ meta: await summarizeQueue(), data: publicView(updated) });
+    const risk = await riskContextFor([updated]);
+    res.json({
+      meta: await summarizeQueue(),
+      data: publicView(updated, null, risk.get(riskKey(updated))),
+    });
   }),
 );
 
@@ -422,7 +431,11 @@ reportsRouter.patch(
 
     if (!updated) throw new HttpError(404, "Laporan tidak ditemukan.");
     const ticket = await findEnvironmentTicketByReportId(updated.id);
-    res.json({ meta: await summarizeQueue(), data: publicView(updated, ticket) });
+    const risk = await riskContextFor([updated]);
+    res.json({
+      meta: await summarizeQueue(),
+      data: publicView(updated, ticket, risk.get(riskKey(updated))),
+    });
   }),
 );
 

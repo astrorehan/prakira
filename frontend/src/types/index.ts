@@ -484,6 +484,8 @@ export type CitizenGuidance = {
 export type CitizenRouting = {
   family: ReportFamily;
   destination: string;
+  /** Instansi penerima bila laporan lingkungan diteruskan. */
+  agency: { name: string; short: string } | null;
   handlingMode: EnvironmentHandlingMode | null;
   workflow:
     | "rekap_evaluasi"
@@ -499,6 +501,15 @@ export type ReportForwarding = {
   reference: string | null;
   note: string | null;
   forwardedAt: string | null;
+  /** Jumlah laporan mandiri serupa bila laporan ini naik karena berulang. */
+  pattern?: number | null;
+};
+
+/** Kelas risiko prakiraan terbaru yang relevan untuk laporan lingkungan. */
+export type ReportRiskContext = {
+  disease: string;
+  riskClass: RiskLevel;
+  month: string;
 };
 
 /** Kelengkapan informasi lokasi — dasar keputusan "perlu informasi" (F11). */
@@ -568,6 +579,7 @@ export type CitizenReport = {
   relatedReportId: string | null;
   completeness: ReportCompleteness;
   forwarding: ReportForwarding | null;
+  risk?: ReportRiskContext | null;
   routing: CitizenRouting;
   guidance: CitizenGuidance;
   /** Tiket DLH lama. Tidak dibuat lagi; tetap tampil sebagai riwayat. */

@@ -83,6 +83,12 @@ export type DistrictsMeta = ReportingPeriod & {
 const GET_CACHE_TTL_MS = 15_000;
 const getCache = new Map<string, { expiresAt: number; value: unknown }>();
 const getInFlight = new Map<string, Promise<unknown>>();
+let cacheGeneration = 0;
+
+/** Perubahan data atau sesi membatalkan snapshot tingkat komponen juga. */
+export function getApiCacheGeneration(): number {
+  return cacheGeneration;
+}
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const method = (init?.method ?? "GET").toUpperCase();
@@ -119,6 +125,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   /* Login, logout, import, review, dan refresh dapat mengubah seluruh snapshot
      baca. Membersihkan cache setelah mutasi menjaga navigasi berikutnya jujur. */
   getCache.clear();
+  cacheGeneration += 1;
   return value;
 }
 
