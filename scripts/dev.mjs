@@ -5,7 +5,7 @@
  * Mengatur urutan startup (ML -> Gateway -> Frontend) dan memastikan pembersihan
  * seluruh process tree saat aplikasi dihentikan (termasuk di Windows).
  */
-import { spawn, execSync } from "node:child_process";
+import { spawn, spawnSync, execSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import net from "node:net";
 import path from "node:path";
@@ -13,6 +13,7 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const isWindows = process.platform === "win32";
+const useProductionFrontend = process.argv.includes("--production-frontend");
 
 const COLORS = {
   gateway: "\x1b[36m",
@@ -172,6 +173,27 @@ async function main() {
   const gatewayUrl = `http://127.0.0.1:${gatewayPort}`;
   const frontendUrl = `http://localhost:${frontendPort}`;
   const mlUrl = mlPort ? `http://127.0.0.1:${mlPort}` : null;
+  const npmCmd = isWindows ? "npm.cmd" : "npm";
+
+  if (useProductionFrontend) {
+    process.stdout.write(
+      `${COLORS.frontend}[frontend]${COLORS.reset} membangun frontend production...\n`,
+    );
+    const build = spawnSync(
+      npmCmd,
+      ["--prefix", path.join(root, "frontend"), "run", "build"],
+      {
+        cwd: root,
+        shell: isWindows,
+        env: { ...process.env, API_PROXY_TARGET: gatewayUrl },
+        stdio: "inherit",
+      },
+    );
+    if (build.error) throw build.error;
+    if (build.status !== 0) {
+      throw new Error(`Build frontend gagal (exit code ${build.status ?? "unknown"}).`);
+    }
+  }
 
   if (python) {
     run(
@@ -192,8 +214,6 @@ async function main() {
         `${COLORS.ml}[ml]${COLORS.reset} Tanpa layanan ini, dashboard menampilkan observasi historis dan menandai prakiraannya belum diperbarui.\n`,
     );
   }
-
-  const npmCmd = isWindows ? "npm.cmd" : "npm";
 
   /* Port yang dipilih diteruskan ke gateway dan frontend. Dengan begitu proxy
      `/api/*` selalu mengikuti gateway yang benar, meskipun port bawaan sedang
@@ -216,7 +236,7 @@ async function main() {
     );
   }
 
-  run("frontend", npmCmd, ["run", "dev"], {
+  run("frontend", npmCmd, ["run", useProductionFrontend ? "start" : "dev"], {
     cwd: path.join(root, "frontend"),
     shell: isWindows,
     env: {
@@ -227,6 +247,7 @@ async function main() {
 
   process.stdout.write(
     `\n${COLORS.reset}[demo] Frontend: ${frontendUrl}\n` +
+      `${COLORS.reset}[demo] Mode:     ${useProductionFrontend ? "production build" : "development"}\n` +
       `${COLORS.reset}[demo] Gateway:  ${gatewayUrl}\n` +
       (mlUrl
         ? `${COLORS.reset}[demo] ML:       ${mlUrl}\n`
@@ -292,4 +313,7 @@ async function shutdown() {
 process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);
 
-main().catch(console.error);
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

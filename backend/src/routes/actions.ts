@@ -32,6 +32,7 @@ export const actionsRouter = Router();
 
 function serializeHistory(row: ActionHistoryRow) {
   return {
+    id: row.id,
     ts: row.ts,
     event: row.event,
     actor: row.actor,
@@ -83,31 +84,39 @@ function serialize(
     /* Penugasan sampai hasil. Tenggat yang disepakati dipisahkan dari
        `due_date` usulan mesin aturan supaya ketepatan waktu dihitung dari
        kesepakatan manusia. */
-    assignment: {
-      unit: row.assigned_unit,
-      pic: row.assigned_pic,
-      note: row.assignment_note,
-      assigned_at: row.assigned_at,
-      assigned_by: row.assigned_by,
-      agreed_due_date: row.agreed_due_date,
-    },
-    acknowledgement: {
-      at: row.acknowledged_at,
-      by: row.acknowledged_by,
-      source: row.acknowledgement_source,
-    },
+    assignment: row.assigned_unit && row.assigned_at
+      ? {
+          unit: row.assigned_unit,
+          pic: row.assigned_pic,
+          note: row.assignment_note,
+          assignedAt: row.assigned_at,
+          assignedBy: row.assigned_by,
+          agreedDueDate: row.agreed_due_date,
+        }
+      : null,
+    acknowledgement: row.acknowledged_at && row.acknowledgement_source
+      ? {
+          at: row.acknowledged_at,
+          by: row.acknowledged_by,
+          source: row.acknowledgement_source,
+        }
+      : null,
     blocker: row.blocker_note
       ? { note: row.blocker_note, at: row.blocked_at }
       : null,
-    result: {
-      note: row.result_note,
-      completed_by: row.completed_by,
-      sop_completed: parseList(row.sop_completed),
-    },
-    publication: {
-      published_at: row.published_at,
-      published_by: row.published_by,
-    },
+    result: row.result_note
+      ? {
+          note: row.result_note,
+          completedBy: row.completed_by,
+          sopCompleted: parseList(row.sop_completed),
+        }
+      : null,
+    publication: row.published_at
+      ? {
+          publishedAt: row.published_at,
+          publishedBy: row.published_by,
+        }
+      : null,
     history: history.map(serializeHistory),
   };
 }

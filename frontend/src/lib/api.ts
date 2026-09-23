@@ -283,6 +283,66 @@ export function fetchLimitations(): Promise<{ data: string[] }> {
 
 /* ── Tindakan ────────────────────────────────────────────────────────────── */
 
+/** Samakan respons gateway lama dan baru sebelum dipakai komponen. */
+function normalizeAction(action: ActionRecommendation): ActionRecommendation {
+  const record = (value: unknown): Record<string, unknown> | null =>
+    value && typeof value === "object" && !Array.isArray(value)
+      ? value as Record<string, unknown>
+      : null;
+  const string = (...values: unknown[]): string | null => {
+    const value = values.find((item) => typeof item === "string" && item.length > 0);
+    return typeof value === "string" ? value : null;
+  };
+
+  const assigned = record(action.assignment);
+  const unit = string(assigned?.unit);
+  const assignedAt = string(assigned?.assignedAt, assigned?.assigned_at);
+  const acknowledged = record(action.acknowledgement);
+  const acknowledgedAt = string(acknowledged?.at);
+  const source = string(acknowledged?.source);
+  const result = record(action.result);
+  const resultNote = string(result?.note);
+  const publication = record(action.publication);
+  const publishedAt = string(publication?.publishedAt, publication?.published_at);
+  const sop = result?.sopCompleted ?? result?.sop_completed;
+
+  return {
+    ...action,
+    assignment: unit && assignedAt
+      ? {
+          unit,
+          pic: string(assigned?.pic),
+          note: string(assigned?.note),
+          assignedAt,
+          assignedBy: string(assigned?.assignedBy, assigned?.assigned_by),
+          agreedDueDate: string(assigned?.agreedDueDate, assigned?.agreed_due_date),
+        }
+      : null,
+    acknowledgement: acknowledgedAt && source
+      ? { at: acknowledgedAt, by: string(acknowledged?.by), source }
+      : null,
+    result: resultNote
+      ? {
+          note: resultNote,
+          completedBy: string(result?.completedBy, result?.completed_by),
+          sopCompleted: Array.isArray(sop)
+            ? sop.filter((item): item is string => typeof item === "string")
+            : [],
+        }
+      : null,
+    publication: publishedAt
+      ? {
+          publishedAt,
+          publishedBy: string(publication?.publishedBy, publication?.published_by),
+        }
+      : null,
+    history: action.history.map((entry, index) => ({
+      ...entry,
+      id: typeof entry.id === "number" ? entry.id : index,
+    })),
+  };
+}
+
 export function fetchActions(
   disease?: string,
   /** F15: permukaan publik hanya boleh menerima kegiatan yang sudah ditinjau. */
@@ -292,14 +352,17 @@ export function fetchActions(
   if (disease) params.set("disease", disease);
   if (options.publishedOnly) params.set("published", "1");
   const query = params.toString() ? `?${params.toString()}` : "";
-  return request(`/api/actions${query}`);
+  return request<Envelope<ActionRecommendation[], ReportingPeriod>>(`/api/actions${query}`)
+    .then((response) => ({ ...response, data: response.data.map(normalizeAction) }));
 }
 
 /** Satu tindakan berdasarkan id — dipakai halaman nota dinas. */
 export function fetchAction(
   id: string,
 ): Promise<Envelope<ActionRecommendation, ReportingPeriod>> {
-  return request(`/api/actions/${encodeURIComponent(id)}`);
+  return request<Envelope<ActionRecommendation, ReportingPeriod>>(
+    `/api/actions/${encodeURIComponent(id)}`,
+  ).then((response) => ({ ...response, data: normalizeAction(response.data) }));
 }
 
 /**
@@ -316,10 +379,10 @@ function actionEvent(
   event: string,
   body: Record<string, unknown>,
 ): Promise<{ data: ActionRecommendation }> {
-  return request(`/api/actions/${encodeURIComponent(id)}/${event}`, {
+  return request<{ data: ActionRecommendation }>(`/api/actions/${encodeURIComponent(id)}/${event}`, {
     method: "POST",
     body: JSON.stringify(body),
-  });
+  }).then((response) => ({ ...response, data: normalizeAction(response.data) }));
 }
 
 /** Menetapkan unit pelaksana, PIC, dan tenggat yang disepakati. */
