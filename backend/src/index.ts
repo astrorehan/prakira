@@ -26,9 +26,8 @@ import { adminRouter } from "./routes/admin.js";
 import { casesRouter } from "./routes/cases.js";
 import { modelRouter } from "./routes/model.js";
 import { availableDiseases } from "./services/period.js";
-import { refreshPredictions } from "./services/predictions.js";
-import { refreshBacktest } from "./services/backtest.js";
-import { regenerateActions } from "./services/actions.js";
+import { refreshAllPredictions } from "./services/refresh.js";
+import { internalRouter } from "./routes/internal.js";
 import { backfillEnvironmentTickets } from "./services/tickets.js";
 
 const app = express();
@@ -71,27 +70,17 @@ app.use("/api/auth", authRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/cases", casesRouter);
 app.use("/api/model", modelRouter);
+app.use("/api/internal", internalRouter);
 
 app.use(notFound);
 app.use(errorHandler);
 
 /** Menyiapkan database lalu, bila layanan ML hidup, memanaskan cache prediksi. */
 async function warmupPredictions(): Promise<void> {
-  const diseases = await availableDiseases();
-  const warmed: string[] = [];
-  const failed: string[] = [];
-
-  for (const disease of diseases) {
-    const outcome = await refreshPredictions(disease);
-    if (outcome.refreshed > 0) {
-      warmed.push(disease);
-      await refreshBacktest(disease);
-    } else {
-      failed.push(disease);
-    }
-  }
-
-  if (warmed.length > 0) await regenerateActions(warmed);
+  const results = await refreshAllPredictions({ forceBacktest: true });
+  const failed = results
+    .filter((r) => r.prediction.refreshed === 0)
+    .map((r) => r.disease);
 
   if (failed.length > 0) {
     /* Bukan kegagalan fatal: gateway tetap melayani observasi historis, dan

@@ -131,6 +131,29 @@ Bila memakai domain kustom atau URL berbeda, Anda dapat menimpanya lewat **varia
 `/api/health` memanggil `isSeeded()`, yang menyentuh Postgres — jadi satu
 permintaan ke gateway sekaligus menjaga Supabase terjaga dan Render hangat.
 
+### 2.5 Penyegaran prakiraan terjadwal
+
+Halaman dashboard hanya membaca tabel `prediksi`; ia tidak memanggil layanan
+ML. Tabel itu diisi oleh `.github/workflows/refresh-predictions.yml`, yang
+tiap dua jam memanggil `POST /api/internal/refresh` di gateway. Gateway lalu
+menghitung ulang jalur prakiraan semua penyakit, menyusun ulang tindakan, dan
+menarik backtest bila angkanya berubah. Pemanasan saat gateway menyala tetap
+berjalan sebagai jaring pengaman.
+
+Pasang token yang sama di dua tempat:
+
+1. Render → prakira-gateway → Environment: `CRON_SECRET` = string acak panjang
+   (mis. hasil `openssl rand -hex 32`).
+2. GitHub → Settings → Secrets and variables → Actions → secret `CRON_SECRET`
+   dengan nilai yang sama.
+
+Tanpa `CRON_SECRET`, endpoint menjawab 503 dan tidak bisa dipakai siapa pun.
+Uji sekali lewat tab Actions → *Refresh Predictions* → *Run workflow*.
+
+Bila bulan aktif belum punya prakiraan lengkap, dashboard menampilkan snapshot
+lengkap terakhir dengan tanda basi sampai penyegaran berikutnya. Admin masih
+bisa memaksa penyegaran lewat tombol refresh di konsol admin.
+
 ---
 
 ## 3. Yang tidak boleh dilakukan di produksi

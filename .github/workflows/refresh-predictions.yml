@@ -1,0 +1,80 @@
+# Penyegaran prakiraan terjadwal.
+#
+# Dashboard tidak memanggil layanan ML sendiri; ia membaca tabel `prediksi`.
+# Alur ini yang mengisinya: tiap dua jam gateway diminta menghitung ulang
+# jalur prakiraan semua penyakit, menyimpan hasilnya, dan menyusun ulang
+# tindakan. Dua jam cukup untuk demo — modelnya bulanan, jadi angka baru
+# berubah setelah impor data, retrain, atau pergantian bulan.
+#
+# Timer di dalam gateway tidak dipakai karena Render paket gratis menidurkan
+# prosesnya; pemicu harus datang dari luar.
+#
+# Butuh secret repositori `CRON_SECRET` yang sama dengan env `CRON_SECRET`
+# layanan prakira-gateway di Render.
+name: Refresh Predictions
+
+on:
+  schedule:
+    # Menit ke-7, bukan ke-0: jam bulat adalah saat antrean jadwal GitHub
+    # paling padat dan paling sering tertunda.
+    - cron: "7 */2 * * *"
+  workflow_dispatch:
+    inputs:
+      gateway_url:
+        description: "URL Backend Gateway (opsional, kosongkan untuk memakai default/vars)"
+        required: false
+        default: ""
+
+concurrency:
+  group: refresh-predictions
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    name: Refresh predictions
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Trigger gateway refresh
+        env:
+          GATEWAY_URL: ${{ inputs.gateway_url || vars.GATEWAY_URL || secrets.GATEWAY_URL || 'https://prakira-gateway.onrender.com' }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -u
+
+          if [ -z "${CRON_SECRET}" ]; then
+            echo "::error::Secret CRON_SECRET belum diisi di repositori."
+            exit 1
+          fi
+
+          # Bangunkan gateway dulu (±50 detik bila tertidur) supaya batas waktu
+          # permintaan penyegaran dipakai untuk menghitung, bukan untuk boot.
+          curl --silent --show-error --fail --retry 3 --retry-delay 15 \
+            --retry-all-errors --max-time 90 --output /dev/null \
+            "${GATEWAY_URL%/}/api/health"
+
+          # Satu run menghitung beberapa bulan untuk tiap penyakit secara
+          # berurutan dan bisa ikut membangunkan layanan ML. Tidak diulang
+          # otomatis: 502 berarti layanan ML gagal, dan jadwal berikutnya
+          # yang akan mencoba lagi.
+          out=$(mktemp)
+          code=$(curl --silent --show-error --max-time 600 \
+            --request POST \
+            --header "Authorization: Bearer ${CRON_SECRET}" \
+            --output "${out}" --write-out "%{http_code}" \
+            "${GATEWAY_URL%/}/api/internal/refresh") || code="000"
+
+          echo "HTTP ${code}"
+          cat "${out}"; echo
+
+          if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+            {
+              echo "### Penyegaran prakiraan — HTTP ${code}"
+              echo '```json'
+              cat "${out}"
+              echo
+              echo '```'
+            } >> "${GITHUB_STEP_SUMMARY}"
+          fi
+
+          [ "${code}" = "200" ]

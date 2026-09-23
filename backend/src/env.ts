@@ -117,6 +117,10 @@ export const env = {
   ),
   sessionTtlHours: Number(process.env.SESSION_TTL_HOURS ?? 12),
 
+  /* Token pemicu penyegaran prakiraan terjadwal (`/api/internal/refresh`).
+     Kosong berarti endpoint itu mati — bukan terbuka. */
+  cronSecret: process.env.CRON_SECRET?.trim() ?? "",
+
   /** Akun awal administrator. Kata sandi wajib diganti lewat env di produksi. */
   seedAdminEmail: process.env.SEED_ADMIN_EMAIL ?? "admin@prakira.id",
   seedAdminPassword: requiredInProduction("SEED_ADMIN_PASSWORD", "admin123"),

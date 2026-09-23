@@ -6,7 +6,7 @@
  * menampilkannya — dashboard yang diam-diam menyajikan angka basi lebih
  * berbahaya daripada dashboard yang mengaku sedang basi.
  */
-import { Router } from "express";
+import { Router, type Request } from "express";
 import {
   getClimateSeries,
   getDistricts,
@@ -43,33 +43,46 @@ async function assertDisease(disease: string): Promise<string> {
   return match;
 }
 
-/* Prediksi tidak ditarik ulang pada tiap permintaan: satu bulan prediksi cukup
-   dihitung sekali. Yang memicu penarikan adalah tidak adanya prediksi untuk
-   bulan itu, atau permintaan eksplisit `?refresh=1`. */
+/* Permintaan halaman tidak pernah memanggil layanan ML. Prakiraan diisi oleh
+   penyegaran terjadwal (`/api/internal/refresh`, tiap dua jam) dan pemanasan
+   saat gateway menyala; di sini tabel `prediksi` hanya dibaca. Bila bulan
+   aktif belum lengkap, respons mengaku basi dan data tersimpan terakhir yang
+   dipakai — pengunjung tidak ikut menunggu layanan ML bangun.
+
+   Satu-satunya jalan pintas: admin boleh memaksa `?refresh=1`. */
 async function ensurePredictions(
   disease: string,
   force: boolean,
   knownDiseases?: string[],
 ): Promise<{ stale: boolean; error?: string }> {
+  if (force) {
+    const outcome = await refreshPredictions(disease);
+    /* `refreshed > 0` saja tidak cukup: jalur prakiraan bisa tersimpan sampai
+       bulan kelima lalu gagal, dan bulan aktif yang ditampilkan halaman tetap
+       kosong. Selama ada sebab kegagalan, halaman harus mengaku basi. */
+    if (outcome.refreshed > 0 && !outcome.error) {
+      invalidateDistrictViewCache(disease);
+      await regenerateActions([disease]);
+      return { stale: false };
+    }
+    return { stale: true, error: outcome.error };
+  }
+
   const period = await reportingPeriod(disease, knownDiseases);
   const complete = period.predictionMonth
     ? await hasCompletePredictions(disease, period.predictionMonth)
     : false;
-  const needsRefresh = force || !complete;
+  return complete
+    ? { stale: false }
+    : {
+        stale: true,
+        error: "Prakiraan bulan aktif belum dihitung; penyegaran terjadwal berikutnya akan mengisinya.",
+      };
+}
 
-  if (!needsRefresh) return { stale: false };
-
-  const outcome = await refreshPredictions(disease);
-  /* `refreshed > 0` saja tidak cukup: jalur prakiraan bisa tersimpan sampai
-     bulan kelima lalu gagal, dan bulan aktif yang ditampilkan halaman tetap
-     kosong. Selama ada sebab kegagalan, halaman harus mengaku basi. */
-  if (outcome.refreshed > 0 && !outcome.error) {
-    invalidateDistrictViewCache(disease);
-    await regenerateActions([disease]);
-    return { stale: false };
-  }
-
-  return { stale: true, error: outcome.error };
+/** `?refresh=1` hanya dihormati untuk admin; pengunjung lain membaca cache. */
+function wantsRefresh(req: Request): boolean {
+  return req.query.refresh === "1" && req.session?.role === "admin";
 }
 
 districtsRouter.get(
@@ -78,11 +91,12 @@ districtsRouter.get(
     const disease = await assertDisease(
       typeof req.query.disease === "string" ? req.query.disease : "DBD",
     );
-    const status = await ensurePredictions(disease, req.query.refresh === "1");
+    const force = wantsRefresh(req);
+    const status = await ensurePredictions(disease, force);
     const [period, data] = await Promise.all([
       reportingPeriod(disease),
       getDistricts(disease, {
-        bypassCache: req.query.refresh === "1",
+        bypassCache: force,
       }),
     ]);
 
@@ -126,7 +140,7 @@ districtsRouter.get(
   "/districts/all",
   asyncRoute(async (req, res) => {
     const diseases = await availableDiseases();
-    const force = req.query.refresh === "1";
+    const force = wantsRefresh(req);
     const results = await Promise.all(
       diseases.map(async (disease) => {
         const status = await ensurePredictions(disease, force, diseases);

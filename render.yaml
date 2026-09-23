@@ -50,6 +50,10 @@ services:
           envVarKey: ML_API_TOKEN
       - key: SESSION_SECRET
         generateValue: true
+      # Token pemicu penyegaran prakiraan terjadwal. Nilai yang sama diisi
+      # sebagai secret repositori `CRON_SECRET` di GitHub.
+      - key: CRON_SECRET
+        sync: false
       - key: SEED_ADMIN_PASSWORD
         sync: false
       - key: SEED_ADMIN_EMAIL

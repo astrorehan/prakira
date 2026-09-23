@@ -34,6 +34,8 @@ export type RefreshOutcome = {
   disease: string;
   month: string | null;
   refreshed: number;
+  /** Baris yang angkanya berbeda dari snapshot sebelumnya. */
+  changed: number;
   source: "ml-service" | "cache";
   error?: string;
 };
@@ -108,12 +110,14 @@ async function refreshPredictionsOnce(
       disease,
       month: null,
       refreshed: 0,
+      changed: 0,
       source: "cache",
       error: "Belum ada data observasi.",
     };
   }
 
   let refreshed = 0;
+  let changed = 0;
   let failure: string | undefined;
   let modelVersion = "unknown";
   const done: string[] = [];
@@ -121,7 +125,9 @@ async function refreshPredictionsOnce(
   for (const month of months) {
     try {
       const predictions = await mlPredictBatch(disease, month);
-      refreshed += await storePredictions(disease, month, predictions);
+      const stored = await storePredictions(disease, month, predictions);
+      refreshed += stored.stored;
+      changed += stored.changed;
       modelVersion = predictions[0]?.model_version ?? modelVersion;
       done.push(month);
     } catch (error) {
@@ -133,8 +139,10 @@ async function refreshPredictionsOnce(
 
   /* Satu catatan untuk satu jalur, bukan satu per bulan: sepuluh baris
      "Inferensi DBD 2026-0x" mengubur jejak audit yang lain tanpa menambah
-     satu pun keterangan baru. */
-  if (done.length > 0) {
+     satu pun keterangan baru. Jalur yang angkanya sama persis dengan snapshot
+     sebelumnya tidak dicatat sama sekali: penyegaran terjadwal berjalan tiap
+     dua jam dan hampir selalu menghasilkan angka yang sama. */
+  if (done.length > 0 && changed > 0) {
     await logAudit({
       actor: "ML Service",
       role: "AI Service",
@@ -150,6 +158,7 @@ async function refreshPredictionsOnce(
     disease,
     month: active,
     refreshed,
+    changed,
     source: refreshed > 0 ? "ml-service" : "cache",
     error: failure,
   };
@@ -159,7 +168,7 @@ async function storePredictions(
   disease: string,
   month: string,
   predictions: MlPrediction[],
-): Promise<number> {
+): Promise<{ stored: number; changed: number }> {
   const kecamatanRows = await all<{ id: string; ml_id: string }>(
     "SELECT id, ml_id FROM kecamatan",
   );
@@ -181,6 +190,33 @@ async function storePredictions(
   }
 
   const generatedAt = new Date().toISOString();
+  const previous = await readPredictions(disease, month);
+  const rows = predictions.map((prediction) => ({
+    kecamatanId: mlIdToId.get(prediction.kecamatan_id)!,
+    predictedCases: Math.max(0, Math.round(prediction.predicted_cases)),
+    lowerBound: Math.max(0, Math.round(prediction.lower_bound)),
+    upperBound: Math.max(0, Math.round(prediction.upper_bound)),
+    riskScore: Math.round(prediction.risk_score),
+    riskClass:
+      prediction.data_coverage === "insufficient" ? null : prediction.risk_class,
+    dataCoverage: prediction.data_coverage,
+    drivers: JSON.stringify(prediction.drivers ?? []),
+    modelVersion: prediction.model_version,
+  }));
+  const changed = rows.filter((row) => {
+    const old = previous.get(row.kecamatanId);
+    return (
+      !old ||
+      Number(old.predicted_cases) !== row.predictedCases ||
+      Number(old.lower_bound) !== row.lowerBound ||
+      Number(old.upper_bound) !== row.upperBound ||
+      Number(old.risk_score) !== row.riskScore ||
+      old.risk_class !== row.riskClass ||
+      old.data_coverage !== row.dataCoverage ||
+      old.drivers !== row.drivers ||
+      old.model_version !== row.modelVersion
+    );
+  }).length;
 
   /* Satu transaksi dan satu INSERT untuk seluruh batch: dashboard tidak boleh
      sempat membaca separuh kota memakai model baru dan separuhnya model lama.
@@ -189,25 +225,20 @@ async function storePredictions(
     const values = predictions
       .map(() => "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
       .join(", ");
-    const params = predictions.flatMap((prediction) => {
-      const kecamatanId = mlIdToId.get(prediction.kecamatan_id)!;
-      return [
-        kecamatanId,
-        disease.toUpperCase(),
-        month,
-        Math.max(0, Math.round(prediction.predicted_cases)),
-        Math.max(0, Math.round(prediction.lower_bound)),
-        Math.max(0, Math.round(prediction.upper_bound)),
-        Math.round(prediction.risk_score),
-        prediction.data_coverage === "insufficient"
-          ? null
-          : prediction.risk_class,
-        prediction.data_coverage,
-        JSON.stringify(prediction.drivers ?? []),
-        prediction.model_version,
-        generatedAt,
-      ];
-    });
+    const params = rows.flatMap((row) => [
+      row.kecamatanId,
+      disease.toUpperCase(),
+      month,
+      row.predictedCases,
+      row.lowerBound,
+      row.upperBound,
+      row.riskScore,
+      row.riskClass,
+      row.dataCoverage,
+      row.drivers,
+      row.modelVersion,
+      generatedAt,
+    ]);
 
     await tx.run(
       `INSERT INTO prediksi
@@ -228,7 +259,7 @@ async function storePredictions(
     );
   });
 
-  return predictions.length;
+  return { stored: predictions.length, changed };
 }
 
 export async function readPredictions(

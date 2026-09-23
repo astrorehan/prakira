@@ -30,6 +30,10 @@ import {
 import { refreshBacktest } from "../services/backtest.js";
 import { refreshPredictions } from "../services/predictions.js";
 import { regenerateActions } from "../services/actions.js";
+import {
+  refreshAllPredictions,
+  refreshSucceeded,
+} from "../services/refresh.js";
 import { availableDiseases, monthLabel } from "../services/period.js";
 import {
   citizenSignalByFamily,
@@ -310,16 +314,7 @@ adminRouter.post(
   "/refresh",
   requireRole("admin"),
   asyncRoute(async (req, res) => {
-    const diseases = await availableDiseases();
-    const results = [];
-
-    for (const disease of diseases) {
-      const prediction = await refreshPredictions(disease);
-      const backtest = await refreshBacktest(disease);
-      results.push({ disease, prediction, backtest });
-    }
-
-    await regenerateActions(diseases);
+    const results = await refreshAllPredictions({ forceBacktest: true });
 
     await logAudit({
       actor: req.session!.label,
@@ -328,12 +323,10 @@ adminRouter.post(
       details: results
         .map(
           (r) =>
-            `${r.disease}: ${r.prediction.refreshed} kecamatan${r.backtest.ok ? "" : " (backtest gagal)"}`,
+            `${r.disease}: ${r.prediction.refreshed} kecamatan${r.backtest?.ok === false ? " (backtest gagal)" : ""}`,
         )
         .join("; "),
-      status: results.every((r) => r.prediction.refreshed > 0 && r.backtest.ok)
-        ? "success"
-        : "warning",
+      status: refreshSucceeded(results) ? "success" : "warning",
     });
 
     res.json({ data: results });
