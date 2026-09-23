@@ -67,7 +67,7 @@ export default function TindakanPage() {
           title={isPuskesmas ? "Tugas saya" : "Rekomendasi aksi"}
           description={
             isPuskesmas
-              ? "Lihat rekomendasi wilayah dan panduan pelaksanaannya."
+              ? "Tindakan yang ditugaskan Dinkes ke puskesmas Anda, beserta panduan pelaksanaannya."
               : "Rekomendasi dari prakiraan risiko. Dinkes memilih unit atau puskesmas pelaksana dan mencatat penugasan."
           }
           actions={
@@ -85,7 +85,11 @@ export default function TindakanPage() {
           loadingFallback={<QueueSkeleton kind="actions" />}
           error={actions.error}
           empty={!actions.loading && (actions.data?.data.length ?? 0) === 0}
-          emptyMessage="Belum ada rekomendasi untuk periode prakiraan ini."
+          emptyMessage={
+            isPuskesmas
+              ? "Belum ada tugas. Tugas muncul setelah Dinkes menugaskan tindakan ke puskesmas Anda."
+              : "Belum ada rekomendasi untuk periode prakiraan ini."
+          }
           onRetry={actions.reload}
         >
           <EarlyActionCenter

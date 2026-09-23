@@ -125,14 +125,22 @@ export function Sidebar() {
       .then(
         (result) =>
           alive &&
-          setPendingActions(result.data.filter((a) => a.status === "pending").length),
+          setPendingActions(
+            /* Puskesmas menghitung tugas yang sudah ditugaskan kepadanya;
+               rekomendasi yang belum ditugaskan adalah antrean Dinkes. */
+            result.data.filter((a) =>
+              userRole === "puskesmas"
+                ? a.assignment !== null && a.status !== "completed"
+                : a.status === "pending",
+            ).length,
+          ),
       )
       .catch(() => alive && setPendingActions(null));
 
     return () => {
       alive = false;
     };
-  }, [pathname, session, loading, isAdmin]);
+  }, [pathname, session, loading, isAdmin, userRole]);
 
   const consoleItems: NavItem[] = React.useMemo(() => {
     /* F06/F08: satu pintu keputusan untuk semua peran, dan namanya menyebut

@@ -32,7 +32,7 @@ interface EarlyActionCenterProps {
   operator: string | null;
   /** Dipanggil setelah status berubah, supaya halaman menarik data segar. */
   onChanged?: () => void;
-  /** Hanya peran lapangan yang membutuhkan saringan tugas pribadi. */
+  /** Peran lapangan hanya melihat tindakan yang sudah ditugaskan kepadanya. */
   showMineFilter?: boolean;
   /** Menugaskan pelaksana adalah wewenang Dinkes. */
   canAssign?: boolean;
@@ -43,8 +43,7 @@ interface EarlyActionCenterProps {
 
 type StatusFilter =
   /* F09: petugas lapangan membuka tugasnya sendiri, bukan seluruh antrean kota.
-     "Tugas saya" mencocokkan penugasan yang benar-benar tercatat — unit atau
-     pelaksana — bukan menebak wilayah kerja dari peran. */
+     "Aktif" adalah penugasan yang benar-benar tercatat dan belum selesai. */
   | "mine"
   | "all"
   | "pending"
@@ -132,10 +131,21 @@ export function EarlyActionCenter({
   const [batchUnit, setBatchUnit] = React.useState("");
   const toast = useConsoleToast();
 
+  /* Akun puskesmas hanya menerima tindakan di wilayahnya (disaring gateway).
+     Yang belum ditugaskan masih antrean Dinkes: menampilkannya di "Tugas saya"
+     membuat petugas mengira ada pekerjaan yang belum boleh ia sentuh. */
+  const visible = React.useMemo(
+    () =>
+      showMineFilter
+        ? recommendations.filter((r) => r.assignment !== null)
+        : recommendations,
+    [recommendations, showMineFilter],
+  );
+
   /* Tenggat dihitung sekali di sini, bukan di tiap baris saat render. */
   const queue = React.useMemo(
-    () => sortQueue(recommendations.map((r) => toQueuedAction(r, systemToday))),
-    [recommendations, systemToday],
+    () => sortQueue(visible.map((r) => toQueuedAction(r, systemToday))),
+    [visible, systemToday],
   );
 
   const summary = React.useMemo(() => summarizeQueue(queue), [queue]);
@@ -145,22 +155,12 @@ export function EarlyActionCenter({
     [recommendations, activeModalId],
   );
 
-  /* Akun puskesmas hanya menerima tindakan di wilayahnya (disaring gateway),
-     jadi tugasnya adalah yang sudah ditugaskan Dinkes. */
-  const isMine = React.useCallback(
-    (rec: ActionRecommendation) => rec.assignment !== null,
-    [],
-  );
+  const mineCount = summary.total - summary.completed;
 
-  const mineCount = React.useMemo(
-    () => queue.filter((r) => isMine(r) && r.status !== "completed").length,
-    [queue, isMine],
-  );
-
-  /* Antrean terbuka pada tugas sendiri bila ada; kalau tidak ada, pada seluruh
-     antrean. Pilihan petugas selalu menang atas keduanya. */
-  const statusFilter: StatusFilter =
-    chosenFilter ?? (showMineFilter && mineCount > 0 ? "mine" : "all");
+  /* Petugas lapangan selalu membuka tugas aktifnya, meski kosong: dulu antrean
+     jatuh ke "Semua" saat kosong dan memperlihatkan pekerjaan milik Dinkes. */
+  const defaultFilter: StatusFilter = showMineFilter ? "mine" : "all";
+  const statusFilter: StatusFilter = chosenFilter ?? defaultFilter;
   const setStatusFilter = setChosenFilter;
 
   const filtered = React.useMemo(
@@ -169,10 +169,10 @@ export function EarlyActionCenter({
         statusFilter === "all"
           ? true
           : statusFilter === "mine"
-            ? isMine(r) && r.status !== "completed"
+            ? r.status !== "completed"
             : r.status === statusFilter,
       ),
-    [queue, statusFilter, isMine],
+    [queue, statusFilter],
   );
 
   const pendingActions = React.useMemo(
@@ -229,19 +229,20 @@ export function EarlyActionCenter({
       ? [
           {
             id: "mine" as const,
-            label: "Tugas saya",
+            label: "Aktif",
             count: mineCount,
             alert: mineCount > 0,
           },
         ]
-      : []),
-    { id: "all", label: "Semua", count: summary.total },
-    {
-      id: "pending",
-      label: "Belum ditugaskan",
-      count: summary.pending,
-      alert: summary.pending > 0,
-    },
+      : [
+          { id: "all" as const, label: "Semua", count: summary.total },
+          {
+            id: "pending" as const,
+            label: "Belum ditugaskan",
+            count: summary.pending,
+            alert: summary.pending > 0,
+          },
+        ]),
     {
       id: "assigned",
       label: "Ditugaskan",
@@ -257,13 +258,22 @@ export function EarlyActionCenter({
              hidup sebagai lencana kecil di dalam tab filter, jadi "berapa jiwa
              yang tindakannya belum keluar" tidak terjawab di mana pun. */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <SummaryTile
-          icon={Zap}
-          label="Belum ditugaskan"
-          value={String(summary.pending)}
-          note={`dari ${summary.total} rekomendasi`}
-          tone={summary.pending > 0 ? "warn" : "neutral"}
-        />
+        {showMineFilter ? (
+          <SummaryTile
+            icon={Zap}
+            label="Tugas aktif"
+            value={String(mineCount)}
+            note={`${summary.completed} selesai`}
+          />
+        ) : (
+          <SummaryTile
+            icon={Zap}
+            label="Belum ditugaskan"
+            value={String(summary.pending)}
+            note={`dari ${summary.total} rekomendasi`}
+            tone={summary.pending > 0 ? "warn" : "neutral"}
+          />
+        )}
         <SummaryTile
           icon={AlertTriangle}
           label="Lewat tenggat"
@@ -274,16 +284,26 @@ export function EarlyActionCenter({
         {/* F16: yang dihitung adalah penduduk wilayah yang tindakannya belum
             diputuskan — bukan orang yang "terlindungi", klaim yang tidak pernah
             diukur sistem ini. */}
-        <SummaryTile
-          icon={Users}
-          label="Penduduk sasaran"
-          value={formatNumber(summary.populationPending)}
-          note={
-            summary.districtsPending.length > 0
-              ? `${summary.districtsPending.length} kecamatan belum ditugaskan`
-              : "Tidak ada wilayah menunggu"
-          }
-        />
+        {showMineFilter ? (
+          <SummaryTile
+            icon={Users}
+            label="Belum dikonfirmasi"
+            value={String(summary.unacknowledged)}
+            note={summary.unacknowledged > 0 ? "Benarkan penerimaan tugas" : "Semua sudah diterima"}
+            tone={summary.unacknowledged > 0 ? "warn" : "neutral"}
+          />
+        ) : (
+          <SummaryTile
+            icon={Users}
+            label="Penduduk sasaran"
+            value={formatNumber(summary.populationPending)}
+            note={
+              summary.districtsPending.length > 0
+                ? `${summary.districtsPending.length} kecamatan belum ditugaskan`
+                : "Tidak ada wilayah menunggu"
+            }
+          />
+        )}
         <SummaryTile
           icon={Clock}
           label="Tenggat terdekat"
@@ -384,17 +404,28 @@ export function EarlyActionCenter({
             <Info className="h-6 w-6" aria-hidden="true" />
           </div>
           <h3 className="text-h3 text-foreground">
-            {statusFilter === "mine" ? "Belum ada tugas untuk Anda" : "Tidak ada rekomendasi di sini"}
+            {statusFilter === "mine"
+              ? "Belum ada tugas untuk Anda"
+              : showMineFilter
+                ? "Tidak ada tugas di sini"
+                : "Tidak ada rekomendasi di sini"}
           </h3>
           <p className="text-body-sm text-paper-600">
             {statusFilter === "mine"
-              ? "Dinkes belum mencatat penugasan ke unit atau PIC Anda."
-              : "Pilih status lain untuk melihat rekomendasi."}
+              ? "Tugas muncul di sini setelah Dinkes menugaskan tindakan ke puskesmas Anda."
+              : "Pilih status lain untuk melihat antrean."}
           </p>
-          <Button variant="outline" size="sm" onClick={() => setStatusFilter("all")} className="gap-1.5">
-            <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
-            <span>Lihat semua rekomendasi</span>
-          </Button>
+          {statusFilter !== defaultFilter && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setStatusFilter(defaultFilter)}
+              className="gap-1.5"
+            >
+              <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>{showMineFilter ? "Lihat tugas aktif" : "Lihat semua rekomendasi"}</span>
+            </Button>
+          )}
         </div>
       ) : (
         <ActionQueue actions={filtered} onOpen={(a: QueuedAction) => setActiveModalId(a.id)} />
