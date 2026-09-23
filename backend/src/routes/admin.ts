@@ -39,6 +39,8 @@ import { listKecamatan } from "../services/districts.js";
 
 export const adminRouter = Router();
 
+/* Baca status dan peragaan lonjakan terbuka untuk Dinkes; mengubah data,
+   menyegarkan prediksi, dan melatih ulang model hanya untuk admin. */
 adminRouter.use(requireRole("admin", "dinas"));
 
 const REQUIRED_COLUMNS = ["kecamatan_nama", "month_start", "cases"];
@@ -136,7 +138,7 @@ adminRouter.get(
  */
 adminRouter.post(
   "/import",
-  requireAuth,
+  requireRole("admin"),
   asyncRoute(async (req, res) => {
     const body = req.body ?? {};
     const csv = typeof body.csv === "string" ? body.csv : "";
@@ -306,7 +308,7 @@ adminRouter.post(
 /** Menarik ulang prediksi + backtest untuk semua penyakit yang punya data. */
 adminRouter.post(
   "/refresh",
-  requireAuth,
+  requireRole("admin"),
   asyncRoute(async (req, res) => {
     const diseases = await availableDiseases();
     const results = [];
@@ -341,7 +343,7 @@ adminRouter.post(
 /** Retraining — hanya peran admin/dinas. Berjalan sinkron dan bisa memakan menit. */
 adminRouter.post(
   "/retrain",
-  requireRole("admin", "dinas"),
+  requireRole("admin"),
   asyncRoute(async (req, res) => {
     const disease =
       typeof req.body?.disease === "string" ? req.body.disease : "";
@@ -414,7 +416,7 @@ adminRouter.post(
 /** Menghapus sesi kedaluwarsa dan menutup pekerjaan ingest yang menggantung. */
 adminRouter.post(
   "/maintenance",
-  requireRole("admin", "dinas"),
+  requireRole("admin"),
   asyncRoute(async (_req, res) => {
     await run(
       "DELETE FROM sessions WHERE expires_at < ?",

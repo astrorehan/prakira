@@ -175,7 +175,7 @@ CREATE TABLE IF NOT EXISTS users (
   email         TEXT NOT NULL UNIQUE,
   password_hash TEXT NOT NULL,
   salt          TEXT NOT NULL,
-  role          TEXT NOT NULL,           -- dinas | analis | admin | puskesmas
+  role          TEXT NOT NULL,           -- dinas | admin | puskesmas
   label         TEXT NOT NULL,
   home          TEXT NOT NULL,
   created_at    TEXT NOT NULL

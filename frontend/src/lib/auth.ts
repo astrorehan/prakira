@@ -83,7 +83,6 @@ export function useSession(): SessionState {
 
 export const ROLE_LABEL: Record<string, string> = {
   dinas: "Dinas Kesehatan",
-  analis: "Analis",
   admin: "Administrator",
   puskesmas: "Petugas Puskesmas",
 };

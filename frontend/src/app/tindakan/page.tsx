@@ -94,6 +94,7 @@ export default function TindakanPage() {
             operator={session?.label ?? null}
             showMineFilter={isPuskesmas}
             canAssign={session?.role === "dinas"}
+            canWork={isPuskesmas}
             onChanged={actions.reload}
           />
         </DataState>

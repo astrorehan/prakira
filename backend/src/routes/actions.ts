@@ -24,7 +24,7 @@ import {
   setActionPublication,
   type ActionHistoryRow,
 } from "../services/actions.js";
-import { requireAuth, requireRole, sessionScope } from "../middleware/auth.js";
+import { requireRole, sessionScope } from "../middleware/auth.js";
 import { asyncRoute, HttpError } from "../middleware/error.js";
 import { reportingPeriod } from "../services/period.js";
 
@@ -120,6 +120,9 @@ function serialize(
     history: history.map(serializeHistory),
   };
 }
+
+/* Pembagian kerja: Dinkes menugaskan, membuka kembali, dan memutuskan
+   publikasi; puskesmas menerima, mengerjakan, dan melaporkan hasilnya. */
 
 /** Tindakan mencakup beberapa kecamatan; akun puskesmas melihat yang memuat wilayahnya. */
 function targets(row: { target_kecamatan: string }, kecamatan: string): boolean {
@@ -220,7 +223,7 @@ async function guarded<T>(work: () => Promise<T>): Promise<T> {
 
 actionsRouter.post(
   "/:id/assign",
-  requireRole("dinas", "admin"),
+  requireRole("dinas"),
   asyncRoute(async (req, res) => {
     const body = req.body ?? {};
     const unit = requireText(body.unit, "Unit pelaksana");
@@ -249,7 +252,7 @@ actionsRouter.post(
 
 actionsRouter.post(
   "/:id/acknowledge",
-  requireAuth,
+  requireRole("puskesmas"),
   asyncRoute(async (req, res) => {
     const body = req.body ?? {};
     const updated = await guarded(() =>
@@ -270,7 +273,7 @@ actionsRouter.post(
 
 actionsRouter.post(
   "/:id/blocker",
-  requireAuth,
+  requireRole("puskesmas"),
   asyncRoute(async (req, res) => {
     const note = requireText((req.body ?? {}).note, "Kendala");
     const updated = await guarded(() =>
@@ -288,7 +291,7 @@ actionsRouter.post(
 
 actionsRouter.post(
   "/:id/progress",
-  requireAuth,
+  requireRole("puskesmas"),
   asyncRoute(async (req, res) => {
     const note = requireText((req.body ?? {}).note, "Catatan pelaksanaan");
     const updated = await guarded(() =>
@@ -306,7 +309,7 @@ actionsRouter.post(
 
 actionsRouter.post(
   "/:id/complete",
-  requireAuth,
+  requireRole("puskesmas"),
   asyncRoute(async (req, res) => {
     const body = req.body ?? {};
     const sop = body.sopCompleted;
@@ -335,7 +338,7 @@ actionsRouter.post(
 
 actionsRouter.post(
   "/:id/reopen",
-  requireAuth,
+  requireRole("dinas"),
   asyncRoute(async (req, res) => {
     const reason = requireText((req.body ?? {}).reason, "Alasan membuka kembali");
     const updated = await guarded(() =>
@@ -358,7 +361,7 @@ actionsRouter.post(
  */
 actionsRouter.post(
   "/:id/publication",
-  requireRole("dinas", "admin"),
+  requireRole("dinas"),
   asyncRoute(async (req, res) => {
     const published = (req.body ?? {}).published;
     if (typeof published !== "boolean") {

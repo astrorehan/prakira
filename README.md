@@ -163,9 +163,9 @@ Akun awal dibuat gateway saat seeding:
 
 | Akun | Peran | Kata sandi |
 |---|---|---|
-| `admin@prakira.id` | Administrator | `SEED_ADMIN_PASSWORD` |
-| `dinkes@prakira.id` | Dinas Kesehatan — menugaskan tindakan, meneruskan laporan ke DLH/DPU | `dinkes123` |
-| `puskesmas@prakira.id` | Puskesmas Pandanaran — wilayah Semarang Selatan | `puskesmas123` |
+| `admin@prakira.id` | Administrator sistem — akun, impor data, penyegaran prediksi, latih ulang model. Tidak memutuskan laporan atau menugaskan | `SEED_ADMIN_PASSWORD` |
+| `dinkes@prakira.id` | Dinas Kesehatan — seluruh kota: memutuskan laporan, menugaskan tindakan ke puskesmas, satu-satunya yang mengirim laporan ke DLH/DPU | `dinkes123` |
+| `puskesmas@prakira.id` | Puskesmas Pandanaran — hanya Semarang Selatan: memutuskan laporan wilayahnya, menandai yang perlu ke DLH/DPU, mengerjakan tugas dari Dinkes | `puskesmas123` |
 
 Ganti akun admin lewat `SEED_ADMIN_EMAIL` dan `SEED_ADMIN_PASSWORD` sebelum dipakai di luar
 pengembangan — di `NODE_ENV=production`, gateway menolak jalan tanpa

@@ -10,22 +10,21 @@ import { useSessionContext } from "@/components/session-provider";
 import { Button } from "@/components/ui/button";
 
 /**
- * Manajemen Sistem & AI (Admin & Dinas).
+ * Manajemen Sistem & AI (khusus Administrator).
  *
- * Ruang kendali khusus Administrator dan Dinas Kesehatan untuk melatih ulang
- * model ML, memantau integritas ingest data, serta memeriksa jejak audit
- * akuntabilitas publik.
+ * Ruang kendali Administrator sistem untuk melatih ulang model ML, memantau
+ * integritas ingest data, serta memeriksa jejak audit akuntabilitas publik.
+ * Dinkes memakai hasilnya (prakiraan, prioritas), tidak mengubah pipeline.
  *
  * Impor data kasus (manual & CSV) dilakukan oleh Nakes di halaman /kasus.
- * Petugas Puskesmas yang mencoba mengakses halaman ini secara manual
+ * Akun Dinkes dan Puskesmas yang mencoba mengakses halaman ini secara manual
  * dialihkan otomatis ke ruang kerja faskes di /dashboard.
  */
 export default function AdminPage() {
   const { session, loading } = useSessionContext();
   const router = useRouter();
 
-  const isAuthorized =
-    session?.role === "admin" || session?.role === "dinas";
+  const isAuthorized = session?.role === "admin";
 
   React.useEffect(() => {
     if (!loading && session && !isAuthorized) {

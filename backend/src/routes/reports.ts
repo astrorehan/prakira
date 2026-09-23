@@ -49,9 +49,12 @@ import {
 
 export const reportsRouter = Router();
 
-const REVIEW_ROLES = ["admin", "dinas", "analis", "puskesmas"];
-/* Penyampaian ke DLH/DPU adalah surat-menyurat antardinas. */
-const FORWARD_ROLES = ["admin", "dinas"];
+/* Keputusan atas laporan warga adalah keputusan tenaga kesehatan. Admin
+   mengelola sistem, bukan memeriksa laporan. */
+const REVIEW_ROLES = ["dinas", "puskesmas"];
+/* Penyampaian ke DLH/DPU adalah surat-menyurat antardinas: satu pintu, Dinkes.
+   Puskesmas menandai laporan "perlu diteruskan"; Dinkes yang mengirimnya. */
+const FORWARD_ROLES = ["dinas"];
 
 /* Akun puskesmas hanya melihat laporan wilayahnya. Laporan di luar wilayah
    dijawab 404, sama seperti laporan yang tidak ada. */

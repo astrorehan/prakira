@@ -92,7 +92,7 @@ export function Sidebar() {
   const isAdmin = userRole === "admin";
   /* F09: dua peran yang pekerjaannya berbeda tidak boleh membuka menu yang
      sama. Petugas puskesmas membuka tugas dan wilayahnya sendiri; koordinator
-     dinas membuka pekerjaan lintas wilayah; analis membuka pintu evaluasi.
+     dinas membuka pekerjaan lintas wilayah; admin mengelola sistem.
      Petugas puskesmas mengerjakan tugas wilayahnya; alat evaluasi model bukan
      pekerjaannya, jadi kelompok Evaluasi tidak ikut tampil di relnya. */
   const canEvaluate = !!session && userRole !== "puskesmas";
@@ -100,8 +100,6 @@ export function Sidebar() {
     ? "Konsol Administrator"
     : userRole === "puskesmas"
       ? "Konsol Petugas Puskesmas"
-      : userRole === "analis"
-        ? "Konsol Analis"
       : userRole === "dinas"
         ? "Konsol Dinas Kesehatan"
         : "Konsol";
@@ -166,15 +164,6 @@ export function Sidebar() {
         home,
         weighting,
         { href: "/analitik", label: "Analitik & Evaluasi", icon: BarChart3 },
-      ];
-    }
-
-    if (userRole === "analis") {
-      // Analis membuka pintu evaluasi: seberapa benar prakiraannya selama ini.
-      return [
-        home,
-        { href: "/analitik", label: "Analitik & Evaluasi", icon: BarChart3 },
-        weighting,
       ];
     }
 

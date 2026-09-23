@@ -16,7 +16,7 @@ export type RiskLevel = "rendah" | "sedang" | "tinggi";
 /** Kelengkapan data historis. Kecamatan berdata tipis bukan kecamatan aman. */
 export type DataCoverage = "high" | "medium" | "low" | "insufficient";
 
-export type Role = "dinas" | "analis" | "admin" | "puskesmas";
+export type Role = "dinas" | "admin" | "puskesmas";
 
 export type KpiMetric = {
   label: string;

@@ -36,6 +36,8 @@ interface EarlyActionCenterProps {
   showMineFilter?: boolean;
   /** Menugaskan pelaksana adalah wewenang Dinkes. */
   canAssign?: boolean;
+  /** Mengerjakan tugas adalah pekerjaan puskesmas. */
+  canWork?: boolean;
   className?: string;
 }
 
@@ -113,6 +115,7 @@ export function EarlyActionCenter({
   onChanged,
   showMineFilter = true,
   canAssign = true,
+  canWork = false,
   className,
 }: EarlyActionCenterProps) {
   const [chosenFilter, setChosenFilter] = React.useState<StatusFilter | null>(null);
@@ -408,6 +411,7 @@ export function EarlyActionCenter({
         systemToday={systemToday}
         operator={operator}
         canAssign={canAssign}
+        canWork={canWork}
       />
 
       {/* 5. Konfirmasi instruksi massal.

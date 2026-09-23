@@ -288,7 +288,7 @@ const READINESS_OWNER = {
   rekap: "Petugas pencatat puskesmas/dinas",
   pemeriksa: "Pemilik rekap wilayah",
   pengelola: "Pengelola data dinas",
-  analis: "Analis/administrator model",
+  admin: "Administrator sistem & model",
 };
 
 /**
@@ -420,7 +420,7 @@ export async function periodReadiness(
       detail: evaluation
         ? `Evaluasi model ${evaluation.model_version} tersedia untuk ditinjau. Keputusan penggunaan hasil dicatat di luar aplikasi sesuai SOP dinas.`
         : "Belum ada hasil evaluasi model yang dapat ditinjau.",
-      owner: READINESS_OWNER.analis,
+      owner: READINESS_OWNER.admin,
     },
   ];
 

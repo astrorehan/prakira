@@ -44,6 +44,8 @@ interface DispatchActionModalProps {
   operator: string | null;
   /** Menugaskan, menerbitkan, dan membuka kembali adalah wewenang Dinkes. */
   canAssign?: boolean;
+  /** Menerima, mengerjakan, dan melaporkan hasil adalah pekerjaan puskesmas. */
+  canWork?: boolean;
 }
 
 const inputClass =
@@ -99,6 +101,7 @@ export function DispatchActionModal({
   onChanged,
   systemToday,
   canAssign = true,
+  canWork = false,
 }: DispatchActionModalProps) {
   const [checkedItems, setCheckedItems] = React.useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -285,6 +288,22 @@ export function DispatchActionModal({
               </>
             ) : !action.assignment ? (
               <p className="text-body-sm text-paper-700">Menunggu penugasan dari Dinkes.</p>
+            ) : !completed && !canWork ? (
+              /* Dinkes memantau, bukan mengerjakan: tombol pelaksanaan milik
+                 puskesmas wilayah yang ditugaskan. */
+              <>
+                {action.blocker && (
+                  <p className="flex items-start gap-2 rounded-lg border border-risk-high-br bg-risk-high-bg px-3 py-2 text-caption text-risk-high">
+                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                    {action.blocker.note}
+                  </p>
+                )}
+                <p className="text-body-sm text-paper-700">
+                  {action.acknowledgement
+                    ? "Sedang dikerjakan puskesmas wilayah. Hasilnya tercatat di sini setelah ditandai selesai."
+                    : "Menunggu puskesmas wilayah menerima tugas."}
+                </p>
+              </>
             ) : !action.acknowledgement && !completed ? (
               <Button
                 size="sm"

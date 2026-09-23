@@ -539,10 +539,10 @@ function ReportRow({
                     />
                     <span>
                       <span className="block text-body-sm font-medium text-foreground">
-                        Teruskan ke {agencyShort}
+                        Perlu penanganan {agencyShort}
                       </span>
                       <span className="mt-0.5 block text-caption text-paper-600">
-                        Meluas, berulang, atau berbahaya
+                        Meluas, berulang, atau berbahaya. Dikirim Dinkes lewat daftar penerusan.
                       </span>
                     </span>
                   </label>
@@ -581,7 +581,7 @@ function ReportRow({
                   className="gap-1.5"
                 >
                   <Check className="h-4 w-4" aria-hidden="true" />
-                  {handlingMode === "dlh" ? `Terima & teruskan ke ${agencyShort}` : "Terima"}
+                  {handlingMode === "dlh" ? `Terima & tandai untuk ${agencyShort}` : "Terima"}
                 </Button>
                 <Button
                   size="sm"
@@ -710,7 +710,8 @@ export function VerificationQueue() {
   const [decideError, setDecideError] = React.useState<string | null>(null);
   const toast = useConsoleToast();
   const { session } = useSessionContext();
-  const canForward = session?.role === "dinas" || session?.role === "admin";
+  /* Puskesmas menandai, Dinkes mengirim: surat antardinas keluar dari satu pintu. */
+  const canForward = session?.role === "dinas";
 
   const reports = queue.data?.data ?? null;
   const summary = queue.data?.meta ?? {
@@ -779,7 +780,9 @@ export function VerificationQueue() {
             ? `${id} menunggu kelengkapan dari pelapor.`
             : next === "terverifikasi"
               ? handlingMode === "dlh"
-                ? `${id} diterima dan masuk daftar penerusan.`
+                ? canForward
+                  ? `${id} diterima dan masuk daftar penerusan di bawah.`
+                  : `${id} diterima dan masuk daftar penerusan Dinkes.`
                 : handlingMode === "mandiri_warga"
                   ? pattern
                     ? `${pattern} laporan serupa di wilayah ini — ${id} naik ke daftar penerusan.`
@@ -791,7 +794,7 @@ export function VerificationQueue() {
         setDecideError(caught instanceof Error ? caught.message : String(caught));
       }
     },
-    [queue, toast],
+    [queue, toast, canForward],
   );
 
   if (queue.loading) return <QueueSkeleton kind="reports" />;

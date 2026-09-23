@@ -64,7 +64,7 @@ function assertOwnKecamatan(req: Request, kecamatanId: string): void {
 casesRouter.post(
   "/manual",
   requireAuth,
-  requireRole("puskesmas", "dinas", "admin"),
+  requireRole("puskesmas", "dinas"),
   asyncRoute(async (req, res) => {
     const {
       kecamatan_id,
@@ -196,7 +196,7 @@ casesRouter.post(
 casesRouter.get(
   "/entry",
   requireAuth,
-  requireRole("puskesmas", "dinas", "admin"),
+  requireRole("puskesmas", "dinas"),
   asyncRoute(async (req, res) => {
     const kecamatanId = String(req.query.kecamatan_id ?? "").trim();
     const disease = String(req.query.disease ?? "").trim().toUpperCase();
@@ -230,7 +230,7 @@ casesRouter.get(
 casesRouter.post(
   "/entry/checked",
   requireAuth,
-  requireRole("puskesmas", "dinas", "admin"),
+  requireRole("puskesmas", "dinas"),
   asyncRoute(async (req, res) => {
     const body = req.body ?? {};
     const kecamatanId = String(body.kecamatan_id ?? "").trim();
@@ -265,7 +265,7 @@ casesRouter.post(
 casesRouter.get(
   "/readiness",
   requireAuth,
-  requireRole("puskesmas", "dinas", "admin", "analis"),
+  requireRole("puskesmas", "dinas"),
   asyncRoute(async (req, res) => {
     const disease = String(req.query.disease ?? "DBD").trim().toUpperCase();
     if (!VALID_DISEASES.includes(disease)) {
@@ -295,7 +295,7 @@ casesRouter.get(
 casesRouter.get(
   "/recent",
   requireAuth,
-  requireRole("puskesmas", "dinas", "admin"),
+  requireRole("puskesmas", "dinas"),
   asyncRoute(async (req, res) => {
     const scope = sessionScopeId(req);
     const rows = await all<{
@@ -330,7 +330,7 @@ casesRouter.get(
 casesRouter.post(
   "/import",
   requireAuth,
-  requireRole("puskesmas", "dinas", "admin"),
+  requireRole("puskesmas", "dinas"),
   asyncRoute(async (req, res) => {
     const body = req.body ?? {};
     const csv = typeof body.csv === "string" ? body.csv : "";
