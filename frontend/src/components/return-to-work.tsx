@@ -18,6 +18,7 @@ import { clearWorkContext, useWorkContext } from "@/lib/work-context";
  *  2. Pekerjaan yang ditinggalkan masih ada namanya.
  *  3. Kembali mempertahankan penyakit, wilayah, dan periode yang tadi dipegang
  *     — bukan mengembalikan petugas ke halaman kosong yang harus difilter ulang.
+ *     Periode tidak diulang di banner karena saat ini sama untuk semua penyakit.
  *
  * Tidak tampil untuk pembaca umum: tanpa konteks tersimpan, komponen ini tidak
  * merender apa pun, jadi permukaan publiknya tetap bersih.
@@ -36,7 +37,6 @@ export function ReturnToWork({
   const detail = [
     ctx.disease ? diseaseLabel(ctx.disease) : null,
     ctx.kecamatan ? `Kecamatan ${ctx.kecamatan}` : null,
-    ctx.periode ?? null,
   ].filter(Boolean);
 
   return (

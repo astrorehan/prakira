@@ -14,7 +14,7 @@ import {
 import { Card } from "@/components/ui/card";
 
 export const metadata: Metadata = {
-  title: "Tentang Prakira — Manifesto Eco-Health & Arsitektur AI",
+  title: "Tentang Prakira — Cara Kerja dan Teknologi",
   description:
     "Mengapa kami membangun Prakira: mengubah surveilans kesehatan reaktif menjadi preventif dengan prakiraan satu bulan lebih awal, dari machine learning dan deret iklim historis.",
 };
@@ -26,7 +26,7 @@ export default function TentangPage() {
       <section className="mx-auto max-w-3xl text-center">
         <div className="eyebrow mx-auto">
           <Sparkles className="h-3 w-3" />
-          Manifesto Eco-Health
+          Tentang Prakira
         </div>
         <h1 className="mt-5 text-3xl font-semibold leading-tight tracking-tight text-balance md:text-5xl text-foreground">
           Mengapa kami membangun <span className="text-primary">Prakira</span>
@@ -145,7 +145,7 @@ export default function TentangPage() {
       </section>
 
       <div className="border-t border-border pt-6 text-center text-xs text-muted-foreground">
-        Prakira Eco-Health — DSDC ANFORCOM 2026 Kota Semarang
+        Prakira — DSDC ANFORCOM 2026 Kota Semarang
       </div>
     </div>
   );
