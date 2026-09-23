@@ -10,7 +10,14 @@
  */
 
 export type ActionType =
-  "fogging" | "psn" | "masker" | "klorinasi" | "logistik_obat" | "penyuluhan";
+  | "fogging"
+  | "psn"
+  | "masker"
+  | "klorinasi"
+  | "logistik_obat"
+  | "penyuluhan"
+  /* Hanya untuk tugas manual Dinkes; mesin aturan tidak pernah memakainya. */
+  | "lainnya";
 
 export type RiskClass = "rendah" | "sedang" | "tinggi";
 
@@ -200,6 +207,7 @@ export const ACTION_TYPE_LABEL: Record<ActionType, string> = {
   klorinasi: "Klorinasi air",
   logistik_obat: "Buffer stock obat",
   penyuluhan: "Penyuluhan & edukasi",
+  lainnya: "Tindakan lainnya",
 };
 
 /** Label fitur model dalam bahasa manusia — mengisi kalimat "Dasar:". */

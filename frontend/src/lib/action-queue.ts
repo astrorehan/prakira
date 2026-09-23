@@ -44,7 +44,7 @@ export const STATUS_LABEL: Record<ActionRecommendation["status"], string> = {
  * Menjadikannya status akan menghapus informasi siapa pemiliknya.
  */
 export type ActionMarker = {
-  id: "belum_dikonfirmasi" | "terkendala" | "lewat_tenggat";
+  id: "sebagian_ditugaskan" | "belum_dikonfirmasi" | "terkendala" | "lewat_tenggat";
   label: string;
   detail: string;
   tone: "risk-medium" | "risk-high";
@@ -63,6 +63,15 @@ export function actionMarkers(
   systemToday: string | null,
 ): ActionMarker[] {
   const markers: ActionMarker[] = [];
+
+  if (rec.status !== "pending" && rec.unassigned_kecamatan.length > 0) {
+    markers.push({
+      id: "sebagian_ditugaskan",
+      label: `${rec.unassigned_kecamatan.length} kecamatan belum ditugaskan`,
+      detail: `Belum diserahkan ke puskesmas: ${rec.unassigned_kecamatan.join(", ")}.`,
+      tone: "risk-medium",
+    });
+  }
 
   if (rec.assignment && !rec.acknowledgement && rec.status !== "completed") {
     markers.push({
@@ -97,6 +106,15 @@ export function actionMarkers(
   return markers;
 }
 
+/** Nama puskesmas untuk satu kecamatan, dari akunnya bila sudah ada. */
+export function puskesmasLabel(
+  kecamatan: string,
+  assignees: { kecamatan: string; puskesmas: string | null }[],
+): string {
+  const name = assignees.find((a) => a.kecamatan === kecamatan)?.puskesmas;
+  return name ? `${name} (${kecamatan})` : `Puskesmas ${kecamatan}`;
+}
+
 export const PRIORITY_LABEL: Record<ActionRecommendation["priority"], string> = {
   high: "Prioritas tinggi",
   medium: "Prioritas sedang",
@@ -110,7 +128,21 @@ export const ACTION_TYPE_LABEL: Record<ActionRecommendation["action_type"], stri
   klorinasi: "Klorinasi air",
   logistik_obat: "Buffer stock obat",
   penyuluhan: "Penyuluhan & edukasi",
+  lainnya: "Tindakan lainnya",
 };
+
+/**
+ * Masih ada keputusan Dinkes di tindakan ini: belum ditugaskan sama sekali,
+ * atau sebagian kecamatan sasarannya belum diserahkan ke puskesmas.
+ */
+export function needsAssignment(rec: ActionRecommendation): boolean {
+  return rec.status === "pending" || rec.unassigned_kecamatan.length > 0;
+}
+
+/** Kecamatan yang masih menunggu keputusan penugasan. */
+export function awaitingKecamatan(rec: ActionRecommendation): string[] {
+  return rec.status === "pending" ? rec.target_kecamatan : rec.unassigned_kecamatan;
+}
 
 export const COVERAGE_LABEL: Record<string, string> = {
   high: "Cakupan data tinggi",
@@ -172,7 +204,7 @@ export type QueueSummary = {
   unacknowledged: number;
   /** Ditugaskan atau dikerjakan tetapi sedang tertahan kendala. */
   blocked: number;
-  /** Jiwa di wilayah yang tindakannya belum diputuskan. */
+  /** Jiwa di kecamatan yang penugasannya belum diputuskan. */
   populationPending: number;
   districtsPending: string[];
   /** Tenggat terdekat di antara yang belum selesai. */
@@ -181,7 +213,7 @@ export type QueueSummary = {
 
 export function summarizeQueue(list: QueuedAction[]): QueueSummary {
   const open = list.filter((r) => r.status !== "completed");
-  const pending = list.filter((r) => r.status === "pending");
+  const pending = list.filter(needsAssignment);
 
   const withDeadline = open
     .filter((r) => r.deadline.days !== null)
@@ -201,7 +233,7 @@ export function summarizeQueue(list: QueuedAction[]): QueueSummary {
     /* Kecamatan yang sama bisa muncul di dua tindakan; menjumlahkan populasi
        per tindakan akan menghitungnya dua kali. */
     populationPending: uniquePopulation(pending),
-    districtsPending: Array.from(new Set(pending.flatMap((r) => r.target_kecamatan))),
+    districtsPending: Array.from(new Set(pending.flatMap(awaitingKecamatan))),
     nextDeadline: withDeadline[0]?.deadline ?? null,
   };
 }
@@ -212,7 +244,7 @@ function uniquePopulation(list: QueuedAction[]): number {
   const seen = new Set<string>();
   let total = 0;
   for (const action of list) {
-    const fresh = action.target_kecamatan.filter((n) => !seen.has(n));
+    const fresh = awaitingKecamatan(action).filter((n) => !seen.has(n));
     if (fresh.length === 0) continue;
     const share = action.target_population / Math.max(1, action.target_kecamatan.length);
     total += share * fresh.length;

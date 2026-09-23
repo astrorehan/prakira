@@ -85,6 +85,9 @@ const CITIZEN_ACTION: Record<ActionRecommendation["action_type"], string[]> = {
     "Daftarkan nomor WhatsApp Anda untuk menerima peringatan dini wilayah.",
     "Sebarkan informasi resmi ini di grup RT/RW; abaikan pesan berantai tanpa sumber.",
   ],
+  /* Tugas manual Dinkes tidak punya terjemahan bawaan; arahannya datang dari
+     petugas yang mengerjakannya. */
+  lainnya: ["Ikuti arahan petugas puskesmas wilayah Anda."],
 };
 
 function NoticeCard({ rec }: { rec: ActionRecommendation }) {

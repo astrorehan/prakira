@@ -97,6 +97,9 @@ export function OfficialMemo({ id }: { id: string }) {
   }, [districts.data, recommendation]);
 
   const enrichedCount = enriched.filter((row) => row.data !== null).length;
+  /* Tugas manual tidak lahir dari prakiraan: nota tidak boleh menempelkan
+     angka prakiraan, kelas risiko, atau batas keandalan model kepadanya. */
+  const manual = recommendation?.source === "manual";
   const totalPopulation = enriched.reduce(
     (sum, row) => sum + (row.data?.populasi ?? 0),
     0,
@@ -149,10 +152,16 @@ export function OfficialMemo({ id }: { id: string }) {
                   </span>
                 </div>
                 <p className="text-caption leading-relaxed text-paper-600">
-                  Dokumen ini disusun otomatis oleh sistem Prakira dari prakiraan
-                  risiko {diseaseLabel(recommendation.disease)} Kota Semarang
-                  periode {formatMonth(recommendation.prediction_month)}. Nomor
-                  surat, pejabat pengirim, tanggal, dan penanda tangan tidak
+                  {manual ? (
+                    <>Dokumen ini disusun dari tugas yang dicatat Dinkes di Prakira.</>
+                  ) : (
+                    <>
+                      Dokumen ini disusun otomatis oleh sistem Prakira dari prakiraan
+                      risiko {diseaseLabel(recommendation.disease)} Kota Semarang
+                      periode {formatMonth(recommendation.prediction_month)}.
+                    </>
+                  )}{" "}
+                  Nomor surat, pejabat pengirim, tanggal, dan penanda tangan tidak
                   diisi sistem.
                 </p>
                 <div className="border-b-2 border-paper-900" />
@@ -187,8 +196,8 @@ export function OfficialMemo({ id }: { id: string }) {
                 <Field label="Lampiran">—</Field>
                 <Field label="Hal">
                   <span className="font-semibold">{recommendation.title}</span>{" "}
-                  — {diseaseLabel(recommendation.disease)},{" "}
-                  {formatMonth(recommendation.prediction_month)}
+                  — {diseaseLabel(recommendation.disease)}
+                  {!manual && `, ${formatMonth(recommendation.prediction_month)}`}
                 </Field>
               </div>
 
@@ -196,20 +205,31 @@ export function OfficialMemo({ id }: { id: string }) {
 
               {/* ── Pembuka ──────────────────────────────────────────────── */}
               <section className="mt-6 space-y-3 text-body-sm leading-relaxed text-paper-800">
-                <p>
-                  Sehubungan dengan hasil prakiraan risiko{" "}
-                  {diseaseLabel(recommendation.disease)} untuk periode{" "}
-                  <span className="font-semibold">
-                    {formatMonth(recommendation.prediction_month)}
-                  </span>{" "}
-                  pada {enriched.length} kecamatan di Kota Semarang, bersama ini
-                  disampaikan permintaan pelaksanaan{" "}
-                  <span className="font-semibold">
-                    {ACTION_TYPE_LABEL[recommendation.action_type]}
-                  </span>{" "}
-                  sebagaimana diuraikan di bawah ini.
-                </p>
-                <p>{recommendation.description}</p>
+                {manual ? (
+                  <p>
+                    Bersama ini disampaikan permintaan pelaksanaan{" "}
+                    <span className="font-semibold">
+                      {ACTION_TYPE_LABEL[recommendation.action_type]}
+                    </span>{" "}
+                    pada {enriched.length} kecamatan di Kota Semarang sebagaimana
+                    diuraikan di bawah ini.
+                  </p>
+                ) : (
+                  <p>
+                    Sehubungan dengan hasil prakiraan risiko{" "}
+                    {diseaseLabel(recommendation.disease)} untuk periode{" "}
+                    <span className="font-semibold">
+                      {formatMonth(recommendation.prediction_month)}
+                    </span>{" "}
+                    pada {enriched.length} kecamatan di Kota Semarang, bersama ini
+                    disampaikan permintaan pelaksanaan{" "}
+                    <span className="font-semibold">
+                      {ACTION_TYPE_LABEL[recommendation.action_type]}
+                    </span>{" "}
+                    sebagaimana diuraikan di bawah ini.
+                  </p>
+                )}
+                {recommendation.description && <p>{recommendation.description}</p>}
               </section>
 
               {/* ── Dasar ────────────────────────────────────────────────── */}
@@ -229,123 +249,144 @@ export function OfficialMemo({ id }: { id: string }) {
               {/* ── Sasaran ──────────────────────────────────────────────── */}
               <section className="mt-6">
                 <SectionTitle>Kecamatan sasaran</SectionTitle>
-                {/* Enam kolom tidak muat di layar ponsel; tabelnya menggeser di
-                    dalam wadahnya sendiri, bukan mendorong seluruh lembar.
-                    Di atas kertas A4 lebarnya muat, jadi batasnya dilepas. */}
-                <div className="overflow-x-auto print:overflow-visible">
-                  <table className="w-full min-w-[520px] border-collapse text-body-sm print:min-w-0">
-                  <caption className="sr-only">
-                    Kecamatan sasaran beserta prakiraan kasus dan cakupan datanya
-                  </caption>
-                  <thead>
-                    <tr className="border-y border-paper-300 bg-paper-100 text-left">
-                      <th scope="col" className="px-2 py-2 font-semibold">
-                        No
-                      </th>
-                      <th scope="col" className="px-2 py-2 font-semibold">
-                        Kecamatan
-                      </th>
-                      <th scope="col" className="px-2 py-2 text-right font-semibold">
-                        Penduduk
-                      </th>
-                      <th scope="col" className="px-2 py-2 text-right font-semibold">
-                        Prakiraan kasus
-                      </th>
-                      <th scope="col" className="px-2 py-2 font-semibold">
-                        Kelas risiko
-                      </th>
-                      <th scope="col" className="px-2 py-2 font-semibold">
-                        Cakupan data
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {enriched.map((row, index) => {
-                      const risk = riskConfigOf(row.data?.tingkat_risiko ?? null);
-                      return (
-                        <tr key={row.nama} className="border-b border-border">
-                          <td className="px-2 py-2 tabular-nums text-paper-700">
-                            {index + 1}
-                          </td>
-                          <th
-                            scope="row"
-                            className="px-2 py-2 text-left font-medium text-foreground"
-                          >
-                            {row.nama}
+                {manual ? (
+                  <ol className="list-decimal space-y-1 pl-5 text-body-sm text-paper-800">
+                    {recommendation.target_kecamatan.map((nama) => (
+                      <li key={nama}>{nama}</li>
+                    ))}
+                  </ol>
+                ) : (
+                  <>
+                    {/* Enam kolom tidak muat di layar ponsel; tabelnya menggeser di
+                        dalam wadahnya sendiri, bukan mendorong seluruh lembar.
+                        Di atas kertas A4 lebarnya muat, jadi batasnya dilepas. */}
+                    <div className="overflow-x-auto print:overflow-visible">
+                      <table className="w-full min-w-[520px] border-collapse text-body-sm print:min-w-0">
+                      <caption className="sr-only">
+                        Kecamatan sasaran beserta prakiraan kasus dan cakupan datanya
+                      </caption>
+                      <thead>
+                        <tr className="border-y border-paper-300 bg-paper-100 text-left">
+                          <th scope="col" className="px-2 py-2 font-semibold">
+                            No
                           </th>
-                          <td className="px-2 py-2 text-right tabular-nums text-paper-700">
-                            {row.data ? formatNumber(row.data.populasi) : "—"}
-                          </td>
-                          <td className="px-2 py-2 text-right tabular-nums text-paper-700">
-                            {row.data &&
-                            row.data.kasus_prediksi_lower !== null &&
-                            row.data.kasus_prediksi_upper !== null
-                              ? `${formatNumber(row.data.kasus_prediksi_lower)}–${formatNumber(row.data.kasus_prediksi_upper)}`
-                              : "—"}
-                          </td>
-                          <td className={cn("px-2 py-2 font-medium", risk.textColor)}>
-                            {risk.label}
-                          </td>
-                          <td className="px-2 py-2 text-paper-700">
-                            {row.data
-                              ? COVERAGE_CONFIG[row.data.coverage].label
-                              : "—"}
-                          </td>
+                          <th scope="col" className="px-2 py-2 font-semibold">
+                            Kecamatan
+                          </th>
+                          <th scope="col" className="px-2 py-2 text-right font-semibold">
+                            Penduduk
+                          </th>
+                          <th scope="col" className="px-2 py-2 text-right font-semibold">
+                            Prakiraan kasus
+                          </th>
+                          <th scope="col" className="px-2 py-2 font-semibold">
+                            Kelas risiko
+                          </th>
+                          <th scope="col" className="px-2 py-2 font-semibold">
+                            Cakupan data
+                          </th>
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                  {enrichedCount > 0 && (
-                    <tfoot>
-                      <tr className="border-b border-paper-300 font-semibold">
-                        <td className="px-2 py-2" />
-                        <td className="px-2 py-2 text-foreground">Jumlah</td>
-                        <td className="px-2 py-2 text-right tabular-nums text-foreground">
-                          {formatNumber(totalPopulation)}
-                        </td>
-                        <td className="px-2 py-2 text-right tabular-nums text-foreground">
-                          {formatNumber(recommendation.predicted_lower)}–
-                          {formatNumber(recommendation.predicted_upper)}
-                        </td>
-                        <td className="px-2 py-2" />
-                        <td className="px-2 py-2" />
-                      </tr>
-                    </tfoot>
-                  )}
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {enriched.map((row, index) => {
+                          const risk = riskConfigOf(row.data?.tingkat_risiko ?? null);
+                          return (
+                            <tr key={row.nama} className="border-b border-border">
+                              <td className="px-2 py-2 tabular-nums text-paper-700">
+                                {index + 1}
+                              </td>
+                              <th
+                                scope="row"
+                                className="px-2 py-2 text-left font-medium text-foreground"
+                              >
+                                {row.nama}
+                              </th>
+                              <td className="px-2 py-2 text-right tabular-nums text-paper-700">
+                                {row.data ? formatNumber(row.data.populasi) : "—"}
+                              </td>
+                              <td className="px-2 py-2 text-right tabular-nums text-paper-700">
+                                {row.data &&
+                                row.data.kasus_prediksi_lower !== null &&
+                                row.data.kasus_prediksi_upper !== null
+                                  ? `${formatNumber(row.data.kasus_prediksi_lower)}–${formatNumber(row.data.kasus_prediksi_upper)}`
+                                  : "—"}
+                              </td>
+                              <td className={cn("px-2 py-2 font-medium", risk.textColor)}>
+                                {risk.label}
+                              </td>
+                              <td className="px-2 py-2 text-paper-700">
+                                {row.data
+                                  ? COVERAGE_CONFIG[row.data.coverage].label
+                                  : "—"}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                      {enrichedCount > 0 && (
+                        <tfoot>
+                          <tr className="border-b border-paper-300 font-semibold">
+                            <td className="px-2 py-2" />
+                            <td className="px-2 py-2 text-foreground">Jumlah</td>
+                            <td className="px-2 py-2 text-right tabular-nums text-foreground">
+                              {formatNumber(totalPopulation)}
+                            </td>
+                            <td className="px-2 py-2 text-right tabular-nums text-foreground">
+                              {formatNumber(recommendation.predicted_lower)}–
+                              {formatNumber(recommendation.predicted_upper)}
+                            </td>
+                            <td className="px-2 py-2" />
+                            <td className="px-2 py-2" />
+                          </tr>
+                        </tfoot>
+                      )}
+                      </table>
+                    </div>
 
-                {enrichedCount < enriched.length && (
-                  <p className="mt-2 text-caption leading-relaxed text-paper-600">
-                    Kolom bertanda &ldquo;—&rdquo; berarti prakiraan kecamatan itu
-                    tidak lagi tersedia untuk bulan yang sama dengan nota ini.
-                    Angka dari bulan lain sengaja tidak disalin ke dalam tabel.
-                  </p>
+                    {enrichedCount < enriched.length && (
+                      <p className="mt-2 text-caption leading-relaxed text-paper-600">
+                        Kolom bertanda &ldquo;—&rdquo; berarti prakiraan kecamatan itu
+                        tidak lagi tersedia untuk bulan yang sama dengan nota ini.
+                        Angka dari bulan lain sengaja tidak disalin ke dalam tabel.
+                      </p>
+                    )}
+                  </>
                 )}
               </section>
 
               {/* ── Tindakan ─────────────────────────────────────────────── */}
               <section className="mt-6">
                 <SectionTitle>Tindakan yang diminta</SectionTitle>
-                <ol className="list-decimal space-y-1.5 pl-5 text-body-sm leading-relaxed text-paper-800">
-                  {recommendation.sop_checklist.map((step) => (
-                    <li key={step}>{step}</li>
-                  ))}
-                </ol>
+                {recommendation.sop_checklist.length > 0 ? (
+                  <ol className="list-decimal space-y-1.5 pl-5 text-body-sm leading-relaxed text-paper-800">
+                    {recommendation.sop_checklist.map((step) => (
+                      <li key={step}>{step}</li>
+                    ))}
+                  </ol>
+                ) : (
+                  <p className="text-body-sm text-paper-800">Sesuai uraian di atas.</p>
+                )}
               </section>
 
               {/* ── Tenggat ──────────────────────────────────────────────── */}
-              <section className="print-keep mt-6 grid gap-3 sm:grid-cols-3">
+              <section
+                className={cn(
+                  "print-keep mt-6 grid gap-3",
+                  manual ? "sm:grid-cols-2" : "sm:grid-cols-3",
+                )}
+              >
                 <div className="rounded-lg border border-border bg-paper-50 p-3">
                   <span className="overline">Tenggat pelaksanaan</span>
                   <p className="text-body-sm font-semibold text-foreground">
                     Paling lambat {formatDate(recommendation.due_date)}
                   </p>
-                  <p className="text-caption text-paper-600">
-                    Unit pelaksana membutuhkan {recommendation.lead_time_days}{" "}
-                    hari kerja persiapan, jadi persiapannya dimulai sebelum
-                    tanggal itu.
-                  </p>
+                  {recommendation.lead_time_days > 0 && (
+                    <p className="text-caption text-paper-600">
+                      Unit pelaksana membutuhkan {recommendation.lead_time_days}{" "}
+                      hari kerja persiapan, jadi persiapannya dimulai sebelum
+                      tanggal itu.
+                    </p>
+                  )}
                 </div>
                 <div className="rounded-lg border border-border bg-paper-50 p-3">
                   <span className="overline">Unit pelaksana</span>
@@ -353,35 +394,39 @@ export function OfficialMemo({ id }: { id: string }) {
                     {recommendation.pic_unit}
                   </p>
                 </div>
-                <div className="rounded-lg border border-border bg-paper-50 p-3">
-                  <span className="overline">Beban tanpa intervensi</span>
-                  <p className="text-body-sm leading-snug text-foreground">
-                    {formatNumber(recommendation.predicted_lower)}–
-                    {formatNumber(recommendation.predicted_upper)} kasus
-                  </p>
-                  <p className="text-caption text-paper-600">
-                    {COVERAGE_CONFIG[recommendation.data_coverage].label ===
-                    "Tinggi"
-                      ? "Cakupan data tinggi."
-                      : `Cakupan data ${COVERAGE_CONFIG[recommendation.data_coverage].label.toLowerCase()} — perlakukan sebagai indikasi.`}
-                  </p>
-                </div>
+                {!manual && (
+                  <div className="rounded-lg border border-border bg-paper-50 p-3">
+                    <span className="overline">Beban tanpa intervensi</span>
+                    <p className="text-body-sm leading-snug text-foreground">
+                      {formatNumber(recommendation.predicted_lower)}–
+                      {formatNumber(recommendation.predicted_upper)} kasus
+                    </p>
+                    <p className="text-caption text-paper-600">
+                      {COVERAGE_CONFIG[recommendation.data_coverage].label ===
+                      "Tinggi"
+                        ? "Cakupan data tinggi."
+                        : `Cakupan data ${COVERAGE_CONFIG[recommendation.data_coverage].label.toLowerCase()} — perlakukan sebagai indikasi.`}
+                    </p>
+                  </div>
+                )}
               </section>
 
               {/* ── Batas keandalan ──────────────────────────────────────── */}
-              <section className="print-keep mt-6 rounded-lg border border-border bg-paper-50 p-3">
-                <SectionTitle>Batas keandalan angka di atas</SectionTitle>
-                <p className="text-caption leading-relaxed text-paper-700">
-                  Seluruh angka prakiraan pada nota ini adalah estimasi
-                  statistik untuk mendukung keputusan pencegahan — bukan
-                  diagnosis, bukan kepastian, dan bukan pengganti surveilans
-                  resmi. Rentang bawah–atas serta cakupan data tiap kecamatan
-                  dicantumkan agar keputusan mempertimbangkan ketidakpastiannya.
-                  Metrik uji model, hasil per kecamatan pada periode uji, dan
-                  daftar batasan tersedia terbuka di halaman Transparansi Model
-                  dan Mesin Waktu.
-                </p>
-              </section>
+              {!manual && (
+                <section className="print-keep mt-6 rounded-lg border border-border bg-paper-50 p-3">
+                  <SectionTitle>Batas keandalan angka di atas</SectionTitle>
+                  <p className="text-caption leading-relaxed text-paper-700">
+                    Seluruh angka prakiraan pada nota ini adalah estimasi
+                    statistik untuk mendukung keputusan pencegahan — bukan
+                    diagnosis, bukan kepastian, dan bukan pengganti surveilans
+                    resmi. Rentang bawah–atas serta cakupan data tiap kecamatan
+                    dicantumkan agar keputusan mempertimbangkan ketidakpastiannya.
+                    Metrik uji model, hasil per kecamatan pada periode uji, dan
+                    daftar batasan tersedia terbuka di halaman Transparansi Model
+                    dan Mesin Waktu.
+                  </p>
+                </section>
+              )}
 
               {/* ── Tanda tangan ─────────────────────────────────────────── */}
               <section className="print-keep mt-10 flex justify-end">

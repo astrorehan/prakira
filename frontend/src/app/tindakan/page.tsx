@@ -99,6 +99,7 @@ export default function TindakanPage() {
             showMineFilter={isPuskesmas}
             canAssign={session?.role === "dinas"}
             canWork={isPuskesmas}
+            diseases={period?.diseases ?? []}
             onChanged={actions.reload}
           />
         </DataState>

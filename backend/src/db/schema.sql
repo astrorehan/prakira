@@ -322,6 +322,21 @@ SELECT t.id, k.nama, t.status, t.acknowledged_at, t.acknowledged_by,
    AND t.status IN ('assigned', 'in_progress', 'completed')
    AND NOT EXISTS (SELECT 1 FROM tindakan_wilayah w WHERE w.tindakan_id = t.id);
 
+-- Asal tindakan: saran mesin aturan, atau tugas yang dibuat Dinkes sendiri.
+-- Tugas manual tidak diturunkan dari prakiraan, jadi regenerasi tidak boleh
+-- menyentuhnya dan nota dinas tidak boleh mengarang dasar prakiraannya.
+ALTER TABLE tindakan ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'sistem';
+
+-- Penugasan per puskesmas. Dinkes boleh menugaskan sebagian kecamatan sasaran
+-- lebih dulu; kecamatan tanpa bagian di `tindakan_wilayah` belum ditugaskan
+-- dan tidak terlihat oleh puskesmasnya.
+ALTER TABLE tindakan_wilayah ADD COLUMN IF NOT EXISTS assigned_at TEXT;
+ALTER TABLE tindakan_wilayah ADD COLUMN IF NOT EXISTS assigned_by TEXT;
+UPDATE tindakan_wilayah w
+   SET assigned_at = t.assigned_at, assigned_by = t.assigned_by
+  FROM tindakan t
+ WHERE t.id = w.tindakan_id AND w.assigned_at IS NULL;
+
 -- Penyampaian laporan ke instansi lain (F10). PRAKIRA berhenti pada
 -- penyampaian yang tercatat; pengerjaan instansi penerima berada di luar
 -- lingkup produk, jadi tidak ada kolom progres pekerjaan di sini.

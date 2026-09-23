@@ -1,11 +1,21 @@
 "use client";
 
 import * as React from "react";
-import { AlertTriangle, Clock, Info, RotateCcw, Send, Users, Zap } from "lucide-react";
-import { cn, formatNumber } from "@/lib/utils";
-import type { ActionRecommendation } from "@/types";
-import { assignAction } from "@/lib/api";
 import {
+  AlertTriangle,
+  ClipboardPlus,
+  Clock,
+  Info,
+  RotateCcw,
+  Send,
+  Users,
+  Zap,
+} from "lucide-react";
+import { cn, formatNumber } from "@/lib/utils";
+import type { ActionAssignee, ActionRecommendation } from "@/types";
+import { assignAction, fetchAssignees } from "@/lib/api";
+import {
+  needsAssignment,
   sortQueue,
   summarizeQueue,
   toQueuedAction,
@@ -13,6 +23,7 @@ import {
 } from "@/lib/action-queue";
 import { ActionQueue } from "./action-queue";
 import { DispatchActionModal } from "./dispatch-action-modal";
+import { ManualTaskDialog } from "./manual-task-dialog";
 import { ConsoleToast, useConsoleToast } from "./console/toast";
 import { Button } from "./ui/button";
 import {
@@ -38,6 +49,8 @@ interface EarlyActionCenterProps {
   canAssign?: boolean;
   /** Mengerjakan tugas adalah pekerjaan puskesmas. */
   canWork?: boolean;
+  /** Penyakit yang bisa dipilih untuk tugas manual. */
+  diseases?: string[];
   className?: string;
 }
 
@@ -115,6 +128,7 @@ export function EarlyActionCenter({
   showMineFilter = true,
   canAssign = true,
   canWork = false,
+  diseases = [],
   className,
 }: EarlyActionCenterProps) {
   const [chosenFilter, setChosenFilter] = React.useState<StatusFilter | null>(null);
@@ -128,8 +142,21 @@ export function EarlyActionCenter({
   /* Penugasan massal memilih barisnya satu per satu. Tanpa daftar pilihan,
      satu tombol menyetujui pekerjaan yang belum dibaca siapa pun (audit F05). */
   const [selected, setSelected] = React.useState<Record<string, boolean>>({});
-  const [batchUnit, setBatchUnit] = React.useState("");
+  const [manualOpen, setManualOpen] = React.useState(false);
+  const [assignees, setAssignees] = React.useState<ActionAssignee[]>([]);
   const toast = useConsoleToast();
+
+  /* Daftar puskesmas hanya dibutuhkan peran yang menugaskan. */
+  React.useEffect(() => {
+    if (!canAssign) return;
+    let alive = true;
+    fetchAssignees()
+      .then((result) => alive && setAssignees(result.data))
+      .catch(() => alive && setAssignees([]));
+    return () => {
+      alive = false;
+    };
+  }, [canAssign]);
 
   /* Akun puskesmas hanya menerima tindakan di wilayahnya (disaring gateway).
      Yang belum ditugaskan masih antrean Dinkes: menampilkannya di "Tugas saya"
@@ -170,7 +197,9 @@ export function EarlyActionCenter({
           ? true
           : statusFilter === "mine"
             ? r.status !== "completed"
-            : r.status === statusFilter,
+            : statusFilter === "pending"
+              ? needsAssignment(r)
+              : r.status === statusFilter,
       ),
     [queue, statusFilter],
   );
@@ -192,15 +221,18 @@ export function EarlyActionCenter({
     onChanged?.();
   };
 
+  const assignedCount = queue.filter((r) => r.status === "assigned").length;
+
   /**
-   * Penugasan beberapa tindakan sekaligus ke satu unit.
+   * Penugasan beberapa tindakan sekaligus ke puskesmas wilayahnya masing-masing.
    *
    * Yang hilang di sini adalah "Tandai semua berjalan": tombol itu menuliskan
    * bahwa pekerjaan sudah dimulai untuk setiap tindakan yang kebetulan ada di
    * antrean, tanpa ada yang membacanya, tanpa pelaksana, dan tanpa seorang pun
    * yang membenarkan menerimanya. Yang tersisa adalah kejadian yang memang
-   * boleh diputuskan seorang koordinator sekaligus: menyerahkannya ke satu
-   * unit. Mulai dikerjakan tetap dicatat per tindakan oleh pelaksananya.
+   * boleh diputuskan seorang koordinator sekaligus: menyerahkan tiap kecamatan
+   * sasaran ke puskesmasnya. Memilih sebagian puskesmas dilakukan per tindakan
+   * di modalnya. Mulai dikerjakan tetap dicatat per tindakan oleh pelaksananya.
    */
   const handleBatchAssign = async () => {
     setIsBatchSubmitting(true);
@@ -210,12 +242,12 @@ export function EarlyActionCenter({
          bisa dijelaskan ("tiga dari lima tersimpan"), bukan campuran acak. */
       let saved = 0;
       for (const id of selectedIds) {
-        await assignAction(id, { unit: batchUnit.trim() });
+        await assignAction(id, {});
         saved += 1;
       }
       setBatchModalOpen(false);
       setSelected({});
-      toast.show(`Penugasan ${saved} rekomendasi ke ${batchUnit.trim()} dicatat.`);
+      toast.show(`Penugasan ${saved} rekomendasi ke puskesmas wilayah dicatat.`);
       onChanged?.();
     } catch (caught) {
       setBatchError(caught instanceof Error ? caught.message : String(caught));
@@ -243,11 +275,7 @@ export function EarlyActionCenter({
             alert: summary.pending > 0,
           },
         ]),
-    {
-      id: "assigned",
-      label: "Ditugaskan",
-      count: summary.total - summary.pending - summary.inProgress - summary.completed,
-    },
+    { id: "assigned", label: "Ditugaskan", count: assignedCount },
     { id: "in_progress", label: "Dikerjakan", count: summary.inProgress },
     { id: "completed", label: "Selesai", count: summary.completed },
   ];
@@ -348,21 +376,34 @@ export function EarlyActionCenter({
           })}
         </div>
 
-        {canAssign && summary.pending > 0 && (
-          <Button
-            size="sm"
-            variant={selectedIds.length > 0 ? "primary" : "outline"}
-            disabled={selectedIds.length === 0}
-            onClick={() => setBatchModalOpen(true)}
-            className="shrink-0 gap-1.5 self-start sm:self-auto"
-          >
-            <Zap className="h-3.5 w-3.5" aria-hidden="true" />
-            <span>
-              {selectedIds.length === 0
-                ? "Pilih rekomendasi"
-                : `Tugaskan ${selectedIds.length} rekomendasi`}
-            </span>
-          </Button>
+        {canAssign && (
+          <div className="flex shrink-0 flex-wrap gap-2 self-start sm:self-auto">
+            {pendingActions.length > 0 && (
+              <Button
+                size="sm"
+                variant={selectedIds.length > 0 ? "primary" : "outline"}
+                disabled={selectedIds.length === 0}
+                onClick={() => setBatchModalOpen(true)}
+                className="gap-1.5"
+              >
+                <Zap className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>
+                  {selectedIds.length === 0
+                    ? "Pilih rekomendasi"
+                    : `Tugaskan ${selectedIds.length} rekomendasi`}
+                </span>
+              </Button>
+            )}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setManualOpen(true)}
+              className="gap-1.5"
+            >
+              <ClipboardPlus className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>Buat tugas</span>
+            </Button>
+          </div>
         )}
       </div>
 
@@ -443,7 +484,19 @@ export function EarlyActionCenter({
         operator={operator}
         canAssign={canAssign}
         canWork={canWork}
+        assignees={assignees}
       />
+
+      {canAssign && (
+        <ManualTaskDialog
+          open={manualOpen}
+          onOpenChange={setManualOpen}
+          assignees={assignees}
+          diseases={diseases}
+          systemToday={systemToday}
+          onCreated={handleActionChanged}
+        />
+      )}
 
       {/* 5. Konfirmasi instruksi massal.
              Dulu berupa `<div className="fixed inset-0">` buatan tangan: tanpa
@@ -459,7 +512,7 @@ export function EarlyActionCenter({
               <div className="min-w-0">
                 <DialogTitle className="text-h3">Tugaskan rekomendasi</DialogTitle>
                 <DialogDescription className="text-caption">
-                  {selectedIds.length} rekomendasi · satu unit pelaksana.
+                  {selectedIds.length} rekomendasi · tiap kecamatan ke puskesmas wilayahnya.
                 </DialogDescription>
               </div>
             </div>
@@ -491,17 +544,10 @@ export function EarlyActionCenter({
           {/* Tidak ada kanal pengiriman di sistem ini; yang berubah adalah
               status dan jejak auditnya. Menuliskan "broadcast WhatsApp" akan
               membuat petugas mengira pesannya sudah terkirim. */}
-          <div className="space-y-2">
-            <input
-              value={batchUnit}
-              onChange={(e) => setBatchUnit(e.target.value)}
-              placeholder="Pilih unit pelaksana"
-              className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-caption text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            />
-            <p className="text-caption leading-relaxed text-paper-600">
-              Catat di aplikasi, teruskan instruksi lewat kanal dinas.
-            </p>
-          </div>
+          <p className="text-caption leading-relaxed text-paper-600">
+            Untuk memilih sebagian puskesmas saja, buka rekomendasinya satu per
+            satu. Catat di aplikasi, teruskan instruksi lewat kanal dinas.
+          </p>
 
           {batchError && (
             <p role="alert" className="text-caption font-medium text-risk-high">
@@ -522,7 +568,7 @@ export function EarlyActionCenter({
               size="sm"
               loading={isBatchSubmitting}
               onClick={handleBatchAssign}
-              disabled={isBatchSubmitting || batchUnit.trim().length === 0}
+              disabled={isBatchSubmitting}
               className="gap-1.5"
             >
               <Send className="h-3.5 w-3.5" aria-hidden="true" />

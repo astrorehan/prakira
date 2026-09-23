@@ -7,11 +7,16 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { BroadcastKit } from "@/components/broadcast-kit";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import type { ActionPart, ActionRecommendation } from "@/types";
+import type { ActionAssignee, ActionPart, ActionRecommendation } from "@/types";
 import { useSessionContext } from "@/components/session-provider";
 import { cn, formatNumber } from "@/lib/utils";
 import { describeDeadline, formatDateTime } from "@/lib/period";
-import { effectiveDueDate, PRIORITY_LABEL } from "@/lib/action-queue";
+import {
+  awaitingKecamatan,
+  effectiveDueDate,
+  PRIORITY_LABEL,
+  puskesmasLabel,
+} from "@/lib/action-queue";
 import {
   acknowledgeAction,
   assignAction,
@@ -47,6 +52,8 @@ interface DispatchActionModalProps {
   canAssign?: boolean;
   /** Menerima, mengerjakan, dan melaporkan hasil adalah pekerjaan puskesmas. */
   canWork?: boolean;
+  /** Puskesmas yang bisa ditugasi, untuk nama di daftar pilihan. */
+  assignees?: ActionAssignee[];
 }
 
 const inputClass =
@@ -163,6 +170,7 @@ export function DispatchActionModal({
   systemToday,
   canAssign = true,
   canWork = false,
+  assignees = [],
 }: DispatchActionModalProps) {
   const [checkedItems, setCheckedItems] = React.useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -170,7 +178,9 @@ export function DispatchActionModal({
   const [copyState, setCopyState] = React.useState<"idle" | "copied" | "failed">("idle");
 
   const [editingAssignment, setEditingAssignment] = React.useState(false);
-  const [unit, setUnit] = React.useState("");
+  /* Puskesmas yang akan ditugasi. Kecamatan yang belum ditugaskan tercentang
+     semua sejak awal; Dinkes mencabut yang belum perlu bergerak. */
+  const [chosen, setChosen] = React.useState<Record<string, boolean>>({});
   const [agreedDue, setAgreedDue] = React.useState("");
   const [note, setNote] = React.useState("");
   const [reopening, setReopening] = React.useState<string | null>(null);
@@ -185,18 +195,27 @@ export function DispatchActionModal({
     setError(null);
     setCopyState("idle");
     setEditingAssignment(false);
-    setAgreedDue("");
     setNote("");
     setReopening(null);
   }, [id]);
+
+  const awaitingKey = recommendation ? awaitingKecamatan(recommendation).join("|") : "";
+  React.useEffect(() => {
+    setChosen(
+      Object.fromEntries(awaitingKey.split("|").filter(Boolean).map((name) => [name, true])),
+    );
+  }, [id, awaitingKey]);
+
+  React.useEffect(() => {
+    setAgreedDue(recommendation?.assignment?.agreedDueDate ?? "");
+  }, [id, recommendation?.assignment?.agreedDueDate]);
 
   /* Centang SOP dibaca dari yang tersimpan, supaya petugas berikutnya tahu
      butir mana yang sudah dikerjakan. */
   React.useEffect(() => {
     const saved = recommendation?.result?.sopCompleted ?? [];
     setCheckedItems(Object.fromEntries(saved.map((item) => [item, true])));
-    setUnit(recommendation?.assignment?.unit ?? recommendation?.pic_unit ?? "");
-  }, [id, recommendation?.assignment?.unit, recommendation?.pic_unit, recommendation?.result]);
+  }, [id, recommendation?.result]);
 
   if (!recommendation) return null;
 
@@ -210,8 +229,13 @@ export function DispatchActionModal({
     (latest, entry) => (!latest || entry.ts > latest.ts ? entry : latest),
     null,
   );
-  const showAssignForm = canAssign && !completed && (!action.assignment || editingAssignment);
   const parts = action.parts;
+  const awaiting = awaitingKecamatan(action);
+  const selectedAreas = awaiting.filter((name) => chosen[name]);
+  /* Formulir tampil selama masih ada kecamatan yang belum diserahkan ke
+     puskesmasnya, atau saat Dinkes mengubah tenggat. */
+  const showAssignForm =
+    canAssign && (awaiting.length > 0 || (editingAssignment && !completed));
   const otherAreas = parts.length - 1;
   const reopenForm = reopening && (
     <div className="flex gap-2">
@@ -279,6 +303,7 @@ export function DispatchActionModal({
         {/* Kepala: apa, di mana, kapan. */}
         <div className="shrink-0 space-y-2.5 border-b border-border bg-paper-50 p-5">
           <div className="flex flex-wrap items-center gap-2 pr-6">
+            {action.source === "manual" && <Badge variant="muted">Tugas manual</Badge>}
             <Badge variant="outline">{action.disease}</Badge>
             <Badge variant={action.priority === "high" ? "risk-high" : "risk-medium"}>
               {PRIORITY_LABEL[action.priority]}
@@ -319,14 +344,16 @@ export function DispatchActionModal({
               <p className="flex flex-wrap items-center gap-x-2 text-body-sm text-foreground">
                 <span>
                   Pelaksana: <strong>{action.assignment.unit}</strong>
+                  {action.assignment.agreedDueDate &&
+                    ` · tenggat ${action.assignment.agreedDueDate}`}
                 </span>
-                {canAssign && !completed && (
+                {canAssign && !completed && awaiting.length === 0 && (
                   <button
                     type="button"
                     onClick={() => setEditingAssignment(true)}
                     className="text-caption font-medium text-brand-700 hover:underline"
                   >
-                    Ubah
+                    Ubah tenggat
                   </button>
                 )}
               </p>
@@ -340,69 +367,90 @@ export function DispatchActionModal({
               </p>
             )}
 
-            {showAssignForm ? (
-              <>
-                <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
-                  <label className="space-y-1 text-caption font-medium text-paper-700">
-                    <span>Pelaksana</span>
-                    <input
-                      value={unit}
-                      onChange={(e) => setUnit(e.target.value)}
-                      className={inputClass}
-                    />
-                  </label>
-                  <label className="space-y-1 text-caption font-medium text-paper-700">
-                    <span>Tenggat</span>
-                    <input
-                      type="date"
-                      value={agreedDue}
-                      onChange={(e) => setAgreedDue(e.target.value)}
-                      className={inputClass}
-                    />
-                  </label>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    disabled={isSubmitting || unit.trim().length === 0}
-                    onClick={() =>
-                      record(
-                        () =>
-                          assignAction(action.id, {
-                            unit: unit.trim(),
-                            dueDate: agreedDue || undefined,
-                          }),
-                        `Ditugaskan ke ${unit.trim()}.`,
-                      )
-                    }
-                  >
-                    Tugaskan
-                  </Button>
-                  {editingAssignment && (
-                    <Button size="sm" variant="ghost" onClick={() => setEditingAssignment(false)}>
-                      Batal
-                    </Button>
-                  )}
-                </div>
-              </>
-            ) : !action.assignment ? (
-              <p className="text-body-sm text-paper-700">Menunggu penugasan dari Dinkes.</p>
-            ) : !canWork && parts.length > 0 ? (
+            {!canWork ? (
               /* Dinkes memantau, bukan mengerjakan: tiap kecamatan dikerjakan
-                 puskesmasnya sendiri, dan Dinkes melihat kemajuannya satu per satu. */
+                 puskesmasnya sendiri, dan Dinkes melihat kemajuannya satu per
+                 satu. Kecamatan yang belum ditugaskan diputuskan di bawahnya. */
               <>
-                <PartsProgress
-                  parts={parts}
-                  onReopen={canAssign ? (kecamatan) => setReopening(kecamatan) : undefined}
-                />
+                {parts.length > 0 && (
+                  <PartsProgress
+                    parts={parts}
+                    onReopen={canAssign ? (kecamatan) => setReopening(kecamatan) : undefined}
+                  />
+                )}
                 {reopenForm}
+                {showAssignForm ? (
+                  <div className="space-y-2.5">
+                    {awaiting.length > 0 && (
+                      <fieldset className="space-y-1.5">
+                        <legend className="mb-1 text-caption font-semibold text-foreground">
+                          {parts.length > 0
+                            ? "Belum ditugaskan"
+                            : "Tugaskan ke puskesmas"}
+                        </legend>
+                        {awaiting.map((name) => (
+                          <label
+                            key={name}
+                            className="flex cursor-pointer items-start gap-2.5 text-body-sm text-paper-800"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={Boolean(chosen[name])}
+                              onChange={() =>
+                                setChosen((current) => ({ ...current, [name]: !current[name] }))
+                              }
+                              className="mt-1 accent-brand-700"
+                            />
+                            <span>{puskesmasLabel(name, assignees)}</span>
+                          </label>
+                        ))}
+                      </fieldset>
+                    )}
+                    <label className="block max-w-[12rem] space-y-1 text-caption font-medium text-paper-700">
+                      <span>Tenggat</span>
+                      <input
+                        type="date"
+                        value={agreedDue}
+                        onChange={(e) => setAgreedDue(e.target.value)}
+                        className={inputClass}
+                      />
+                    </label>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        disabled={
+                          isSubmitting || (awaiting.length > 0 && selectedAreas.length === 0)
+                        }
+                        onClick={() =>
+                          record(
+                            () =>
+                              assignAction(action.id, {
+                                kecamatan: selectedAreas.length > 0 ? selectedAreas : undefined,
+                                dueDate: agreedDue || undefined,
+                              }),
+                            selectedAreas.length > 0
+                              ? `Ditugaskan ke ${selectedAreas.length} puskesmas.`
+                              : "Tenggat diperbarui.",
+                          )
+                        }
+                      >
+                        {selectedAreas.length > 0
+                          ? `Tugaskan ${selectedAreas.length} puskesmas`
+                          : "Simpan tenggat"}
+                      </Button>
+                      {editingAssignment && (
+                        <Button size="sm" variant="ghost" onClick={() => setEditingAssignment(false)}>
+                          Batal
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  !action.assignment && (
+                    <p className="text-body-sm text-paper-700">Menunggu penugasan dari Dinkes.</p>
+                  )
+                )}
               </>
-            ) : !completed && !canWork ? (
-              <p className="text-body-sm text-paper-700">
-                {action.acknowledgement
-                  ? "Sedang dikerjakan puskesmas wilayah. Hasilnya tercatat di sini setelah ditandai selesai."
-                  : "Menunggu puskesmas wilayah menerima tugas."}
-              </p>
             ) : !action.acknowledgement && !completed ? (
               <Button
                 size="sm"

@@ -170,6 +170,7 @@ function ActionRow({
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0 flex-1 space-y-2.5">
             <div className="flex flex-wrap items-center gap-1.5">
+              {action.source === "manual" && <Badge variant="outline">Manual</Badge>}
               <Badge variant="muted">{ACTION_TYPE_LABEL[action.action_type]}</Badge>
               <Badge variant="outline">
                 <DiseaseIcon className="h-3 w-3" aria-hidden="true" />

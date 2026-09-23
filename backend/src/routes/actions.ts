@@ -14,7 +14,9 @@ import {
   acknowledgeAction,
   assignAction,
   completeAction,
+  createManualAction,
   getAction,
+  listAssignees,
   listActionHistory,
   listActionHistoryFor,
   listActionParts,
@@ -29,7 +31,8 @@ import {
 } from "../services/actions.js";
 import { requireRole, sessionScope } from "../middleware/auth.js";
 import { asyncRoute, HttpError } from "../middleware/error.js";
-import { reportingPeriod } from "../services/period.js";
+import { availableDiseases, reportingPeriod } from "../services/period.js";
+import { ACTION_TYPE_LABEL, type ActionType } from "../services/action-rules.js";
 
 export const actionsRouter = Router();
 
@@ -58,6 +61,7 @@ function serializePart(part: ActionPartRow) {
   return {
     kecamatan: part.kecamatan,
     status: part.status,
+    assignedAt: part.assigned_at,
     acknowledgement: part.acknowledged_at && part.acknowledgement_source
       ? {
           at: part.acknowledged_at,
@@ -148,15 +152,22 @@ function serialize(
   scope?: string,
 ) {
   const parts = partRows.map(serializePart);
+  const targetKecamatan = JSON.parse(row.target_kecamatan) as string[];
   return {
     id: row.id,
+    source: row.source,
     disease: row.disease,
     action_type: row.action_type,
     priority: row.priority,
     title: row.title,
     description: row.description,
     basis: row.basis,
-    target_kecamatan: JSON.parse(row.target_kecamatan) as string[],
+    target_kecamatan: targetKecamatan,
+    /* Sasaran yang belum diserahkan ke puskesmas mana pun. Puskesmas tidak
+       perlu tahu wilayah lain yang masih menunggu keputusan Dinkes. */
+    unassigned_kecamatan: scope
+      ? []
+      : targetKecamatan.filter((name) => !parts.some((part) => part.kecamatan === name)),
     target_population: row.target_population,
     due_date: row.due_date,
     lead_time_days: row.lead_time_days,
@@ -201,17 +212,21 @@ function serialize(
 /* Pembagian kerja: Dinkes menugaskan, membuka kembali, dan memutuskan
    publikasi; puskesmas menerima, mengerjakan, dan melaporkan hasilnya. */
 
-/** Tindakan mencakup beberapa kecamatan; akun puskesmas melihat yang memuat wilayahnya. */
-function targets(row: { target_kecamatan: string }, kecamatan: string): boolean {
-  return (JSON.parse(row.target_kecamatan) as string[]).includes(kecamatan);
+/**
+ * Akun puskesmas hanya melihat tindakan yang sudah ditugaskan ke wilayahnya.
+ * Menjadi sasaran saja belum cukup: sebelum Dinkes memutuskan, tindakan itu
+ * masih usulan, dan Dinkes boleh memilih puskesmas lain lebih dulu.
+ */
+function assignedTo(parts: ActionPartRow[], kecamatan: string): boolean {
+  return parts.some((part) => part.kecamatan === kecamatan);
 }
 
 actionsRouter.param("id", (req, _res, next, id: string) => {
   const scope = sessionScope(req);
   if (!scope) return next();
-  getAction(id)
-    .then((row) => {
-      if (row && !targets(row, scope)) {
+  listActionParts(id)
+    .then((parts) => {
+      if (!assignedTo(parts, scope)) {
         next(new HttpError(404, "Tindakan tidak ditemukan."));
       } else {
         next();
@@ -233,23 +248,21 @@ actionsRouter.get(
        yang sudah ditinjau untuk diterbitkan. Menyaring di sini, bukan di
        peramban, supaya usulan internal tidak ikut terkirim sama sekali. */
     const scope = sessionScope(req);
-    const rows = all.filter(
-      (row) =>
-        (req.query.published !== "1" || row.published_at !== null) &&
-        (!scope || targets(row, scope)),
+    const published = all.filter(
+      (row) => req.query.published !== "1" || row.published_at !== null,
     );
-    /* Riwayat cukup diambil untuk baris yang benar-benar akan dikirim. */
-    const ids = rows.map((row) => row.id);
-    const [history, partRows] = await Promise.all([
-      listActionHistoryFor(ids),
-      listActionPartsFor(ids),
-    ]);
+    const partRows = await listActionPartsFor(published.map((row) => row.id));
     const partsByAction = new Map<string, ActionPartRow[]>();
     for (const part of partRows) {
       const bucket = partsByAction.get(part.tindakan_id);
       if (bucket) bucket.push(part);
       else partsByAction.set(part.tindakan_id, [part]);
     }
+    const rows = published.filter(
+      (row) => !scope || assignedTo(partsByAction.get(row.id) ?? [], scope),
+    );
+    /* Riwayat cukup diambil untuk baris yang benar-benar akan dikirim. */
+    const history = await listActionHistoryFor(rows.map((row) => row.id));
     const byAction = new Map<string, ActionHistoryRow[]>();
     for (const entry of history) {
       const bucket = byAction.get(entry.tindakan_id);
@@ -268,6 +281,16 @@ actionsRouter.get(
         ),
       ),
     });
+  }),
+);
+
+/* Daftar puskesmas yang bisa ditugasi, untuk formulir penugasan Dinkes.
+   Didaftarkan sebelum `/:id` supaya "assignees" tidak terbaca sebagai id. */
+actionsRouter.get(
+  "/assignees",
+  requireRole("dinas"),
+  asyncRoute(async (_req, res) => {
+    res.json({ data: await listAssignees() });
   }),
 );
 
@@ -301,6 +324,23 @@ function optionalText(value: unknown, field: string): string | null {
     throw new HttpError(400, `${field} tidak valid.`);
   }
   return value.trim() || null;
+}
+
+function optionalDate(value: unknown): string | null {
+  const text = optionalText(value, "Tenggat");
+  if (text && !/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+    throw new HttpError(400, "Tenggat harus berformat YYYY-MM-DD.");
+  }
+  return text;
+}
+
+/** Daftar teks; butir kosong dibuang, duplikat dirapatkan. */
+function optionalList(value: unknown, field: string): string[] | null {
+  if (value === undefined || value === null) return null;
+  if (!Array.isArray(value) || value.some((item) => typeof item !== "string")) {
+    throw new HttpError(400, `${field} tidak valid.`);
+  }
+  return [...new Set((value as string[]).map((item) => item.trim()).filter(Boolean))];
 }
 
 /** Membungkus pelanggaran urutan kerja menjadi 409, bukan 500. */
@@ -340,22 +380,71 @@ function workArea(req: Parameters<typeof sessionScope>[0]): string {
   return scope;
 }
 
+/**
+ * Tugas manual Dinkes: dibuat dan langsung ditugaskan ke puskesmas pilihan.
+ * Dasar penugasan wajib, sama seperti saran sistem wajib membawa "Dasar:".
+ */
+actionsRouter.post(
+  "/",
+  requireRole("dinas"),
+  asyncRoute(async (req, res) => {
+    const body = req.body ?? {};
+    const kecamatan = optionalList(body.kecamatan, "Daftar puskesmas") ?? [];
+    if (kecamatan.length === 0) {
+      throw new HttpError(400, "Pilih paling sedikit satu puskesmas.");
+    }
+    const dueDate = optionalDate(body.dueDate);
+    if (!dueDate) throw new HttpError(400, "Tenggat wajib diisi.");
+
+    const actionType = body.actionType ?? "lainnya";
+    if (!(actionType in ACTION_TYPE_LABEL)) {
+      throw new HttpError(400, "Jenis tindakan tidak dikenal.");
+    }
+    const priority = body.priority ?? "medium";
+    if (!["high", "medium", "low"].includes(priority)) {
+      throw new HttpError(400, "Prioritas harus high, medium, atau low.");
+    }
+    const disease = requireText(body.disease, "Penyakit").toUpperCase();
+    if (!(await availableDiseases()).includes(disease)) {
+      throw new HttpError(400, `Penyakit ${disease} tidak dikenal.`);
+    }
+
+    const created = await guarded(() =>
+      createManualAction(
+        {
+          title: requireText(body.title, "Judul tugas"),
+          description: optionalText(body.description, "Uraian tugas") ?? "",
+          reason: requireText(body.reason, "Dasar penugasan"),
+          disease,
+          actionType: actionType as ActionType,
+          priority,
+          kecamatan,
+          dueDate,
+          sopChecklist: optionalList(body.sopChecklist, "Langkah SOP") ?? [],
+          pic: optionalText(body.pic, "Nama PIC"),
+          note: optionalText(body.note, "Catatan penugasan"),
+        },
+        req.session!.label,
+        req.session!.role,
+      ),
+    );
+    res.status(201).json({ data: await present(created, sessionScope(req)) });
+  }),
+);
+
 actionsRouter.post(
   "/:id/assign",
   requireRole("dinas"),
   asyncRoute(async (req, res) => {
     const body = req.body ?? {};
-    const unit = requireText(body.unit, "Unit pelaksana");
-    const dueDate = optionalText(body.dueDate, "Tenggat");
-    if (dueDate && !/^\d{4}-\d{2}-\d{2}$/.test(dueDate)) {
-      throw new HttpError(400, "Tenggat harus berformat YYYY-MM-DD.");
-    }
+    const dueDate = optionalDate(body.dueDate);
 
     const updated = await guarded(() =>
       assignAction(
         req.params.id,
         {
-          unit,
+          kecamatan: optionalList(body.kecamatan, "Daftar kecamatan"),
+          unit: optionalText(body.unit, "Unit pelaksana"),
           pic: optionalText(body.pic, "Nama PIC"),
           dueDate,
           note: optionalText(body.note, "Catatan penugasan"),

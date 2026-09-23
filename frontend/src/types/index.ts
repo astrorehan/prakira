@@ -287,6 +287,7 @@ export type ActionPriority = "high" | "medium" | "low";
 export type ActionStatus = "pending" | "assigned" | "in_progress" | "completed";
 
 export type ActionHistoryEvent =
+  | "dibuat"
   | "ditugaskan"
   | "dikonfirmasi"
   | "kendala"
@@ -336,6 +337,7 @@ export type ActionResult = {
 export type ActionPart = {
   kecamatan: string;
   status: "assigned" | "in_progress" | "completed";
+  assignedAt: string | null;
   acknowledgement: ActionAcknowledgement | null;
   blocker: { note: string; at: string | null } | null;
   result: ActionResult | null;
@@ -352,10 +354,23 @@ export type ActionType =
   | "masker"
   | "klorinasi"
   | "logistik_obat"
-  | "penyuluhan";
+  | "penyuluhan"
+  /* Hanya untuk tugas manual Dinkes. */
+  | "lainnya";
+
+/** Saran mesin aturan, atau tugas yang dibuat Dinkes sendiri. */
+export type ActionSource = "sistem" | "manual";
+
+/** Puskesmas yang bisa ditugasi — satu per kecamatan. */
+export type ActionAssignee = {
+  kecamatan: string;
+  /** Nama dari akun puskesmas wilayahnya; kosong bila akunnya belum ada. */
+  puskesmas: string | null;
+};
 
 export type ActionRecommendation = {
   id: string;
+  source: ActionSource;
   disease: DiseaseType;
   action_type: ActionType;
   priority: ActionPriority;
@@ -365,6 +380,8 @@ export type ActionRecommendation = {
   /** Kalimat "Dasar: …" — wajib ada, PRD §5.2. */
   basis: string;
   target_kecamatan: string[];
+  /** Sasaran yang belum ditugaskan ke puskesmasnya. Selalu kosong untuk akun puskesmas. */
+  unassigned_kecamatan: string[];
   target_population: number;
   /** `YYYY-MM-DD`. */
   due_date: string;

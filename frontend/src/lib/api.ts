@@ -13,6 +13,7 @@
  * cookie sesi ikut terkirim tanpa konfigurasi CORS tambahan.
  */
 import type {
+  ActionAssignee,
   ActionRecommendation,
   AuditLog,
   BacktestMetric,
@@ -343,6 +344,10 @@ function normalizeAction(action: ActionRecommendation): ActionRecommendation {
           publishedBy: string(publication?.publishedBy, publication?.published_by),
         }
       : null,
+    source: action.source === "manual" ? "manual" : "sistem",
+    unassigned_kecamatan: Array.isArray(action.unassigned_kecamatan)
+      ? action.unassigned_kecamatan
+      : [],
     parts: Array.isArray(action.parts) ? action.parts : [],
     history: action.history.map((entry, index) => ({
       ...entry,
@@ -393,12 +398,46 @@ function actionEvent(
   }).then((response) => ({ ...response, data: normalizeAction(response.data) }));
 }
 
-/** Menetapkan unit pelaksana, PIC, dan tenggat yang disepakati. */
+/**
+ * Menugaskan puskesmas pelaksana. `kecamatan` memilih puskesmas mana yang
+ * ditugasi; kosong berarti seluruh kecamatan sasaran.
+ */
 export function assignAction(
   id: string,
-  input: { unit: string; pic?: string; dueDate?: string; note?: string },
+  input: {
+    kecamatan?: string[];
+    unit?: string;
+    pic?: string;
+    dueDate?: string;
+    note?: string;
+  },
 ) {
   return actionEvent(id, "assign", input);
+}
+
+/** Tugas manual Dinkes: dibuat dan langsung ditugaskan ke puskesmas pilihan. */
+export function createManualAction(input: {
+  title: string;
+  reason: string;
+  description?: string;
+  disease: string;
+  actionType: ActionRecommendation["action_type"];
+  priority: ActionRecommendation["priority"];
+  kecamatan: string[];
+  dueDate: string;
+  sopChecklist?: string[];
+  pic?: string;
+  note?: string;
+}): Promise<{ data: ActionRecommendation }> {
+  return request<{ data: ActionRecommendation }>("/api/actions", {
+    method: "POST",
+    body: JSON.stringify(input),
+  }).then((response) => ({ ...response, data: normalizeAction(response.data) }));
+}
+
+/** Puskesmas yang bisa ditugasi Dinkes. */
+export function fetchAssignees(): Promise<{ data: ActionAssignee[] }> {
+  return request<{ data: ActionAssignee[] }>("/api/actions/assignees");
 }
 
 /** Mencatat bahwa pelaksana membenarkan menerima penugasan, dan lewat apa. */

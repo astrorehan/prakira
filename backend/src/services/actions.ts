@@ -11,6 +11,7 @@
  * bulan prediksi, sehingga status yang sudah diubah petugas (dikirim, selesai)
  * bertahan saat prediksi diperbarui.
  */
+import { randomBytes } from "node:crypto";
 import { all, one, run } from "../db/index.js";
 import { getDistricts, type DistrictPayload } from "./districts.js";
 import { monthLabel } from "./period.js";
@@ -18,6 +19,7 @@ import {
   ACTION_TYPE_LABEL,
   templatesFor,
   type ActionTemplate,
+  type ActionType,
   type RiskClass,
 } from "./action-rules.js";
 import { logAudit } from "./audit.js";
@@ -64,7 +66,11 @@ export type ActionRow = {
   sop_completed: string | null;
   published_at: string | null;
   published_by: string | null;
+  source: ActionSource;
 };
+
+/** Saran mesin aturan, atau tugas yang dibuat Dinkes tanpa saran sistem. */
+export type ActionSource = "sistem" | "manual";
 
 /**
  * Model status minimal audit §7.A: Perlu keputusan -> Ditugaskan -> Dikerjakan
@@ -78,6 +84,7 @@ export type ActionStatus =
   | "completed";
 
 export type ActionHistoryEvent =
+  | "dibuat"
   | "ditugaskan"
   | "dikonfirmasi"
   | "kendala"
@@ -105,6 +112,8 @@ export type ActionPartRow = {
   sop_completed: string | null;
   completed_at: string | null;
   completed_by: string | null;
+  assigned_at: string | null;
+  assigned_by: string | null;
 };
 
 export type ActionHistoryRow = {
@@ -157,10 +166,11 @@ async function regenerateForDisease(disease: string): Promise<number> {
   const upper = disease.toUpperCase();
 
   /* Tindakan untuk bulan prediksi lain sudah tidak relevan; yang belum pernah
-     dikirim dibuang, yang sudah dikirim disimpan sebagai riwayat. */
+     dikirim dibuang, yang sudah dikirim disimpan sebagai riwayat. Tugas manual
+     bukan turunan prakiraan, jadi tidak ikut dibuang. */
   await run(
     `DELETE FROM tindakan
-      WHERE disease = ? AND prediction_month <> ?
+      WHERE disease = ? AND prediction_month <> ? AND source = 'sistem'
         AND dispatched_at IS NULL AND assigned_at IS NULL`,
     upper,
     predictionMonth,
@@ -247,7 +257,8 @@ async function upsertAction(
   if (existing) {
     /* Wilayah yang sudah ditugaskan tidak dicabut saat prediksi diperbarui —
        puskesmasnya mungkin sudah bekerja. Wilayah yang baru masuk kelas risiko
-       ini ditambahkan dan langsung mendapat bagiannya. */
+       ini ditambahkan sebagai sasaran yang belum ditugaskan: Dinkes yang
+       memutuskan puskesmas mana yang ikut bergerak. */
     if (existing.assigned_at) {
       for (const name of JSON.parse(existing.target_kecamatan) as string[]) {
         if (!names.includes(name)) names.push(name);
@@ -280,10 +291,7 @@ async function upsertAction(
       generatedAt,
       id,
     );
-    if (existing.assigned_at) {
-      await ensureParts(id, names);
-      await syncActionStatus(id);
-    }
+    if (existing.assigned_at) await syncActionStatus(id);
     return;
   }
 
@@ -474,17 +482,31 @@ export async function listActionPartsFor(ids: string[]): Promise<ActionPartRow[]
   );
 }
 
-/** Membuka bagian untuk kecamatan sasaran yang belum punya. Bagian lama tidak disentuh. */
-async function ensureParts(id: string, kecamatan: string[]): Promise<void> {
+/**
+ * Membuka bagian untuk kecamatan yang ditugaskan dan belum punya. Bagian lama
+ * tidak disentuh. Mengembalikan kecamatan yang benar-benar baru ditugaskan.
+ */
+async function ensureParts(
+  id: string,
+  kecamatan: string[],
+  now: string,
+  actor: string,
+): Promise<string[]> {
+  const opened: string[] = [];
   for (const name of kecamatan) {
-    await run(
-      `INSERT INTO tindakan_wilayah (tindakan_id, kecamatan, status)
-       VALUES (?, ?, 'assigned')
-       ON CONFLICT (tindakan_id, kecamatan) DO NOTHING`,
+    const inserted = await one<{ kecamatan: string }>(
+      `INSERT INTO tindakan_wilayah (tindakan_id, kecamatan, status, assigned_at, assigned_by)
+       VALUES (?, ?, 'assigned', ?, ?)
+       ON CONFLICT (tindakan_id, kecamatan) DO NOTHING
+       RETURNING kecamatan`,
       id,
       name,
+      now,
+      actor,
     );
+    if (inserted) opened.push(name);
   }
+  return opened;
 }
 
 /**
@@ -546,15 +568,23 @@ export class ActionTransitionError extends Error {
   }
 }
 
+/** Pelaksana bawaan: tiap kecamatan dikerjakan puskesmas wilayahnya. */
+const DEFAULT_UNIT = "Puskesmas wilayah";
+
 /**
  * Penugasan (F04). Sebelum ini antarmuka hanya bisa menulis "berjalan": tidak
  * ada tempat untuk PIC, tenggat yang disepakati, atau kalimat penugasan, jadi
  * produk mencatat awal pekerjaan tanpa pemiliknya.
+ *
+ * `kecamatan` memilih puskesmas mana yang ditugaskan. Kosong berarti seluruh
+ * sasaran. Penugasan berikutnya boleh menambah kecamatan; bagian yang sudah
+ * berjalan tidak dicabut.
  */
 export async function assignAction(
   id: string,
   input: {
-    unit: string;
+    kecamatan?: string[] | null;
+    unit?: string | null;
     pic?: string | null;
     dueDate?: string | null;
     note?: string | null;
@@ -564,14 +594,26 @@ export async function assignAction(
 ): Promise<ActionRow | null> {
   const existing = await getAction(id);
   if (!existing) return null;
-  if (existing.status === "completed") {
+
+  const targets = JSON.parse(existing.target_kecamatan) as string[];
+  const chosen = input.kecamatan && input.kecamatan.length > 0 ? input.kecamatan : targets;
+  const outside = chosen.filter((name) => !targets.includes(name));
+  if (outside.length > 0) {
+    throw new ActionTransitionError(
+      `${outside.join(", ")} tidak termasuk sasaran tindakan ini.`,
+    );
+  }
+
+  const assigned = new Set((await listActionParts(id)).map((part) => part.kecamatan));
+  const fresh = chosen.filter((name) => !assigned.has(name));
+  if (existing.status === "completed" && fresh.length === 0) {
     throw new ActionTransitionError(
       "Tindakan yang sudah selesai tidak dapat ditugaskan ulang. Buka kembali lebih dulu bila hasilnya perlu diperbaiki.",
     );
   }
 
   const now = new Date().toISOString();
-  const unit = input.unit.trim();
+  const unit = input.unit?.trim() || existing.assigned_unit || DEFAULT_UNIT;
   const pic = input.pic?.trim() || null;
   const dueDate = input.dueDate?.trim() || null;
   const note = input.note?.trim() || null;
@@ -594,12 +636,13 @@ export async function assignAction(
     id,
   );
 
-  await ensureParts(id, JSON.parse(existing.target_kecamatan) as string[]);
+  const opened = await ensureParts(id, chosen, now, actor);
   await syncActionStatus(id);
 
+  const areas = opened.length > 0 ? ` untuk ${opened.join(", ")}` : "";
   await appendHistory(id, "ditugaskan", actor, role, {
     detail:
-      `Ditugaskan ke ${unit}${pic ? ` (${pic})` : ""}` +
+      `Ditugaskan ke ${unit}${pic ? ` (${pic})` : ""}${areas}` +
       (dueDate ? `, tenggat ${dueDate}` : ", tanpa tenggat yang disepakati") +
       (note ? `. ${note}` : "."),
     now,
@@ -609,11 +652,119 @@ export async function assignAction(
     actor,
     role,
     action: `Penugasan tindakan ${id}`,
-    details: `${existing.title} ditugaskan ke ${unit}${pic ? ` (${pic})` : ""}.`,
+    details: `${existing.title} ditugaskan ke ${unit}${pic ? ` (${pic})` : ""}${areas}.`,
     status: "info",
   });
 
   return getAction(id);
+}
+
+/**
+ * Tugas manual Dinkes. Tidak semua pekerjaan lahir dari prakiraan: laporan
+ * lapangan, surat edaran, atau permintaan kecamatan juga menuntut tindakan.
+ * Tugas ini memakai alur yang sama — dikonfirmasi, dikerjakan, dilaporkan
+ * hasilnya — dan langsung ditugaskan ke puskesmas yang dipilih, karena tidak
+ * ada gunanya membuat tugas yang tidak ditujukan kepada siapa pun.
+ */
+export async function createManualAction(
+  input: {
+    title: string;
+    description: string;
+    reason: string;
+    disease: string;
+    actionType: ActionType;
+    priority: "high" | "medium" | "low";
+    kecamatan: string[];
+    dueDate: string;
+    sopChecklist: string[];
+    pic?: string | null;
+    note?: string | null;
+  },
+  actor: string,
+  role: string,
+): Promise<ActionRow> {
+  const known = await all<{ nama: string; populasi: number }>(
+    "SELECT nama, populasi FROM kecamatan WHERE nama = ANY(?::text[])",
+    input.kecamatan,
+  );
+  const unknown = input.kecamatan.filter((name) => !known.some((k) => k.nama === name));
+  if (unknown.length > 0) {
+    throw new ActionTransitionError(`Kecamatan tidak dikenal: ${unknown.join(", ")}.`);
+  }
+
+  const now = new Date().toISOString();
+  const id = `MAN-${now.slice(0, 10).replaceAll("-", "")}-${randomBytes(3).toString("hex").toUpperCase()}`;
+  const disease = input.disease.toUpperCase();
+  const population = known.reduce((sum, k) => sum + k.populasi, 0);
+  const basis = `Dasar: penugasan manual Dinkes — ${input.reason}`;
+  const label = ACTION_TYPE_LABEL[input.actionType];
+
+  await run(
+    `INSERT INTO tindakan
+       (id, disease, action_type, priority, status, title, description, basis,
+        target_kecamatan, target_population, due_date, lead_time_days, estimated_impact,
+        climate_trigger, sop_checklist, pic_unit, broadcast_draft, prediction_month,
+        predicted_lower, predicted_upper, data_coverage, generated_at, source)
+     VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, 0, ?, NULL, ?, ?, ?, ?, 0, 0, 'insufficient', ?, 'manual')`,
+    id,
+    disease,
+    input.actionType,
+    input.priority,
+    input.title,
+    input.description,
+    basis,
+    JSON.stringify(input.kecamatan),
+    population,
+    input.dueDate,
+    `Menjangkau ${population.toLocaleString("id-ID")} jiwa di ${input.kecamatan.length} kecamatan.`,
+    JSON.stringify(input.sopChecklist),
+    DEFAULT_UNIT,
+    [
+      `[INSTRUKSI DINKES — ${disease}]`,
+      "",
+      `Kepada puskesmas wilayah: ${input.kecamatan.join(", ")}.`,
+      `Tindakan: ${label} — ${input.title}.`,
+      basis,
+      "",
+      "Nomor surat, pejabat penanda tangan, dan tanggal pelaksanaan diisi oleh dinas sebelum diedarkan.",
+    ].join("\n"),
+    `${input.dueDate.slice(0, 7)}-01`,
+    now,
+  );
+
+  await appendHistory(id, "dibuat", actor, role, {
+    detail: `Tugas manual dibuat. ${basis}`,
+    now,
+  });
+
+  const assigned = await assignAction(
+    id,
+    {
+      kecamatan: input.kecamatan,
+      pic: input.pic,
+      dueDate: input.dueDate,
+      note: input.note,
+    },
+    actor,
+    role,
+  );
+  return assigned as ActionRow;
+}
+
+/**
+ * Puskesmas yang bisa ditugasi: satu per kecamatan. Nama puskesmas diambil
+ * dari akun wilayahnya bila sudah ada, supaya Dinkes memilih nama yang sama
+ * dengan yang tertulis di konsol puskesmas.
+ */
+export function listAssignees(): Promise<{ kecamatan: string; puskesmas: string | null }[]> {
+  return all<{ kecamatan: string; puskesmas: string | null }>(
+    `SELECT k.nama AS kecamatan,
+            (SELECT u.label FROM users u
+              WHERE u.role = 'puskesmas' AND u.kecamatan_id = k.id
+              ORDER BY u.created_at LIMIT 1) AS puskesmas
+       FROM kecamatan k
+      ORDER BY k.nama`,
+  );
 }
 
 /**
