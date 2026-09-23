@@ -97,11 +97,58 @@ const STATUS_RANK: Record<ReportStatus, number> = {
   ditolak: 3,
 };
 
-/** Yang belum diputuskan lebih dulu, lalu yang paling lama menunggu. */
+/**
+ * Prioritas pemeriksaan untuk laporan yang belum diputuskan.
+ *
+ * Antrean yang hanya diurutkan menurut waktu masuk membuat laporan lengkap
+ * dari wilayah berisiko tinggi tertimbun di bawah laporan asal-asalan. Tiga
+ * tingkat, sengaja sederhana supaya petugas bisa menebak alasannya sendiri:
+ *
+ *   - didahulukan: wilayahnya berisiko tinggi dan lokasinya bisa ditemukan,
+ *     atau lokasinya bisa ditemukan dan disertai foto;
+ *   - kurang lengkap: tanpa patokan lokasi apa pun dan tanpa foto — petugas
+ *     tidak dapat memeriksanya di lapangan;
+ *   - biasa: sisanya.
+ *
+ * Tidak ada laporan yang disembunyikan atau ditolak otomatis; yang berubah
+ * hanya urutannya. Laporan kurang lengkap yang sudah menunggu lebih dari
+ * `STALE_HOURS` naik ke tingkat biasa supaya tidak terlupakan selamanya.
+ */
+export type ReportPriority = "didahulukan" | "biasa" | "kurang_lengkap";
+
+const STALE_HOURS = 72;
+
+const PRIORITY_RANK: Record<ReportPriority, number> = {
+  didahulukan: 0,
+  biasa: 1,
+  kurang_lengkap: 2,
+};
+
+export function reportPriority(report: CitizenReport, now = Date.now()): ReportPriority {
+  const { locatable, hasPhoto } = report.completeness;
+  const highRisk = report.risk?.riskClass === "tinggi";
+  if (locatable && (highRisk || hasPhoto)) return "didahulukan";
+  if (!locatable && !hasPhoto) {
+    const waitedHours = (now - Date.parse(report.submittedAt)) / 3_600_000;
+    return waitedHours > STALE_HOURS ? "biasa" : "kurang_lengkap";
+  }
+  return "biasa";
+}
+
+/**
+ * Yang belum diputuskan lebih dulu; di antara yang menunggu pemeriksaan,
+ * menurut prioritas; lalu yang paling lama menunggu.
+ */
 export function sortForQueue(list: CitizenReport[]): CitizenReport[] {
+  const now = Date.now();
   return [...list].sort((a, b) => {
     const byStatus = STATUS_RANK[a.status] - STATUS_RANK[b.status];
     if (byStatus !== 0) return byStatus;
+    if (a.status === "menunggu") {
+      const byPriority =
+        PRIORITY_RANK[reportPriority(a, now)] - PRIORITY_RANK[reportPriority(b, now)];
+      if (byPriority !== 0) return byPriority;
+    }
     return a.submittedAt.localeCompare(b.submittedAt);
   });
 }

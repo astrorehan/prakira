@@ -15,6 +15,7 @@ import {
   RotateCcw,
   Recycle,
   FlaskConical,
+  ArrowUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
@@ -29,6 +30,7 @@ import { ForwardingQueue, RiskChip } from "@/components/forwarding-queue";
 import { useSessionContext } from "@/components/session-provider";
 import {
   sortForQueue,
+  reportPriority,
   REPORT_KIND,
   REPORT_STATUS,
   FAMILY_ROUTING,
@@ -239,6 +241,7 @@ function ReportRow({
   const kind = REPORT_KIND[report.kind];
   const status = REPORT_STATUS[report.status];
   const Icon = KIND_ICON[report.kind];
+  const priority = reportPriority(report);
   /* Laporan yang sedang menunggu jawaban warga tetap dapat diputuskan: itu
      justru tujuan pertanyaannya. */
   const pending =
@@ -301,6 +304,24 @@ function ReportRow({
             <Badge variant="outline" className="gap-1">
               <Recycle className="h-3 w-3" aria-hidden="true" />
               {report.routing.agency?.short ?? FAMILY_ROUTING.lingkungan}
+            </Badge>
+          )}
+          {report.status === "menunggu" && priority === "didahulukan" && (
+            <Badge
+              variant="secondary"
+              className="gap-1"
+              title="Lokasi dapat ditemukan dan wilayahnya berisiko tinggi atau laporannya berfoto."
+            >
+              <ArrowUp className="h-3 w-3" aria-hidden="true" />
+              Didahulukan
+            </Badge>
+          )}
+          {report.status === "menunggu" && priority === "kurang_lengkap" && (
+            <Badge
+              variant="muted"
+              title="Tanpa patokan lokasi dan tanpa foto, jadi diurutkan di belakang. Naik kembali setelah menunggu 3 hari."
+            >
+              Kurang lengkap
             </Badge>
           )}
           <RiskChip risk={report.risk} />
@@ -863,6 +884,15 @@ export function VerificationQueue() {
           Muat ulang antrean
         </Button>
       </div>
+
+      {(status === "semua" || status === "menunggu") && (
+        <p className="-mt-2 text-caption text-paper-600">
+          Laporan yang perlu diperiksa diurutkan: <strong className="font-medium text-paper-700">didahulukan</strong>{" "}
+          (lokasi jelas, di wilayah berisiko tinggi atau berfoto), lalu biasa, lalu{" "}
+          <strong className="font-medium text-paper-700">kurang lengkap</strong> (tanpa lokasi dan foto).
+          Dalam tiap tingkat, yang paling lama menunggu lebih dulu. Tidak ada laporan yang ditolak otomatis.
+        </p>
+      )}
 
       {decideError && (
         <p
