@@ -38,6 +38,11 @@ function row(overrides: Partial<ReportRow> = {}): ReportRow {
     device_hash: "0123456789abcdef0123456789abcdef",
     landmark: null,
     rt_rw: null,
+    latitude: null,
+    longitude: null,
+    location_accuracy_m: null,
+    photo_device: null,
+    photo_taken_at: null,
     info_request: null,
     info_requested_at: null,
     related_report_id: null,
@@ -194,7 +199,9 @@ test("proyeksi kolom menyebut foto hanya sebagai uji keberadaan", () => {
      satu kolom 400 KB yang ikut terbawa diam-diam ke setiap baris adalah
      selisih antara respons beberapa ratus kilobita dan respons 40 MB. */
   assert.ok(!REPORT_COLUMNS.includes("*"), "kolom harus disebut satu per satu");
-  const photoMentions = REPORT_COLUMNS.match(/photo/g) ?? [];
-  assert.equal(photoMentions.length, 2, "hanya `(photo IS NOT NULL) AS has_photo`");
+  /* `\b` melewati `has_photo`, `photo_device`, dan `photo_taken_at`: yang
+     dihitung hanya kolom `photo` itu sendiri. */
+  const photoMentions = REPORT_COLUMNS.match(/\bphoto\b/g) ?? [];
+  assert.equal(photoMentions.length, 1, "hanya `(photo IS NOT NULL) AS has_photo`");
   assert.match(REPORT_COLUMNS, /\(photo IS NOT NULL\) AS has_photo/);
 });
