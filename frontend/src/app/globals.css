@@ -657,4 +657,47 @@
   a[href]::after {
     content: "";
   }
+
+  /* Dialog surat dirender lewat portal langsung di body. Saat dicetak,
+     hanya lembar surat yang ikut, tanpa halaman antrean dan bilah dialog. */
+  body:has(> .forward-letter-print) > :not(.forward-letter-print) {
+    display: none !important;
+  }
+
+  .forward-letter-print {
+    position: static !important;
+    display: block !important;
+    width: auto !important;
+    max-width: none !important;
+    max-height: none !important;
+    overflow: visible !important;
+    transform: none !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .forward-letter-print > .forward-letter-controls,
+  .forward-letter-print > button {
+    display: none !important;
+  }
+
+  .forward-letter-print > div:has(> .forward-letter-sheet) {
+    overflow: visible !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+  }
+
+  .forward-letter-sheet {
+    max-width: none !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .forward-letter-signature,
+  .forward-letter-attachment {
+    break-inside: avoid;
+  }
 }

@@ -1,12 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { Check, Loader2, Mail, MapPin, Repeat, Send } from "lucide-react";
+import { Check, Loader2, Mail, MapPin, Repeat, Send, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { DispositionEmailModal } from "@/components/disposition-email-modal";
-import { forwardReport, sendReportEmail } from "@/lib/api";
+import { ReportPhoto } from "@/components/report-photo";
+import { decideForwardProposal, forwardReport, sendReportEmail } from "@/lib/api";
 import { formatDateTime } from "@/lib/period";
 import { REPORT_KIND } from "@/lib/reports";
 import { diseaseLabel } from "@/lib/utils";
@@ -20,6 +21,10 @@ import type { CitizenReport, ReportRiskContext } from "@/types";
  * penyakit, supaya instansi penerima tahu lokasi mana yang didahulukan.
  * Dua langkah: kirim ringkasan ke inbox pengelola, lalu catat penerusannya
  * ke instansi. Email saja tidak membuat laporan keluar dari antrean.
+ *
+ * Laporan yang dirutekan puskesmas datang sebagai usulan. Draf surat dan
+ * tombol kirim baru muncul setelah Dinkes menyetujuinya: meneruskan laporan
+ * ke instansi lain adalah keputusan Dinkes.
  */
 
 const RISK_BADGE = {
@@ -125,7 +130,7 @@ function ForwardCard({
           onClick={() => setDraftOpen(true)}
         >
           <Mail className="h-4 w-4" aria-hidden />
-          Surat
+          Lihat draf surat
         </Button>
         {readyToForward ? (
           <>
@@ -179,6 +184,119 @@ function ForwardCard({
   );
 }
 
+/** Usulan penerusan dari puskesmas: Dinkes memutuskan sebelum ada draf. */
+function ProposalCard({
+  report,
+  onChanged,
+}: {
+  report: CitizenReport;
+  onChanged: () => void;
+}) {
+  const [busy, setBusy] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [declining, setDeclining] = React.useState(false);
+  const [reason, setReason] = React.useState("");
+  const agency = report.routing.agency;
+
+  const decide = async (approve: boolean) => {
+    setBusy(true);
+    setError(null);
+    try {
+      await decideForwardProposal(report.id, {
+        approve,
+        note: approve ? undefined : reason.trim(),
+      });
+      onChanged();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Gagal menyimpan.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Card className="border-amber-200 bg-white p-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-body-sm font-semibold text-foreground">
+          {REPORT_KIND[report.kind].label}
+        </span>
+        <span className="font-mono text-caption uppercase text-paper-600">{report.id}</span>
+        <span className="flex items-center gap-1 text-body-sm text-paper-700">
+          <MapPin className="h-3.5 w-3.5 text-paper-600" aria-hidden />
+          {report.kecamatan}
+          {report.kelurahan ? ` · ${report.kelurahan}` : ""}
+        </span>
+        <span className="text-caption text-paper-600">→ {agency?.short ?? "instansi"}</span>
+        <span className="ml-auto flex flex-wrap gap-1.5">
+          <RiskChip risk={report.risk} />
+          <PatternChip count={report.forwarding?.pattern} />
+        </span>
+      </div>
+
+      <p className="mt-2 text-body-sm text-paper-800">{report.description}</p>
+      {report.hasPhoto && <ReportPhoto id={report.id} />}
+      <p className="mt-2 text-caption text-paper-600">
+        {report.forwarding?.pattern
+          ? "Naik otomatis karena laporan mandiri serupa berulang"
+          : `Diusulkan ${report.reviewer ?? "puskesmas"}`}
+        {report.reviewedAt ? ` · ${formatDateTime(report.reviewedAt)}` : ""}
+        {report.reviewNote ? ` · ${report.reviewNote}` : ""}
+      </p>
+
+      {declining ? (
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <input
+            value={reason}
+            onChange={(event) => setReason(event.target.value)}
+            placeholder="Alasan tidak diteruskan"
+            aria-label="Alasan tidak diteruskan"
+            className="min-w-0 flex-1 rounded-xl border border-border bg-surface px-3 py-2 text-body-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          />
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={busy || reason.trim().length === 0}
+            onClick={() => decide(false)}
+          >
+            {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
+            Kembalikan ke arahan warga
+          </Button>
+          <Button size="sm" variant="ghost" disabled={busy} onClick={() => setDeclining(false)}>
+            Batal
+          </Button>
+        </div>
+      ) : (
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <Button size="sm" className="gap-1.5" disabled={busy} onClick={() => decide(true)}>
+            {busy ? (
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+            ) : (
+              <Check className="h-4 w-4" aria-hidden />
+            )}
+            Setujui penerusan ke {agency?.short ?? "instansi"}
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1.5"
+            disabled={busy}
+            onClick={() => setDeclining(true)}
+          >
+            <X className="h-4 w-4" aria-hidden />
+            Tidak diteruskan
+          </Button>
+        </div>
+      )}
+
+      {error && (
+        <p role="alert" className="mt-2 text-caption text-risk-high">
+          {error}
+        </p>
+      )}
+    </Card>
+  );
+}
+
 export function ForwardingQueue({
   reports,
   onChanged,
@@ -188,6 +306,9 @@ export function ForwardingQueue({
 }) {
   const [showArchive, setShowArchive] = React.useState(false);
 
+  const proposals = (reports ?? [])
+    .filter((r) => r.forwarding?.state === "diusulkan")
+    .sort((a, b) => urgency(b) - urgency(a));
   const pending = (reports ?? [])
     .filter(
       (r) =>
@@ -204,9 +325,21 @@ export function ForwardingQueue({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-h3 text-foreground">Penerusan ke instansi</h2>
         <span className="text-caption text-paper-700">
+          {proposals.length > 0 ? `${proposals.length} usulan · ` : ""}
           {pending.length} perlu diteruskan · {forwarded.length} sudah
         </span>
       </div>
+
+      {proposals.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="text-body-sm font-semibold text-paper-800">
+            Usulan puskesmas — menunggu persetujuan
+          </h3>
+          {proposals.map((report) => (
+            <ProposalCard key={report.id} report={report} onChanged={onChanged} />
+          ))}
+        </div>
+      )}
 
       {pending.length === 0 ? (
         <p className="rounded-xl border border-dashed border-teal-200 bg-white/60 px-3.5 py-3 text-body-sm text-paper-700">
@@ -262,7 +395,7 @@ function ArchiveRow({ report }: { report: CitizenReport }) {
         onClick={() => setOpen(true)}
         className="ml-auto font-medium text-brand-700 hover:underline"
       >
-        Ringkasan
+        Lihat surat
       </button>
       <DispositionEmailModal open={open} onOpenChange={setOpen} report={report} />
     </li>

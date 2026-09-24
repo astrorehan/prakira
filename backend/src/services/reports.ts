@@ -42,7 +42,13 @@ export type ReportHandlingMode = "mandiri_warga" | "dlh";
  * penerima bukan pekerjaan yang dikelola PRAKIRA, dan menampilkannya berarti
  * menjanjikan pemantauan yang tidak punya sumber pembaruan.
  */
-export type ForwardState = "perlu_diteruskan" | "diteruskan" | "gagal";
+/**
+ * `diusulkan`: puskesmas (atau pola laporan mandiri berulang) mengusulkan
+ * penerusan, dan Dinkes belum menyetujuinya. Draf surat dan email baru ada
+ * setelah Dinkes menyetujui — keputusan meneruskan ke instansi lain adalah
+ * kewenangan Dinkes, bukan puskesmas.
+ */
+export type ForwardState = "diusulkan" | "perlu_diteruskan" | "diteruskan" | "gagal";
 
 export const REPORT_HANDLING_MODES: ReportHandlingMode[] = [
   "mandiri_warga",
@@ -806,10 +812,13 @@ export async function reviewReport(
 
     /* Laporan yang diterima dan dirutekan ke instansi lain masuk keadaan
        "perlu diteruskan". Ia belum diteruskan: penyampaian adalah kejadian
-       tersendiri yang dicatat lewat `recordForwarding`. */
-    const forwardState =
+       tersendiri yang dicatat lewat `recordForwarding`. Bila yang memutuskan
+       puskesmas, rutenya baru usulan sampai Dinkes menyetujuinya. */
+    const forwardState: ForwardState | null =
       decision.status === "terverifikasi" && handlingMode === "dlh"
-        ? "perlu_diteruskan"
+        ? role === "dinas"
+          ? "perlu_diteruskan"
+          : "diusulkan"
         : null;
     const infoRequest =
       decision.status === "perlu_informasi"
@@ -862,7 +871,7 @@ export async function reviewReport(
         escalatedPattern = mandiriCount;
         await tx.run(
           `UPDATE laporan_warga
-              SET forward_state = 'perlu_diteruskan', forward_target = ?,
+              SET forward_state = 'diusulkan', forward_target = ?,
                   forward_pattern = ?
             WHERE id = ?`,
           agencyFor(existing.kind).name,
@@ -934,6 +943,11 @@ export async function recordForwarding(
       "Laporan harus diperiksa dan diterima lebih dulu sebelum diteruskan.",
     );
   }
+  if (existing.forward_state === "diusulkan") {
+    throw new ForwardStateError(
+      "Usulan penerusan ini belum disetujui Dinkes.",
+    );
+  }
   if (existing.forward_state === "diteruskan") {
     throw new ForwardStateError("Laporan ini sudah tercatat diteruskan.");
   }
@@ -983,6 +997,67 @@ export async function recordForwarding(
   return findReport(existing.id);
 }
 
+/**
+ * Keputusan Dinkes atas usulan penerusan dari puskesmas.
+ *
+ * Disetujui: laporan masuk antrean penerusan (`perlu_diteruskan`), dan baru
+ * di titik ini draf surat serta email ringkasan tersedia. Tidak disetujui:
+ * laporan kembali ke arahan mandiri warga; alasannya wajib dan tercatat di
+ * jejak audit.
+ */
+export async function decideForwardProposal(
+  id: string,
+  input: { approve: boolean; note?: string },
+  actor: string,
+  role: string,
+): Promise<ReportRow | null> {
+  const note = input.note?.trim() || null;
+  if (!input.approve && !note) {
+    throw new ForwardStateError("Usulan yang tidak disetujui wajib disertai alasan.");
+  }
+
+  const updated = await transaction(async (tx) => {
+    const row = await tx.one<ReportRow>(
+      `SELECT ${REPORT_COLUMNS} FROM laporan_warga WHERE id = ? FOR UPDATE`,
+      id,
+    );
+    if (!row) return null;
+    if (row.forward_state !== "diusulkan") {
+      throw new ForwardStateError("Laporan ini tidak sedang menunggu persetujuan penerusan.");
+    }
+    if (input.approve) {
+      await tx.run(
+        `UPDATE laporan_warga SET forward_state = 'perlu_diteruskan', forward_note = ?
+          WHERE id = ?`,
+        note,
+        id,
+      );
+    } else {
+      await tx.run(
+        `UPDATE laporan_warga
+            SET forward_state = NULL, forward_target = NULL, forward_pattern = NULL,
+                forward_note = NULL, handling_mode = 'mandiri_warga'
+          WHERE id = ?`,
+        id,
+      );
+    }
+    return tx.one<ReportRow>(`SELECT ${REPORT_COLUMNS} FROM laporan_warga WHERE id = ?`, id);
+  });
+  if (!updated) return null;
+
+  await logAudit({
+    actor,
+    role,
+    action: `Usulan penerusan laporan ${id}`,
+    details: input.approve
+      ? `Disetujui untuk diteruskan ke ${updated.forward_target ?? agencyFor(updated.kind).name}${note ? ` — ${note}` : ""}.`
+      : `Tidak disetujui; dikembalikan ke arahan mandiri warga — ${note}.`,
+    status: input.approve ? "success" : "warning",
+  });
+
+  return updated;
+}
+
 /** Laporan lain di kecamatan dan jenis yang sama, untuk menautkan duplikat. */
 export async function listRelatedReports(
   id: string,
@@ -1018,6 +1093,8 @@ export type QueueSummary = {
   lingkunganMenunggu: number;
   /** Sudah diputuskan perlu diteruskan, penyampaiannya belum tercatat. */
   perluDiteruskan: number;
+  /** Usulan penerusan dari puskesmas yang menunggu persetujuan Dinkes. */
+  diusulkan: number;
   diteruskan: number;
   oldestWaitHours: number | null;
 };
@@ -1048,7 +1125,8 @@ export async function summarizeQueue(kecamatan?: string): Promise<QueueSummary> 
     (r) =>
       r.status === "terverifikasi" &&
       (r.handling_mode === "dlh" || r.forward_state !== null) &&
-      (r.forward_state ?? "perlu_diteruskan") !== "diteruskan",
+      (r.forward_state ?? "perlu_diteruskan") !== "diteruskan" &&
+      r.forward_state !== "diusulkan",
   ).length;
 
   return {
@@ -1058,6 +1136,9 @@ export async function summarizeQueue(kecamatan?: string): Promise<QueueSummary> 
     terverifikasi: rows.filter((r) => r.status === "terverifikasi").length,
     ditolak: rows.filter((r) => r.status === "ditolak").length,
     perluDiteruskan: awaitingForward,
+    diusulkan: rows.filter(
+      (r) => r.status === "terverifikasi" && r.forward_state === "diusulkan",
+    ).length,
     diteruskan: rows.filter((r) => r.forward_state === "diteruskan").length,
     lingkunganMenunggu: pending.filter(
       (r) => REPORT_FAMILY[r.kind] === "lingkungan",

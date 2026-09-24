@@ -114,6 +114,9 @@ export async function sendReportEmail(
         row.status !== "terverifikasi") {
       throw new ForwardStateError("Hanya laporan lingkungan terverifikasi yang siap diteruskan dapat dikirim.");
     }
+    if (row.forward_state === "diusulkan") {
+      throw new ForwardStateError("Usulan penerusan ini belum disetujui Dinkes.");
+    }
     if (row.forward_state === "diteruskan") {
       throw new ForwardStateError("Laporan ini sudah diteruskan.");
     }

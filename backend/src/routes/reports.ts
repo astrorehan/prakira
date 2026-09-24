@@ -17,6 +17,7 @@ import {
   listReports,
   listRelatedReports,
   recordForwarding,
+  decideForwardProposal,
   reviewReport,
   riskContextFor,
   riskKey,
@@ -382,6 +383,44 @@ reportsRouter.post(
       meta: await summarizeQueue(sessionScope(req)),
       data: publicView(sent.row, null, risk.get(riskKey(sent.row)), "staff"),
       recipient: sent.recipient,
+    });
+  }),
+);
+
+/**
+ * Dinkes menyetujui atau menolak usulan penerusan dari puskesmas. Hanya
+ * setelah disetujui laporan masuk antrean penerusan dan drafnya tersedia.
+ */
+reportsRouter.post(
+  "/:id/forward-proposal",
+  requireRole(...FORWARD_ROLES),
+  asyncRoute(async (req, res) => {
+    const body = req.body ?? {};
+    if (typeof body.approve !== "boolean") {
+      throw new HttpError(400, "Sebutkan keputusan dengan nilai 'approve' true atau false.");
+    }
+    if (body.note !== undefined && typeof body.note !== "string") {
+      throw new HttpError(400, "Kolom 'note' tidak valid.");
+    }
+
+    let updated;
+    try {
+      updated = await decideForwardProposal(
+        req.params.id,
+        { approve: body.approve, note: body.note },
+        req.session!.label,
+        req.session!.role,
+      );
+    } catch (error) {
+      if (error instanceof ForwardStateError) throw new HttpError(409, error.message);
+      throw error;
+    }
+
+    if (!updated) throw new HttpError(404, "Laporan tidak ditemukan.");
+    const risk = await riskContextFor([updated]);
+    res.json({
+      meta: await summarizeQueue(sessionScope(req)),
+      data: publicView(updated, null, risk.get(riskKey(updated)), "staff"),
     });
   }),
 );

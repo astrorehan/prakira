@@ -566,6 +566,17 @@ export function forwardReport(
 }
 
 /** Mengirim rujukan lewat SMTP dan mencatatnya setelah server email menerimanya. */
+/** Dinkes menyetujui atau menolak usulan penerusan dari puskesmas. */
+export function decideForwardProposal(
+  id: string,
+  input: { approve: boolean; note?: string },
+): Promise<Envelope<CitizenReport, QueueSummary>> {
+  return request(`/api/reports/${encodeURIComponent(id)}/forward-proposal`, {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
 export function sendReportEmail(
   id: string,
 ): Promise<Envelope<CitizenReport, QueueSummary> & { recipient: string }> {

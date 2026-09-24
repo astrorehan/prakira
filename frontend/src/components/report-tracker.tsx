@@ -112,6 +112,7 @@ function buildSteps(report: CitizenReport): Step[] {
     report.status !== "menunggu" && report.status !== "perlu_informasi";
   const rejected = report.status === "ditolak";
   const forwarded = report.forwarding?.state === "diteruskan";
+  const proposed = report.forwarding?.state === "diusulkan";
   const followUpLabel =
     !decided
       ? report.routing.family === "lingkungan"
@@ -120,7 +121,9 @@ function buildSteps(report: CitizenReport): Step[] {
       : report.routing.workflow === "penerusan_instansi"
       ? forwarded
         ? `Diteruskan ke ${report.forwarding?.target ?? "instansi penerima"}`
-        : "Perlu diteruskan"
+        : proposed
+          ? "Diusulkan untuk diteruskan"
+          : "Perlu diteruskan"
       : report.routing.workflow === "arahan_warga"
         ? "Arahan mandiri warga"
         : report.routing.workflow === "rekap_evaluasi"
@@ -134,7 +137,9 @@ function buildSteps(report: CitizenReport): Step[] {
       : report.routing.workflow === "penerusan_instansi"
       ? forwarded
         ? `Disampaikan pada ${report.forwarding?.forwardedAt ? formatDateTime(report.forwarding.forwardedAt) : "waktu yang tercatat"}${report.forwarding?.channel ? ` lewat ${report.forwarding.channel}` : ""}. Penanganan teknis menjadi kewenangan instansi penerima.`
-        : "Petugas sudah memutuskan laporan ini perlu diteruskan; penyampaiannya ke instansi penerima belum tercatat."
+        : proposed
+          ? "Petugas mengusulkan laporan ini diteruskan ke instansi penerima; Dinas Kesehatan sedang menimbang usulan itu."
+          : "Petugas sudah memutuskan laporan ini perlu diteruskan; penyampaiannya ke instansi penerima belum tercatat."
       : report.routing.workflow === "arahan_warga"
         ? "Petugas memilih tindak lanjut melalui arahan yang aman dilakukan warga."
         : report.routing.workflow === "rekap_evaluasi"
@@ -301,7 +306,9 @@ function ReportDetail({ report }: { report: CitizenReport }) {
                 : report.routing.workflow === "penerusan_instansi"
                   ? report.forwarding?.state === "diteruskan"
                     ? `Laporan sudah disampaikan ke ${report.forwarding.target}; penanganan teknis merupakan kewenangan instansi penerima.`
-                    : "Petugas memutuskan laporan ini perlu diteruskan. Halaman ini akan menyebut waktu penyampaiannya begitu tercatat."
+                    : report.forwarding?.state === "diusulkan"
+                      ? "Petugas mengusulkan laporan ini diteruskan; Dinas Kesehatan akan memutuskannya lebih dulu."
+                      : "Petugas memutuskan laporan ini perlu diteruskan. Halaman ini akan menyebut waktu penyampaiannya begitu tercatat."
                   : report.routing.workflow === "arahan_warga"
                     ? "Petugas memilih arahan mandiri warga; laporan ini tidak diteruskan ke instansi lain."
                     : report.routing.workflow === "rekap_evaluasi"

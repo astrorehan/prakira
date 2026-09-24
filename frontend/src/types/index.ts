@@ -497,7 +497,7 @@ export type ReportStatus =
  * Sengaja tidak punya tahap "dikerjakan" atau "selesai": Dinkes menyampaikan
  * laporan dan mencatat penyampaiannya, tidak mengelola pekerjaan instansi lain.
  */
-export type ForwardState = "perlu_diteruskan" | "diteruskan" | "gagal";
+export type ForwardState = "diusulkan" | "perlu_diteruskan" | "diteruskan" | "gagal";
 export type ReportFamily = "kesehatan" | "lingkungan";
 export type EnvironmentTicketStatus =
   | "baru"
@@ -633,6 +633,8 @@ export type QueueSummary = {
   lingkunganMenunggu: number;
   /** Sudah diputuskan perlu diteruskan, penyampaiannya belum tercatat. */
   perluDiteruskan: number;
+  /** Usulan penerusan dari puskesmas yang menunggu persetujuan Dinkes. */
+  diusulkan: number;
   diteruskan: number;
   oldestWaitHours: number | null;
   /** Jumlah baris yang benar-benar dikirim; ada batas atas per permintaan. */

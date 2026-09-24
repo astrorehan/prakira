@@ -1,37 +1,25 @@
 "use client";
 
 import * as React from "react";
-import { Check, Copy, Mail, ShieldCheck } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Check, Copy, Paperclip, Printer } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ReportPhoto } from "@/components/report-photo";
 import { REPORT_KIND, mapLink } from "@/lib/reports";
 import { formatDateTime, formatMonth } from "@/lib/period";
 import { diseaseLabel } from "@/lib/utils";
 import type { CitizenReport } from "@/types";
 
-/**
- * Draf surat rujukan lintas instansi — bahan untuk disampaikan, bukan bukti
- * penyampaian (audit F08, F10, §7.E).
- *
- * Bentuk suratnya berasal dari simulasi disposisi email resmi; yang berubah
- * adalah klaimnya. Aplikasi ini tidak punya sambungan ke kanal surat DLH, jadi
- * layar ini tidak boleh menyatakan "disposisi terkirim" atau "tersimpan di
- * jejak audit" pada saat petugas baru membuka drafnya. Yang benar terjadi pada
- * titik ini hanyalah: teks suratnya siap disalin.
- *
- * Nomor surat pun tidak dikarang. Nomor yang dibentuk sendiri di peramban
- * akan tercetak seperti nomor resmi yang tidak pernah diterbitkan siapa pun;
- * nomornya baru muncul setelah instansi penerima memberi rujukan dan petugas
- * mencatatnya lewat "Catat sudah diteruskan".
- */
+/** Surat ini bahan penerusan. Penyampaian tetap dicatat dari antrean. */
+function LetterField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="grid grid-cols-[5.5rem_minmax(0,1fr)] gap-2 text-body-sm leading-relaxed sm:grid-cols-[7rem_minmax(0,1fr)]">
+      <span className="text-paper-700">{label}</span>
+      <span className="min-w-0 break-words text-foreground">: {children}</span>
+    </div>
+  );
+}
 
 export function DispositionEmailModal({
   open,
@@ -43,234 +31,216 @@ export function DispositionEmailModal({
   report: CitizenReport | null;
 }) {
   const [copied, setCopied] = React.useState(false);
+  const [copyError, setCopyError] = React.useState(false);
 
   React.useEffect(() => {
-    if (!open) setCopied(false);
+    if (!open) {
+      setCopied(false);
+      setCopyError(false);
+    }
   }, [open]);
 
   if (!report) return null;
 
   const kindLabel = REPORT_KIND[report.kind]?.label ?? report.kind;
-  const target =
-    report.forwarding?.target ?? report.routing.agency?.name ?? "Instansi terkait";
+  const target = report.forwarding?.target ?? report.routing.agency?.name ?? "Instansi terkait";
+  const shortTarget = report.routing.agency?.short ?? target;
   const delivered = report.forwarding?.state === "diteruskan";
-  /* ID pesan email internal bukan nomor rujukan instansi. */
-  const reference =
-    report.forwarding?.channel === "Email internal"
-      ? null
-      : report.forwarding?.reference ?? null;
-  const pattern = report.forwarding?.pattern ?? null;
-
-  /* Inti rujukan dari Dinkes: kenapa lokasi ini perlu didahulukan. */
-  const riskLine = report.risk
-    ? `Prakiraan risiko ${diseaseLabel(report.risk.disease)} di Kec. ${report.kecamatan} periode ${formatMonth(report.risk.month)}: ${report.risk.riskClass.toUpperCase()}.`
-    : null;
-  const patternLine = pattern
-    ? `Temuan serupa dilaporkan ${pattern} kali di kecamatan ini dalam 14 hari terakhir.`
-    : null;
-  const contextText = [riskLine, patternLine].filter(Boolean).join(" ");
-
   const where = [
     `Kec. ${report.kecamatan}`,
     report.kelurahan ? `Kel. ${report.kelurahan}` : null,
     report.rtRw,
-  ]
-    .filter(Boolean)
-    .join(", ");
-  const point = report.location
-    ? mapLink(report.location) +
-      (report.location.accuracyM ? ` (akurasi ±${report.location.accuracyM} m)` : "")
+  ].filter(Boolean).join(", ");
+  const mapUrl = report.location ? mapLink(report.location) : null;
+  const point = mapUrl
+    ? mapUrl + (report.location?.accuracyM ? ` (akurasi ±${report.location.accuracyM} m)` : "")
     : null;
-  /* Butir bernomor dari baris yang benar-benar ada, supaya nomor tidak loncat. */
-  const details = [
-    `Kode lacak warga : ${report.id}`,
-    `Lokasi kejadian  : ${where}`,
-    report.landmark ? `Patokan          : ${report.landmark}` : null,
-    point ? `Titik peta       : ${point}` : null,
-    `Kategori temuan  : ${kindLabel}`,
-    `Keterangan warga : "${report.description}"`,
-  ]
-    .filter(Boolean)
-    .map((line, index) => `${index + 1}. ${line}`)
-    .join("\n");
+  const riskLine = report.risk
+    ? `Prakiraan risiko ${diseaseLabel(report.risk.disease)} di Kec. ${report.kecamatan} untuk ${formatMonth(report.risk.month)} berada pada kelas ${report.risk.riskClass}.`
+    : null;
+  const patternLine = report.forwarding?.pattern
+    ? `Terdapat ${report.forwarding.pattern} laporan serupa di kecamatan ini dalam 14 hari terakhir.`
+    : null;
+  const contextLines = [riskLine, patternLine].filter((line): line is string => Boolean(line));
+  const subject = `Penerusan laporan ${kindLabel} di ${where}`;
+  const missing = report.completeness.missing.length
+    ? `Informasi yang belum tersedia dari pelapor: ${report.completeness.missing.join(", ")}.`
+    : null;
 
-  const emailText = `
-SURAT RUJUKAN LINTAS INSTANSI (DRAF)
-Sistem Peringatan Dini PRAKIRA Kota Semarang
-
-${reference ? `No. Rujukan   : ${reference}` : "No. Rujukan   : (diisi sesuai penomoran kanal resmi)"}
-Pengirim      : Tim Surveilans Dinas Kesehatan Kota Semarang
-Kepada        : ${target}
-Perihal       : [PRAKIRA] Rujukan temuan ${kindLabel} — ${where}
-
-Yth. Pimpinan ${target},
-
-Berdasarkan pemeriksaan petugas atas laporan masyarakat di sistem PRAKIRA, kami meneruskan temuan pemicu lingkungan berikut:
-
-${details}
-
-${contextText ? `Konteks kesehatan: ${contextText}\n\n` : ""}Temuan ini dapat menjadi habitat vektor atau sumber penularan penyakit berbasis lingkungan. Kami mohon bantuan penjadwalan pemeriksaan dan penanganan di lokasi tersebut.
-
-Penanganan teknis di lapangan sepenuhnya menjadi kewenangan instansi penerima.
-
-Dinas Kesehatan Kota Semarang
-`.trim();
+  const letterText = [
+    "DRAF SURAT PENGANTAR LAPORAN LINGKUNGAN",
+    "DINAS KESEHATAN KOTA SEMARANG",
+    "",
+    "Nomor    : [diisi unit tata usaha]",
+    "Tanggal  : [diisi unit tata usaha]",
+    `Kepada   : Yth. Pimpinan ${target}`,
+    `Hal      : ${subject}`,
+    `Lampiran : ${report.hasPhoto ? "Foto bukti laporan (dilampirkan terpisah)" : "—"}`,
+    "",
+    `Yth. Pimpinan ${target},`,
+    "",
+    "Berdasarkan laporan masyarakat yang telah diperiksa petugas melalui PRAKIRA, kami menyampaikan temuan berikut untuk ditelaah sesuai kewenangan instansi Bapak/Ibu.",
+    "",
+    `Kode laporan   : ${report.id}`,
+    `Jenis temuan   : ${kindLabel}`,
+    `Lokasi         : ${where}`,
+    `Waktu kejadian : ${formatDateTime(report.occurredAt)}`,
+    report.landmark ? `Patokan lokasi : ${report.landmark}` : null,
+    point ? `Titik peta     : ${point}` : null,
+    `Uraian warga   : ${report.description}`,
+    missing,
+    "",
+    ...(contextLines.length ? ["Konteks kesehatan:", ...contextLines, ""] : []),
+    "Mohon pemeriksaan dan tindak lanjut sesuai kewenangan instansi penerima. Penanganan teknis di lapangan menjadi kewenangan instansi penerima.",
+    "",
+    "Demikian disampaikan. Atas perhatian dan kerja sama Bapak/Ibu, kami mengucapkan terima kasih.",
+    "",
+    "Dinas Kesehatan Kota Semarang",
+    "[nama, jabatan, dan tanda tangan pejabat berwenang]",
+  ].filter((line): line is string => line !== null).join("\n");
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(emailText);
+      await navigator.clipboard.writeText(letterText);
       setCopied(true);
+      setCopyError(false);
     } catch {
       setCopied(false);
+      setCopyError(true);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
-        <DialogHeader>
-          <div className="mb-1 flex flex-wrap items-center gap-2">
-            {/* Lencana menyebut keadaan yang tercatat, bukan yang diharapkan. */}
+      <DialogContent className="forward-letter-print flex max-h-[94dvh] w-[calc(100vw-1rem)] max-w-4xl flex-col gap-0 overflow-hidden p-0 sm:max-h-[92dvh]">
+        <div className="forward-letter-controls shrink-0 border-b border-border bg-surface px-5 py-4 pr-12 sm:px-7 sm:py-5 sm:pr-12">
+          <div className="mb-2 flex flex-wrap items-center gap-2">
             <Badge variant={delivered ? "risk-low" : "risk-medium"}>
-              {delivered ? "Sudah disampaikan" : "Draf — belum disampaikan"}
+              {delivered ? "Penyampaian tercatat" : "Draf · belum disampaikan"}
             </Badge>
-            {reference && (
-              <Badge variant="secondary" className="font-mono text-[11px]">
-                {reference}
-              </Badge>
-            )}
+            <span className="font-mono text-caption text-paper-600">{report.id}</span>
           </div>
-          <DialogTitle className="flex items-center gap-2 text-h3 text-foreground">
-            <Mail className="h-5 w-5 text-brand-700" aria-hidden="true" />
-            Draf surat rujukan ke {target}
+          <DialogTitle className="text-h3 text-foreground sm:text-h2">
+            Surat pengantar untuk {shortTarget}
           </DialogTitle>
-          <DialogDescription className="text-body-sm text-paper-600">
+          <DialogDescription className="mt-1.5 max-w-2xl text-body-sm leading-relaxed text-paper-700">
             {delivered
-              ? `Disampaikan${report.forwarding?.channel ? ` lewat ${report.forwarding.channel}` : ""}${
-                  report.forwarding?.forwardedAt
-                    ? ` pada ${formatDateTime(report.forwarding.forwardedAt)}`
-                    : ""
-                }.`
-              : "Salin teks ini ke kanal resmi instansi penerima, lalu catat penyampaiannya di antrean penerusan. Aplikasi ini tidak mengirim surat sendiri."}
+              ? `Penyampaian dicatat${report.forwarding?.channel ? ` melalui ${report.forwarding.channel}` : ""}${report.forwarding?.forwardedAt ? ` pada ${formatDateTime(report.forwarding.forwardedAt)}` : ""}. Pratinjau ini tetap dapat disalin atau dicetak.`
+              : "Periksa isi, lengkapi nomor, tanggal, dan penanda tangan melalui tata usaha, lalu sampaikan lewat kanal resmi. Setelah itu, catat penyampaiannya di antrean."}
           </DialogDescription>
-        </DialogHeader>
+        </div>
 
-        <div className="space-y-3.5 rounded-xl border border-sand-300 bg-sand-50/70 p-4 font-sans text-body-sm text-paper-800">
-          <div className="grid gap-1.5 border-b border-sand-200 pb-3 text-caption">
-            <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-2">
-              <span className="w-20 shrink-0 font-semibold text-paper-600">Pengirim:</span>
-              <span className="text-foreground">
-                Tim Surveilans Dinas Kesehatan Kota Semarang
+        <div className="min-h-0 flex-1 overflow-y-auto bg-paper-100 px-3 py-4 sm:px-7 sm:py-6">
+          <article className="forward-letter-sheet mx-auto max-w-[210mm] rounded-lg border border-paper-200 bg-white px-5 py-7 text-paper-800 shadow-card sm:px-12 sm:py-11">
+            <header className="border-b-2 border-paper-900 pb-4 text-center">
+              <p className="text-caption uppercase tracking-[0.12em] text-paper-700">Pemerintah Kota Semarang</p>
+              <p className="mt-1 text-h3 font-semibold uppercase tracking-[0.06em] text-foreground">Dinas Kesehatan</p>
+              <p className="mt-1 text-caption text-paper-600">Draf pengantar laporan masyarakat dari PRAKIRA</p>
+            </header>
+
+            <div className="mt-6 flex flex-wrap items-start justify-between gap-3">
+              <h2 className="text-body-sm font-semibold uppercase tracking-[0.08em] text-foreground">
+                Surat pengantar laporan lingkungan
+              </h2>
+              <span className="rounded border border-risk-medium-br bg-risk-medium-bg px-2 py-0.5 text-caption font-semibold uppercase tracking-[0.08em] text-risk-medium">
+                Draf
               </span>
             </div>
-            <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-2">
-              <span className="w-20 shrink-0 font-semibold text-paper-600">Kepada:</span>
-              <span className="font-medium text-teal-900">{target}</span>
-            </div>
-            <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-2">
-              <span className="w-20 shrink-0 font-semibold text-paper-600">Perihal:</span>
-              <span className="font-medium text-foreground">
-                [PRAKIRA] Rujukan temuan {kindLabel} — {where}
-              </span>
-            </div>
-          </div>
 
-          <div className="space-y-2.5 text-body-sm leading-relaxed text-paper-800">
-            <p>
-              Yth. Pimpinan <strong>{target}</strong>,
-            </p>
-            <p>
-              Berdasarkan pemeriksaan petugas atas laporan masyarakat di sistem
-              PRAKIRA, kami meneruskan temuan pemicu lingkungan berikut:
-            </p>
+            <div className="mt-5 space-y-1.5 border-b border-paper-200 pb-5">
+              <LetterField label="Nomor"><span className="italic text-paper-600">Diisi unit tata usaha</span></LetterField>
+              <LetterField label="Tanggal"><span className="italic text-paper-600">Diisi unit tata usaha</span></LetterField>
+              <LetterField label="Kepada">Yth. Pimpinan {target}</LetterField>
+              <LetterField label="Hal">{subject}</LetterField>
+              <LetterField label="Lampiran">{report.hasPhoto ? "1 foto bukti · dilampirkan terpisah" : "—"}</LetterField>
+            </div>
 
-            <div className="space-y-1 rounded-lg border border-sand-300/80 bg-white p-3 text-caption">
+            <div className="mt-6 space-y-4 text-body-sm leading-[1.75]">
+              <p>Yth. Pimpinan {target},</p>
               <p>
-                <strong className="text-paper-700">Kode lacak:</strong>{" "}
-                <span className="font-mono">{report.id}</span>
+                Berdasarkan laporan masyarakat yang telah diperiksa petugas melalui
+                PRAKIRA, kami menyampaikan temuan berikut untuk ditelaah sesuai
+                kewenangan instansi Bapak/Ibu.
               </p>
-              <p>
-                <strong className="text-paper-700">Lokasi:</strong> {where}
-              </p>
-              {report.landmark && (
-                <p>
-                  <strong className="text-paper-700">Patokan:</strong> {report.landmark}
-                </p>
+
+              <section aria-label="Rincian laporan" className="rounded-md border border-paper-200 bg-paper-50 px-4 py-4 sm:px-5">
+                <h3 className="mb-3 text-caption font-semibold uppercase tracking-[0.08em] text-paper-700">Rincian temuan</h3>
+                <div className="space-y-1.5">
+                  <LetterField label="Kode laporan"><span className="font-mono">{report.id}</span></LetterField>
+                  <LetterField label="Jenis temuan">{kindLabel}</LetterField>
+                  <LetterField label="Lokasi">{where}</LetterField>
+                  <LetterField label="Waktu kejadian">{formatDateTime(report.occurredAt)}</LetterField>
+                  {report.landmark && <LetterField label="Patokan">{report.landmark}</LetterField>}
+                  {point && mapUrl && (
+                    <LetterField label="Titik peta">
+                      <a href={mapUrl} target="_blank" rel="noopener noreferrer" className="break-all text-brand-700 underline underline-offset-2">{point}</a>
+                    </LetterField>
+                  )}
+                </div>
+                <div className="mt-3 border-t border-paper-200 pt-3">
+                  <p className="text-caption font-semibold text-paper-700">Uraian warga</p>
+                  <p className="mt-1 whitespace-pre-wrap break-words">{report.description}</p>
+                </div>
+                {missing && <p className="mt-3 text-caption text-paper-700">{missing}</p>}
+              </section>
+
+              {contextLines.length > 0 && (
+                <section aria-label="Konteks kesehatan" className="border-l-[3px] border-brand-700 pl-4">
+                  <h3 className="text-caption font-semibold uppercase tracking-[0.08em] text-paper-700">Konteks kesehatan</h3>
+                  {contextLines.map((line) => <p key={line} className="mt-1">{line}</p>)}
+                </section>
               )}
-              {report.location && (
-                <p>
-                  <strong className="text-paper-700">Titik:</strong>{" "}
-                  <a
-                    href={mapLink(report.location)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-brand-700 hover:underline"
-                  >
-                    buka di peta
-                  </a>
-                </p>
-              )}
+
               <p>
-                <strong className="text-paper-700">Kategori:</strong> {kindLabel}
+                Mohon pemeriksaan dan tindak lanjut sesuai kewenangan instansi
+                penerima. Penanganan teknis di lapangan menjadi kewenangan
+                instansi penerima.
               </p>
-              <p className="border-t border-sand-200 pt-1 italic text-paper-800">
-                &ldquo;{report.description}&rdquo;
+              <p>
+                Demikian disampaikan. Atas perhatian dan kerja sama Bapak/Ibu,
+                kami mengucapkan terima kasih.
               </p>
-            </div>
 
-            {report.completeness.missing.length > 0 && (
-              <p className="text-caption text-paper-600">
-                Belum tersedia dari pelapor: {report.completeness.missing.join(", ")}.
-              </p>
-            )}
-
-            <div className="flex items-start gap-2 rounded-lg border border-teal-200/80 bg-teal-50/70 p-3 text-caption text-teal-950">
-              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-teal-700" aria-hidden="true" />
-              <div>
-                {contextText && (
-                  <p className="mb-1">
-                    <strong>Konteks kesehatan:</strong> {contextText}
-                  </p>
-                )}
-                Temuan ini dapat menjadi habitat vektor atau sumber penularan
-                penyakit berbasis lingkungan. Mohon bantuan penjadwalan
-                pemeriksaan dan penanganan di lokasi tersebut.
+              <div className="forward-letter-signature ml-auto w-full max-w-[16rem] pt-4 text-center">
+                <p>Dinas Kesehatan Kota Semarang</p>
+                <div className="h-16" aria-hidden="true" />
+                <p className="border-b border-paper-700 pb-1 text-caption italic text-paper-600">Nama dan tanda tangan pejabat</p>
+                <p className="mt-1 text-caption text-paper-600">Jabatan diisi unit tata usaha</p>
               </div>
             </div>
 
-            <p className="pt-1 text-caption text-paper-600">
-              Penanganan teknis di lapangan sepenuhnya menjadi kewenangan instansi
-              penerima; sistem ini hanya mencatat penyampaiannya.
-            </p>
-          </div>
+            {report.hasPhoto && (
+              <section className="forward-letter-attachment mt-9 border-t border-paper-200 pt-5" aria-label="Lampiran foto bukti">
+                <h3 className="flex items-center gap-2 text-caption font-semibold uppercase tracking-[0.08em] text-paper-700">
+                  <Paperclip className="h-4 w-4" aria-hidden="true" /> Lampiran foto bukti
+                </h3>
+                <p className="print-hide mt-1 text-caption text-paper-600">Saat menyalin teks, lampirkan foto ini secara terpisah.</p>
+                <ReportPhoto id={report.id} />
+              </section>
+            )}
+          </article>
         </div>
 
-        <DialogFooter className="flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <span className="text-caption text-paper-600">
-            {delivered
-              ? "Penyampaian surat ini sudah tercatat."
-              : "Penyampaian belum tercatat."}
-          </span>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleCopy}
-              className="gap-1.5"
-            >
-              {copied ? (
-                <Check className="h-3.5 w-3.5 text-risk-low" aria-hidden="true" />
-              ) : (
-                <Copy className="h-3.5 w-3.5" aria-hidden="true" />
-              )}
-              {copied ? "Tersalin" : "Salin surat"}
+        <div className="forward-letter-controls flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-border bg-surface px-5 py-3 sm:px-7">
+          <p className="max-w-md text-caption leading-relaxed text-paper-600" aria-live="polite">
+            {copyError
+              ? "Gagal menyalin. Coba lagi atau gunakan Cetak / simpan PDF."
+              : copied
+                ? report.hasPhoto
+                  ? "Teks surat tersalin. Foto bukti perlu dilampirkan terpisah."
+                  : "Teks surat tersalin dan siap ditempel ke kanal resmi."
+                : "Menyalin atau mencetak tidak mencatat surat sebagai sudah disampaikan."}
+          </p>
+          <div className="flex w-full flex-wrap gap-2 sm:w-auto">
+            <Button type="button" variant="outline" size="sm" onClick={() => window.print()} className="gap-1.5">
+              <Printer className="h-4 w-4" aria-hidden="true" /> Cetak / simpan PDF
             </Button>
-            <Button type="button" size="sm" onClick={() => onOpenChange(false)}>
-              Tutup
+            <Button type="button" size="sm" onClick={handleCopy} className="gap-1.5">
+              {copied ? <Check className="h-4 w-4" aria-hidden="true" /> : <Copy className="h-4 w-4" aria-hidden="true" />}
+              {copied ? "Tersalin" : "Salin teks surat"}
             </Button>
           </div>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );
