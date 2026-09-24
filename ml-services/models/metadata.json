@@ -1,10 +1,10 @@
 {
   "dbd": {
     "algorithm": "ensemble_ridge_trees_xgboost",
-    "version": "ensemble-monthly-dbd-2026.09.22",
+    "version": "ensemble-monthly-dbd-2026.09.24",
     "granularity": "monthly",
     "is_log_transformed": true,
-    "trained_at": "2026-09-22T22:56:37.545823",
+    "trained_at": "2026-09-24T19:25:00.929275",
     "train_period": "2021-04-01 to 2024-12-01",
     "test_period": "2025-01-01 to 2025-12-01",
     "n_train_samples": 720,
@@ -165,10 +165,10 @@
   },
   "leptospirosis": {
     "algorithm": "ensemble_rf_et_xgb_ridge",
-    "version": "ensemble-monthly-leptospirosis-2026.09.22",
+    "version": "ensemble-monthly-leptospirosis-2026.09.24",
     "granularity": "monthly",
     "is_log_transformed": true,
-    "trained_at": "2026-09-22T22:57:05.691530",
+    "trained_at": "2026-09-24T17:01:28.129630",
     "train_period": "2021-04-01 to 2024-12-01",
     "test_period": "2025-01-01 to 2025-12-01",
     "n_train_samples": 720,
