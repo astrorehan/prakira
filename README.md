@@ -167,6 +167,9 @@ Akun awal dibuat gateway saat seeding:
 | `dinkes@prakira.id` | Dinas Kesehatan — seluruh kota: memutuskan laporan, menugaskan tindakan ke puskesmas, satu-satunya yang mengirim laporan ke DLH/DPU | `dinkes123` |
 | `puskesmas@prakira.id` | Puskesmas Pandanaran — hanya Semarang Selatan: memutuskan laporan wilayahnya, menandai yang perlu ke DLH/DPU, mengerjakan tugas dari Dinkes | `puskesmas123` |
 
+Untuk live demo kasus Tugu, `npm run demo:prep` menambahkan `puskesmas.tugu@prakira.id` /
+`puskesmas123` beserta tugas dan rekap contohnya. Rinciannya ada di [docs/demo](docs/demo/README.md).
+
 Ganti akun admin lewat `SEED_ADMIN_EMAIL` dan `SEED_ADMIN_PASSWORD` sebelum dipakai di luar
 pengembangan — di `NODE_ENV=production`, gateway menolak jalan tanpa
 `SESSION_SECRET` dan `SEED_ADMIN_PASSWORD`.

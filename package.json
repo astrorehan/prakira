@@ -10,6 +10,7 @@
     "dev:backend": "npm --prefix backend run dev",
     "install:all": "npm --prefix backend install && npm --prefix frontend install",
     "seed": "npm --prefix backend run seed",
+    "demo:prep": "npm --prefix backend run demo:prep",
     "build": "npm --prefix backend run build && npm --prefix frontend run build",
     "start": "npm --prefix frontend run start",
     "lint": "npm --prefix frontend run lint",
