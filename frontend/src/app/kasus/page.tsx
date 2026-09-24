@@ -27,8 +27,6 @@ export default function KasusPage() {
   const [activeTab, setActiveTab] = React.useState<"manual" | "csv">("manual");
 
   const isAdmin = session?.role === "admin";
-  /* Impor CSV untuk rekap lintas kecamatan; akun berwilayah cukup formulir. */
-  const scoped = Boolean(session?.kecamatanId);
 
   React.useEffect(() => {
     if (!loading && session && isAdmin) {
@@ -62,8 +60,8 @@ export default function KasusPage() {
           description="Pencatatan data kasus klinis bulanan per kecamatan oleh petugas fasilitas kesehatan. Pilih entri formulir manual atau unggah rekapitulasi massal via berkas CSV."
         />
 
-        {/* Tab Switcher: Manual vs CSV */}
-        {!scoped && (
+        {/* Tab Switcher: Manual vs CSV. Akun puskesmas ikut memakai impor CSV;
+            gateway menolak baris di luar kecamatannya. */}
         <div className="flex border-b border-border">
           <button
             type="button"
@@ -93,10 +91,9 @@ export default function KasusPage() {
             <span>Impor Rekapitulasi Berkas (CSV)</span>
           </button>
         </div>
-        )}
 
         {/* Tab Content */}
-        {scoped || activeTab === "manual" ? (
+        {activeTab === "manual" ? (
           <ManualCaseEntryCard />
         ) : (
           <div className="max-w-4xl">

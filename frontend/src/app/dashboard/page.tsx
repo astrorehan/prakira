@@ -28,6 +28,7 @@ import { DistrictRankingTable } from "@/components/district-ranking-table";
 import { DataState } from "@/components/data-state";
 import { DashboardDataSkeleton } from "@/components/console/console-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useSessionContext } from "@/components/session-provider";
 import { TrendChart } from "@/components/trend-chart";
 import {
   fetchActions,
@@ -121,9 +122,18 @@ export default function DashboardPrediksiPage() {
   );
 
   const geo = useApi(() => fetchGeoJson(), []);
+  /* Admin IT memeriksa keluaran model di sini, tetapi alur tindakan milik
+     Dinkes dan /tindakan menolak admin — jadi tindakannya tidak diambil dan
+     pintunya tidak ditampilkan. Tunggu sesi agar tidak mengambil lebih dulu. */
+  const { session, loading: sessionLoading } = useSessionContext();
+  const canOpenActions = !sessionLoading && session?.role !== "admin";
+
   /* Semua penyakit: panel prioritas memakai yang aktif, strip tugas memakai
      seluruhnya. */
-  const actions = useApi(() => fetchActions(), []);
+  const actions = useApi(
+    () => (canOpenActions ? fetchActions() : Promise.resolve(null as never)),
+    [canOpenActions],
+  );
   const triggers = useApi(() => fetchTriggerSummary(), []);
 
   const rows = React.useMemo(() => districts.data?.data ?? [], [districts.data]);
@@ -179,7 +189,10 @@ export default function DashboardPrediksiPage() {
     });
   }, [selectedDisease, selectedDistrict?.nama, meta?.monthYear]);
 
-  const allActions = React.useMemo(() => actions.data?.data ?? [], [actions.data]);
+  const allActions = React.useMemo(
+    () => (canOpenActions ? actions.data?.data ?? [] : []),
+    [actions.data, canOpenActions],
+  );
   const diseaseActions = React.useMemo(
     () => allActions.filter((a) => a.disease === selectedDisease),
     [allActions, selectedDisease],

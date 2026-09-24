@@ -22,6 +22,7 @@ import {
 import { downloadCsv, toCsv } from "@/lib/export";
 import { useApi } from "@/lib/use-api";
 import { invalidatePeriod } from "@/lib/use-period";
+import { useSessionContext } from "./session-provider";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -66,13 +67,18 @@ export function CaseCsvImportCard({
   const inputRef = React.useRef<HTMLInputElement>(null);
 
   const kecamatan = useApi(() => fetchKecamatanList(), []);
+  const { session } = useSessionContext();
 
   React.useEffect(() => {
     if (!disease && diseases.length > 0) setDisease(diseases[0].disease);
   }, [diseases, disease]);
 
   const downloadTemplate = () => {
-    const rows = kecamatan.data ?? [];
+    /* Akun puskesmas hanya boleh mengimpor wilayahnya; template berisi 16
+       kecamatan akan ditolak 15 barisnya. */
+    const rows = (kecamatan.data ?? []).filter(
+      (row) => !session?.kecamatanId || row.id === session.kecamatanId,
+    );
     if (rows.length === 0) return;
 
     const now = new Date();
