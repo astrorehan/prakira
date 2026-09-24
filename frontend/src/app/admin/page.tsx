@@ -51,11 +51,11 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background bg-mesh-blue px-4 py-8 sm:px-6 lg:px-8">
-      <div className="container mx-auto max-w-7xl space-y-8">
+    <div className="min-h-screen bg-background bg-mesh-blue px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+      <div className="container mx-auto max-w-7xl space-y-6 sm:space-y-8">
         <ConsolePageHeader
           title="Manajemen Sistem & AI"
-          description="Latih ulang model prediksi ML, pantau status ingest data, serta telusuri jejak audit sistem untuk akuntabilitas publik."
+          description="Pantau kesehatan data dan model, latih ulang model prediksi, dan telusuri jejak audit sistem."
         />
 
         <AdminDataImport />
