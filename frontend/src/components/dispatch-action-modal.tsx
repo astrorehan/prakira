@@ -411,6 +411,7 @@ export function DispatchActionModal({
                       <input
                         type="date"
                         value={agreedDue}
+                        min={systemToday ?? undefined}
                         onChange={(e) => setAgreedDue(e.target.value)}
                         className={inputClass}
                       />

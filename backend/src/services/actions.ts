@@ -568,6 +568,18 @@ export class ActionTransitionError extends Error {
   }
 }
 
+/**
+ * Tenggat yang sudah lewat saat ditetapkan membuat tugas langsung "terlambat"
+ * sebelum puskesmas sempat membacanya. Hari ini dihitung dalam WIB, sama
+ * dengan `systemToday` di /api/meta.
+ */
+function assertNotPast(dueDate: string): void {
+  const today = new Date(Date.now() + 7 * 3_600_000).toISOString().slice(0, 10);
+  if (dueDate < today) {
+    throw new ActionTransitionError("Tenggat tidak boleh sebelum hari ini.");
+  }
+}
+
 /** Pelaksana bawaan: tiap kecamatan dikerjakan puskesmas wilayahnya. */
 const DEFAULT_UNIT = "Puskesmas wilayah";
 
@@ -617,6 +629,9 @@ export async function assignAction(
   const pic = input.pic?.trim() || null;
   const dueDate = input.dueDate?.trim() || null;
   const note = input.note?.trim() || null;
+  /* Tenggat yang sudah disepakati sebelumnya boleh dibawa ulang saat
+     menambah puskesmas; yang ditolak hanya tenggat baru yang sudah lewat. */
+  if (dueDate && dueDate !== existing.agreed_due_date) assertNotPast(dueDate);
 
   await run(
     `UPDATE tindakan
@@ -683,6 +698,7 @@ export async function createManualAction(
   actor: string,
   role: string,
 ): Promise<ActionRow> {
+  assertNotPast(input.dueDate);
   const known = await all<{ nama: string; populasi: number }>(
     "SELECT nama, populasi FROM kecamatan WHERE nama = ANY(?::text[])",
     input.kecamatan,

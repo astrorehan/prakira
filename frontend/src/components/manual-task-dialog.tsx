@@ -204,6 +204,7 @@ export function ManualTaskDialog({
             <input
               type="date"
               value={dueDate}
+              min={systemToday ?? undefined}
               onChange={(e) => setDueDate(e.target.value)}
               className={inputClass}
             />
