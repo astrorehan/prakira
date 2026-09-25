@@ -81,7 +81,7 @@ function SummaryTile({
   return (
     <div
       className={cn(
-        "rounded-xl border bg-surface p-3.5 shadow-xs",
+        "min-w-0 rounded-xl border bg-surface p-3 shadow-xs sm:p-3.5",
         tone === "alert"
           ? "border-risk-critical-br"
           : tone === "warn"
@@ -92,7 +92,8 @@ function SummaryTile({
       <div className="flex items-center gap-1.5">
         <Icon
           className={cn(
-            "h-3.5 w-3.5 shrink-0",
+            /* Di ponsel label dua kata butuh lebar ikon ini. */
+            "hidden h-3.5 w-3.5 shrink-0 sm:block",
             tone === "alert"
               ? "text-risk-critical"
               : tone === "warn"
@@ -101,11 +102,11 @@ function SummaryTile({
           )}
           aria-hidden="true"
         />
-        <span className="overline">{label}</span>
+        <span className="overline min-w-0">{label}</span>
       </div>
       <div
         className={cn(
-          "tabular mt-1.5 text-metric-sm",
+          "tabular mt-1.5 break-words text-lg font-semibold leading-tight sm:text-metric-sm",
           tone === "alert"
             ? "text-risk-critical"
             : tone === "warn"
@@ -285,7 +286,7 @@ export function EarlyActionCenter({
       {/* 1. Keadaan antrean dalam satu baris. Sebelumnya angka-angka ini hanya
              hidup sebagai lencana kecil di dalam tab filter, jadi "berapa jiwa
              yang tindakannya belum keluar" tidak terjawab di mana pun. */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 lg:grid-cols-4">
         {showMineFilter ? (
           <SummaryTile
             icon={Zap}

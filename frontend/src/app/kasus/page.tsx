@@ -67,28 +67,32 @@ export default function KasusPage() {
             type="button"
             onClick={() => setActiveTab("manual")}
             className={cn(
-              "flex items-center gap-2 border-b-2 px-5 py-3 text-body-sm font-semibold transition",
+              "flex min-w-0 flex-1 items-center justify-center gap-2 border-b-2 px-3 py-3 text-left text-body-sm font-semibold transition sm:flex-none sm:justify-start sm:px-5",
               activeTab === "manual"
                 ? "border-brand-700 text-brand-700"
                 : "border-transparent text-paper-500 hover:border-border hover:text-foreground",
             )}
           >
-            <FileText className="h-4.5 w-4.5" aria-hidden="true" />
-            <span>Formulir Entri Manual</span>
+            <FileText className="h-4.5 w-4.5 shrink-0" aria-hidden="true" />
+            <span>
+              Formulir <span className="hidden sm:inline">Entri </span>Manual
+            </span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab("csv")}
             className={cn(
-              "flex items-center gap-2 border-b-2 px-5 py-3 text-body-sm font-semibold transition",
+              "flex min-w-0 flex-1 items-center justify-center gap-2 border-b-2 px-3 py-3 text-left text-body-sm font-semibold transition sm:flex-none sm:justify-start sm:px-5",
               activeTab === "csv"
                 ? "border-brand-700 text-brand-700"
                 : "border-transparent text-paper-500 hover:border-border hover:text-foreground",
             )}
           >
-            <FileSpreadsheet className="h-4.5 w-4.5" aria-hidden="true" />
-            <span>Impor Rekapitulasi Berkas (CSV)</span>
+            <FileSpreadsheet className="h-4.5 w-4.5 shrink-0" aria-hidden="true" />
+            <span>
+              Impor <span className="hidden sm:inline">Rekapitulasi Berkas </span>(CSV)
+            </span>
           </button>
         </div>
 

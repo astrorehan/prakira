@@ -819,7 +819,7 @@ export function VerificationQueue() {
           })}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 max-w-full items-center gap-2">
           <Label htmlFor="wilayah" className="text-caption text-paper-600">
             Wilayah tugas
           </Label>
@@ -827,7 +827,7 @@ export function VerificationQueue() {
             id="wilayah"
             value={wilayah}
             onChange={(e) => setWilayah(e.target.value)}
-            className="h-10 rounded-xl border border-border bg-surface px-3 text-body-sm text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="h-10 min-w-0 flex-1 rounded-xl border border-border bg-surface px-3 text-body-sm text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <option value="semua">Semua kecamatan</option>
             {wilayahOptions.map((w) => (

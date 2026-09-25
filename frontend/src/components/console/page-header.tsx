@@ -62,7 +62,7 @@ export function PeriodChip({ className }: { className?: string }) {
           : `Data terakhir ${period.monthYear}, prakiraan ${period.predictionLabel}`
       }
       className={cn(
-        "inline-flex max-w-full flex-wrap items-center gap-x-1.5 gap-y-0.5 text-caption text-paper-500",
+        "relative inline-flex max-w-full flex-wrap items-center gap-x-1.5 gap-y-0.5 text-caption text-paper-500",
         className,
       )}
     >
@@ -106,7 +106,9 @@ function PeriodInfo({
 }) {
   const id = React.useId();
   return (
-    <span className="group/info relative inline-flex">
+    /* Di layar sempit tooltip menempel ke tepi kiri chip, bukan ke ikon —
+       ikonnya sering sudah di tengah layar dan kotak 18rem akan meluap. */
+    <span className="group/info inline-flex sm:relative">
       <button
         type="button"
         aria-describedby={id}
@@ -118,7 +120,7 @@ function PeriodInfo({
       <span
         role="tooltip"
         id={id}
-        className="pointer-events-none invisible absolute left-0 top-full z-50 mt-2 w-72 rounded-xl border border-border bg-surface p-3 text-left text-caption leading-relaxed text-paper-700 opacity-0 shadow-card transition-opacity duration-fast group-hover/info:visible group-hover/info:opacity-100 group-focus-within/info:visible group-focus-within/info:opacity-100"
+        className="pointer-events-none invisible absolute left-0 top-full z-50 mt-2 w-72 max-w-[calc(100vw-5.5rem)] rounded-xl border border-border bg-surface p-3 text-left text-caption leading-relaxed text-paper-700 opacity-0 shadow-card transition-opacity duration-fast group-hover/info:visible group-hover/info:opacity-100 group-focus-within/info:visible group-focus-within/info:opacity-100"
       >
         Rekap kasus resmi terakhir: <strong className="font-semibold text-foreground">{monthYear}</strong>.
         Model memprakirakan bulan demi bulan sampai{" "}

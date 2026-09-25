@@ -35,7 +35,7 @@ import type { KecamatanData } from "@/types";
 function BlankLine({ width = "12rem" }: { width?: string }) {
   return (
     <span
-      className="inline-block border-b border-dashed border-paper-400 align-baseline"
+      className="inline-block max-w-full border-b border-dashed border-paper-400 align-baseline"
       style={{ width, height: "1em" }}
       aria-label="diisi manual"
     />
@@ -50,9 +50,9 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex gap-2 text-body-sm leading-relaxed">
-      <span className="w-28 shrink-0 text-paper-700">{label}</span>
-      <span className="shrink-0 text-paper-700">:</span>
+    <div className="flex flex-col text-body-sm leading-relaxed sm:flex-row sm:gap-2 print:flex-row print:gap-2">
+      <span className="shrink-0 text-paper-700 sm:w-28 print:w-28">{label}</span>
+      <span className="hidden shrink-0 text-paper-700 sm:inline print:inline">:</span>
       <span className="min-w-0 flex-1 text-foreground">{children}</span>
     </div>
   );
@@ -142,10 +142,10 @@ export function OfficialMemo({ id }: { id: string }) {
           onRetry={action.reload}
         >
           {recommendation && (
-            <article className="print-sheet rounded-xl border border-border bg-paper-0 p-8 shadow-card sm:p-12">
+            <article className="print-sheet rounded-xl border border-border bg-paper-0 p-5 shadow-card sm:p-12">
               {/* ── Kop ──────────────────────────────────────────────────── */}
               <header className="print-keep space-y-4">
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start justify-between gap-3 sm:gap-4">
                   <BrandLockup subline="Peringatan Dini Risiko Iklim" />
                   <span className="rounded-full border border-risk-medium-br bg-risk-medium-bg px-2.5 py-1 text-caption font-semibold uppercase tracking-[0.08em] text-risk-medium">
                     Draf

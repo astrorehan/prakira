@@ -257,9 +257,9 @@ function ActionRow({
                 size="sm"
                 variant={action.status === "pending" ? "primary" : "outline"}
                 onClick={() => onOpen(action)}
-                className="flex-1 gap-1.5 lg:flex-initial"
+                className="min-w-0 flex-1 gap-1.5 px-3 sm:px-5 lg:flex-initial"
               >
-                <span>{ACTION_LABEL[action.status]}</span>
+                <span className="truncate">{ACTION_LABEL[action.status]}</span>
                 <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
               </Button>
 

@@ -614,7 +614,7 @@ export function ManualCaseEntryCard({
         )}
 
         {/* Submit Actions */}
-        <div className="flex items-center justify-between pt-1">
+        <div className="flex flex-col gap-3 pt-1 sm:flex-row sm:items-center sm:justify-between">
           <span className="text-caption text-paper-500">
             * Menggantikan total yang tersimpan untuk kecamatan dan periode ini
           </span>
@@ -622,7 +622,7 @@ export function ManualCaseEntryCard({
           <Button
             type="submit"
             disabled={submitting}
-            className="min-w-[140px] bg-brand-700 hover:bg-brand-800 text-white font-medium"
+            className="w-full bg-brand-700 font-medium text-white hover:bg-brand-800 sm:w-auto sm:min-w-[140px]"
           >
             {submitting ? (
               <>

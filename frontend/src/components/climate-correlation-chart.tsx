@@ -160,7 +160,7 @@ export function ClimateCorrelationChart({
               aria-selected={selected}
               onClick={() => setActive(v.key)}
               className={cn(
-                "flex items-center gap-2 rounded-lg border px-3 py-1.5 transition-colors duration-fast ease-out",
+                "flex max-w-full flex-wrap items-center gap-x-2 text-left rounded-lg border px-3 py-1.5 transition-colors duration-fast ease-out",
                 selected
                   ? "border-paper-300 bg-surface shadow-xs"
                   : "border-transparent bg-paper-100 hover:bg-paper-200/70",

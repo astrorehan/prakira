@@ -122,21 +122,21 @@ function PartsProgress({
 function Steps({ current }: { current: number }) {
   const steps = ["Ditugaskan", "Diterima", "Selesai"];
   return (
-    <ol className="flex items-center gap-2 text-caption">
+    <ol className="flex flex-wrap items-center gap-1.5 text-caption sm:gap-2">
       {steps.map((label, index) => {
         const done = index < current;
         const active = index === current;
         return (
-          <li key={label} className="flex items-center gap-2">
+          <li key={label} className="flex items-center gap-1.5 sm:gap-2">
             {index > 0 && (
               <span
                 aria-hidden="true"
-                className={cn("h-px w-6", done || active ? "bg-brand-700" : "bg-paper-300")}
+                className={cn("h-px w-3 sm:w-6", done || active ? "bg-brand-700" : "bg-paper-300")}
               />
             )}
             <span
               className={cn(
-                "flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-semibold",
+                "flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold",
                 done
                   ? "bg-brand-700 text-white"
                   : active

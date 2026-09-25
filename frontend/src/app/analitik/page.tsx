@@ -257,14 +257,19 @@ export default function AnalitikPage() {
                     <p className="text-body-sm text-paper-600">{tool.question}</p>
                   </div>
 
-                  <Button asChild size="sm" variant="outline" className="gap-1.5 self-start">
+                  <Button
+                    asChild
+                    size="sm"
+                    variant="outline"
+                    className="h-auto min-h-10 max-w-full gap-1.5 self-start whitespace-normal py-2 text-left"
+                  >
                     <Link
                       href={withWorkParams(tool.href, {
                         disease: selectedDisease,
                       })}
                     >
                       <span>{tool.cta}</span>
-                      <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                      <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
                     </Link>
                   </Button>
                 </Card>

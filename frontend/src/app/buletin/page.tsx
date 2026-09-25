@@ -139,11 +139,12 @@ function BuletinContent() {
       {/* ── Screen Toolbar (Hidden on Print) ─────────────────────────────────── */}
       <header className="print-hide sticky top-4 z-50 mx-auto mb-6 max-w-[210mm] rounded-xl border border-slate-300 bg-white/95 p-3 shadow-md backdrop-blur-md">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3">
             <Button asChild variant="outline" size="sm" className="gap-1.5 text-xs">
               <Link href="/dashboard">
                 <ArrowLeft className="h-3.5 w-3.5" />
-                <span>Kembali ke Konsol</span>
+                <span className="hidden sm:inline">Kembali ke Konsol</span>
+                <span className="sm:hidden">Konsol</span>
               </Link>
             </Button>
             <div className="hidden sm:block h-4 w-px bg-slate-300" />
@@ -155,7 +156,7 @@ function BuletinContent() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex w-full flex-wrap items-center justify-between gap-2 sm:w-auto sm:gap-3">
             {/* Disease Selector */}
             <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
               {(diseases.data ?? []).map((d) => (
@@ -183,7 +184,8 @@ function BuletinContent() {
               className="gap-1.5 bg-brand-700 hover:bg-brand-800 text-white shadow-sm font-semibold disabled:opacity-50 disabled:pointer-events-none"
             >
               <Printer className="h-4 w-4" />
-              <span>Cetak / Simpan PDF</span>
+              <span className="hidden sm:inline">Cetak / Simpan PDF</span>
+              <span className="sm:hidden">Cetak</span>
             </Button>
           </div>
         </div>
@@ -241,10 +243,10 @@ function BuletinContent() {
             </div>
           </div>
         ) : (
-          <article className="print-sheet rounded-xl border border-slate-300 bg-white p-6 sm:p-8 shadow-md print:rounded-none print:border-none print:p-0 print:shadow-none text-slate-900 print:text-black">
+          <article className="print-sheet rounded-xl border border-slate-300 bg-white p-4 sm:p-8 shadow-md print:rounded-none print:border-none print:p-0 print:shadow-none text-slate-900 print:text-black">
           
           {/* ── Kop Surat Resmi Pemerintah Kota Semarang ────────────────────── */}
-          <header className="print-keep flex items-center justify-between gap-4 border-b-[3px] border-double border-slate-900 pb-4">
+          <header className="print-keep flex flex-wrap items-center justify-between gap-3 border-b-[3px] sm:flex-nowrap sm:gap-4 print:flex-nowrap border-double border-slate-900 pb-4">
             {/* Logo Lambang Kota Semarang Resmi */}
             <div className="shrink-0 flex items-center justify-center">
               <Image
@@ -253,16 +255,16 @@ function BuletinContent() {
                 width={72}
                 height={96}
                 priority
-                className="h-20 w-auto object-contain"
+                className="h-14 w-auto object-contain sm:h-20 print:h-20"
               />
             </div>
 
             {/* Kop Text */}
-            <div className="flex-1 text-center">
+            <div className="min-w-0 flex-1 text-center">
               <h3 className="font-serif text-sm font-bold tracking-wider text-slate-900 uppercase">
                 Pemerintah Kota Semarang
               </h3>
-              <h2 className="font-serif text-lg font-black text-slate-950 uppercase tracking-tight">
+              <h2 className="font-serif text-base font-black sm:text-lg print:text-lg text-slate-950 uppercase tracking-tight">
                 Dinas Kesehatan Kota Semarang
               </h2>
               <p className="text-[11px] font-semibold text-slate-800 uppercase tracking-wide">
@@ -277,7 +279,7 @@ function BuletinContent() {
             </div>
 
             {/* Document Verification Code */}
-            <div className="shrink-0 flex flex-col items-end text-right border-l border-slate-300 pl-3 text-[9px] text-slate-500 font-mono">
+            <div className="flex w-full shrink-0 flex-wrap items-center justify-center gap-x-2 border-t border-slate-300 pt-2 text-center text-[9px] font-mono text-slate-500 sm:w-auto sm:flex-col sm:flex-nowrap sm:items-end sm:gap-x-0 sm:border-l sm:border-t-0 sm:pl-3 sm:pt-0 sm:text-right print:w-auto print:flex-col print:flex-nowrap print:items-end print:gap-x-0 print:border-l print:border-t-0 print:pl-3 print:pt-0 print:text-right">
               <span className="font-bold text-slate-800">SISTEM PRAKIRA</span>
               <span>SKDR DINI v0.1</span>
               <span className="mt-1 inline-block px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 font-bold border border-amber-300">
@@ -301,7 +303,7 @@ function BuletinContent() {
           </div>
 
           {/* ── Ringkasan Identitas Distribusi ─────────────────────────────────── */}
-          <div className="print-keep mt-4 grid grid-cols-4 gap-2 rounded-lg border border-slate-300 bg-slate-50/90 p-2.5 text-xs">
+          <div className="print-keep mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 print:grid-cols-4 rounded-lg border border-slate-300 bg-slate-50/90 p-2.5 text-xs">
             <div>
               <span className="text-[9px] font-semibold uppercase text-slate-500 block">Periode Prakiraan</span>
               <span className="font-bold text-slate-900">{formatMonth(meta?.predictionMonth)}</span>
@@ -340,7 +342,7 @@ function BuletinContent() {
             </p>
 
             {/* Fixed 4-Column KPI Cards on both web and print */}
-            <div className="mt-3 grid grid-cols-4 gap-2">
+            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4 print:grid-cols-4">
               <div className="rounded-lg border border-slate-300 bg-white p-2.5 shadow-2xs">
                 <span className="text-[9px] font-semibold text-slate-500 uppercase block">Teramati ({formatMonth(meta?.latestObserved)})</span>
                 <div className="mt-0.5 flex items-baseline gap-1">
@@ -399,8 +401,10 @@ function BuletinContent() {
               </h2>
             </div>
 
-            <div className="w-full">
-              <table className="w-full text-left text-[9.5px] leading-tight border-collapse border border-slate-300">
+            {/* Tabel sembilan kolom tidak muat di layar ponsel; digeser
+                ke samping di layar, tetap selebar kertas saat dicetak. */}
+            <div className="w-full overflow-x-auto print:overflow-visible">
+              <table className="w-full min-w-[640px] text-left print:min-w-0 text-[9.5px] leading-tight border-collapse border border-slate-300">
                 <thead>
                   <tr className="bg-slate-100 text-slate-900 font-bold border-b border-slate-300">
                     <th className="py-1 px-1.5 border-r border-slate-300 w-6 text-center">No</th>
@@ -515,7 +519,7 @@ function BuletinContent() {
                   key={act.id}
                   className="rounded-lg border border-slate-300 bg-slate-50/60 p-3 text-[10.5px] space-y-1.5 break-inside-avoid print-keep"
                 >
-                  <div className="flex items-center justify-between gap-2 border-b border-slate-200 pb-1.5">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-1.5">
                     <div className="flex items-center gap-2">
                       <span className="flex h-4 w-4 items-center justify-center rounded bg-slate-800 text-white font-bold text-[9px]">
                         #{idx + 1}
@@ -546,7 +550,7 @@ function BuletinContent() {
                     {act.description}
                   </p>
 
-                  <div className="grid grid-cols-2 gap-2 pt-1.5 text-[9.5px] border-t border-slate-200">
+                  <div className="grid grid-cols-1 gap-2 pt-1.5 text-[9.5px] sm:grid-cols-2 print:grid-cols-2 border-t border-slate-200">
                     <div>
                       <span className="font-bold text-slate-900 block mb-0.5">Wilayah Sasaran:</span>
                       <span className="text-slate-700">
@@ -565,7 +569,7 @@ function BuletinContent() {
                       <span className="font-bold text-slate-900 block mb-1 text-[9px] uppercase tracking-wider">
                         Checklist Standar Operasional Prosedur (SOP):
                       </span>
-                      <ul className="grid grid-cols-2 gap-1 text-[9.5px] text-slate-700">
+                      <ul className="grid grid-cols-1 gap-1 text-[9.5px] sm:grid-cols-2 print:grid-cols-2 text-slate-700">
                         {act.sop_checklist.map((item, cIdx) => (
                           <li key={cIdx} className="flex items-start gap-1.5">
                             <span className="h-3 w-3 rounded-xs border border-slate-400 inline-block mt-0.5 shrink-0 bg-white" />
@@ -586,7 +590,7 @@ function BuletinContent() {
 
           {/* ── Bagian IV: Lembar Pengesahan Otorisasi ────────────────────────── */}
           <section className="print-keep mt-8 pt-4 border-t-2 border-slate-400 break-inside-avoid">
-            <div className="grid grid-cols-2 gap-6 items-end">
+            <div className="grid grid-cols-1 gap-6 items-end sm:grid-cols-2 print:grid-cols-2">
               <div className="text-[9.5px] text-slate-600 space-y-1.5">
                 <p className="font-bold text-slate-800 uppercase tracking-wider">
                   Catatan Penting, Sumber &amp; Batas Penggunaan:
@@ -605,7 +609,7 @@ function BuletinContent() {
                 </p>
               </div>
 
-              <div className="text-right text-xs">
+              <div className="min-w-0 text-right text-xs [overflow-wrap:anywhere] sm:[overflow-wrap:normal] print:[overflow-wrap:normal]">
                 <p className="text-slate-700">Semarang, .....................................................</p>
                 <p className="font-semibold text-slate-900 mt-1">
                   Mengetahui / Mengesahkan:

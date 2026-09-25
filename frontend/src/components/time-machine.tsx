@@ -455,10 +455,11 @@ export function TimeMachine() {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex w-full items-center gap-2 sm:w-auto">
                   <Button
                     variant="outline"
                     size="sm"
+                    className="w-10 shrink-0 px-0"
                     onClick={() => stepMonth(-1)}
                     disabled={monthIndex === 0}
                     aria-label="Bulan sebelumnya"
@@ -474,7 +475,7 @@ export function TimeMachine() {
                       setPlaying((p) => !p);
                     }}
                     aria-pressed={playing}
-                    className="gap-1.5"
+                    className="flex-1 gap-1.5 sm:flex-none"
                   >
                     {playing ? (
                       <Pause className="h-4 w-4" aria-hidden="true" />
@@ -486,6 +487,7 @@ export function TimeMachine() {
                   <Button
                     variant="outline"
                     size="sm"
+                    className="w-10 shrink-0 px-0"
                     onClick={() => stepMonth(1)}
                     disabled={monthIndex >= months.length - 1}
                     aria-label="Bulan berikutnya"

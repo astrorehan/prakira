@@ -97,7 +97,7 @@ export function DistrictPriorityList({
                 onClick={() => onSelect(row.id)}
                 className="group min-w-0 flex-1 text-left"
               >
-                <span className="block text-body-sm font-semibold text-foreground group-hover:text-brand-700">
+                <span className="block break-words text-body-sm font-semibold text-foreground group-hover:text-brand-700">
                   {row.nama}
                 </span>
                 <span className="mt-0.5 block text-caption tabular text-paper-600">
@@ -111,7 +111,8 @@ export function DistrictPriorityList({
                   href={`/tindakan?disease=${encodeURIComponent(disease)}`}
                   className="flex shrink-0 items-center gap-1 text-caption font-semibold text-brand-700 hover:underline"
                 >
-                  Tindakan
+                  {/* Di ponsel cukup panahnya; nama kecamatan lebih perlu tempat. */}
+                  <span className="sr-only min-[400px]:not-sr-only">Tindakan</span>
                   <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
                 </Link>
               ) : (

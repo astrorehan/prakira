@@ -53,7 +53,7 @@ export function DiseaseSelector({
       role="tablist"
       aria-label="Jenis penyakit"
       className={cn(
-        "inline-flex items-center gap-0.5 rounded-lg border border-border bg-paper-100 p-0.5",
+        "flex w-full max-w-full items-center gap-0.5 rounded-lg border border-border bg-paper-100 p-0.5 sm:inline-flex sm:w-auto",
         className,
       )}
     >
@@ -66,7 +66,7 @@ export function DiseaseSelector({
             aria-selected={isSelected}
             onClick={() => onSelect(id)}
             className={cn(
-              "inline-flex h-9 items-center gap-1.5 rounded-md px-3.5 text-body-sm font-medium",
+              "inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-md px-2 text-body-sm font-medium sm:flex-none sm:px-3.5",
               "transition-colors duration-fast ease-out",
               isSelected
                 ? "bg-surface text-foreground shadow-xs"
@@ -74,7 +74,7 @@ export function DiseaseSelector({
             )}
           >
             {ICONS[id] ?? <Activity className="h-3.5 w-3.5" />}
-            <span>{diseaseLabel(id)}</span>
+            <span className="truncate">{diseaseLabel(id)}</span>
           </button>
         );
       })}

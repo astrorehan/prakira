@@ -10,6 +10,7 @@ import {
   RefreshCw,
   Printer,
   ShieldAlert,
+  X,
 } from "lucide-react";
 import {
   aggregateCoverage,
@@ -198,7 +199,7 @@ export default function DashboardPrediksiPage() {
 
       showLiveToast(
         isMyKec
-          ? `⚠️ Laporan baru masuk di wilayah Anda: ${kindLabel} (${newReport.id})`
+          ? `Laporan baru masuk di wilayah Anda: ${kindLabel} (${newReport.id})`
           : `Laporan baru masuk: ${kindLabel} di Kec. ${newReport.kecamatan}`,
       );
     },
@@ -383,7 +384,7 @@ export default function DashboardPrediksiPage() {
             />
           )}
           {rows.length > 0 && (
-            <dl className="grid grid-cols-3 divide-x divide-border rounded-xl border border-border bg-surface shadow-xs">
+            <dl className="grid grid-cols-1 divide-y divide-border rounded-xl min-[400px]:grid-cols-3 min-[400px]:divide-x min-[400px]:divide-y-0 border border-border bg-surface shadow-xs">
               <Stat
                 label={`Kasus ${formatMonth(meta?.latestObserved)}`}
                 value={formatNumber(totals.active)}
@@ -446,6 +447,7 @@ export default function DashboardPrediksiPage() {
                       if (match) setSelectedDistrictId(match.id);
                     }}
                     userDistrict={session?.role === "puskesmas" && session?.kecamatan ? session.kecamatan : null}
+                    userRole={session?.role}
                     height="100%"
                   />
                 ) : (
@@ -471,9 +473,18 @@ export default function DashboardPrediksiPage() {
                   district={selectedDistrict}
                   disease={selectedDisease ?? ""}
                   trigger={selectedTrigger}
-                  reports={reports.filter(
-                    (r) => r.kecamatan.toLowerCase() === selectedDistrict.nama.toLowerCase(),
-                  )}
+                  reports={reports.filter((r) => {
+                    if (r.kecamatan.toLowerCase() !== selectedDistrict.nama.toLowerCase()) return false;
+                    if (session?.role === "puskesmas") {
+                      if (session.kecamatan && r.kecamatan.toLowerCase() !== session.kecamatan.toLowerCase()) return false;
+                      return r.status === "menunggu" || r.status === "perlu_informasi";
+                    }
+                    if (r.status !== "terverifikasi") return false;
+                    if (r.forwarding?.state === "diteruskan") return false;
+                    if (r.routing?.handlingMode === "mandiri_warga" && !r.forwarding?.state) return false;
+                    return true;
+                  })}
+                  userRole={session?.role}
                   onBack={() => setSelectedDistrictId(null)}
                   className="h-full min-h-0 overflow-y-auto"
                 />
@@ -555,17 +566,17 @@ export default function DashboardPrediksiPage() {
         <div
           role="status"
           aria-live="polite"
-          className="fixed bottom-6 right-6 z-[500] flex max-w-md items-center gap-3 rounded-2xl border border-emerald-300 bg-white/95 px-4 py-3 text-body-sm shadow-xl backdrop-blur animate-in fade-in slide-in-from-bottom-3 duration-300"
+          className="fixed bottom-6 right-6 z-[500] flex max-w-md items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3 text-body-sm shadow-card backdrop-blur animate-in fade-in slide-in-from-bottom-3 duration-300"
         >
-          <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+          <span className="flex h-2 w-2 rounded-full bg-brand-600 shrink-0" />
           <span className="font-medium text-foreground">{liveToast}</span>
           <button
             type="button"
             onClick={() => setLiveToast(null)}
-            className="ml-auto text-paper-400 hover:text-paper-700"
+            className="ml-auto inline-flex items-center justify-center text-paper-400 hover:text-paper-700"
             aria-label="Tutup notifikasi"
           >
-            ✕
+            <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
       )}
