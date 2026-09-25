@@ -48,6 +48,7 @@ import {
 } from "@/lib/api";
 import { useApi } from "@/lib/use-api";
 import { ReportPhoto } from "@/components/report-photo";
+import { useReportStream } from "@/hooks/use-report-stream";
 import type { EnvironmentHandlingMode } from "@/types";
 
 /**
@@ -648,6 +649,29 @@ export function VerificationQueue() {
   const { session } = useSessionContext();
   /* Puskesmas menandai, Dinkes mengirim: surat antardinas keluar dari satu pintu. */
   const canForward = session?.role === "dinas";
+
+  useReportStream({
+    enabled: true,
+    onReportCreated: (newReport) => {
+      if (
+        session?.role === "puskesmas" &&
+        session?.kecamatan &&
+        newReport.kecamatan.toLowerCase() !== session.kecamatan.toLowerCase()
+      ) {
+        return;
+      }
+      queue.reload();
+      toast.show(
+        `Laporan baru masuk di Kec. ${newReport.kecamatan} (${newReport.id})`,
+      );
+    },
+    onReportReviewed: () => {
+      queue.reload();
+    },
+    onReportForwarded: () => {
+      queue.reload();
+    },
+  });
 
   const reports = queue.data?.data ?? null;
   const summary = queue.data?.meta ?? {

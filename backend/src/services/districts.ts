@@ -105,10 +105,12 @@ type TrendPayload = {
   proyeksi: boolean;
 }[];
 
-/* Respons ini dibaca berulang oleh beberapa widget pada satu halaman. Cache
-   pendek mengurangi perjalanan ke Supabase tanpa menjadikan data operasional
-   basi dalam waktu lama; refresh prediksi dan ingest menginvalidasinya. */
-const VIEW_CACHE_TTL_MS = 10_000;
+/* Respons ini dibaca berulang oleh beberapa widget pada satu halaman, dan
+   isinya (observasi + prediksi bulanan) hanya berubah saat ingest atau
+   refresh prediksi — keduanya menginvalidasinya lewat `invalidateReadCaches`.
+   TTL 10 detik sebelumnya membuat hampir setiap pindah halaman menunggu
+   Supabase lagi. */
+const VIEW_CACHE_TTL_MS = 5 * 60_000;
 const DIRECTORY_CACHE_TTL_MS = 60_000;
 let kecamatanCache: { expiresAt: number; value: KecamatanRow[] } | null = null;
 let kecamatanInFlight: Promise<KecamatanRow[]> | null = null;

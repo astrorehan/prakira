@@ -40,6 +40,7 @@ import {
   type CitizenSignalFamily,
 } from "../services/reports.js";
 import { listKecamatan } from "../services/districts.js";
+import { invalidateReadCaches } from "../services/read-cache.js";
 
 export const adminRouter = Router();
 
@@ -290,6 +291,8 @@ adminRouter.post(
       throw error;
     }
 
+    invalidateReadCaches(disease);
+
     await finishIngestJob(jobId, {
       status: "success",
       rows: valid.length,
@@ -362,6 +365,7 @@ adminRouter.post(
 
       // Sinkronisasi data prediksi kota, evaluasi backtest, dan rekomendasi aksi
       await refreshPredictions(disease);
+      invalidateReadCaches(disease);
       await refreshBacktest(disease);
       await regenerateActions([disease]);
 

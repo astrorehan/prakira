@@ -35,6 +35,7 @@ import { useSessionContext } from "@/components/session-provider";
 import { SidebarSkeleton } from "@/components/console/console-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fetchActions, fetchReportQueue } from "@/lib/api";
+import { useReportStream } from "@/hooks/use-report-stream";
 import { readWorkContext, withWorkParams } from "@/lib/work-context";
 
 /**
@@ -141,6 +142,25 @@ export function Sidebar() {
       alive = false;
     };
   }, [pathname, session, loading, isAdmin, userRole]);
+
+  useReportStream({
+    enabled: !loading && !!session && !isAdmin,
+    onReportCreated: (report) => {
+      if (
+        userRole === "puskesmas" &&
+        session?.kecamatan &&
+        report.kecamatan.toLowerCase() !== session.kecamatan.toLowerCase()
+      ) {
+        return;
+      }
+      setPendingReports((prev) => (prev !== null ? prev + 1 : 1));
+    },
+    onReportReviewed: () => {
+      fetchReportQueue()
+        .then((result) => setPendingReports(result.meta.menunggu))
+        .catch(() => {});
+    },
+  });
 
   const consoleItems: NavItem[] = React.useMemo(() => {
     /* F06/F08: satu pintu keputusan untuk semua peran, dan namanya menyebut

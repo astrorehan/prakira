@@ -39,12 +39,18 @@ function createPool(): pg.Pool {
   for (const key of ["ssl", "sslmode", "sslrootcert", "sslcert", "sslkey", "sslnegotiation", "uselibpqcompat"]) {
     databaseUrl.searchParams.delete(key);
   }
-  return new pg.Pool({
+  const created = new pg.Pool({
     connectionString: databaseUrl.toString(),
-    /* Supabase menutup koneksi menganggur; kolam kecil dengan idle timeout
-       pendek lebih cocok daripada menahan koneksi yang sudah mati. */
     max: env.databasePoolMax,
-    idleTimeoutMillis: 30_000,
+    /* Koneksi baru ke Supabase (TLS + autentikasi pooler) makan ~650 ms,
+       sedangkan satu query di koneksi yang sudah terbuka ~35 ms. Dengan idle
+       timeout 30 detik, jeda sebentar saja di antara dua halaman sudah cukup
+       untuk membuang seluruh kolam, dan halaman berikutnya membayar jabat
+       tangan itu lagi. Koneksi menganggur ditahan 10 menit, dengan TCP
+       keepalive supaya NAT/router tidak diam-diam memutusnya lebih dulu. */
+    idleTimeoutMillis: 10 * 60_000,
+    keepAlive: true,
+    keepAliveInitialDelayMillis: 30_000,
     connectionTimeoutMillis: 15_000,
     ssl: env.databaseSsl
       ? {
@@ -55,6 +61,14 @@ function createPool(): pg.Pool {
         }
       : undefined,
   });
+  /* Klien menganggur yang diputus server (restart pooler, jaringan putus)
+     memancarkan `error` di kolam. Tanpa pendengar, Node menganggapnya galat
+     tak tertangani dan mematikan gateway. Kolam sudah membuang klien itu
+     sendiri; query berikutnya membuka koneksi baru. */
+  created.on("error", (error) => {
+    console.warn("[db] koneksi menganggur terputus:", error.message);
+  });
+  return created;
 }
 
 /** Menyiapkan kolam koneksi dan menerapkan skema. Aman dipanggil berulang. */

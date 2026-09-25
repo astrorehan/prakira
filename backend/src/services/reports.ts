@@ -19,6 +19,7 @@ import {
   type EnvironmentTicket,
   type PublicEnvironmentTicket,
 } from "./tickets.js";
+import { reportEvents } from "./events.js";
 
 export type ReportKind =
   "gejala" | "jentik" | "genangan" | "sampah" | "saluran";
@@ -471,7 +472,12 @@ export async function createReport(
     status: "info",
   });
 
-  return (await findReport(id)) as ReportRow;
+  const created = (await findReport(id)) as ReportRow;
+  if (created) {
+    reportEvents.emitReportCreated(created);
+  }
+
+  return created;
 }
 
 export async function findReport(code: string): Promise<ReportRow | null> {
@@ -505,6 +511,8 @@ export async function findReportPhoto(code: string): Promise<string | null> {
 export function listReports(filter?: {
   kecamatan?: string;
   status?: ReportStatus;
+  excludeRejected?: boolean;
+  order?: "asc" | "desc";
 }): Promise<ReportRow[]> {
   const clauses: string[] = [];
   const params: unknown[] = [];
@@ -516,9 +524,12 @@ export function listReports(filter?: {
   if (filter?.status) {
     clauses.push("status = ?");
     params.push(filter.status);
+  } else if (filter?.excludeRejected) {
+    clauses.push("status != 'ditolak'");
   }
 
   const where = clauses.length > 0 ? `WHERE ${clauses.join(" AND ")}` : "";
+  const sortOrder = filter?.order === "desc" ? "DESC" : "ASC";
   return all<ReportRow>(
     `SELECT ${REPORT_COLUMNS} FROM laporan_warga ${where}
       ORDER BY CASE status
@@ -527,7 +538,7 @@ export function listReports(filter?: {
                  WHEN 'terverifikasi' THEN 2
                  ELSE 3
                END,
-               submitted_at ASC`,
+               submitted_at ${sortOrder}`,
     ...params,
   );
 }
@@ -912,6 +923,8 @@ export async function reviewReport(
     status: decision.status === "terverifikasi" ? "success" : "warning",
   });
 
+  reportEvents.emitReportReviewed(updated);
+
   return updated;
 }
 
@@ -1004,7 +1017,11 @@ export async function recordForwarding(
     status: input.delivered ? "success" : "warning",
   });
 
-  return findReport(existing.id);
+  const forwarded = await findReport(existing.id);
+  if (forwarded) {
+    reportEvents.emitReportForwarded(forwarded);
+  }
+  return forwarded;
 }
 
 /**
@@ -1064,6 +1081,8 @@ export async function decideForwardProposal(
       : `Tidak disetujui; dikembalikan ke arahan mandiri warga — ${note}.`,
     status: input.approve ? "success" : "warning",
   });
+
+  reportEvents.emitReportReviewed(updated);
 
   return updated;
 }

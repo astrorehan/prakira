@@ -53,6 +53,24 @@ def _load_metadata() -> dict:
     return {}
 
 
+def single_thread(model):
+    """Memaksa sub-model sklearn memprediksi di satu thread.
+
+    Model dilatih dengan `n_jobs=-1`, dan setelan itu ikut ter-pickle. Saat
+    prediksi, setiap thread joblib menjalankan `catch_warnings()` +
+    `resetwarnings()` — yang tidak aman antar-thread di Python < 3.14. Balapan
+    itu lama-lama mengosongkan `warnings.filters` global milik proses, lalu
+    sklearn menulis UserWarning "`sklearn.utils.parallel.delayed` should be
+    used with ..." di setiap prediksi sampai layanan dimatikan. Untuk 16 baris
+    per panggilan, membuat thread juga lebih mahal daripada kerjanya: satu
+    thread ~4x lebih cepat.
+    """
+    for member in vars(model).values():
+        if getattr(member, "n_jobs", None) not in (None, 1) and type(member).__module__.startswith("sklearn"):
+            member.n_jobs = 1
+    return model
+
+
 def _load_model(disease: str):
     """Load model pkl dan historical features untuk penyakit tertentu."""
     disease_lower = disease.lower()
@@ -67,7 +85,7 @@ def _load_model(disease: str):
     if not model_path.exists():
         raise FileNotFoundError(f"Model belum dilatih: {model_path}")
 
-    model = joblib.load(model_path)
+    model = single_thread(joblib.load(model_path))
 
     feature_path = DATASET_CLEAN_DIR / cfg["feature_file"]
     if feature_path.exists():

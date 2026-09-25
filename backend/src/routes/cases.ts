@@ -14,6 +14,7 @@ import { startIngestJob, finishIngestJob } from "../db/seed.js";
 import { requireAuth, requireRole, sessionScopeId } from "../middleware/auth.js";
 import { asyncRoute, HttpError } from "../middleware/error.js";
 import { logAudit } from "../services/audit.js";
+import { invalidateReadCaches } from "../services/read-cache.js";
 import {
   RecapReasonRequiredError,
   districtRecapStatus,
@@ -539,6 +540,8 @@ casesRouter.post(
       });
       throw error;
     }
+
+    invalidateReadCaches(disease);
 
     await finishIngestJob(jobId, {
       status: "success",

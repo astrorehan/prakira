@@ -590,6 +590,8 @@ export type CitizenReport = {
   id: string;
   /** Benar bila baris ini disuntikkan sebagai peragaan, bukan dikirim warga. */
   simulated?: boolean;
+  /** Benar bila laporan berada di wilayah kerja petugas yang sedang masuk (misal Puskesmas). */
+  forMyDistrict?: boolean;
   kind: ReportKind;
   kecamatan: string;
   kelurahan: string | null;

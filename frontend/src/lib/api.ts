@@ -534,6 +534,34 @@ export function fetchTriggerSummary(
   return request<{ data: DistrictTriggerSummary[] }>(`/api/reports/triggers${query}`);
 }
 
+export type MapReportsMeta = {
+  total: number;
+  menunggu: number;
+  terverifikasi: number;
+  perluInformasi: number;
+  shown: number;
+};
+
+/** Titik data laporan warga untuk visualisasi peta (masuk & terverifikasi). */
+export function fetchMapReports(params?: {
+  kecamatan?: string;
+  status?: string;
+  limit?: number;
+}): Promise<Envelope<CitizenReport[], MapReportsMeta>> {
+  const parts: string[] = [];
+  if (params?.kecamatan) parts.push(`kecamatan=${encodeURIComponent(params.kecamatan)}`);
+  if (params?.status) parts.push(`status=${encodeURIComponent(params.status)}`);
+  if (params?.limit) parts.push(`limit=${params.limit}`);
+  const query = parts.length > 0 ? `?${parts.join("&")}` : "";
+  return request(`/api/reports/map${query}`);
+}
+
+/** URL aliran Server-Sent Events (SSE) laporan warga. */
+export function getReportStreamUrl(): string {
+  const base = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
+  return `${base}/api/reports/stream`;
+}
+
 export function fetchReportQueue(
   kecamatan?: string,
 ): Promise<Envelope<CitizenReport[], QueueSummary>> {

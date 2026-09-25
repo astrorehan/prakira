@@ -23,9 +23,14 @@ type DiseaseMeta = {
   latest: string;
 };
 
-const DISEASE_META_TTL_MS = 15_000;
+/* Ditahan lama karena berubah hanya saat ingest; lihat `services/read-cache.ts`. */
+const DISEASE_META_TTL_MS = 5 * 60_000;
 let diseasesMetaCache: { expiresAt: number; value: DiseaseMeta[] } | null = null;
 let diseasesMetaInFlight: Promise<DiseaseMeta[]> | null = null;
+
+export function invalidateDiseaseMetaCache(): void {
+  diseasesMetaCache = null;
+}
 
 function diseaseMeta(): Promise<DiseaseMeta[]> {
   if (diseasesMetaCache && diseasesMetaCache.expiresAt > Date.now()) {

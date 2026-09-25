@@ -31,7 +31,10 @@ import {
   REPORT_HANDLING_MODES,
   type ReportKind,
   type ReportHandlingMode,
+  type ReportRow,
+  type ReportStatus,
 } from "../services/reports.js";
+import { reportEvents } from "../services/events.js";
 import {
   findEnvironmentTicketByReportId,
   listEnvironmentTicketsByReportIds,
@@ -310,6 +313,167 @@ reportsRouter.get(
       typeof req.query.kecamatan === "string" ? req.query.kecamatan : undefined;
     const summary = await getTriggerSummaryByDistrict(kecamatan);
     res.json({ data: summary });
+  }),
+);
+
+/**
+ * Aliran event Server-Sent Events (SSE) laporan warga real-time.
+ *
+ * Mengirim notifikasi seketika saat laporan masuk (`report:created`),
+ * saat laporan diverifikasi/ditolak (`report:reviewed`), dan saat
+ * laporan diteruskan (`report:forwarded`).
+ *
+ * Untuk staf kesehatan (Dinkes & Puskesmas), rincian lokasi presisi
+ * disertakan agar peta dapat memplot titik laporan secara live.
+ * Untuk publik, data disanitasi menjadi sinyal tanpa PII.
+ */
+reportsRouter.get("/stream", (req, res) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache, no-transform");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("X-Accel-Buffering", "no");
+  res.flushHeaders?.();
+
+  const isStaff =
+    req.session?.role === "dinas" ||
+    req.session?.role === "puskesmas" ||
+    req.session?.role === "admin";
+  const scope = sessionScope(req);
+
+  res.write(
+    `event: connected\ndata: ${JSON.stringify({
+      connected: true,
+      role: req.session?.role ?? "public",
+      scope: scope ?? null,
+      time: new Date().toISOString(),
+    })}\n\n`,
+  );
+
+  const heartbeat = setInterval(() => {
+    res.write(":keepalive\n\n");
+  }, 25_000);
+
+  const onCreated = async (row: ReportRow) => {
+    try {
+      if (isStaff) {
+        const risk = await riskContextFor([row]);
+        const payload = {
+          ...publicView(row, null, risk.get(riskKey(row)), "staff"),
+          forMyDistrict: scope ? row.kecamatan.toLowerCase() === scope.toLowerCase() : true,
+        };
+        res.write(`event: report:created\ndata: ${JSON.stringify(payload)}\n\n`);
+      }
+      // Publik tidak menerima laporan masuk mentah yang belum terverifikasi
+    } catch {
+      // Ignored
+    }
+  };
+
+  const onReviewed = async (row: ReportRow) => {
+    try {
+      if (isStaff) {
+        const ticket = await findEnvironmentTicketByReportId(row.id);
+        const risk = await riskContextFor([row]);
+        const payload = {
+          ...publicView(row, ticket, risk.get(riskKey(row)), "staff"),
+          forMyDistrict: scope ? row.kecamatan.toLowerCase() === scope.toLowerCase() : true,
+        };
+        res.write(`event: report:reviewed\ndata: ${JSON.stringify(payload)}\n\n`);
+      } else if (row.status === "terverifikasi") {
+        // Publik hanya menerima sinyal yang telah terverifikasi sah (tanpa PII dan tanpa koordinat presisi)
+        const payload = publicView(row, null, null, "public");
+        res.write(`event: report:reviewed\ndata: ${JSON.stringify(payload)}\n\n`);
+      }
+    } catch {
+      // Ignored
+    }
+  };
+
+  const onForwarded = async (row: ReportRow) => {
+    if (!isStaff) return;
+    try {
+      const risk = await riskContextFor([row]);
+      const payload = {
+        ...publicView(row, null, risk.get(riskKey(row)), "staff"),
+        forMyDistrict: scope ? row.kecamatan.toLowerCase() === scope.toLowerCase() : true,
+      };
+      res.write(`event: report:forwarded\ndata: ${JSON.stringify(payload)}\n\n`);
+    } catch {
+      // Ignored
+    }
+  };
+
+  reportEvents.on("report:created", onCreated);
+  reportEvents.on("report:reviewed", onReviewed);
+  reportEvents.on("report:forwarded", onForwarded);
+
+  req.on("close", () => {
+    clearInterval(heartbeat);
+    reportEvents.off("report:created", onCreated);
+    reportEvents.off("report:reviewed", onReviewed);
+    reportEvents.off("report:forwarded", onForwarded);
+  });
+});
+
+/**
+ * Titik data laporan warga untuk visualisasi peta di Dinkes & Puskesmas.
+ *
+ * Mengembalikan laporan masuk (`menunggu`), laporan terverifikasi (`terverifikasi`),
+ * dan koordinat titik lokasi presisi bila tersedia dari pelapor.
+ * Mengurutkan dari yang terbaru (descending) dan mengecualikan laporan yang ditolak.
+ */
+reportsRouter.get(
+  "/map",
+  asyncRoute(async (req, res) => {
+    const isStaff =
+      req.session?.role === "dinas" ||
+      req.session?.role === "puskesmas" ||
+      req.session?.role === "admin";
+    const requestedKec =
+      typeof req.query.kecamatan === "string" ? req.query.kecamatan : undefined;
+    const requestedStatus =
+      typeof req.query.status === "string" ? req.query.status : undefined;
+
+    let rows: ReportRow[];
+    if (isStaff) {
+      rows = await listReports({
+        kecamatan: requestedKec,
+        status:
+          requestedStatus && requestedStatus !== "semua" && requestedStatus !== "all"
+            ? (requestedStatus as ReportStatus)
+            : undefined,
+        excludeRejected: true,
+        order: "desc",
+      });
+    } else {
+      rows = await listReports({
+        kecamatan: requestedKec,
+        status: "terverifikasi",
+        excludeRejected: true,
+        order: "desc",
+      });
+    }
+
+    const limit = Math.min(Number(req.query.limit ?? 250) || 250, 500);
+    const sliced = rows.slice(0, limit);
+    const risk = isStaff ? await riskContextFor(sliced) : new Map();
+    const scope = sessionScope(req);
+
+    const data = sliced.map((row) => ({
+      ...publicView(row, null, risk.get(riskKey(row)), isStaff ? "staff" : "public"),
+      forMyDistrict: scope ? row.kecamatan.toLowerCase() === scope.toLowerCase() : true,
+    }));
+
+    res.json({
+      meta: {
+        total: rows.length,
+        menunggu: rows.filter((r) => r.status === "menunggu").length,
+        terverifikasi: rows.filter((r) => r.status === "terverifikasi").length,
+        perluInformasi: rows.filter((r) => r.status === "perlu_informasi").length,
+        shown: data.length,
+      },
+      data,
+    });
   }),
 );
 

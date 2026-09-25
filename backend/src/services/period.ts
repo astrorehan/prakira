@@ -9,9 +9,9 @@
 import { all, one } from "../db/index.js";
 
 /* Metadata periode dibaca oleh hampir setiap permukaan. Data ini berubah saat
-   ingest, bukan di setiap request, jadi cache singkat menghindari beberapa
-   perjalanan bolak-balik ke Postgres untuk satu kali buka halaman. */
-const PERIOD_CACHE_TTL_MS = 15_000;
+   ingest, bukan di setiap request. Setiap penulisan membuangnya lewat
+   `invalidateReadCaches`, jadi TTL hanya jaring pengaman dan boleh panjang. */
+const PERIOD_CACHE_TTL_MS = 5 * 60_000;
 
 type TimedValue<T> = {
   expiresAt: number;

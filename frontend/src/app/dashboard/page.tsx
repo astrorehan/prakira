@@ -38,14 +38,16 @@ import {
   fetchGeoJson,
   fetchTrend,
   fetchTriggerSummary,
+  fetchMapReports,
 } from "@/lib/api";
+import { useReportStream } from "@/hooks/use-report-stream";
 import { useApi } from "@/lib/use-api";
 import {
   pickInitialDisease,
   readWorkParams,
   rememberWorkContext,
 } from "@/lib/work-context";
-import type { DiseaseType } from "@/types";
+import type { DiseaseType, CitizenReport } from "@/types";
 
 const MAP_HEIGHT = "h-[420px] lg:h-[560px]";
 
@@ -136,6 +138,102 @@ export default function DashboardPrediksiPage() {
   );
   const triggers = useApi(() => fetchTriggerSummary(), []);
 
+  const [reports, setReports] = React.useState<CitizenReport[]>([]);
+  const [liveToast, setLiveToast] = React.useState<string | null>(null);
+  const toastTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  const showLiveToast = React.useCallback((msg: string) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setLiveToast(msg);
+    toastTimerRef.current = setTimeout(() => {
+      setLiveToast(null);
+      toastTimerRef.current = null;
+    }, 6000);
+  }, []);
+
+  React.useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    };
+  }, []);
+
+  const reloadReports = React.useCallback(() => {
+    fetchMapReports()
+      .then((res) => {
+        if (res?.data) {
+          setReports(res.data);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  React.useEffect(() => {
+    reloadReports();
+  }, [reloadReports]);
+
+  const { connected: liveConnected } = useReportStream({
+    enabled: !sessionLoading,
+    onReportCreated: (newReport) => {
+      setReports((prev) => {
+        if (prev.some((r) => r.id === newReport.id)) return prev;
+        return [newReport, ...prev];
+      });
+      triggers.reload();
+      const isMyKec =
+        session?.role === "puskesmas" &&
+        session?.kecamatan &&
+        newReport.kecamatan.toLowerCase() === session.kecamatan.toLowerCase();
+      const kindLabel =
+        newReport.kind === "gejala"
+          ? "Gejala Kasus"
+          : newReport.kind === "jentik"
+            ? "Temuan Jentik"
+            : newReport.kind === "genangan"
+              ? "Genangan Air"
+              : newReport.kind === "sampah"
+                ? "Timbunan Sampah"
+                : newReport.kind === "saluran"
+                  ? "Saluran Tersumbat"
+                  : newReport.kind;
+
+      showLiveToast(
+        isMyKec
+          ? `⚠️ Laporan baru masuk di wilayah Anda: ${kindLabel} (${newReport.id})`
+          : `Laporan baru masuk: ${kindLabel} di Kec. ${newReport.kecamatan}`,
+      );
+    },
+    onReportReviewed: (reviewedReport) => {
+      setReports((prev) => {
+        if (reviewedReport.status === "ditolak") {
+          return prev.filter((r) => r.id !== reviewedReport.id);
+        }
+        const exists = prev.some((r) => r.id === reviewedReport.id);
+        if (exists) {
+          return prev.map((r) => (r.id === reviewedReport.id ? reviewedReport : r));
+        }
+        return [reviewedReport, ...prev];
+      });
+      triggers.reload();
+      const isReject = reviewedReport.status === "ditolak";
+      const isVerified = reviewedReport.status === "terverifikasi";
+      const actionText = isReject
+        ? "ditolak"
+        : isVerified
+          ? "diverifikasi sah"
+          : "memerlukan informasi tambahan";
+
+      showLiveToast(
+        `Laporan ${reviewedReport.id} ${actionText} di Kec. ${reviewedReport.kecamatan}`,
+      );
+    },
+    onReportForwarded: (forwardedReport) => {
+      setReports((prev) =>
+        prev.map((r) => (r.id === forwardedReport.id ? forwardedReport : r)),
+      );
+      triggers.reload();
+    },
+  });
+
   const rows = React.useMemo(() => districts.data?.data ?? [], [districts.data]);
   const meta = districts.data?.meta ?? null;
 
@@ -148,12 +246,14 @@ export default function DashboardPrediksiPage() {
   const restoredDistrict = React.useRef(false);
   React.useEffect(() => {
     if (restoredDistrict.current || rows.length === 0) return;
-    restoredDistrict.current = true;
-    const wanted = readWorkParams().kecamatan;
+    const wanted =
+      readWorkParams().kecamatan ??
+      (session?.role === "puskesmas" && session?.kecamatan ? session.kecamatan : null);
     if (!wanted) return;
+    restoredDistrict.current = true;
     const match = rows.find((d) => d.nama.toLowerCase() === wanted.toLowerCase());
     if (match) setSelectedDistrictId(match.id);
-  }, [rows]);
+  }, [rows, session]);
 
   const selectedTrigger = React.useMemo(() => {
     if (!selectedDistrict || !triggers.data?.data) return undefined;
@@ -224,6 +324,7 @@ export default function DashboardPrediksiPage() {
                   trend.reload();
                   actions.reload();
                   triggers.reload();
+                  reloadReports();
                 }}
                 disabled={districts.refreshing}
                 title="Segarkan data"
@@ -336,6 +437,15 @@ export default function DashboardPrediksiPage() {
                     selectedId={selectedDistrictId}
                     onSelect={(id) => setSelectedDistrictId(id)}
                     triggers={triggers.data?.data ?? []}
+                    reports={reports}
+                    liveConnected={liveConnected}
+                    onReportSelect={(report) => {
+                      const match = rows.find(
+                        (d) => d.nama.toLowerCase() === report.kecamatan.toLowerCase(),
+                      );
+                      if (match) setSelectedDistrictId(match.id);
+                    }}
+                    userDistrict={session?.role === "puskesmas" && session?.kecamatan ? session.kecamatan : null}
                     height="100%"
                   />
                 ) : (
@@ -361,6 +471,9 @@ export default function DashboardPrediksiPage() {
                   district={selectedDistrict}
                   disease={selectedDisease ?? ""}
                   trigger={selectedTrigger}
+                  reports={reports.filter(
+                    (r) => r.kecamatan.toLowerCase() === selectedDistrict.nama.toLowerCase(),
+                  )}
                   onBack={() => setSelectedDistrictId(null)}
                   className="h-full min-h-0 overflow-y-auto"
                 />
@@ -437,6 +550,25 @@ export default function DashboardPrediksiPage() {
           </section>
         </DataState>
       </div>
+
+      {liveToast && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-6 right-6 z-[500] flex max-w-md items-center gap-3 rounded-2xl border border-emerald-300 bg-white/95 px-4 py-3 text-body-sm shadow-xl backdrop-blur animate-in fade-in slide-in-from-bottom-3 duration-300"
+        >
+          <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+          <span className="font-medium text-foreground">{liveToast}</span>
+          <button
+            type="button"
+            onClick={() => setLiveToast(null)}
+            className="ml-auto text-paper-400 hover:text-paper-700"
+            aria-label="Tutup notifikasi"
+          >
+            ✕
+          </button>
+        </div>
+      )}
     </div>
   );
 }

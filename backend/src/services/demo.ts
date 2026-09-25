@@ -21,7 +21,8 @@
  */
 import { all, one, run } from "../db/index.js";
 import { logAudit } from "./audit.js";
-import { generateTrackingCode, type ReportKind } from "./reports.js";
+import { generateTrackingCode, findReport, type ReportKind } from "./reports.js";
+import { reportEvents } from "./events.js";
 
 /** Penanda di deskripsi. Ikut tampil di antrean, di ekspor, dan di audit. */
 export const SIMULATION_PREFIX = "[SIMULASI]";
@@ -161,6 +162,10 @@ export async function injectSurge(
     );
 
     created.push(id);
+    const reportRow = await findReport(id);
+    if (reportRow) {
+      reportEvents.emitReportCreated(reportRow);
+    }
   }
 
   await logAudit({

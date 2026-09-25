@@ -15,6 +15,7 @@
  */
 import { all, one, run, transaction } from "../db/index.js";
 import { logAudit } from "./audit.js";
+import { invalidateReadCaches } from "./read-cache.js";
 
 export type RecapState = "tersimpan" | "diperiksa";
 
@@ -189,6 +190,7 @@ export async function saveRecap(
       );
     }
   });
+  invalidateReadCaches(input.disease);
 
   await logAudit({
     actor,

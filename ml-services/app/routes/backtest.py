@@ -18,6 +18,7 @@ import numpy as np
 import joblib
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from app.services.risk_classifier import classify_risk, calculate_risk_score, assess_data_coverage
+from app.services.predictor import single_thread
 
 router = APIRouter()
 
@@ -52,7 +53,7 @@ async def backtest(disease: str = Query(..., description="Nama penyakit sesuai D
     if not model_path.exists():
         raise HTTPException(status_code=503, detail=f"Model file not found: {cfg['model_file']}")
 
-    model = joblib.load(model_path)
+    model = single_thread(joblib.load(model_path))
 
     # Load features dataset
     feature_path = DATASET_CLEAN_DIR / cfg["feature_file"]
