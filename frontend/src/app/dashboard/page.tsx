@@ -291,9 +291,13 @@ export default function DashboardPrediksiPage() {
                 label={`Prakiraan ${formatMonth(meta?.predictionMonth)}`}
                 value={forecastHidden ? "—" : formatMaybeNumber(totals.pred)}
                 sub={
-                  forecastHidden || totals.lower === null || totals.upper === null
+                  forecastHidden
                     ? undefined
-                    : `${formatNumber(totals.lower)}–${formatNumber(totals.upper)}`
+                    : totals.lower === null || totals.upper === null
+                      /* Prakiraan multi-bulan tidak punya interval terkalibrasi;
+                         kosong di sini terbaca seperti angka pasti. */
+                      ? "rentang belum terkalibrasi"
+                      : `${formatNumber(totals.lower)}–${formatNumber(totals.upper)}`
                 }
               />
               <Stat

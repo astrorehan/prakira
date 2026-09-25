@@ -30,7 +30,9 @@ const LIMITATIONS = [
   "Akurasi bergantung pada kelengkapan data historis; kecamatan dengan data sedikit punya ketidakpastian lebih besar.",
   "Korelasi cuaca–penyakit bukan kausalitas tunggal; kepadatan penduduk dan sanitasi turut berperan.",
   "Laporan warga rentan bias pelaporan — wilayah dengan warga lebih aktif dapat tampak lebih berisiko.",
-  "Interpolasi cuaca dari stasiun terbatas ke tingkat kecamatan menurunkan presisi.",
+  "Iklim berasal dari grid reanalisis Open-Meteo, bukan stasiun BMKG; beberapa kecamatan berbagi nilai grid yang sama sehingga variasi iklim antarkecamatan tidak tertangkap.",
+  "Rekap DBD dan Leptospirosis Dinkes hanya memuat total tahunan per wilayah dan total sekota per periode; angka per kecamatan per bulan dibagi dari kedua total itu, sehingga pola bulanan tiap kecamatan sebagian besar mengikuti pola kota.",
+  "Pada periode uji, model belum mengungguli pembanding sederhana (kasus bulan lalu atau rata-rata musiman) dalam MAE; perbandingannya ditampilkan apa adanya di halaman ini.",
 ];
 
 /**

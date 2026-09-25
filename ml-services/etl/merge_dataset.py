@@ -70,7 +70,7 @@ def _load_monthly_weather() -> pd.DataFrame:
 def _scale_partial_month(df_monthly: pd.DataFrame) -> pd.DataFrame:
     """Menaikkan curah hujan bulan berjalan ke setara satu bulan penuh.
 
-    Berkas harian BMKG berhenti di tanggal terakhir yang sudah terbit. Bulan
+    Berkas harian Open-Meteo berhenti di tanggal terakhir yang sudah terbit. Bulan
     berjalan karena itu hanya berisi sebagian hari, dan `sum` atasnya
     menghasilkan curah hujan yang terlalu kecil — bukan karena hujannya
     sedikit, melainkan karena bulannya belum selesai. Fitur `rainfall_lag1`

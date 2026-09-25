@@ -111,8 +111,8 @@ export type DataLag = Pick<
  * Bulan prakiraan aktif: sebulan sesudah bulan kalender berjalan.
  *
  * Rekapitulasi kasus Dinkes terbit jauh lebih lambat daripada data iklim
- * BMKG, jadi observasi berhenti di Desember sementara kalender sudah
- * September. Model tetap dilatih satu langkah ke depan; bulan yang lebih jauh
+ * grid Open-Meteo, jadi observasi kasus bisa tertinggal beberapa bulan dari
+ * kalender. Model tetap dilatih satu langkah ke depan; bulan yang lebih jauh
  * dijangkau dengan menyusuri bulan antara satu per satu — iklimnya nyata,
  * jumlah kasusnya prakiraan yang dipakai sebagai lag bulan berikutnya
  * (`ml-services/app/services/feature_frame.py`).

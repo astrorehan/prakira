@@ -228,7 +228,7 @@ disengaja — tidak ada jalur cadangan yang diam-diam mengisi angka palsu.
 | `GET` | `/api/climate?months=` | — | deret iklim (hujan, suhu, kelembaban) vs kasus |
 | `GET` | `/api/model/backtest?disease=` | — | metrik evaluasi model (MAE, RMSE, R²) & batasan |
 | `GET` | `/api/model/info` | — | informasi arsitektur model & status layanan |
-| `GET` | `/api/model/limitations` | — | 5 batasan resmi sistem untuk transparansi publik |
+| `GET` | `/api/model/limitations` | — | 7 batasan resmi sistem untuk transparansi publik |
 | `GET` | `/api/model/coverage?disease=` | — | tingkat kelengkapan data historis per kecamatan |
 | `GET` | `/api/model/rewind?disease=` | — | putusan Mesin Waktu per bulan × kecamatan & lead time |
 | `GET` | `/api/model/explain?disease=&kecamatan_id=` | — | atribusi kontribusi fitur lokal ("Kenapa angka ini?") |

@@ -173,7 +173,7 @@ def run_cuaca_etl(start_date: str, end_date: str):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Script Pengambil & Pengolah Data Cuaca BMKG / Open-Meteo untuk PRAKIRA"
+        description="Script Pengambil & Pengolah Data Cuaca Open-Meteo Archive untuk PRAKIRA"
     )
     parser.add_argument(
         "--start-date",

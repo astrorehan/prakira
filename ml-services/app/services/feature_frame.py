@@ -98,8 +98,8 @@ def monthly_weather() -> pd.DataFrame:
 
     Berkas fitur berhenti di bulan observasi kasus terakhir karena ia irisan
     kasus x cuaca. Prakiraan beberapa bulan ke depan tetap butuh iklim bulan
-    antara, dan iklim itu benar-benar ada — BMKG menerbitkannya jauh lebih
-    cepat daripada rekapitulasi kasus Dinkes. `etl/merge_dataset.py`
+    antara, dan iklim itu benar-benar ada — arsip grid Open-Meteo tersedia
+    jauh lebih cepat daripada rekapitulasi kasus Dinkes. `etl/merge_dataset.py`
     menyimpannya utuh di `dataset_clean/cuaca_monthly.csv`.
     """
     global _weather_cache

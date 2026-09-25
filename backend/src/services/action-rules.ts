@@ -37,16 +37,17 @@ const RULES: Record<string, Partial<Record<RiskClass, ActionTemplate[]>>> = {
     tinggi: [
       {
         actionType: "fogging",
-        title: "Fogging fokus & PSN 3M Plus serentak",
+        title: "Siaga PE, PSN 3M Plus serentak & fogging fokus bila PE positif",
         description:
-          "Model memproyeksikan kelas risiko tinggi pada bulan prediksi. Fogging fokus menekan nyamuk dewasa yang sudah terinfeksi, PSN memutus perindukannya — keduanya harus berjalan bersamaan agar populasi vektor tidak pulih dalam satu siklus.",
+          "Model memproyeksikan kelas risiko tinggi pada bulan prediksi. Prakiraan menyiapkan kesiapan, bukan dasar pengasapan: fogging fokus hanya dijalankan bila Penyelidikan Epidemiologi (PE) atas kasus indeks positif. PSN memutus perindukan dan berjalan tanpa menunggu PE, agar populasi vektor tidak pulih dalam satu siklus.",
         picUnit: "Seksi Pencegahan & Pengendalian Penyakit Menular (P2PM)",
         leadTimeDays: 14,
         sopChecklist: [
           "Instruksikan puskesmas wilayah pada kecamatan target",
           "Mobilisasi kader Jumantik dan petugas surveilans tingkat RW",
+          "Lakukan Penyelidikan Epidemiologi (PE) radius 100 m dari setiap kasus indeks yang dilaporkan",
           "Distribusi larvasida ke kelurahan dengan kasus indeks",
-          "Fogging fokus siklus 1 pada radius 200 m dari kasus indeks",
+          "Fogging fokus radius 200 m hanya bila PE positif (ada penderita DBD lain atau ≥3 demam tanpa sebab, dan ditemukan jentik)",
           "Verifikasi Angka Bebas Jentik (ABJ) target >95% pasca intervensi",
         ],
       },

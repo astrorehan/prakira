@@ -30,7 +30,7 @@ ml-services/
 │
 ├── dataset_raw/                ← Data mentah
 │   ├── kasus/                  ← Data kasus per kecamatan dari Dinkes
-│   ├── cuaca/                  ← Data iklim dari BMKG (hujan, suhu, kelembaban)
+│   ├── cuaca/                  ← Data iklim grid Open-Meteo Archive (hujan, suhu, kelembaban)
 │   └── wilayah/                ← Data kecamatan & populasi dari BPS
 │
 ├── dataset_clean/              ← Data bersih bulanan siap latih
@@ -103,7 +103,12 @@ ml-services/
 
 ---
 
-### 2.2 Data Cuaca (BMKG)
+### 2.2 Data Cuaca (rencana awal BMKG — implementasi memakai Open-Meteo)
+
+> **Status implementasi:** rencana stasiun BMKG di bawah tidak dipakai. `etl/etl_cuaca.py`
+> mengambil data harian dari Open-Meteo Archive (grid reanalisis) pada koordinat sentroid
+> tiap kecamatan; beberapa kecamatan dapat berbagi nilai grid yang sama. Bagian ini
+> disimpan sebagai catatan rencana dan arah integrasi BMKG berikutnya.
 
 **Sumber:** [data.bmkg.go.id](https://data.bmkg.go.id) — data historis stasiun pengamatan.
 
@@ -813,7 +818,7 @@ uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
 
 ### Fase 1: Data & Model Ensemble Bulanan (Selesai & Terverifikasi)
 - [x] Kumpulkan data kasus dari Profil Kesehatan Semarang (DBD 2021–2025, ISPA 2025, Leptospirosis 2021–2025).
-- [x] Kumpulkan data iklim dari BMKG (curah hujan, suhu, kelembaban).
+- [x] Kumpulkan data iklim dari Open-Meteo Archive (curah hujan, suhu, kelembaban).
 - [x] Kumpulkan data populasi dan batas wilayah 16 kecamatan dari BPS.
 - [x] Standardisasi dataset bulanan (`merged_monthly_*.csv`).
 - [x] Feature engineering lag iklim, autoregresif kasus, rasio insidens, interaksi bioklimatik (`features_*_monthly.csv`).

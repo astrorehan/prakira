@@ -207,7 +207,7 @@ Root font-size ditetapkan pada `112.5%` (1rem = 18px).
 | 7 | `/masuk` | `BARE_ROUTES` | `public` | Terbuka | Bare | **Autentikasi Petugas**: Formulir masuk nakes dengan httpOnly cookie session, penanganan redirect `?lanjut=` |
 | 8 | `/sistem` | `SISTEM_ROUTES` | `public` | Terbuka | `SistemMasthead` + `SistemFooter` | **Portal Layanan & Status Kota**: Navigasi SL-01..SL-06, buletin resmi, peringatan aktif, register terbuka 16 kecamatan (GeoJSON/CSV), feed sistem |
 | 9 | `/model` | Publik | `public` | Terbuka | `Navbar` + `Footer` | **Transparansi & Akurasi Model** (M8): Bobot kepentingan fitur, kurva blind test walk-forward, tabel cakupan data 16 kecamatan, batasan model |
-| 10 | `/tentang` | Publik | `public` | Terbuka | `Navbar` + `Footer` | **Tentang Platform**: Metodologi epidemiologi-iklim, arsitektur data, institusi pelaksana (Dinkes & BMKG), FAQ |
+| 10 | `/tentang` | Publik | `public` | Terbuka | `Navbar` + `Footer` | **Tentang Platform**: Metodologi epidemiologi-iklim, arsitektur data, sumber data (Dinkes, Open-Meteo, BPS), FAQ |
 | 11 | `/hubungi-kami` | Publik | `public` | Terbuka | `Navbar` + `Footer` | **Direktori Darurat & Puskesmas**: Kontak 119 ext 9, direktori lengkap 37 puskesmas se-Kota Semarang (alamat, kontak, jam operasional) |
 | 12 | `/warga` | Publik | `public` | Terbuka | `Navbar` + `Footer` | **Portal Warga**: Hub pelaporan dan pemantauan warga dengan `WargaShell` dan penafian non-diagnostik |
 | 13 | `/warga/lapor` | Publik | `public` | Terbuka | `Navbar` + `Footer` | **Formulir Laporan Warga**: 5 kategori laporan, kompresi foto & stripping GPS/EXIF di sisi klien, rate-limiting, kode lacak PKR-XXXXXX |
