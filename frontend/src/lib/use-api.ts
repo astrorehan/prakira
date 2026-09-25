@@ -14,6 +14,17 @@ import * as React from "react";
 import { ApiError, getApiCacheGeneration } from "@/lib/api";
 
 type CacheOptions = { cacheKey: string; cacheTimeMs: number };
+
+type UseApiOptions = {
+  /**
+   * Bila diisi, perubahan `deps` hanya mengosongkan data ketika nilai ini ikut
+   * berubah. Perubahan lain dimuat ulang sebagai `refreshing` dan data
+   * terakhir tetap terlihat — untuk parameter yang digeser terus-menerus,
+   * seperti penggeser simulator, di mana layar kosong tiap geseran lebih
+   * mengganggu daripada angka lama yang diredupkan sebentar.
+   */
+  resetKey?: unknown;
+};
 const responseCache = new Map<string, { value: unknown; expiresAt: number; generation: number }>();
 
 function cachedResponse<T>(key: string | undefined): T | null {
@@ -42,6 +53,7 @@ export function useApi<T>(
   fetcher: () => Promise<T>,
   deps: React.DependencyList = [],
   cache?: CacheOptions,
+  options?: UseApiOptions,
 ): AsyncState<T> {
   const [data, setData] = React.useState<T | null>(null);
   const [error, setError] = React.useState<string | null>(null);
@@ -64,6 +76,8 @@ export function useApi<T>(
      menyala setelah datanya tiba dan halamannya tersangkut di "Memuat data…". */
   const hasData = React.useRef(false);
   const previousDeps = React.useRef<React.DependencyList | null>(null);
+  const previousResetKey = React.useRef<unknown>(undefined);
+  const resetKey = options?.resetKey;
 
   React.useEffect(() => {
     let alive = true;
@@ -73,7 +87,13 @@ export function useApi<T>(
       previousDeps.current === null ||
       previousDeps.current.length !== deps.length ||
       deps.some((value, index) => !Object.is(value, previousDeps.current?.[index]));
+    const keepPrevious =
+      dependencyChanged &&
+      previousDeps.current !== null &&
+      options !== undefined &&
+      Object.is(previousResetKey.current, resetKey);
     previousDeps.current = [...deps];
+    previousResetKey.current = resetKey;
 
     const cached = dependencyChanged ? cachedResponse<T>(cache?.cacheKey) : null;
     if (cached !== null) {
@@ -89,10 +109,11 @@ export function useApi<T>(
 
     setError(null);
     setRefreshError(null);
-    if (dependencyChanged) {
+    if (dependencyChanged && !(keepPrevious && hasData.current)) {
       /* Data dari penyakit/entitas lama tidak boleh tetap terlihat di bawah
          label baru ketika permintaan transisinya gagal. Reload manual dengan
-         dependency yang sama tetap memakai stale-while-revalidate. */
+         dependency yang sama, atau perubahan dependency dengan `resetKey`
+         yang sama, tetap memakai stale-while-revalidate. */
       hasData.current = false;
       setData(null);
       setDataKey(cache?.cacheKey ?? null);

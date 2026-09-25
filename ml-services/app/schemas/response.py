@@ -232,6 +232,9 @@ class SimulateDistrict(BaseModel):
     scenario_risk_score: Optional[int] = None
     scenario_risk_class: Optional[str] = None
     scenario_rank: Optional[int] = None
+    # Nilai model sebelum dibulatkan; angka bulat di atas tetap acuan tampilan.
+    baseline_expected: Optional[float] = None
+    scenario_expected: Optional[float] = None
     rainfall_baseline: Optional[float] = None
     rainfall_scenario: Optional[float] = None
     # Nama fitur yang nilainya keluar dari rentang data latih setelah digeser.
@@ -250,7 +253,11 @@ class SimulateSummary(BaseModel):
     scenario_total: int
     baseline_high: int
     scenario_high: int
+    baseline_expected_total: float
+    scenario_expected_total: float
     rank_changed: int
+    score_up: int
+    score_down: int
     beyond_training: int
 
 

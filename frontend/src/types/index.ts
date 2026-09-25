@@ -848,6 +848,9 @@ export type SimulateDistrict = {
   scenario_risk_score: number | null;
   scenario_risk_class: RiskLevel | null;
   scenario_rank: number | null;
+  /** Nilai model sebelum dibulatkan. */
+  baseline_expected: number | null;
+  scenario_expected: number | null;
   rainfall_baseline: number | null;
   rainfall_scenario: number | null;
   /** Fitur yang keluar dari rentang data latih setelah digeser. */
@@ -860,7 +863,12 @@ export type SimulateSummary = {
   scenario_total: number;
   baseline_high: number;
   scenario_high: number;
+  baseline_expected_total: number;
+  scenario_expected_total: number;
   rank_changed: number;
+  /** Kecamatan yang skor risikonya sendiri naik / turun. */
+  score_up: number;
+  score_down: number;
   beyond_training: number;
 };
 

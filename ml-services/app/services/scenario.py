@@ -60,6 +60,8 @@ SCENARIO_NOTES = [
     "Menggeser curah hujan menaikkan pula hujan kumulatif 2 bulan dan interaksi hujan×kelembaban, karena ketiganya memang terhitung dari angka yang sama.",
     "Baris yang nilainya keluar dari rentang data latih ditandai. Model berbasis pohon tidak mengekstrapolasi — jawabannya membeku di batas terluar yang pernah dilihat.",
     "Skor risiko tetap dihitung sebagai persentil terhadap sejarah kecamatan itu sendiri, sama seperti pada prakiraan biasa.",
+    "Jumlah kasus dan skor memakai angka bulat seperti di dashboard. Kolom selisih memakai nilai model sebelum dibulatkan, jadi geseran yang belum cukup mengubah angka bulat tetap terlihat.",
+    "Kecamatan dengan skor sama berbagi peringkat. Peringkat bisa bergeser walau skor kecamatan itu sendiri tetap, karena kecamatan lain naik atau turun melewatinya.",
 ]
 
 
@@ -172,9 +174,11 @@ def simulate_batch(
                 "baseline_cases": baseline_int,
                 "baseline_risk_score": baseline_score,
                 "baseline_risk_class": classify_risk(baseline_score),
+                "baseline_expected": round(baseline_value, 2),
                 "scenario_cases": adjusted_int,
                 "scenario_risk_score": adjusted_score,
                 "scenario_risk_class": classify_risk(adjusted_score),
+                "scenario_expected": round(adjusted_value, 2),
                 "rainfall_baseline": round(float(base_row.iloc[0]["rainfall_lag1"]), 1),
                 "rainfall_scenario": round(
                     float(adjusted_row.iloc[0]["rainfall_lag1"]), 1
@@ -208,8 +212,27 @@ def simulate_batch(
             "scenario_high": sum(
                 1 for r in evaluated if r["scenario_risk_class"] == "tinggi"
             ),
+            "baseline_expected_total": round(
+                sum(r["baseline_expected"] for r in evaluated), 1
+            ),
+            "scenario_expected_total": round(
+                sum(r["scenario_expected"] for r in evaluated), 1
+            ),
             "rank_changed": sum(
                 1 for r in evaluated if r["baseline_rank"] != r["scenario_rank"]
+            ),
+            # Yang dihitung di sini perubahan skor kecamatan itu sendiri, bukan
+            # peringkat. Satu kecamatan yang turun jauh menggeser peringkat
+            # semua yang di bawahnya, padahal skor mereka tidak berubah.
+            "score_up": sum(
+                1
+                for r in evaluated
+                if r["scenario_risk_score"] > r["baseline_risk_score"]
+            ),
+            "score_down": sum(
+                1
+                for r in evaluated
+                if r["scenario_risk_score"] < r["baseline_risk_score"]
             ),
             "beyond_training": len(flagged),
         },
@@ -234,6 +257,8 @@ def _empty_row(kecamatan_id: str, nama: str, coverage: str) -> dict:
         "scenario_cases": None,
         "scenario_risk_score": None,
         "scenario_risk_class": None,
+        "baseline_expected": None,
+        "scenario_expected": None,
         "rainfall_baseline": None,
         "rainfall_scenario": None,
         "beyond_training": [],
@@ -241,11 +266,19 @@ def _empty_row(kecamatan_id: str, nama: str, coverage: str) -> dict:
 
 
 def _assign_ranks(rows: List[dict], score_key: str, rank_key: str) -> None:
-    """Peringkat 1 = skor tertinggi. Kecamatan tanpa skor tidak diberi peringkat."""
+    """Peringkat 1 = skor tertinggi. Kecamatan tanpa skor tidak diberi peringkat.
+
+    Skor yang sama berbagi peringkat (1, 2, 2, 4). Memecah seri menurut nama
+    membuat urutan di antara mereka sewenang-wenang, lalu terbaca sebagai
+    "naik" atau "turun" begitu satu kecamatan lain berpindah.
+    """
     ranked = [r for r in rows if r[score_key] is not None]
     ranked.sort(key=lambda r: (-r[score_key], r["kecamatan_nama"]))
-    for index, row in enumerate(ranked, start=1):
-        row[rank_key] = index
+    for index, row in enumerate(ranked):
+        if index > 0 and row[score_key] == ranked[index - 1][score_key]:
+            row[rank_key] = ranked[index - 1][rank_key]
+        else:
+            row[rank_key] = index + 1
     for row in rows:
         if row[score_key] is None:
             row[rank_key] = None

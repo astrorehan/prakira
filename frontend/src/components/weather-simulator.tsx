@@ -209,6 +209,29 @@ function RankShift({ row }: { row: SimulateDistrict }) {
   /* Peringkat 1 adalah yang tertinggi, jadi selisih positif berarti naik. */
   const shift = row.baseline_rank - row.scenario_rank;
 
+  /* Skornya sendiri tetap, tapi kecamatan lain melewatinya. Tetap ditampilkan
+     karena urutan prioritasnya memang berubah, tapi tanpa warna risiko:
+     panah merah di sini akan terbaca sebagai "kecamatan ini memburuk". */
+  if (shift !== 0 && row.baseline_risk_score === row.scenario_risk_score) {
+    const text = `${shift > 0 ? "naik" : "turun"} ${Math.abs(shift)}`;
+    return (
+      <span
+        className="inline-flex items-center gap-1 text-paper-500"
+        title="Skor kecamatan ini tetap; peringkatnya bergeser karena kecamatan lain berubah."
+      >
+        {shift > 0 ? (
+          <ArrowUp className="h-3 w-3" aria-hidden />
+        ) : (
+          <ArrowDown className="h-3 w-3" aria-hidden />
+        )}
+        {text}
+        <span className="sr-only">
+          , skor kecamatan ini sendiri tetap
+        </span>
+      </span>
+    );
+  }
+
   if (shift === 0) {
     return (
       <span className="inline-flex items-center gap-1 text-paper-500">
@@ -233,6 +256,22 @@ function RankShift({ row }: { row: SimulateDistrict }) {
         <ArrowDown className="h-3 w-3" aria-hidden />
       )}
       {up ? "naik" : "turun"} {Math.abs(shift)}
+    </span>
+  );
+}
+
+/** Selisih nilai model sebelum dibulatkan, dalam kasus. */
+function ModelDelta({ row }: { row: SimulateDistrict }) {
+  if (row.baseline_expected === null || row.scenario_expected === null) {
+    return <span className="text-paper-500">—</span>;
+  }
+  const delta = row.scenario_expected - row.baseline_expected;
+  if (Math.abs(delta) < 0.05) {
+    return <span className="text-paper-500">0,0</span>;
+  }
+  return (
+    <span className={delta > 0 ? "text-risk-high" : "text-risk-low"}>
+      {signed(delta, 1)}
     </span>
   );
 }
@@ -285,6 +324,11 @@ export function WeatherSimulator() {
       settled.tempDeltaC,
       settled.humidityDeltaPct,
     ],
+    undefined,
+    /* Geseran baru memuat ulang di atas hasil lama yang diredupkan; hanya
+       berganti penyakit yang mengosongkan layar. Tanpa ini tabel lenyap dan
+       halaman meloncat setiap kali penggeser dilepas. */
+    { resetKey: disease },
   );
 
   /* Dimemo supaya `sorted` di bawah tidak dihitung ulang tiap render:
@@ -317,10 +361,39 @@ export function WeatherSimulator() {
     });
   }, [rows]);
 
+  /* Hasil yang tampil tertinggal dari penggeser: permintaan terakhir gagal,
+     jadi yang di layar masih geseran sebelumnya. Wajib disebut, karena
+     angkanya tidak lagi cocok dengan posisi penggeser. */
+  const outdated =
+    shown !== undefined &&
+    !pending &&
+    !simulation.refreshing &&
+    simulation.refreshError !== null &&
+    (shown.rainfall_pct !== settled.rainfallPct ||
+      shown.temp_delta_c !== settled.tempDeltaC ||
+      shown.humidity_delta_pct !== settled.humidityDeltaPct);
+
   const deltaTotal =
     summary === undefined
       ? null
       : summary.scenario_total - summary.baseline_total;
+  const deltaExpected =
+    summary === undefined
+      ? 0
+      : summary.scenario_expected_total - summary.baseline_expected_total;
+
+  const totalSub = (() => {
+    if (!summary || !meta) return "";
+    if (deltaTotal !== null && deltaTotal !== 0) {
+      return `${signed(deltaTotal)} kasus dibanding keadaan sekarang.`;
+    }
+    /* Penyakit dengan kasus kecil: model bereaksi, tapi belum cukup untuk
+       mengubah angka bulat. Tanpa kalimat ini penggesernya tampak rusak. */
+    if (!isNeutral && Math.abs(deltaExpected) >= 0.05) {
+      return `Nilai model bergeser ${signed(deltaExpected, 1)} kasus, belum cukup mengubah angka bulat.`;
+    }
+    return `Kasus ${diseaseLabel(meta.disease)} pada ${meta.monthLabel}.`;
+  })();
 
   return (
     <div className="container space-y-6 py-8 md:py-12">
@@ -463,6 +536,27 @@ export function WeatherSimulator() {
         loadingMessage="Menghitung ulang 16 kecamatan…"
         onRetry={simulation.reload}
       >
+        {outdated && shown && (
+          <Card className="mb-6 border-risk-medium-br bg-risk-medium-bg p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex gap-3">
+                <AlertTriangle
+                  className="mt-0.5 h-4 w-4 shrink-0 text-risk-medium"
+                  aria-hidden
+                />
+                <p className="text-body-sm text-paper-800">
+                  Geseran terakhir gagal dihitung. Angka di bawah masih milik
+                  geseran sebelumnya ({signed(shown.rainfall_pct)}% hujan,{" "}
+                  {signed(shown.temp_delta_c, 1)} °C,{" "}
+                  {signed(shown.humidity_delta_pct)} poin kelembaban).
+                </p>
+              </div>
+              <Button size="sm" variant="outline" onClick={simulation.reload}>
+                Coba lagi
+              </Button>
+            </div>
+          </Card>
+        )}
         {summary && meta && (
           <div
             className={cn(
@@ -478,11 +572,7 @@ export function WeatherSimulator() {
                     ? formatNumber(summary.baseline_total)
                     : `${formatNumber(summary.baseline_total)} → ${formatNumber(summary.scenario_total)}`
                 }
-                sub={
-                  deltaTotal === null || deltaTotal === 0
-                    ? `Kasus ${diseaseLabel(meta.disease)} pada ${meta.monthLabel}.`
-                    : `${signed(deltaTotal)} kasus dibanding keadaan sekarang.`
-                }
+                sub={totalSub}
                 tone={deltaTotal !== null && deltaTotal > 0 ? "up" : "default"}
               />
               <StatTile
@@ -498,9 +588,14 @@ export function WeatherSimulator() {
                 }
               />
               <StatTile
-                label="Peringkat bergeser"
-                value={String(summary.rank_changed)}
-                sub="Kecamatan yang urutan prioritasnya berubah karena geseran ini."
+                label="Skor risiko berubah"
+                value={String(summary.score_up + summary.score_down)}
+                sub={
+                  summary.score_up + summary.score_down === 0
+                    ? "Belum ada kecamatan yang skornya sendiri bergeser."
+                    : `${summary.score_up} naik, ${summary.score_down} turun. Dihitung dari skor kecamatan itu sendiri, bukan urutannya.`
+                }
+                tone={summary.score_up > summary.score_down ? "up" : "default"}
               />
               <StatTile
                 label="Di luar data latih"
@@ -544,8 +639,8 @@ export function WeatherSimulator() {
                 </p>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[720px] border-collapse text-body-sm">
+              <div className="relative overflow-x-auto">
+                <table className="w-full min-w-[800px] border-collapse whitespace-nowrap text-body-sm">
                   <thead>
                     <tr className="border-b border-border bg-paper-50 text-left text-caption uppercase tracking-wide text-paper-600">
                       <th className="px-4 py-2.5 font-medium">#</th>
@@ -555,6 +650,12 @@ export function WeatherSimulator() {
                       </th>
                       <th className="px-4 py-2.5 text-right font-medium">
                         Skenario
+                      </th>
+                      <th
+                        className="px-4 py-2.5 text-right font-medium"
+                        title="Selisih nilai model sebelum dibulatkan, dalam kasus."
+                      >
+                        Selisih model
                       </th>
                       <th className="px-4 py-2.5 font-medium">Kelas skenario</th>
                       <th className="px-4 py-2.5 font-medium">Peringkat</th>
@@ -603,6 +704,9 @@ export function WeatherSimulator() {
                             )}
                           >
                             {noData ? "—" : formatNumber(row.scenario_cases ?? 0)}
+                          </td>
+                          <td className="px-4 py-2.5 text-right font-mono tabular-nums">
+                            <ModelDelta row={row} />
                           </td>
                           <td className="px-4 py-2.5">
                             {noData ? (
