@@ -11,7 +11,7 @@ import { Router } from "express";
 import { all, one, run, transaction } from "../db/index.js";
 import { parseCsv, parseCsvHeader, toNumber } from "../db/csv.js";
 import { recentAudit, logAudit } from "../services/audit.js";
-import { requireAuth, requireRole } from "../middleware/auth.js";
+import { rejectDemo, requireAuth, requireRole } from "../middleware/auth.js";
 import {
   clearSimulation,
   countSimulation,
@@ -150,6 +150,13 @@ adminRouter.post(
     const disease =
       typeof body.disease === "string" ? body.disease.toUpperCase() : "";
     const dryRun = body.dryRun !== false;
+    /* Pratinjau tetap boleh dari akun demo; hanya penulisannya yang ditolak. */
+    if (!dryRun && req.session?.demo) {
+      throw new HttpError(
+        403,
+        "Impor data dinonaktifkan untuk akun demo karena mengubah data semua pengguna. Pratinjau tetap bisa dipakai.",
+      );
+    }
 
     if (!csv.trim()) throw new HttpError(400, "Isi berkas CSV kosong.");
     if (!disease)
@@ -340,6 +347,7 @@ adminRouter.post(
 adminRouter.post(
   "/retrain",
   requireRole("admin"),
+  rejectDemo("Retraining model"),
   asyncRoute(async (req, res) => {
     const disease =
       typeof req.body?.disease === "string" ? req.body.disease : "";

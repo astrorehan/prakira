@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { env } from "../env.js";
-import { SESSION_COOKIE, signIn, signOut } from "../services/auth.js";
+import { SESSION_COOKIE, signIn, signInDemo, signOut } from "../services/auth.js";
+import { one } from "../db/index.js";
 import {
   checkLogin,
   clearLoginFailures,
@@ -79,6 +80,75 @@ authRouter.post(
     }
 
     clearLoginFailures(key);
+    res.cookie(SESSION_COOKIE, result.token, cookieOptions);
+    res.json({ data: result.user });
+  }),
+);
+
+/* ── Akun demo ─────────────────────────────────────────────────────────── */
+
+type DemoRole = keyof typeof env.demoAccounts;
+const DEMO_ROLES = Object.keys(env.demoAccounts) as DemoRole[];
+
+/**
+ * Akun yang dipakai tombol demo sebuah peran: email terkonfigurasi pertama
+ * yang ada dan memang berperan itu, atau akun tertua berperan itu. Perannya
+ * selalu dicocokkan — `SEED_ADMIN_EMAIL` bisa saja menunjuk akun Dinkes, dan
+ * tombol "Administrator" tidak boleh diam-diam membuka sesi peran lain.
+ */
+async function demoAccount(
+  role: DemoRole,
+): Promise<{ email: string; label: string; kecamatan: string | null } | null> {
+  const configured = env.demoAccounts[role];
+  const candidates = Array.isArray(configured) ? configured : [configured];
+  const select = `SELECT u.email, u.label, k.nama AS kecamatan
+         FROM users u LEFT JOIN kecamatan k ON k.id = u.kecamatan_id`;
+  for (const email of candidates) {
+    const row = await one<{ email: string; label: string; kecamatan: string | null }>(
+      `${select} WHERE u.email = ? AND u.role = ?`,
+      email.toLowerCase(),
+      role,
+    );
+    if (row) return row;
+  }
+  return one<{ email: string; label: string; kecamatan: string | null }>(
+    `${select} WHERE u.role = ? ORDER BY u.created_at LIMIT 1`,
+    role,
+  );
+}
+
+/** Daftar tombol akun demo. Kosong berarti fiturnya mati. */
+authRouter.get(
+  "/demo",
+  asyncRoute(async (_req, res) => {
+    if (!env.demoLogin) {
+      res.json({ data: { enabled: false, accounts: [] } });
+      return;
+    }
+    const accounts = [];
+    for (const role of DEMO_ROLES) {
+      const account = await demoAccount(role);
+      if (account)
+        accounts.push({ role, label: account.label, kecamatan: account.kecamatan });
+    }
+    res.json({ data: { enabled: accounts.length > 0, accounts } });
+  }),
+);
+
+authRouter.post(
+  "/demo",
+  asyncRoute(async (req, res) => {
+    if (!env.demoLogin) throw new HttpError(404, "Akun demo tidak diaktifkan.");
+
+    const role = req.body?.role as DemoRole;
+    if (!DEMO_ROLES.includes(role))
+      throw new HttpError(400, "Peran akun demo tidak dikenal.");
+
+    const account = await demoAccount(role);
+    const result = account ? await signInDemo(account.email) : null;
+    if (!result)
+      throw new HttpError(404, "Akun demo untuk peran ini belum tersedia.");
+
     res.cookie(SESSION_COOKIE, result.token, cookieOptions);
     res.json({ data: result.user });
   }),

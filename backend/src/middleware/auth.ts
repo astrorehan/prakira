@@ -81,3 +81,23 @@ export function requireRole(...roles: string[]) {
     next();
   };
 }
+
+/**
+ * Menolak aksi yang mengubah data secara permanen dari sesi akun demo.
+ *
+ * Akun demo dibagi beberapa penilai sekaligus. Verifikasi laporan atau
+ * penugasan boleh — itu yang ingin diperagakan dan bisa dikembalikan dengan
+ * `npm run demo:prep`. Impor CSV dan retraining tidak: keduanya menulis ulang
+ * data kasus atau mengganti model aktif untuk semua orang.
+ */
+export function rejectDemo(action: string) {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    if (req.session?.demo) {
+      res.status(403).json({
+        error: `${action} dinonaktifkan untuk akun demo karena mengubah data semua pengguna.`,
+      });
+      return;
+    }
+    next();
+  };
+}

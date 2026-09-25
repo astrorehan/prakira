@@ -213,6 +213,9 @@ CREATE TABLE IF NOT EXISTS sessions (
   created_at TEXT NOT NULL,
   expires_at TEXT NOT NULL
 );
+-- Sesi yang dibuka lewat tombol akun demo di halaman masuk. Penandanya
+-- dipakai untuk menolak aksi yang mengubah data secara permanen.
+ALTER TABLE sessions ADD COLUMN IF NOT EXISTS demo BOOLEAN NOT NULL DEFAULT FALSE;
 
 -- Riwayat pekerjaan ingest data iklim/kasus. Inilah yang dilaporkan sebagai
 -- "status sinkronisasi" di halaman admin — status pekerjaan yang benar-benar

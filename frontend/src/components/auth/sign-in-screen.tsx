@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { BrandLockup } from "@/components/brand-lockup";
 import { SignInForm } from "./sign-in-form";
+import { DemoAccounts } from "./demo-accounts";
 import { useSessionContext } from "@/components/session-provider";
 import { ApiError } from "@/lib/api";
 
@@ -20,7 +21,9 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  *    itu dulu juga hidup sebagai konstanta di dalam bundel JavaScript, jadi
  *    siapa pun bisa membacanya tanpa membuka halaman ini. Akun awal sekarang
  *    dibuat gateway saat seeding dan kredensialnya ada di `backend/.env.example`
- *    — tempat yang benar untuk rahasia pemasangan.
+ *    — tempat yang benar untuk rahasia pemasangan. Penggantinya untuk
+ *    penilai adalah `DemoAccounts`: tombol per peran yang membuka sesi di
+ *    server tanpa kata sandi, dan hanya muncul bila `DEMO_LOGIN` menyala.
  * 2. `FAKE_LATENCY_MS` — jeda 650 ms yang ditambahkan supaya masuk "terasa
  *    seperti bekerja". Sekarang ada permintaan jaringan sungguhan, dan
  *    lamanya adalah lamanya.
@@ -28,7 +31,7 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export function SignInScreen() {
   const router = useRouter();
   const params = useSearchParams();
-  const { session, signIn } = useSessionContext();
+  const { session, signIn, signInDemo } = useSessionContext();
 
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -91,6 +94,24 @@ export function SignInScreen() {
             <p className="mt-2 text-body-sm text-paper-600">
               Akun diterbitkan Dinas Kesehatan Kota Semarang.
             </p>
+
+            <DemoAccounts
+              disabled={loading}
+              onPick={async (role) => {
+                setError(null);
+                try {
+                  const user = await signInDemo(role);
+                  router.replace(next ?? user.home);
+                } catch (caught) {
+                  setError(
+                    caught instanceof ApiError
+                      ? caught.message
+                      : "Tidak dapat menghubungi gateway. Pastikan layanan backend berjalan.",
+                  );
+                  throw caught;
+                }
+              }}
+            />
 
             <div className="mt-6">
               <SignInForm

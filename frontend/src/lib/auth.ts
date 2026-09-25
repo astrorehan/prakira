@@ -11,8 +11,14 @@
  */
 
 import * as React from "react";
-import { ApiError, fetchSession, signIn as apiSignIn, signOut as apiSignOut } from "@/lib/api";
-import type { Session } from "@/types";
+import {
+  ApiError,
+  fetchSession,
+  signIn as apiSignIn,
+  signInDemo as apiSignInDemo,
+  signOut as apiSignOut,
+} from "@/lib/api";
+import type { Role, Session } from "@/types";
 
 export type { Session };
 
@@ -22,6 +28,7 @@ export type SessionState = {
   loading: boolean;
   error: string | null;
   signIn: (email: string, password: string) => Promise<Session>;
+  signInDemo: (role: Role) => Promise<Session>;
   signOut: () => Promise<void>;
   reload: () => void;
 };
@@ -66,6 +73,13 @@ export function useSession(): SessionState {
     return result.data;
   }, []);
 
+  const signInDemo = React.useCallback(async (role: Role) => {
+    const result = await apiSignInDemo(role);
+    setSession(result.data);
+    setError(null);
+    return result.data;
+  }, []);
+
   const signOut = React.useCallback(async () => {
     await apiSignOut();
     setSession(null);
@@ -76,6 +90,7 @@ export function useSession(): SessionState {
     loading,
     error,
     signIn,
+    signInDemo,
     signOut,
     reload: React.useCallback(() => setNonce((n) => n + 1), []),
   };

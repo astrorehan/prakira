@@ -123,6 +123,25 @@ export const env = {
      Kosong berarti endpoint itu mati — bukan terbuka. */
   cronSecret: process.env.CRON_SECRET?.trim() ?? "",
 
+  /* Tombol "Masuk sebagai ..." di halaman masuk, untuk penjurian. Mati
+     bawaannya: selama menyala siapa pun yang membuka `/masuk` bisa membuka
+     sesi peran-peran ini, jadi dinyalakan hanya selama masa penilaian.
+     Kata sandi akunnya tidak pernah dikirim ke peramban. */
+  demoLogin: (process.env.DEMO_LOGIN ?? "false").toLowerCase() === "true",
+  demoAccounts: {
+    dinas: process.env.DEMO_DINKES_EMAIL?.trim() || "dinkes@prakira.id",
+    /* Akun Tugu disiapkan `npm run demo:prep` lengkap dengan tugas lapangan;
+       bila belum ada, akun puskesmas hasil seeding yang dipakai. */
+    puskesmas: [
+      process.env.DEMO_PUSKESMAS_EMAIL?.trim() || "puskesmas.tugu@prakira.id",
+      "puskesmas@prakira.id",
+    ],
+    admin:
+      process.env.DEMO_ADMIN_EMAIL?.trim() ||
+      process.env.SEED_ADMIN_EMAIL ||
+      "admin@prakira.id",
+  },
+
   /** Akun awal administrator. Kata sandi wajib diganti lewat env di produksi. */
   seedAdminEmail: process.env.SEED_ADMIN_EMAIL ?? "admin@prakira.id",
   seedAdminPassword: requiredInProduction("SEED_ADMIN_PASSWORD", "admin123"),

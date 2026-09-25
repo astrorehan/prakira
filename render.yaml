@@ -58,6 +58,11 @@ services:
       # sebagai secret repositori `CRON_SECRET` di GitHub.
       - key: CRON_SECRET
         sync: false
+      # Tombol akun demo di halaman masuk. Diatur dari dasbor: "true" hanya
+      # selama penjurian, lalu "false". Tidak ditulis di sini supaya sinkronisasi
+      # Blueprint tidak menimpa nilai dasbor.
+      - key: DEMO_LOGIN
+        sync: false
       - key: SEED_ADMIN_PASSWORD
         sync: false
       - key: SEED_DINKES_PASSWORD

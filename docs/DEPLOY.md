@@ -124,6 +124,25 @@ Untuk akun yang telanjur dibuat dengan kata sandi lama, isi ketiga variabel
 `backend` dengan `DATABASE_URL` yang mengarah ke database yang benar. Perintah
 itu juga mencabut sesi lama ketiga akun.
 
+#### Akun demo untuk penjurian
+
+`DEMO_LOGIN=true` di `prakira-gateway` memunculkan tombol **Masuk sebagai
+Dinas Kesehatan / Petugas Puskesmas / Administrator** di `/masuk`. Tombolnya
+membuka sesi di server tanpa kata sandi, jadi penilai tidak perlu diberi
+kredensial satu per satu, dan tidak ada kata sandi yang terkirim ke peramban.
+
+- Selama menyala, siapa pun yang membuka `/masuk` bisa memakai tombol itu.
+  Nyalakan hanya selama masa penilaian lalu kembalikan ke `false`. Render
+  memulai ulang gateway saat env diubah; frontend tidak perlu dideploy ulang.
+- Sesi demo ditolak untuk **impor CSV** (pratinjau tetap boleh) dan
+  **retraining model**, karena keduanya mengubah data atau model aktif untuk
+  semua pengguna.
+- Akun puskesmas memakai `puskesmas.tugu@prakira.id` dari `npm run demo:prep`
+  bila ada. Jalankan `demo:prep` sebelum penjurian supaya tugas dan antreannya
+  kembali ke keadaan awal.
+- Beberapa penilai berbagi data yang sama: laporan yang diverifikasi satu
+  penilai langsung tampil terverifikasi bagi yang lain.
+
 ### 2.3 Vercel
 
 Root directory `frontend`. Satu variabel:

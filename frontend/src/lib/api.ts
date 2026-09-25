@@ -13,6 +13,7 @@
  * cookie sesi ikut terkirim tanpa konfigurasi CORS tambahan.
  */
 import type {
+  DemoAccount,
   ActionAssignee,
   ActionRecommendation,
   AuditLog,
@@ -48,6 +49,7 @@ import type {
   RetrainResult,
   RewindMeta,
   RewindPayload,
+  Role,
   Session,
   SimulateMeta,
   SimulatePayload,
@@ -653,6 +655,20 @@ export function signIn(email: string, password: string): Promise<{ data: Session
   return request("/api/auth/login", {
     method: "POST",
     body: JSON.stringify({ email, password }),
+  });
+}
+
+/** Tombol akun demo; `enabled: false` bila `DEMO_LOGIN` di gateway mati. */
+export function fetchDemoAccounts(): Promise<{
+  data: { enabled: boolean; accounts: DemoAccount[] };
+}> {
+  return request("/api/auth/demo");
+}
+
+export function signInDemo(role: Role): Promise<{ data: Session }> {
+  return request("/api/auth/demo", {
+    method: "POST",
+    body: JSON.stringify({ role }),
   });
 }
 

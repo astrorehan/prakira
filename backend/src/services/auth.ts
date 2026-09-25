@@ -38,19 +38,22 @@ export type SessionUser = {
   /** Wilayah kerja akun puskesmas; null untuk peran lintas wilayah. */
   kecamatanId: string | null;
   kecamatan: string | null;
+  /** Sesi dibuka lewat tombol akun demo, bukan kata sandi. */
+  demo: boolean;
 };
+
+type SessionOwner = UserRow & { kecamatan: string | null };
+
+const USER_QUERY = `SELECT u.*, k.nama AS kecamatan
+       FROM users u LEFT JOIN kecamatan k ON k.id = u.kecamatan_id
+      WHERE u.email = ?`;
 
 export async function signIn(
   email: string,
   password: string,
 ): Promise<{ token: string; user: SessionUser } | null> {
   const normalized = email.trim().toLowerCase();
-  const user = await one<UserRow & { kecamatan: string | null }>(
-    `SELECT u.*, k.nama AS kecamatan
-       FROM users u LEFT JOIN kecamatan k ON k.id = u.kecamatan_id
-      WHERE u.email = ?`,
-    normalized,
-  );
+  const user = await one<SessionOwner>(USER_QUERY, normalized);
 
   /* KDF dijalankan juga saat emailnya tidak terdaftar. `verifyDecoy` selalu
      gagal; gunanya hanya menghabiskan waktu yang sama, supaya lamanya jawaban
@@ -70,6 +73,26 @@ export async function signIn(
     return null;
   }
 
+  return openSession(user, false);
+}
+
+/**
+ * Masuk tanpa kata sandi lewat tombol akun demo.
+ *
+ * Hanya bisa dipanggil selama `DEMO_LOGIN` menyala; route-nya memeriksa itu.
+ * Email diambil dari konfigurasi server, tidak pernah dari peramban.
+ */
+export async function signInDemo(
+  email: string,
+): Promise<{ token: string; user: SessionUser } | null> {
+  const user = await one<SessionOwner>(USER_QUERY, email.trim().toLowerCase());
+  return user ? openSession(user, true) : null;
+}
+
+async function openSession(
+  user: SessionOwner,
+  demo: boolean,
+): Promise<{ token: string; user: SessionUser }> {
   const token = crypto.randomBytes(32).toString("hex");
   const createdAt = new Date();
   const expiresAt = new Date(
@@ -77,18 +100,21 @@ export async function signIn(
   );
 
   await run(
-    "INSERT INTO sessions (token, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)",
+    "INSERT INTO sessions (token, user_id, created_at, expires_at, demo) VALUES (?, ?, ?, ?, ?)",
     token,
     user.id,
     createdAt.toISOString(),
     expiresAt.toISOString(),
+    demo,
   );
 
   await logAudit({
     actor: user.label,
     role: user.role,
     action: "Masuk konsol",
-    details: `${user.email} memulai sesi.`,
+    details: demo
+      ? `${user.email} memulai sesi lewat akun demo.`
+      : `${user.email} memulai sesi.`,
     status: "success",
   });
 
@@ -102,6 +128,7 @@ export async function signIn(
       signedInAt: createdAt.toISOString(),
       kecamatanId: user.kecamatan_id,
       kecamatan: user.kecamatan,
+      demo,
     },
   };
 }
@@ -120,9 +147,10 @@ export async function resolveSession(
     expires_at: string;
     kecamatan_id: string | null;
     kecamatan: string | null;
+    demo: boolean;
   }>(
     `SELECT u.email, u.role, u.label, u.home, s.created_at, s.expires_at,
-            u.kecamatan_id, k.nama AS kecamatan
+            u.kecamatan_id, k.nama AS kecamatan, s.demo
        FROM sessions s JOIN users u ON u.id = s.user_id
        LEFT JOIN kecamatan k ON k.id = u.kecamatan_id
       WHERE s.token = ?`,
@@ -144,6 +172,7 @@ export async function resolveSession(
     signedInAt: row.created_at,
     kecamatanId: row.kecamatan_id,
     kecamatan: row.kecamatan,
+    demo: row.demo === true,
   };
 }
 
