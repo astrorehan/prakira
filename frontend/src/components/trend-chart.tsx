@@ -17,6 +17,10 @@ import type { TrendPoint, DiseaseType } from "@/types";
 import { diseaseProfile, cn } from "@/lib/utils";
 import { formatMonthShort } from "@/lib/period";
 
+// "3.000" terpotong di sumbu Y sempit pada HP; ringkas jadi "3 rb".
+const compactNumber = new Intl.NumberFormat("id-ID", { notation: "compact" });
+const compactTick = (v: number) => compactNumber.format(v);
+
 type TrendChartProps = {
   data: TrendPoint[];
   disease?: DiseaseType;
@@ -98,9 +102,10 @@ export function TrendChart({
               yAxisId="left"
               tick={{ fill: "#5A6C6E", fontSize: compact ? 11 : 12 }}
               tickMargin={2}
+              tickFormatter={compactTick}
               axisLine={false}
               tickLine={false}
-              width={36}
+              width={40}
             />
 
             {/* Right Axis: Curah Hujan (Optional) */}

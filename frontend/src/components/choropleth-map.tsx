@@ -248,12 +248,18 @@ export default function ChoroplethMap({
         </div>
       `;
 
-      layer.bindTooltip(html, {
-        sticky: true,
-        direction: "top",
-        offset: [0, -8],
-        className: "dsdc-map-tooltip",
-      });
+      // Di layar sentuh tooltip hover tertinggal menutupi peta dan terpotong di HP;
+      // tap sudah membuka panel detail kecamatan, jadi tooltip hanya untuk pointer.
+      const canHover =
+        typeof window === "undefined" || window.matchMedia("(hover: hover)").matches;
+      if (canHover) {
+        layer.bindTooltip(html, {
+          sticky: true,
+          direction: "top",
+          offset: [0, -8],
+          className: "dsdc-map-tooltip",
+        });
+      }
     }
 
     layer.on({

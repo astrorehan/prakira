@@ -76,6 +76,13 @@
     scroll-behavior: smooth;
   }
 
+  /* Halaman tidak boleh bisa digeser ke samping di HP; tabel lebar punya
+     wadah scroll sendiri. `clip` (bukan hidden) agar position: sticky tetap jalan. */
+  html,
+  body {
+    overflow-x: clip;
+  }
+
   html,
   body {
     background: var(--canvas);
