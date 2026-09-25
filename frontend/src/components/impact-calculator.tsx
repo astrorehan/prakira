@@ -152,13 +152,16 @@ export function ImpactCalculator({
   const highRisk = rows.filter(
     (r) => r.tingkat_risiko === "tinggi" && r.kasus_prediksi !== null,
   );
+  const hasBounds = highRisk.length > 0 && highRisk.every(
+    (r) => r.kasus_prediksi_lower !== null && r.kasus_prediksi_upper !== null,
+  );
 
   const lower = highRisk.reduce(
-    (sum, r) => sum + (r.kasus_prediksi_lower ?? r.kasus_prediksi ?? 0),
+    (sum, r) => sum + (r.kasus_prediksi_lower ?? 0),
     0,
   );
   const upper = highRisk.reduce(
-    (sum, r) => sum + (r.kasus_prediksi_upper ?? r.kasus_prediksi ?? 0),
+    (sum, r) => sum + (r.kasus_prediksi_upper ?? 0),
     0,
   );
   const population = highRisk.reduce((sum, r) => sum + r.populasi, 0);
@@ -168,6 +171,7 @@ export function ImpactCalculator({
   const coverage = parseNumber(values.coveragePct);
 
   const ready =
+    hasBounds &&
     cost !== null &&
     cost > 0 &&
     effectiveness !== null &&
@@ -283,6 +287,11 @@ export function ImpactCalculator({
             Tidak ada kecamatan berkelas risiko tinggi untuk{" "}
             {diseaseLabel(disease)} pada {monthLabel}, jadi tidak ada basis
             perhitungan. Itu kabar baik, bukan kekurangan data.
+          </p>
+        ) : !hasBounds ? (
+          <p className="rounded-xl border border-dashed border-paper-300 bg-paper-50 p-4 text-body-sm text-paper-700">
+            Proyeksi dampak belum dapat dihitung: prakiraan multi-bulan belum
+            memiliki rentang yang terkalibrasi.
           </p>
         ) : !ready ? (
           <div className="rounded-xl border border-dashed border-paper-300 bg-paper-50 p-4">

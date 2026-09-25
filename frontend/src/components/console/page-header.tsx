@@ -123,7 +123,8 @@ function PeriodInfo({
         Rekap kasus resmi terakhir: <strong className="font-semibold text-foreground">{monthYear}</strong>.
         Model memprakirakan bulan demi bulan sampai{" "}
         <strong className="font-semibold text-foreground">{predictionLabel}</strong> memakai
-        data iklim BMKG terbaru; makin jauh bulannya, makin lebar rentangnya.
+        data iklim dari dataset Open-Meteo. Rentang hanya tersedia untuk
+        prakiraan satu langkah; bulan rekursif belum memiliki rentang terkalibrasi.
       </span>
     </span>
   );

@@ -45,8 +45,8 @@ CREATE TABLE IF NOT EXISTS prediksi (
   disease         TEXT NOT NULL,
   month_start     TEXT NOT NULL,
   predicted_cases INTEGER NOT NULL,
-  lower_bound     INTEGER NOT NULL,
-  upper_bound     INTEGER NOT NULL,
+  lower_bound     INTEGER,
+  upper_bound     INTEGER,
   risk_score      INTEGER NOT NULL,
   risk_class      TEXT,                 -- NULL saat cakupan data 'insufficient'
   data_coverage   TEXT NOT NULL,
@@ -55,6 +55,17 @@ CREATE TABLE IF NOT EXISTS prediksi (
   generated_at    TEXT NOT NULL,
   PRIMARY KEY (kecamatan_id, disease, month_start)
 );
+
+-- Migrasi untuk snapshot lama: rentang satu langkah tidak sah dipakai pada
+-- bulan yang dibangun dari prediksi rekursif. Hapus juga saat ML sedang mati.
+ALTER TABLE prediksi ALTER COLUMN lower_bound DROP NOT NULL;
+ALTER TABLE prediksi ALTER COLUMN upper_bound DROP NOT NULL;
+UPDATE prediksi AS p
+   SET lower_bound = NULL, upper_bound = NULL
+ WHERE p.month_start > (
+   SELECT to_char(MAX(o.month_start)::date + INTERVAL '1 month', 'YYYY-MM-DD')
+     FROM observasi AS o WHERE o.disease = p.disease
+ );
 
 -- Jalur baca dashboard selalu menyaring penyakit + bulan terlebih dahulu.
 -- Kunci utama dimulai dari kecamatan, sehingga tanpa indeks ini pemeriksaan
@@ -102,14 +113,17 @@ CREATE TABLE IF NOT EXISTS tindakan (
   pic_unit          TEXT NOT NULL,
   broadcast_draft   TEXT NOT NULL,
   prediction_month  TEXT NOT NULL,
-  predicted_lower   INTEGER NOT NULL,
-  predicted_upper   INTEGER NOT NULL,
+  predicted_lower   INTEGER,
+  predicted_upper   INTEGER,
   data_coverage     TEXT NOT NULL,
   generated_at      TEXT NOT NULL,
   dispatched_at     TEXT,
   dispatched_by     TEXT,
   completed_at      TEXT
 );
+
+ALTER TABLE tindakan ALTER COLUMN predicted_lower DROP NOT NULL;
+ALTER TABLE tindakan ALTER COLUMN predicted_upper DROP NOT NULL;
 
 CREATE TABLE IF NOT EXISTS laporan_warga (
   id           TEXT PRIMARY KEY,         -- kode lacak PKR-XXXXXX

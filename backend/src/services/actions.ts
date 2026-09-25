@@ -43,8 +43,8 @@ export type ActionRow = {
   pic_unit: string;
   broadcast_draft: string;
   prediction_month: string;
-  predicted_lower: number;
-  predicted_upper: number;
+  predicted_lower: number | null;
+  predicted_upper: number | null;
   data_coverage: string;
   generated_at: string;
   dispatched_at: string | null;
@@ -205,14 +205,15 @@ async function upsertAction(
   );
   const names = sorted.map((d) => d.nama);
   const population = sorted.reduce((sum, d) => sum + d.populasi, 0);
-  const lower = sorted.reduce(
-    (sum, d) => sum + (d.kasus_prediksi_lower ?? 0),
-    0,
+  const hasBounds = sorted.every(
+    (d) => d.kasus_prediksi_lower !== null && d.kasus_prediksi_upper !== null,
   );
-  const upper = sorted.reduce(
-    (sum, d) => sum + (d.kasus_prediksi_upper ?? 0),
-    0,
-  );
+  const lower = hasBounds
+    ? sorted.reduce((sum, d) => sum + d.kasus_prediksi_lower!, 0)
+    : null;
+  const upper = hasBounds
+    ? sorted.reduce((sum, d) => sum + d.kasus_prediksi_upper!, 0)
+    : null;
 
   /* Cakupan gabungan mengikuti kecamatan paling tipis datanya: instruksi
      hanya sekuat masukannya yang paling lemah. */
@@ -236,7 +237,9 @@ async function upsertAction(
 
   const estimatedImpact =
     `Menjangkau ${population.toLocaleString("id-ID")} jiwa di ${sorted.length} kecamatan. ` +
-    `Proyeksi tanpa intervensi: ${lower.toLocaleString("id-ID")}–${upper.toLocaleString("id-ID")} kasus ${disease} pada ${label}.`;
+    (lower === null || upper === null
+      ? `Rentang kasus ${disease} pada ${label} belum terkalibrasi untuk prakiraan multi-bulan.`
+      : `Proyeksi tanpa intervensi: ${lower.toLocaleString("id-ID")}–${upper.toLocaleString("id-ID")} kasus ${disease} pada ${label}.`);
 
   const broadcast = buildBroadcast({
     disease,
@@ -331,8 +334,8 @@ function buildBasis(input: {
   riskClass: RiskClass;
   predictionMonth: string;
   group: DistrictPayload[];
-  lower: number;
-  upper: number;
+  lower: number | null;
+  upper: number | null;
   coverage: string;
 }): string {
   const label = monthLabel(input.predictionMonth);
@@ -352,7 +355,9 @@ function buildBasis(input: {
   return (
     [
       opening,
-      `Ketidakpastian: proyeksi ${input.lower.toLocaleString("id-ID")}–${input.upper.toLocaleString("id-ID")} kasus`,
+      input.lower === null || input.upper === null
+        ? "Ketidakpastian: rentang multi-bulan belum terkalibrasi"
+        : `Ketidakpastian: proyeksi ${input.lower.toLocaleString("id-ID")}–${input.upper.toLocaleString("id-ID")} kasus`,
       `Cakupan data kecamatan: ${COVERAGE_LABEL[input.coverage] ?? input.coverage}`,
     ].join(". ") + "."
   );
@@ -433,8 +438,8 @@ function buildBroadcast(input: {
   label: string;
   names: string[];
   actionLabel: string;
-  lower: number;
-  upper: number;
+  lower: number | null;
+  upper: number | null;
   basis: string;
 }): string {
   return [
@@ -721,7 +726,7 @@ export async function createManualAction(
         target_kecamatan, target_population, due_date, lead_time_days, estimated_impact,
         climate_trigger, sop_checklist, pic_unit, broadcast_draft, prediction_month,
         predicted_lower, predicted_upper, data_coverage, generated_at, source)
-     VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, 0, ?, NULL, ?, ?, ?, ?, 0, 0, 'insufficient', ?, 'manual')`,
+     VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, 0, ?, NULL, ?, ?, ?, ?, NULL, NULL, 'insufficient', ?, 'manual')`,
     id,
     disease,
     input.actionType,

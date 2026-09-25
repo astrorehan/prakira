@@ -25,9 +25,8 @@ import { Badge } from "./ui/badge";
  * yang biasanya ditanyakan orang yang harus mempercayai angkanya.
  *
  * Bobot kepentingan ditampilkan relatif terhadap fitur teratas, bukan sebagai
- * persentase dari 100. Skala `feature_importances_` berbeda antar algoritma
- * dan jumlahnya tidak selalu satu; menyebutnya "persen" akan menjadi angka
- * yang terlihat pasti padahal tidak.
+ * persentase dari 100. Daftar ini hanya menghitung komponen pohon, sehingga
+ * menyebutnya kontribusi seluruh ensemble akan menyesatkan.
  */
 
 type ModelSummaryProps = {
@@ -94,7 +93,7 @@ export function ModelSummary({ metric, className }: ModelSummaryProps) {
       <div className="space-y-3">
         <div className="flex items-center gap-1.5">
           <ListOrdered className="h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />
-          <h3 className="text-h3 text-foreground">Fitur yang paling menentukan</h3>
+          <h3 className="text-h3 text-foreground">Fitur dominan pada komponen pohon</h3>
         </div>
 
         {features.length === 0 ? (
@@ -149,8 +148,8 @@ export function ModelSummary({ metric, className }: ModelSummaryProps) {
 
             <p className="text-caption text-paper-600">
               Panjang bar dibaca relatif terhadap fitur teratas, bukan sebagai persen
-              dari total. Urutan ini menjelaskan apa yang paling menggerakkan angka
-              prakiraan — bukan bukti hubungan sebab-akibat.
+              dari total. Urutan ini dihitung dari komponen pohon sesuai bobotnya;
+              komponen linear tidak tercakup. Ini bukan bukti hubungan sebab-akibat.
             </p>
           </>
         )}

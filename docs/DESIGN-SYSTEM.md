@@ -391,7 +391,10 @@ Pada mode `prefers-reduced-motion: reduce`, seluruh durasi animasi dan transisi 
 
 ---
 
-## 8. Standar Aksesibilitas (WCAG 2.1 AA)
+## 8. Kriteria Aksesibilitas yang Dituju (WCAG 2.1 AA)
+
+Komponen di bawah menerapkan sebagian kriteria WCAG 2.1 AA. Belum ada audit
+menyeluruh yang membuktikan seluruh produk memenuhi tingkat AA.
 
 | Kriteria | Standar & Implementasi PRAKIRA |
 |---|---|

@@ -165,11 +165,14 @@ export default function DashboardPrediksiPage() {
   const totals = React.useMemo(() => {
     const observed = rows.filter((d) => d.kasus_aktif !== null);
     const predicted = rows.filter((d) => d.kasus_prediksi !== null);
+    const hasBounds = predicted.length > 0 && predicted.every(
+      (d) => d.kasus_prediksi_lower !== null && d.kasus_prediksi_upper !== null,
+    );
     return {
       active: observed.reduce((s, d) => s + (d.kasus_aktif ?? 0), 0),
       pred: predicted.reduce((s, d) => s + (d.kasus_prediksi ?? 0), 0),
-      lower: predicted.reduce((s, d) => s + (d.kasus_prediksi_lower ?? 0), 0),
-      upper: predicted.reduce((s, d) => s + (d.kasus_prediksi_upper ?? 0), 0),
+      lower: hasBounds ? predicted.reduce((s, d) => s + d.kasus_prediksi_lower!, 0) : null,
+      upper: hasBounds ? predicted.reduce((s, d) => s + d.kasus_prediksi_upper!, 0) : null,
       predictedCount: predicted.length,
       high: rows.filter((d) => d.tingkat_risiko === "tinggi").length,
       /* Total kota mewarisi cakupan kecamatan paling tipis (PRD §7-H2). */
@@ -288,7 +291,7 @@ export default function DashboardPrediksiPage() {
                 label={`Prakiraan ${formatMonth(meta?.predictionMonth)}`}
                 value={forecastHidden ? "—" : formatMaybeNumber(totals.pred)}
                 sub={
-                  forecastHidden
+                  forecastHidden || totals.lower === null || totals.upper === null
                     ? undefined
                     : `${formatNumber(totals.lower)}–${formatNumber(totals.upper)}`
                 }

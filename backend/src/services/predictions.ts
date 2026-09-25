@@ -20,8 +20,8 @@ export type StoredPrediction = {
   disease: string;
   month_start: string;
   predicted_cases: number;
-  lower_bound: number;
-  upper_bound: number;
+  lower_bound: number | null;
+  upper_bound: number | null;
   risk_score: number;
   risk_class: "rendah" | "sedang" | "tinggi" | null;
   data_coverage: "high" | "medium" | "low" | "insufficient";
@@ -125,7 +125,9 @@ async function refreshPredictionsOnce(
   for (const month of months) {
     try {
       const predictions = await mlPredictBatch(disease, month);
-      const stored = await storePredictions(disease, month, predictions);
+      const stored = await storePredictions(
+        disease, month, predictions, month === months[0],
+      );
       refreshed += stored.stored;
       changed += stored.changed;
       modelVersion = predictions[0]?.model_version ?? modelVersion;
@@ -168,6 +170,7 @@ async function storePredictions(
   disease: string,
   month: string,
   predictions: MlPrediction[],
+  allowBounds: boolean,
 ): Promise<{ stored: number; changed: number }> {
   const kecamatanRows = await all<{ id: string; ml_id: string }>(
     "SELECT id, ml_id FROM kecamatan",
@@ -194,8 +197,10 @@ async function storePredictions(
   const rows = predictions.map((prediction) => ({
     kecamatanId: mlIdToId.get(prediction.kecamatan_id)!,
     predictedCases: Math.max(0, Math.round(prediction.predicted_cases)),
-    lowerBound: Math.max(0, Math.round(prediction.lower_bound)),
-    upperBound: Math.max(0, Math.round(prediction.upper_bound)),
+    lowerBound: !allowBounds || prediction.lower_bound === null
+      ? null : Math.max(0, Math.round(prediction.lower_bound)),
+    upperBound: !allowBounds || prediction.upper_bound === null
+      ? null : Math.max(0, Math.round(prediction.upper_bound)),
     riskScore: Math.round(prediction.risk_score),
     riskClass:
       prediction.data_coverage === "insufficient" ? null : prediction.risk_class,
@@ -208,8 +213,8 @@ async function storePredictions(
     return (
       !old ||
       Number(old.predicted_cases) !== row.predictedCases ||
-      Number(old.lower_bound) !== row.lowerBound ||
-      Number(old.upper_bound) !== row.upperBound ||
+      old.lower_bound !== row.lowerBound ||
+      old.upper_bound !== row.upperBound ||
       Number(old.risk_score) !== row.riskScore ||
       old.risk_class !== row.riskClass ||
       old.data_coverage !== row.dataCoverage ||

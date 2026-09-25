@@ -167,7 +167,7 @@ def _weather_for(kecamatan_id: str, month: pd.Timestamp) -> dict:
 def _append_month(
     history: pd.DataFrame, step: pd.Timestamp, kecamatan_id: str, cases: float
 ) -> pd.DataFrame:
-    """Riwayat + satu bulan: iklimnya nyata, kasusnya hasil prakiraan."""
+    """Riwayat + satu bulan: iklim dari dataset, kasus hasil prakiraan."""
     weather = _weather_for(kecamatan_id, step)
     appended = history.iloc[-1].copy()
     appended["month_start"] = step.strftime("%Y-%m-%d")
@@ -182,10 +182,10 @@ def _extend_history(history: pd.DataFrame, target: pd.Timestamp, model) -> pd.Da
 
     Model dilatih satu langkah ke depan, jadi memprakirakan Oktober dari
     observasi Desember hanya sah bila bulan-bulan di antaranya ikut diisi.
-    Bulan antara diisi sebagaimana adanya: iklimnya nyata (dari BMKG), jumlah
-    kasusnya prakiraan model itu sendiri, lalu dipakai sebagai lag bagi bulan
-    berikutnya. Ketidakpastiannya menumpuk — itu sifat prakiraan rekursif, dan
-    rentang konformal di `predictor.py` yang menanggungnya.
+    Bulan antara diisi dengan iklim yang tersedia dari dataset Open-Meteo dan
+    jumlah kasus hasil prakiraan model itu sendiri, lalu dipakai sebagai lag
+    bagi bulan berikutnya. Ketidakpastiannya menumpuk; interval satu langkah
+    tidak ditampilkan untuk bulan rekursif yang belum dikalibrasi.
     """
     kecamatan_id = str(history["kecamatan_id"].iloc[-1])
     cursor = pd.Timestamp(history["month_start"].iloc[-1])

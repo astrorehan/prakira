@@ -18,6 +18,7 @@ from config import (
     TARGET_COLUMN,
 )
 from training.ensemble import DBDEnsembleModel
+from training.blend_selection import fit_with_train_only_weights
 from training.baselines import compute_baselines, summarise
 from training.citizen_variant import compare as compare_citizen
 from training.conformal import calibrate as calibrate_conformal
@@ -57,8 +58,7 @@ def train_dbd_model(
 
     y_train_log = np.log1p(y_train)
 
-    model = DBDEnsembleModel()
-    model.fit(X_train, y_train_log)
+    model = fit_with_train_only_weights(DBDEnsembleModel, train_df, log_transform=True)
 
     y_pred = model.predict(X_test)
     y_pred_clipped = np.clip(y_pred, 0, None)
@@ -94,8 +94,9 @@ def train_dbd_model(
 
     def _fit_predict(subset, X_eval):
         """Melatih ulang jenis model yang sama pada bagian awal periode latih."""
-        calib_model = DBDEnsembleModel()
-        calib_model.fit(subset[FEATURE_COLUMNS], np.log1p(subset[TARGET_COLUMN]))
+        calib_model = fit_with_train_only_weights(
+            DBDEnsembleModel, subset, log_transform=True
+        )
         return calib_model.predict(X_eval)
 
     conformal = calibrate_conformal(_fit_predict, train_df, test_df, y_pred_clipped)
@@ -155,6 +156,8 @@ def train_dbd_model(
         "version": version_str,
         "granularity": "monthly",
         "is_log_transformed": True,
+        "blend_weights": [float(weight) for weight in model.blend_weights],
+        "weight_validation_period": model.weight_validation_period,
         "trained_at": datetime.now().isoformat(),
         "train_period": (
             f"{train_df['month_start'].min():%Y-%m-%d} to {train_df['month_start'].max():%Y-%m-%d}"

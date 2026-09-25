@@ -695,7 +695,7 @@ export default function DesignSystemPage() {
                     Grafik tren aktual vs prakiraan bulan berikutnya
                   </h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Proyeksi model Machine Learning dengan lead-time 14-28 hari dan interval kepercayaan.
+                    Prakiraan model bulanan; rentang hanya tersedia untuk satu langkah setelah observasi.
                   </p>
                 </div>
                 <Badge variant="glass-blue">Horizon 1 bulan</Badge>

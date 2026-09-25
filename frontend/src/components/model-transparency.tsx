@@ -254,9 +254,9 @@ export function ModelTransparency() {
           <h2 className="h-section text-foreground">Cakupan data per kecamatan</h2>
           <p className="text-body-sm text-paper-600">
             Model yang sama tidak sama andalnya di setiap wilayah. Kecamatan dengan
-            riwayat pendek menghasilkan prakiraan berinterval lebar, dan itu ditandai
-            di seluruh antarmuka — bukan diam-diam dibulatkan jadi &ldquo;risiko
-            rendah&rdquo;.
+            riwayat pendek memiliki keterbatasan tersendiri. Prakiraan rekursif
+            beberapa bulan tidak menampilkan rentang sebelum ada kalibrasi yang
+            sesuai; ketiadaan rentang bukan tanda risiko rendah.
           </p>
         </div>
 

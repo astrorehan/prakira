@@ -55,7 +55,6 @@ const DEFAULT_DISEASES = [
   { disease: "DBD", label: "DBD (Demam Berdarah)" },
   { disease: "ISPA", label: "ISPA (Pernapasan)" },
   { disease: "LEPTOSPIROSIS", label: "Leptospirosis" },
-  { disease: "DIARE", label: "Diare" },
 ];
 
 export function ManualCaseEntryCard({
@@ -398,7 +397,7 @@ export function ManualCaseEntryCard({
             ) : (
               <ChevronDown className="h-3.5 w-3.5" />
             )}
-            <span>Parameter Cuaca Pendukung (Opsional / BMKG)</span>
+            <span>Parameter Cuaca Pendukung (Opsional)</span>
           </button>
 
           {showClimate && (

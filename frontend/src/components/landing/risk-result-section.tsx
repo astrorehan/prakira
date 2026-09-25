@@ -191,9 +191,12 @@ function DiseaseCard({
           </dt>
           <dd className="tabular mt-1 text-h3 text-foreground">
             {data.kasus_prediksi_lower === null
-              ? "—"
+              ? data.kasus_prediksi ?? "—"
               : `${data.kasus_prediksi_lower}–${data.kasus_prediksi_upper}`}
           </dd>
+          {data.kasus_prediksi !== null && data.kasus_prediksi_lower === null && (
+            <dd className="text-caption text-paper-600">Rentang multi-bulan belum terkalibrasi</dd>
+          )}
         </div>
       </dl>
 
@@ -509,9 +512,12 @@ function DistrictResult({ selectedKecamatan }: { selectedKecamatan: string }) {
                     </dt>
                     <dd className="tabular mt-1 text-h2 text-foreground">
                       {worst.data.kasus_prediksi_lower === null
-                        ? "—"
+                        ? worst.data.kasus_prediksi ?? "—"
                         : `${worst.data.kasus_prediksi_lower}–${worst.data.kasus_prediksi_upper}`}
                     </dd>
+                    {worst.data.kasus_prediksi !== null && worst.data.kasus_prediksi_lower === null && (
+                      <dd className="text-caption text-paper-600">Rentang multi-bulan belum terkalibrasi</dd>
+                    )}
                   </div>
                 </dl>
               </div>

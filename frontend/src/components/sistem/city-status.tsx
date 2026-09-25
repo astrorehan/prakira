@@ -48,14 +48,17 @@ type Summary = {
   rendah: number;
   tanpaPrakiraan: number;
   kasusAktif: number;
-  prediksiLower: number;
-  prediksiUpper: number;
+  prediksiLower: number | null;
+  prediksiUpper: number | null;
   /** Satu sel per kecamatan, terurut skor. `null` = belum ada prakiraan. */
   cells: (RiskLevel | null)[];
 };
 
 function summarise(disease: DiseaseType, list: KecamatanData[]): Summary {
   const ranked = [...list].sort((a, b) => (b.skor_risiko ?? -1) - (a.skor_risiko ?? -1));
+  const hasBounds = list.length > 0 && list.every(
+    (k) => k.kasus_prediksi_lower !== null && k.kasus_prediksi_upper !== null,
+  );
 
   return {
     disease,
@@ -64,8 +67,8 @@ function summarise(disease: DiseaseType, list: KecamatanData[]): Summary {
     rendah: list.filter((k) => k.tingkat_risiko === "rendah").length,
     tanpaPrakiraan: list.filter((k) => k.tingkat_risiko === null).length,
     kasusAktif: list.reduce((sum, k) => sum + (k.kasus_aktif ?? 0), 0),
-    prediksiLower: list.reduce((sum, k) => sum + (k.kasus_prediksi_lower ?? 0), 0),
-    prediksiUpper: list.reduce((sum, k) => sum + (k.kasus_prediksi_upper ?? 0), 0),
+    prediksiLower: hasBounds ? list.reduce((sum, k) => sum + k.kasus_prediksi_lower!, 0) : null,
+    prediksiUpper: hasBounds ? list.reduce((sum, k) => sum + k.kasus_prediksi_upper!, 0) : null,
     cells: ranked.map((k) => k.tingkat_risiko),
   };
 }
@@ -102,9 +105,15 @@ function DiseaseRow({ summary }: { summary: Summary }) {
               Prakiraan bulan berikutnya
             </dt>
             <dd className="mt-1 text-metric-sm tabular text-foreground">
-              {formatNumber(summary.prediksiLower)}
-              <span className="mx-1 text-paper-600">–</span>
-              {formatNumber(summary.prediksiUpper)}
+              {summary.prediksiLower === null || summary.prediksiUpper === null ? (
+                "Belum terkalibrasi"
+              ) : (
+                <>
+                  {formatNumber(summary.prediksiLower)}
+                  <span className="mx-1 text-paper-600">–</span>
+                  {formatNumber(summary.prediksiUpper)}
+                </>
+              )}
             </dd>
           </div>
         </dl>

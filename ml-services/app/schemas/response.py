@@ -15,8 +15,8 @@ class PredictionResult(BaseModel):
     disease: str
     month: str
     predicted_cases: int
-    lower_bound: int
-    upper_bound: int
+    lower_bound: Optional[int] = None
+    upper_bound: Optional[int] = None
     risk_score: int = Field(..., ge=0, le=100)
     risk_class: Optional[Literal["rendah", "sedang", "tinggi"]] = None
     data_coverage: Literal["high", "medium", "low", "insufficient"]
@@ -29,6 +29,7 @@ class PredictionResult(BaseModel):
     interval_method: Optional[str] = None
     interval_target_coverage: Optional[float] = None
     interval_empirical_coverage: Optional[float] = None
+    forecast_horizon_months: Optional[int] = None
 
 
 class BatchPredictionResponse(BaseModel):
@@ -116,7 +117,7 @@ class ConformalInfo(BaseModel):
 
 
 class TopFeature(BaseModel):
-    """Satu fitur beserta bobot kepentingannya pada model terlatih."""
+    """Satu fitur beserta bobot kepentingannya pada komponen pohon model."""
     feature: str = Field(..., example="cases_ma_3m")
     importance: float = Field(..., example=0.1465)
 

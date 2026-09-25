@@ -157,13 +157,17 @@ export function TrendChart({
 
                       {point.lower_bound !== null && point.upper_bound !== null && (
                         <div className="flex items-center justify-between text-caption text-muted-foreground pt-1 border-t border-paper-200/40">
-                          {/* Interval berasal dari sebaran sub-model ensemble
-                              (persentil 10-90), bukan interval 95% teoretis —
-                              label lamanya menyebut angka yang tidak dihitung. */}
+                          {/* Rentang satu langkah berasal dari kalibrasi konformal. */}
                           <span>Rentang model:</span>
                           <span className="font-mono">
                             {point.lower_bound} – {point.upper_bound}
                           </span>
+                        </div>
+                      )}
+
+                      {point.kasus_prediksi !== null && point.lower_bound === null && (
+                        <div className="text-caption text-muted-foreground pt-1 border-t border-paper-200/40">
+                          Rentang multi-bulan belum terkalibrasi.
                         </div>
                       )}
 
@@ -238,7 +242,7 @@ export function TrendChart({
               strokeDasharray="5 5"
               dot={{ r: 4, fill: "#FFFFFF", stroke: forecastColor, strokeWidth: 2.5 }}
               activeDot={{ r: 6.5, fill: forecastColor, stroke: "#FFFFFF", strokeWidth: 2.5 }}
-              name="Prediksi Model (2-4 Mgg)"
+              name="Prakiraan bulanan model"
               connectNulls
             />
           </ComposedChart>

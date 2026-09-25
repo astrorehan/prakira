@@ -331,9 +331,8 @@ function ExplainDialog({
                     </h3>
                     <p className="mt-1 text-caption text-paper-600">
                       Berlaku untuk seluruh kota, bukan untuk {kecamatanNama}.
-                      Ini menjawab &ldquo;fitur apa yang paling sering dipakai
-                      model&rdquo;, bukan &ldquo;kenapa kecamatan ini
-                      segini&rdquo;.
+                      Bobot ini berasal dari komponen pohon sesuai bobotnya;
+                      komponen linear tidak tercakup.
                     </p>
                     <ul className="mt-3 space-y-1.5">
                       {explain.data.data.global_importance

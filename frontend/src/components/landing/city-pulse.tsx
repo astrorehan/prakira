@@ -294,8 +294,10 @@ export function CityPulse({ onSelectKecamatan }: CityPulseProps) {
                     </span>
                     <span className="tabular block text-2xs text-paper-600">
                       {row.driver} · {kec.kasus_aktif ?? "—"} kasus bulan lalu ·
-                      prakiraan {kec.kasus_prediksi_lower ?? "—"}–
-                      {kec.kasus_prediksi_upper ?? "—"}
+                      prakiraan {kec.kasus_prediksi ?? "—"} kasus{" "}
+                      {kec.kasus_prediksi_lower === null || kec.kasus_prediksi_upper === null
+                        ? "(tanpa rentang terkalibrasi)"
+                        : `(${kec.kasus_prediksi_lower}–${kec.kasus_prediksi_upper})`}
                     </span>
                   </span>
 

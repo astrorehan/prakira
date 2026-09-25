@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     "DBD",
     "ISPA",
     "Leptospirosis",
-    "BMKG",
+    "Open-Meteo",
     "Semarang",
     "ANFORCOM 2026",
   ],

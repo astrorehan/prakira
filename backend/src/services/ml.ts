@@ -26,8 +26,8 @@ export type MlPrediction = {
   disease: string;
   month: string;
   predicted_cases: number;
-  lower_bound: number;
-  upper_bound: number;
+  lower_bound: number | null;
+  upper_bound: number | null;
   risk_score: number;
   risk_class: "rendah" | "sedang" | "tinggi" | null;
   data_coverage: "high" | "medium" | "low" | "insufficient";

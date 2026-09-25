@@ -116,7 +116,7 @@ export const RISK_CONFIG: Record<RiskLevel, RiskConfig> = {
     badgeVariant: "risk-high",
     hatch: true,
     description:
-      "Potensi lonjakan dalam 2–4 minggu. Perlu intervensi terarah: fogging fokus, PSN serentak, dan penyiapan stok obat.",
+      "Potensi peningkatan pada bulan prakiraan. Perlu intervensi terarah: fogging fokus, PSN serentak, dan penyiapan stok obat.",
     glassClass: "liquid-glass-risk-high",
   },
 };

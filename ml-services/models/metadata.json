@@ -1,18 +1,25 @@
 {
   "dbd": {
     "algorithm": "ensemble_ridge_trees_xgboost",
-    "version": "ensemble-monthly-dbd-2026.09.24",
+    "version": "ensemble-monthly-dbd-2026.09.25",
     "granularity": "monthly",
     "is_log_transformed": true,
-    "trained_at": "2026-09-24T19:25:00.929275",
+    "blend_weights": [
+      0.387355691891437,
+      0.512644308108563,
+      0.05,
+      0.05000000000000001
+    ],
+    "weight_validation_period": "2024-04-01 to 2024-12-01",
+    "trained_at": "2026-09-25T16:55:17.602738",
     "train_period": "2021-04-01 to 2024-12-01",
     "test_period": "2025-01-01 to 2025-12-01",
     "n_train_samples": 720,
     "n_test_samples": 192,
     "metrics": {
-      "mae": 1.4725,
-      "rmse": 1.9403,
-      "r2": 0.2941
+      "mae": 1.4598,
+      "rmse": 1.9293,
+      "r2": 0.3021
     },
     "citizen_signal_comparison": null,
     "citizen_signal_family": null,
@@ -40,20 +47,20 @@
       "best_baseline": "persistence",
       "best_baseline_label": "Kasus bulan lalu",
       "best_baseline_mae": 1.3646,
-      "model_mae": 1.4725,
+      "model_mae": 1.4598,
       "model_beats_all_baselines": false,
-      "mae_improvement_pct": -7.91
+      "mae_improvement_pct": -6.98
     },
     "conformal": {
-      "empirical_coverage": 0.901,
+      "empirical_coverage": 0.9167,
       "target_coverage": 0.8,
-      "mean_width": 4.125,
+      "mean_width": 4.3281,
       "median_width": 3.0,
       "n_evaluated": 192,
       "method": "rolling_origin_conformal_normalized",
       "difficulty": "1 + cases_ma_3m",
       "alpha": 0.2,
-      "q_hat": 0.681646,
+      "q_hat": 0.725029,
       "n_calibration": 368,
       "n_folds": 8,
       "calibration_period": "2023-02-01 to 2024-12-01"
@@ -61,40 +68,46 @@
     "top_features": [
       {
         "feature": "cases_ma_3m",
-        "importance": 0.15592575879655263
+        "importance": 0.2491003733469635
       },
       {
         "feature": "cases_lag1",
-        "importance": 0.06896547948524695
+        "importance": 0.12743058442922003
       },
       {
         "feature": "cases_lag2",
-        "importance": 0.04158173212762706
+        "importance": 0.07892816957155828
       },
       {
         "feature": "population",
-        "importance": 0.03730615055176549
+        "importance": 0.0688918845000349
       },
       {
         "feature": "rainfall_lag1",
-        "importance": 0.0367458517737042
+        "importance": 0.058587228657291886
       }
     ]
   },
   "ispa": {
     "algorithm": "ensemble_rf_xgboost_elasticnet",
-    "version": "ensemble-monthly-ispa-2026.09.22",
+    "version": "ensemble-monthly-ispa-2026.09.25",
     "granularity": "monthly",
     "is_log_transformed": false,
-    "trained_at": "2026-09-22T22:56:46.089519",
+    "blend_weights": [
+      0.5816717187901709,
+      0.04999999992149099,
+      0.36832828128833806
+    ],
+    "weight_validation_period": "2025-08-01 to 2025-09-01",
+    "trained_at": "2026-09-25T16:56:11.340626",
     "train_period": "2025-04-01 to 2025-09-01",
     "test_period": "2025-10-01 to 2025-12-01",
     "n_train_samples": 96,
     "n_test_samples": 48,
     "metrics": {
-      "mae": 407.7571,
-      "rmse": 661.2239,
-      "r2": 0.768
+      "mae": 395.6602,
+      "rmse": 645.8887,
+      "r2": 0.7786
     },
     "citizen_signal_comparison": null,
     "citizen_signal_family": null,
@@ -122,20 +135,20 @@
       "best_baseline": "seasonal_mean",
       "best_baseline_label": "Rata-rata musiman",
       "best_baseline_mae": 381.2118,
-      "model_mae": 407.7571,
+      "model_mae": 395.6602,
       "model_beats_all_baselines": false,
-      "mae_improvement_pct": -6.96
+      "mae_improvement_pct": -3.79
     },
     "conformal": {
       "empirical_coverage": 0.9375,
       "target_coverage": 0.8,
-      "mean_width": 1913.5625,
-      "median_width": 1577.0,
+      "mean_width": 1809.6458,
+      "median_width": 1490.5,
       "n_evaluated": 48,
       "method": "rolling_origin_conformal_normalized",
       "difficulty": "1 + cases_ma_3m",
       "alpha": 0.2,
-      "q_hat": 0.415168,
+      "q_hat": 0.392595,
       "n_calibration": 48,
       "n_folds": 3,
       "calibration_period": "2025-07-01 to 2025-09-01"
@@ -143,23 +156,23 @@
     "top_features": [
       {
         "feature": "cases_ma_3m",
-        "importance": 0.3262342953464965
+        "importance": 0.3589026650841347
       },
       {
         "feature": "cases_lag1",
-        "importance": 0.2574810752940493
+        "importance": 0.2862727475771871
       },
       {
         "feature": "population",
-        "importance": 0.1839836202651257
+        "importance": 0.1629468017135083
       },
       {
         "feature": "cases_lag2",
-        "importance": 0.047225244059852116
+        "importance": 0.06067397551863837
       },
       {
         "feature": "cases_lag3",
-        "importance": 0.03423737547414278
+        "importance": 0.04019638673042672
       }
     ]
   },
@@ -225,23 +238,23 @@
     "top_features": [
       {
         "feature": "month",
-        "importance": 0.3546164978792632
+        "importance": 0.36531484339528214
       },
       {
         "feature": "cases_lag1",
-        "importance": 0.11921769925553016
+        "importance": 0.11099309169140582
       },
       {
         "feature": "population",
-        "importance": 0.07906908401539747
-      },
-      {
-        "feature": "cases_per_10k_lag1",
-        "importance": 0.06832684896613637
+        "importance": 0.08107965656111443
       },
       {
         "feature": "month_sin",
-        "importance": 0.06677162504238256
+        "importance": 0.07419069449153617
+      },
+      {
+        "feature": "cases_per_10k_lag1",
+        "importance": 0.07134381333683906
       }
     ]
   }

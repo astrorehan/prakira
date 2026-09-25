@@ -122,7 +122,9 @@ export default function ChoroplethMap({
       const predicted =
         item.kasus_prediksi === null
           ? "belum ada prediksi"
-          : `${formatMaybeNumber(item.kasus_prediksi)} kasus (${formatMaybeNumber(item.kasus_prediksi_lower)}–${formatMaybeNumber(item.kasus_prediksi_upper)})`;
+          : `${formatMaybeNumber(item.kasus_prediksi)} kasus${item.kasus_prediksi_lower === null || item.kasus_prediksi_upper === null
+            ? " (rentang belum terkalibrasi)"
+            : ` (${formatMaybeNumber(item.kasus_prediksi_lower)}–${formatMaybeNumber(item.kasus_prediksi_upper)})`}`;
       const delta =
         item.delta_periode === null
           ? ""

@@ -202,15 +202,15 @@ function CalibrationPanel({ metric }: { metric: BacktestMetric }) {
           Seberapa sering kenyataan masuk ke dalam rentang
         </h3>
         <p className="text-body-sm leading-relaxed text-paper-600">
-          Setiap prakiraan disertai rentang, misalnya “3 kasus (2–4)”. Lebarnya
-          tidak diperkirakan, melainkan dikalibrasi dari galat yang benar-benar
-          dialami model pada bulan-bulan yang belum pernah dilihatnya.
+          Rentang hanya ditampilkan untuk prakiraan satu bulan setelah observasi
+          terakhir. Kalibrasi dan cakupan di bawah menguji satu langkah tersebut;
+          hasil rekursif beberapa bulan belum memiliki rentang terkalibrasi.
         </p>
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div className="space-y-1 rounded-xl border border-border bg-paper-50 p-4">
-          <p className="text-caption font-semibold text-paper-700">Dijanjikan</p>
+          <p className="text-caption font-semibold text-paper-700">Target satu langkah</p>
           <p className="text-2xl font-semibold tabular-nums text-foreground">
             {pct(c.target_coverage)}
           </p>
@@ -259,9 +259,9 @@ function CalibrationPanel({ metric }: { metric: BacktestMetric }) {
           </>
         ) : (
           <>
-            Rentangnya menampung kenyataan lebih sering daripada yang dijanjikan
-            — arah yang aman, tapi berarti ia sedikit lebih lebar daripada yang
-            perlu.
+            Rentangnya menampung kenyataan lebih sering daripada target.
+            Rentang yang jauh di atas target dapat terlalu lebar untuk membantu
+            pengambilan keputusan.
           </>
         )}{" "}
         Kalibrasinya memakai {formatNumber(c.n_calibration)} pengamatan dari{" "}

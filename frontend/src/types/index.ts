@@ -392,8 +392,8 @@ export type ActionRecommendation = {
   pic_unit: string;
   broadcast_draft: string;
   prediction_month: string;
-  predicted_lower: number;
-  predicted_upper: number;
+  predicted_lower: number | null;
+  predicted_upper: number | null;
   data_coverage: DataCoverage;
   generated_at: string;
   dispatched_at: string | null;
@@ -1012,4 +1012,3 @@ export type RetrainResult = {
 export type RetrainResponse = {
   data: RetrainResult;
 };
-

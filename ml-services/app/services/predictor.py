@@ -106,8 +106,8 @@ def _insufficient_result(kecamatan_id: str, disease_upper: str, month: str, vers
         "disease": disease_upper,
         "month": month,
         "predicted_cases": 0,
-        "lower_bound": 0,
-        "upper_bound": 0,
+        "lower_bound": None,
+        "upper_bound": None,
         "risk_score": 0,
         "risk_class": None,
         "data_coverage": "insufficient",
@@ -122,12 +122,13 @@ def _compose_result(
     month: str,
     feature_row: pd.DataFrame,
     predicted: float,
-    bounds: Tuple[int, int],
+    bounds: Tuple[Optional[int], Optional[int]],
     coverage: str,
     df_kec: pd.DataFrame,
     df_hist: pd.DataFrame,
     model,
     model_meta: dict,
+    horizon: int,
 ) -> dict:
     """Hasil satu kecamatan, dari baris fitur dan angka yang sudah dihitung.
 
@@ -178,7 +179,10 @@ def _compose_result(
         "data_coverage": coverage,
         "drivers": drivers,
         "model_version": model_meta.get("version", "unknown"),
-        **_interval_provenance(model_meta),
+        **(_interval_provenance(model_meta) if horizon == 1 else {
+            "interval_method": "unavailable_multistep",
+        }),
+        "forecast_horizon_months": horizon,
     }
 
 
@@ -220,10 +224,15 @@ def predict_single(
 
     predicted = max(0.0, float(model.predict(feature_row)[0]))
 
+    horizon = _forecast_horizon(df_kec, month)
+
     # Rentang prakiraan. Lebarnya berasal dari galat yang benar-benar teramati
     # pada periode kalibrasi (`training/conformal.py`), bukan dari selisih
     # jawaban antar sub-model ensemble seperti sebelumnya.
-    bounds = _estimate_confidence(model, feature_row, cfg, model_meta)
+    bounds = (
+        _estimate_confidence(model, feature_row, cfg, model_meta)
+        if horizon == 1 else (None, None)
+    )
 
     return _compose_result(
         kecamatan_id,
@@ -237,7 +246,15 @@ def predict_single(
         df_hist,
         model,
         model_meta,
+        horizon,
     )
+
+
+def _forecast_horizon(df_kec: pd.DataFrame, month: str) -> int:
+    """Jumlah langkah dari observasi kasus terakhir ke bulan yang diminta."""
+    latest = pd.Timestamp(df_kec["month_start"].max())
+    target = pd.Timestamp(month)
+    return 12 * (target.year - latest.year) + target.month - latest.month
 
 
 def _interval_provenance(model_meta: dict) -> dict:
@@ -310,10 +327,18 @@ def predict_batch(disease: str, month: str) -> list:
     if pending:
         X = pd.concat([item[3] for item in pending], ignore_index=True)
         predictions = np.clip(np.asarray(model.predict(X), dtype=float), 0, None)
-        bounds = _estimate_confidence_many(model, X, predictions, cfg, model_meta)
+        horizons = [_forecast_horizon(item[1], month) for item in pending]
+        bounds = [(None, None)] * len(predictions)
+        one_step = [i for i, horizon in enumerate(horizons) if horizon == 1]
+        if one_step:
+            calibrated = _estimate_confidence_many(
+                model, X.iloc[one_step], predictions[one_step], cfg, model_meta
+            )
+            for index, bound in zip(one_step, calibrated):
+                bounds[index] = bound
 
-        for (kecamatan_id, df_kec, coverage, feature_row), predicted, bound in zip(
-            pending, predictions, bounds
+        for (kecamatan_id, df_kec, coverage, feature_row), predicted, bound, horizon in zip(
+            pending, predictions, bounds, horizons
         ):
             results[kecamatan_id] = _compose_result(
                 kecamatan_id,
@@ -327,6 +352,7 @@ def predict_batch(disease: str, month: str) -> list:
                 df_hist,
                 model,
                 model_meta,
+                horizon,
             )
 
     return [results[kec["id"]] for kec in KECAMATAN_SEMARANG]

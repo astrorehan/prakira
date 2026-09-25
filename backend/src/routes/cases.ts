@@ -26,7 +26,7 @@ import {
 
 export const casesRouter = Router();
 
-const VALID_DISEASES = ["DBD", "ISPA", "LEPTOSPIROSIS", "DIARE"];
+const VALID_DISEASES = ["DBD", "ISPA", "LEPTOSPIROSIS"];
 const REQUIRED_COLUMNS = ["kecamatan_nama", "month_start", "cases"];
 const OPTIONAL_COLUMNS = ["rainfall_mm", "temp_mean_c", "humidity_pct"];
 

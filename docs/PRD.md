@@ -34,7 +34,7 @@ Konsekuensi langsung ke PRD ini:
 
 ## 1. Ringkasan Produk
 
-**Satu kalimat.** PRAKIRA memprediksi lonjakan kasus penyakit terkait iklim per kecamatan 2–4 minggu ke depan, lalu mengubah prediksi itu menjadi daftar tindakan berprioritas untuk Dinas Kesehatan dan Puskesmas.
+**Satu kalimat.** PRAKIRA memprakirakan jumlah kasus penyakit terkait iklim per kecamatan untuk bulan kalender berikutnya, lalu mengubahnya menjadi daftar tindakan berprioritas untuk Dinas Kesehatan dan Puskesmas. Bila observasi kasus tertinggal, prakiraan memerlukan beberapa langkah rekursif dan rentangnya tidak diklaim terkalibrasi.
 
 **Masalah.** Penanganan penyakit iklim di kota Indonesia bersifat reaktif: data kasus direkap periodik (mingguan–bulanan), sehingga intervensi (fogging, PSN, klorinasi, logistik obat) baru bergerak setelah kurva kasus naik. Padahal pemicu iklimnya — curah hujan, suhu, kelembaban — sudah terukur 2–4 minggu sebelumnya.
 
@@ -74,18 +74,23 @@ Tiga keputusan yang di dokumen konsep masih terbuka. Ditutup di sini agar sprint
 
 ### 3.1 Kota studi kasus: **Kota Semarang**
 
-16 kecamatan, data Profil Kesehatan tersedia, stasiun BMKG memadai (Klimatologi Semarang, Maritim Tanjung Emas, Stasiun Ahmad Yani), dan lokasi final lomba di Undip Semarang — konteks lokal bisa diverifikasi juri secara langsung.
+16 kecamatan dan data Profil Kesehatan tersedia. Variabel iklim yang dipakai implementasi berasal dari Open-Meteo Archive berbasis grid pada koordinat kecamatan, bukan pengukuran tiga stasiun BMKG. Beberapa kecamatan dapat berbagi nilai grid yang sama.
 
-### 3.2 Cakupan penyakit: **DBD, ISPA, Diare, + Leptospirosis**
+### 3.2 Cakupan penyakit: **DBD, ISPA, dan Leptospirosis**
 
-Tiga inti tetap. Penyakit keempat: **Leptospirosis**, bukan Malaria.
+Model yang aktif meliputi tiga penyakit ini. Diare masih berupa rencana karena
+belum ada dataset historis dan model terlatihnya.
 
 Alasan:
 - Semarang adalah wilayah endemis leptospirosis dengan beban kasus tertinggi di Jawa Tengah; malaria di wilayah kota praktis nol sehingga tidak ada sinyal untuk dipelajari model.
 - Leptospirosis terikat langsung ke **rob dan banjir** — karakteristik paling khas Semarang. Ini memenuhi tuntutan rulebook untuk "menghindari proyek generik (solusi klise tanpa konteks lokal)".
 - Rantai kausalnya melewati sampah dan sanitasi (populasi tikus ↔ timbulan sampah ↔ genangan), sehingga menjadi jembatan tema ke *Circular Economy* (§3.3).
 
-Batas jujur: leptospirosis punya jumlah kasus tahunan jauh lebih kecil dari DBD. Model untuk leptospirosis **wajib ditampilkan dengan interval ketidakpastian lebar** dan diberi label cakupan data rendah. Jangan disamakan tampilannya dengan DBD.
+Batas jujur: leptospirosis punya jumlah kasus tahunan jauh lebih kecil dari DBD.
+Riwayat bulan per kecamatan lengkap sehingga label kelengkapan datanya tinggi,
+tetapi itu tidak membuktikan akurasi. R² pada holdout 2025 negatif dan rentang
+satu langkah sangat konservatif; untuk prakiraan rekursif beberapa bulan,
+rentang tidak ditampilkan karena belum dikalibrasi.
 
 ### 3.3 Pengikat tema Circular Economy
 
@@ -225,7 +230,7 @@ Halaman `/model` — bukan halaman "tentang kami". Isi wajib:
 
 ### 5.8 Admin & Data (M9)
 
-Upload CSV kasus → validasi kolom & tipe → preview 10 baris → konfirmasi. Sinkronisasi BMKG ditampilkan sebagai status (terakhir sinkron, jumlah stasiun, latensi). Audit trail untuk seluruh perubahan data.
+Upload CSV kasus → validasi kolom & tipe → preview 10 baris → konfirmasi. Data iklim historis diambil dari API Open-Meteo Archive melalui ETL, lalu dimuat dari dataset hasil ETL; belum ada penjadwal otomatis. Halaman admin menampilkan riwayat ingest yang benar-benar tercatat. Audit trail menyimpan perubahan data.
 
 ---
 
@@ -469,7 +474,7 @@ Bagian ini mencatat status implementasi yang telah terkirim dan terverifikasi se
 | PostgreSQL (+PostGIS opsional) | **PostgreSQL (Supabase)** via pooler `pg` | Gateway beroperasi dengan `pg.Pool`, translasi parameter `toPg` (`?` -> `$1..$n`), dan wrapper transaksi terisolasi. |
 | Granularitas mingguan (`week_start`, `horizon_weeks`) | **bulanan** (`month_start`) | Dataset kasus yang tersedia direkap bulanan; model dilatih bulanan. Seluruh UI menyebut bulan, bukan minggu |
 | Empat penyakit (DBD, ISPA, Diare, Leptospirosis) | **DBD, ISPA, dan Leptospirosis** | Tiga penyakit telah memiliki dataset bulanan 2021–2025 dan model ensemble terlatih. Diare belum memiliki data historis. |
-| Cron sinkronisasi BMKG di gateway | **Data Ingest Pipeline** | Data iklim masuk sebagai berkas dataset yang di-seed. Halaman admin melaporkan pekerjaan ingest yang benar-benar berjalan, bukan status koneksi yang tidak ada |
+| Cron sinkronisasi iklim di gateway | **ETL manual + Data Ingest Pipeline** | Skrip ETL mengambil data historis dari Open-Meteo Archive; dataset hasilnya di-seed. Belum ada penjadwal otomatis. Halaman admin melaporkan pekerjaan ingest yang benar-benar berjalan. |
 | Login penuh JWT + RBAC (§4 WON'T) | **Sesi cookie httpOnly + peran dinas/puskesmas** | Sesi aman via cookie httpOnly dengan signature HMAC. Rute mutasi diproteksi `requireAuth` dan `requireRole`. |
 | Layer Pemicu Lingkungan (S1) | **Terkirim** | Marker agregasi pemicu terverifikasi di `/dashboard`, formulir lapor pemicu di `/warga/lapor`, dan endpoint publik `/api/reports/triggers`. |
 | Mesin Cetak Buletin & Nota (S2) | **Terkirim** | Halaman `/buletin` (Buletin Resmi SKDR A4) dan `/tindakan/nota/[id]` (Nota Dinas A4) berbasis native `@media print`. |

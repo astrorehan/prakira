@@ -85,8 +85,11 @@ function BuletinContent() {
 
     const active = observed.reduce((s, d) => s + (d.kasus_aktif ?? 0), 0);
     const pred = predicted.reduce((s, d) => s + (d.kasus_prediksi ?? 0), 0);
-    const lower = predicted.reduce((s, d) => s + (d.kasus_prediksi_lower ?? 0), 0);
-    const upper = predicted.reduce((s, d) => s + (d.kasus_prediksi_upper ?? 0), 0);
+    const hasBounds = predicted.length > 0 && predicted.every(
+      (d) => d.kasus_prediksi_lower !== null && d.kasus_prediksi_upper !== null,
+    );
+    const lower = hasBounds ? predicted.reduce((s, d) => s + d.kasus_prediksi_lower!, 0) : null;
+    const upper = hasBounds ? predicted.reduce((s, d) => s + d.kasus_prediksi_upper!, 0) : null;
 
     const high = rows.filter((d) => d.tingkat_risiko === "tinggi");
     const medium = rows.filter((d) => d.tingkat_risiko === "sedang");
@@ -333,7 +336,7 @@ function BuletinContent() {
             </div>
 
             <p className="text-[11px] text-slate-700 leading-relaxed text-justify">
-              Model prediktif berbasis lag variabel iklim (curah hujan, suhu, kelembaban udara) memperkirakan total kasus <strong>{activeDisease}</strong> di Kota Semarang pada bulan <strong>{formatMonth(meta?.predictionMonth)}</strong> mencapai <strong>{formatNumber(totals.pred)} kasus</strong> (interval ketidakpastian 95%: {formatNumber(totals.lower)}–{formatNumber(totals.upper)} kasus). Laporan pemicu lingkungan terverifikasi ditampilkan sebagai konteks lapangan dan bahan evaluasi varian model, bukan sebagai diagnosis. Terdapat <strong>{totals.highCount} kecamatan siaga tinggi</strong> dan <strong>{totals.mediumCount} kecamatan waspada sedang</strong> yang membutuhkan mobilisasi sumber daya intervensi pencegahan dini sebelum lonjakan kurva kasus terjadi.
+              Model prediktif berbasis lag variabel iklim (curah hujan, suhu, kelembaban udara) memperkirakan total kasus <strong>{activeDisease}</strong> di Kota Semarang pada bulan <strong>{formatMonth(meta?.predictionMonth)}</strong> mencapai <strong>{formatNumber(totals.pred)} kasus</strong>. {totals.lower !== null && totals.upper !== null ? `Jumlah rentang satu langkah per kecamatan: ${formatNumber(totals.lower)}–${formatNumber(totals.upper)} kasus. ` : "Rentang tidak tersedia karena prakiraan ini memakai beberapa langkah rekursif yang belum dikalibrasi. "}Laporan pemicu lingkungan terverifikasi ditampilkan sebagai konteks lapangan dan bahan evaluasi varian model, bukan sebagai diagnosis. Terdapat <strong>{totals.highCount} kecamatan siaga tinggi</strong> dan <strong>{totals.mediumCount} kecamatan waspada sedang</strong> yang membutuhkan mobilisasi sumber daya intervensi pencegahan dini sebelum lonjakan kurva kasus terjadi.
             </p>
 
             {/* Fixed 4-Column KPI Cards on both web and print */}
@@ -353,7 +356,9 @@ function BuletinContent() {
                   <span className="text-[9px] font-semibold text-amber-700">kasus</span>
                 </div>
                 <span className="text-[8.5px] text-amber-800 font-mono block mt-0.5">
-                  Rentang: {formatNumber(totals.lower)}–{formatNumber(totals.upper)}
+                  {totals.lower !== null && totals.upper !== null
+                    ? `Rentang: ${formatNumber(totals.lower)}–${formatNumber(totals.upper)}`
+                    : "Rentang multi-langkah belum terkalibrasi"}
                 </span>
               </div>
 
@@ -590,7 +595,7 @@ function BuletinContent() {
                   1. <strong>Status Dokumen:</strong> Dokumen ini merupakan <em>Draf Buletin PRAKIRA</em> yang disusun otomatis oleh sistem sebagai instrumen pendukung keputusan (Decision Support System). Dokumen ini belum disahkan sebagai instruksi dinas resmi.
                 </p>
                 <p>
-                  2. <strong>Sumber Data:</strong> Rekapitulasi kasus Dinas Kesehatan Kota Semarang dan variabel iklim BMKG (curah hujan, suhu, kelembaban).
+                  2. <strong>Sumber Data:</strong> Rekapitulasi kasus Dinas Kesehatan Kota Semarang dan variabel iklim Open-Meteo Archive berbasis grid (curah hujan, suhu, kelembaban).
                 </p>
                 <p>
                   3. <strong>Batas Penggunaan:</strong> Prakiraan risiko merupakan sinyal kewaspadaan dini berbasis pemodelan statistik, bukan diagnosis atau vonis wabah. Petugas surveilans wajib melakukan verifikasi lapangan sebelum tindakan intervensi berskala besar.

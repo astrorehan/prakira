@@ -367,10 +367,15 @@ export async function getTrend(
     let predicted = 0;
     let lower = 0;
     let upper2 = 0;
+    let hasBounds = true;
     for (const row of stored.values()) {
       predicted += row.predicted_cases;
-      lower += row.lower_bound;
-      upper2 += row.upper_bound;
+      if (row.lower_bound === null || row.upper_bound === null) {
+        hasBounds = false;
+      } else {
+        lower += row.lower_bound;
+        upper2 += row.upper_bound;
+      }
     }
 
     /* Titik sambung: bulan aktual terakhir juga membawa nilai prediksi yang
@@ -390,8 +395,8 @@ export async function getTrend(
       periode: month,
       kasus_aktual: null,
       kasus_prediksi: predicted,
-      lower_bound: lower,
-      upper_bound: upper2,
+      lower_bound: hasBounds ? lower : null,
+      upper_bound: hasBounds ? upper2 : null,
       curah_hujan_mm: null,
       suhu_c: null,
       kelembaban_pct: null,

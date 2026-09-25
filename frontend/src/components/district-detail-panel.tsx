@@ -166,13 +166,15 @@ export function DistrictDetailPanel({
                 </span>
                 <span className="text-caption text-paper-600">kasus</span>
               </dd>
-              {/* Angka prediksi tidak pernah tampil tanpa batasnya (PRD §7-H1). */}
               <dd className="mt-2 border-t border-border pt-2 text-caption text-paper-600">
-                Rentang{" "}
-                <span className="tabular whitespace-nowrap font-medium text-foreground">
-                  {formatMaybeNumber(district.kasus_prediksi_lower)}–
-                  {formatMaybeNumber(district.kasus_prediksi_upper)}
-                </span>
+                {district.kasus_prediksi_lower === null || district.kasus_prediksi_upper === null ? (
+                  "Rentang belum terkalibrasi untuk prakiraan multi-bulan."
+                ) : (
+                  <>Rentang <span className="tabular whitespace-nowrap font-medium text-foreground">
+                    {formatMaybeNumber(district.kasus_prediksi_lower)}–
+                    {formatMaybeNumber(district.kasus_prediksi_upper)}
+                  </span></>
+                )}
               </dd>
             </>
           ) : (
@@ -212,14 +214,14 @@ export function DistrictDetailPanel({
         )}
       </div>
 
-      {/* 5. Pemicu dominan menurut model — mengisi kalimat "Dasar:" (§5.2).
+      {/* 5. Sinyal iklim pada komponen pohon — mengisi kalimat "Dasar:" (§5.2).
              Daftar ini bersifat global: fitur iklim ber-importance tertinggi
-             menurut model secara keseluruhan, sama untuk keenam belas
+             menurut komponen pohon, sama untuk keenam belas
              kecamatan. Tombol di bawahnya membuka hitungan yang lokal. */}
       <div className="shrink-0 space-y-2">
         {district.drivers.length > 0 && (
           <div className="rounded-xl border border-border bg-paper-50 p-3">
-            <p className="overline">Pemicu utama menurut model</p>
+            <p className="overline">Sinyal iklim pada komponen pohon</p>
             <ul className="mt-1.5 space-y-1">
               {district.drivers.map((d) => (
                 <li

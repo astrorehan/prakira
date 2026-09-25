@@ -184,10 +184,10 @@ export function DistrictRankingTable({
                         <div className="font-semibold text-foreground">
                           {formatMaybeNumber(kec.kasus_prediksi)} kasus
                         </div>
-                        {/* Batas selalu ikut angkanya, tidak pernah di kolom lain. */}
                         <div className="font-mono text-caption text-muted-foreground">
-                          {formatMaybeNumber(kec.kasus_prediksi_lower)}–
-                          {formatMaybeNumber(kec.kasus_prediksi_upper)}
+                          {kec.kasus_prediksi_lower === null || kec.kasus_prediksi_upper === null
+                            ? "Rentang belum terkalibrasi"
+                            : `${formatMaybeNumber(kec.kasus_prediksi_lower)}–${formatMaybeNumber(kec.kasus_prediksi_upper)}`}
                         </div>
                       </>
                     )}

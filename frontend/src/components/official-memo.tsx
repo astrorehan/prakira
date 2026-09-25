@@ -332,8 +332,9 @@ export function OfficialMemo({ id }: { id: string }) {
                               {formatNumber(totalPopulation)}
                             </td>
                             <td className="px-2 py-2 text-right tabular-nums text-foreground">
-                              {formatNumber(recommendation.predicted_lower)}–
-                              {formatNumber(recommendation.predicted_upper)}
+                              {recommendation.predicted_lower === null || recommendation.predicted_upper === null
+                                ? "Belum terkalibrasi"
+                                : `${formatNumber(recommendation.predicted_lower)}–${formatNumber(recommendation.predicted_upper)}`}
                             </td>
                             <td className="px-2 py-2" />
                             <td className="px-2 py-2" />
@@ -398,8 +399,9 @@ export function OfficialMemo({ id }: { id: string }) {
                   <div className="rounded-lg border border-border bg-paper-50 p-3">
                     <span className="overline">Beban tanpa intervensi</span>
                     <p className="text-body-sm leading-snug text-foreground">
-                      {formatNumber(recommendation.predicted_lower)}–
-                      {formatNumber(recommendation.predicted_upper)} kasus
+                      {recommendation.predicted_lower === null || recommendation.predicted_upper === null
+                        ? "Rentang multi-bulan belum terkalibrasi"
+                        : `${formatNumber(recommendation.predicted_lower)}–${formatNumber(recommendation.predicted_upper)} kasus`}
                     </p>
                     <p className="text-caption text-paper-600">
                       {COVERAGE_CONFIG[recommendation.data_coverage].label ===

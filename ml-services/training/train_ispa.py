@@ -18,6 +18,7 @@ from config import (
     TARGET_COLUMN,
 )
 from training.ensemble import ISPAEnsembleModel
+from training.blend_selection import fit_with_train_only_weights
 from training.baselines import compute_baselines, summarise
 from training.citizen_variant import compare as compare_citizen
 from training.conformal import calibrate as calibrate_conformal
@@ -58,8 +59,7 @@ def train_ispa_model(
     X_train, y_train = train_df[FEATURE_COLUMNS], train_df[TARGET_COLUMN]
     X_test, y_test = test_df[FEATURE_COLUMNS], test_df[TARGET_COLUMN]
 
-    model = ISPAEnsembleModel()
-    model.fit(X_train, y_train)
+    model = fit_with_train_only_weights(ISPAEnsembleModel, train_df, log_transform=False)
 
     y_pred = model.predict(X_test)
     y_pred_clipped = np.clip(y_pred, 0, None)
@@ -95,8 +95,9 @@ def train_ispa_model(
 
     def _fit_predict(subset, X_eval):
         """Melatih ulang jenis model yang sama pada bagian awal periode latih."""
-        calib_model = ISPAEnsembleModel()
-        calib_model.fit(subset[FEATURE_COLUMNS], subset[TARGET_COLUMN])
+        calib_model = fit_with_train_only_weights(
+            ISPAEnsembleModel, subset, log_transform=False
+        )
         return calib_model.predict(X_eval)
 
     conformal = calibrate_conformal(_fit_predict, train_df, test_df, y_pred_clipped)
@@ -153,6 +154,8 @@ def train_ispa_model(
         "version": version_str,
         "granularity": "monthly",
         "is_log_transformed": False,
+        "blend_weights": [float(weight) for weight in model.blend_weights],
+        "weight_validation_period": model.weight_validation_period,
         "trained_at": datetime.now().isoformat(),
         "train_period": f"{train_df['month_start'].min().strftime('%Y-%m-%d')} to {train_df['month_start'].max().strftime('%Y-%m-%d')}",
         "test_period": f"{test_df['month_start'].min().strftime('%Y-%m-%d')} to {test_df['month_start'].max().strftime('%Y-%m-%d')}",
