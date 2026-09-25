@@ -103,6 +103,17 @@ MIN_CITIZEN_COVERAGE = 0.60  # porsi bulan latih yang wajib punya laporan
 MIN_CITIZEN_MONTHS = 12      # dan sekurang-kurangnya satu siklus musim penuh
 
 # ---------------------------------------------------------------------------
+# Batas rekap kasus tahun berjalan (DBD & Leptospirosis)
+#
+# Berkas 2026 dari Dinkes adalah rekap sebagian tahun, dan isinya tidak
+# menyebut sampai kapan laporan sudah lengkap: berkas mingguan DBD hanya
+# memuat minggu yang ada kasusnya, dan baris "Sep" leptospirosis bernilai 0
+# karena rekapnya ditarik saat September belum selesai. Bulan sesudah batas
+# ini tidak dianggap observasi; prediksi yang mengisinya.
+# ---------------------------------------------------------------------------
+CASE_REPORT_THROUGH = "2026-08-01"
+
+# ---------------------------------------------------------------------------
 # Per-disease training configuration
 # ---------------------------------------------------------------------------
 DISEASE_CONFIG = {

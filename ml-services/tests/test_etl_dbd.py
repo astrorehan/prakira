@@ -24,3 +24,12 @@ def test_reported_week_limit_falls_back_to_full_year_without_source(tmp_path: Pa
     monkeypatch.setattr(etl_dbd, "DATASET_RAW_KASUS", tmp_path)
 
     assert etl_dbd.reported_week_limit(2026) == 52
+
+
+def test_partial_year_weeks_stop_at_report_month(monkeypatch):
+    monkeypatch.setattr(etl_dbd, "CASE_REPORT_THROUGH", "2026-08-01")
+
+    weeks = etl_dbd.partial_year_weeks(2026)
+
+    assert len(weeks) == 35
+    assert str(weeks[-1].date()) == "2026-08-31"

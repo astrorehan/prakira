@@ -6,7 +6,8 @@ import pandas as pd
 
 # Add parent directory to sys.path to import config
 sys.path.append(str(Path(__file__).resolve().parent.parent))
-from config import DATASET_RAW_KASUS, KECAMATAN_SEMARANG
+from config import CASE_REPORT_THROUGH, DATASET_RAW_KASUS, KECAMATAN_SEMARANG
+from etl.allocation import allocate_two_margins
 
 # Setup Logging
 logging.basicConfig(
@@ -74,12 +75,11 @@ PUSKESMAS_TO_KECAMATAN = {
 }
 
 
-def load_real_weekly_weights(year: int) -> np.ndarray:
-    """Load real citywide weekly case distribution from `jumlah-pasien-dbd-minguan_{year}.csv`."""
+def load_weekly_counts(year: int) -> pd.Series | None:
+    """Kasus DBD sekota per minggu ke-1..52 dari `jumlah-pasien-dbd-minguan_{year}.csv`."""
     weekly_file = DATASET_RAW_KASUS / f"jumlah-pasien-dbd-minguan_{year}.csv"
     if not weekly_file.exists():
-        logger.warning(f"Real weekly file not found: {weekly_file}. Using uniform distribution.")
-        return np.full(52, 1.0 / 52)
+        return None
 
     df_w = pd.read_csv(weekly_file)
     df_w.columns = [col.strip().replace('"', '') for col in df_w.columns]
@@ -98,6 +98,15 @@ def load_real_weekly_weights(year: int) -> np.ndarray:
         wn = int(row["week_num"])
         if 1 <= wn <= 52:
             weekly_series[wn] = row["total_cases"]
+    return weekly_series
+
+
+def load_real_weekly_weights(year: int) -> np.ndarray:
+    """Load real citywide weekly case distribution from `jumlah-pasien-dbd-minguan_{year}.csv`."""
+    weekly_series = load_weekly_counts(year)
+    if weekly_series is None:
+        logger.warning(f"Real weekly file not found for {year}. Using uniform distribution.")
+        return np.full(52, 1.0 / 52)
 
     total_annual_city = weekly_series.sum()
     if total_annual_city > 0:
@@ -108,14 +117,29 @@ def load_real_weekly_weights(year: int) -> np.ndarray:
     return weights
 
 
-def reported_week_limit(year: int) -> int:
-    """Batas minggu yang benar-benar ada di sumber tahun berjalan.
+def partial_year_weeks(year: int) -> pd.DatetimeIndex:
+    """Minggu tahun berjalan yang masih termasuk rekap (`CASE_REPORT_THROUGH`).
 
-    File mingguan tahun berjalan hanya berisi laporan sampai periode terakhir
-    yang diterima. Mengisi minggu setelah itu dengan nol akan membuat bulan
-    masa depan terlihat sebagai observasi resmi dan mendorong model selalu
-    memprakirakan nol. Tahun-tahun yang tidak punya file mingguan tetap
-    memakai 52 minggu sebagai perilaku lama yang paling aman.
+    Berkas mingguan hanya memuat minggu yang ada kasusnya, jadi minggu
+    terakhir di berkas bukan batas laporan. Minggu dihitung dengan konvensi
+    yang sama dengan tahun penuh (Senin pertama setelah 1 Januari) dan
+    dipotong pada minggu terakhir yang dimulai di bulan batas.
+    """
+    first_excluded = pd.Timestamp(CASE_REPORT_THROUGH) + pd.offsets.MonthBegin(1)
+    dates = pd.date_range(start=f"{year}-01-01", periods=52, freq="W-MON")
+    return dates[dates < first_excluded]
+
+
+def reported_week_limit(year: int) -> int:
+    """Minggu terakhir yang ada di berkas mingguan suatu tahun.
+
+    Dipakai hanya untuk tahun penuh terakhir: data latih model yang sekarang
+    dibangkitkan saat tahun itu masih menjadi tahun sumber terakhir dan
+    dipotong di minggu ini. Memotong dengan cara yang sama menjaga urutan
+    RNG multinomial, sehingga data 2021-2025 tetap identik dengan yang
+    dipakai melatih model. Batas laporan tahun berjalan tidak memakai fungsi
+    ini — berkas mingguan hanya memuat minggu yang ada kasusnya, jadi batasnya
+    ditentukan `CASE_REPORT_THROUGH`.
     """
     weekly_file = DATASET_RAW_KASUS / f"jumlah-pasien-dbd-minguan_{year}.csv"
     if not weekly_file.exists():
@@ -147,8 +171,6 @@ def process_raw_dbd_files():
     )
     if not years:
         years = list(range(2021, 2027))
-
-    latest_source_year = max(years)
 
     for year in years:
         file_path = DATASET_RAW_KASUS / f"dbd_{year}.csv"
@@ -201,45 +223,52 @@ def process_raw_dbd_files():
     weekly_records = []
     np.random.seed(42)
 
-    for year in years:
-        real_weights = load_real_weekly_weights(year)
-        logger.info(f"Loaded REAL weekly weights for Year {year} (Total citywide cases: {real_weights.sum():.2f})")
+    report_through = pd.Timestamp(CASE_REPORT_THROUGH)
+    last_full_year = max((y for y in years if y < report_through.year), default=None)
 
-        start_date = f"{year}-01-01"
-        week_limit = 52
-        if year == latest_source_year:
-            week_limit = reported_week_limit(year)
-            if week_limit < 52:
-                logger.info(
-                    "Year %s is the latest source year; trimming synthetic future weeks after week %s.",
-                    year,
-                    week_limit,
-                )
-        dates = pd.date_range(start=start_date, periods=week_limit, freq="W-MON")
+    for year in years:
+        if year > report_through.year:
+            logger.warning(f"Rekap {year} melewati CASE_REPORT_THROUGH ({CASE_REPORT_THROUGH}); dilewati.")
+            continue
 
         year_group = annual_kecamatan[annual_kecamatan["year"] == year]
-
+        annual_totals = []
         for k_item in KECAMATAN_SEMARANG:
+            match = year_group[year_group["kecamatan_id"] == k_item["id"]]
+            annual_totals.append(int(match["total_cases"].values[0]) if not match.empty else 0)
+
+        if year == report_through.year:
+            # Tahun berjalan: bobot 52 minggu menyebar kasus secara acak dan
+            # bisa jatuh di minggu yang tidak dilaporkan. Dibagi dengan dua
+            # batas, total per kecamatan dan total sekota per minggu tetap
+            # sama dengan rekap.
+            dates = partial_year_weeks(year)
+            city_weekly = load_weekly_counts(year)
+            if city_weekly is None:
+                raise FileNotFoundError(f"Rekap mingguan DBD {year} tidak ada; tahun berjalan tidak bisa dibagi.")
+            col_totals = [int(city_weekly[w]) for w in range(1, len(dates) + 1)]
+            kecamatan_weeks = allocate_two_margins(annual_totals, col_totals)
+            logger.info(
+                f"Tahun {year} dibagi sampai minggu ke-{len(dates)} ({dates[-1].date()}): "
+                f"{sum(col_totals)} kasus."
+            )
+        else:
+            real_weights = load_real_weekly_weights(year)
+            logger.info(f"Loaded REAL weekly weights for Year {year} (Total citywide cases: {real_weights.sum():.2f})")
+            week_limit = reported_week_limit(year) if year == last_full_year else 52
+            dates = pd.date_range(start=f"{year}-01-01", periods=week_limit, freq="W-MON")
+            weights = real_weights
+            if week_limit < 52:
+                weights = real_weights[:week_limit]
+                weights = weights / weights.sum() if weights.sum() > 0 else np.full(week_limit, 1.0 / week_limit)
+            kecamatan_weeks = [
+                np.random.multinomial(total, weights) if total > 0 else np.zeros(week_limit, dtype=int)
+                for total in annual_totals
+            ]
+
+        for k_item, weekly_cases in zip(KECAMATAN_SEMARANG, kecamatan_weeks):
             kec_id = k_item["id"]
             kec_nama = k_item["name"]
-            match = year_group[year_group["kecamatan_id"] == kec_id]
-            annual_total = int(match["total_cases"].values[0]) if not match.empty else 0
-
-            if annual_total > 0:
-                if week_limit == 52:
-                    # Pertahankan distribusi dan urutan RNG historis persis;
-                    # koreksi ini hanya perlu mengubah tahun sumber terakhir.
-                    weekly_cases = np.random.multinomial(annual_total, real_weights)
-                else:
-                    weights = real_weights[:week_limit]
-                    weight_total = weights.sum()
-                    if weight_total <= 0:
-                        weights = np.full(week_limit, 1.0 / week_limit)
-                    else:
-                        weights = weights / weight_total
-                    weekly_cases = np.random.multinomial(annual_total, weights)
-            else:
-                weekly_cases = np.zeros(week_limit, dtype=int)
 
             for week_start, cases in zip(dates, weekly_cases):
                 weekly_records.append(

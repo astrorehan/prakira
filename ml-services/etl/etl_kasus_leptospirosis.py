@@ -6,7 +6,8 @@ import pandas as pd
 
 # Add parent directory to sys.path to import config
 sys.path.append(str(Path(__file__).resolve().parent.parent))
-from config import DATASET_RAW_KASUS, KECAMATAN_SEMARANG
+from config import CASE_REPORT_THROUGH, DATASET_RAW_KASUS, KECAMATAN_SEMARANG
+from etl.allocation import allocate_two_margins
 
 # Setup Logging
 logging.basicConfig(
@@ -88,6 +89,44 @@ def _distribute_cases_largest_remainder(yearly_cases: int, weights: dict) -> dic
     return floor_alloc
 
 
+def _partial_year_rows(year: int, last_month: int, df_yearly: pd.DataFrame, city_monthly: dict) -> list[dict]:
+    """Baris kecamatan-bulan untuk tahun yang rekapnya belum setahun penuh.
+
+    Bobot bulanan tahun penuh tidak bisa dipakai di sini: bulan yang tidak
+    ada di rekap mendapat bobot 1/12, sehingga kasus bocor ke bulan yang belum
+    terjadi, dan pembulatan per kecamatan membuat total sekota per bulan
+    melenceng dari rekap bulanan. Tahun ini dibagi dengan dua batas sekaligus:
+    total per kecamatan dan total sekota per bulan, hanya sampai `last_month`.
+    """
+    months = list(range(1, last_month + 1))
+    col_totals = [city_monthly.get(m, 0) for m in months]
+    kecamatan = [(k["id"], k["name"]) for k in KECAMATAN_SEMARANG]
+    row_totals = []
+    for k_id, _ in kecamatan:
+        match = df_yearly[(df_yearly["year"] == year) & (df_yearly["kecamatan_id"] == k_id)]
+        row_totals.append(int(match["yearly_cases"].values[0]) if not match.empty else 0)
+
+    matrix = allocate_two_margins(row_totals, col_totals)
+    logger.info(
+        f"Tahun {year} dibagi sampai bulan {last_month}: {sum(col_totals)} kasus, "
+        f"total per bulan {col_totals}."
+    )
+
+    rows = []
+    for (k_id, k_nama), month_cases in zip(kecamatan, matrix):
+        for month, cases in zip(months, month_cases):
+            rows.append(
+                {
+                    "kecamatan_id": k_id,
+                    "kecamatan_nama": k_nama,
+                    "month_start": f"{year}-{str(month).zfill(2)}-01",
+                    "disease": "LEPTOSPIROSIS",
+                    "cases": int(cases),
+                }
+            )
+    return rows
+
+
 def process_leptospirosis_files():
     """Process raw Leptospirosis datasets (2021-2025) and generate monthly cases per kecamatan.
 
@@ -108,6 +147,7 @@ def process_leptospirosis_files():
 
     # 1. Read monthly distribution weights per year
     monthly_weights = {}
+    monthly_totals = {}
     for year in years:
         m_file = DATASET_RAW_KASUS / f"jumlah-pasien-leptospirosis-bulanan_{year}.csv"
         if m_file.exists():
@@ -126,6 +166,10 @@ def process_leptospirosis_files():
             ).fillna(0) + pd.to_numeric(
                 df_m["Penderita Perempuan"], errors="coerce"
             ).fillna(0)
+
+            monthly_totals[year] = {
+                int(m): int(c) for m, c in df_m.dropna(subset=["month_num"])[["month_num", "cases"]].values
+            }
 
             tot = df_m["cases"].sum()
             weights = {}
@@ -179,8 +223,18 @@ def process_leptospirosis_files():
 
     # 3. Create full grid for 16 Kecamatan x Years x 12 Months using Largest Remainder Method
     grid_rows = []
+    report_through = pd.Timestamp(CASE_REPORT_THROUGH)
 
     for year in years:
+        if year == report_through.year:
+            grid_rows.extend(
+                _partial_year_rows(year, report_through.month, df_yearly, monthly_totals.get(year, {}))
+            )
+            continue
+        if year > report_through.year:
+            logger.warning(f"Rekap {year} melewati CASE_REPORT_THROUGH ({CASE_REPORT_THROUGH}); dilewati.")
+            continue
+
         weights = monthly_weights.get(year, {m: 1 / 12.0 for m in range(1, 13)})
 
         for k_item in KECAMATAN_SEMARANG:
