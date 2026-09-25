@@ -17,7 +17,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def build_features(disease: str = "dbd"):
+def build_features(disease: str = "dbd", output_path: Path | None = None):
     """Perform MONTHLY feature engineering for the specified disease.
 
     Input:  dataset_clean/merged_monthly_{disease}.csv
@@ -86,7 +86,7 @@ def build_features(disease: str = "dbd"):
     # ----- 6. Drop NaN rows from lagging -----
     df_clean = df.dropna().copy()
 
-    output_path = DATASET_CLEAN_DIR / cfg["feature_file"]
+    output_path = output_path or DATASET_CLEAN_DIR / cfg["feature_file"]
     df_clean.to_csv(output_path, index=False)
     logger.info(
         f"Monthly feature engineering completed for {disease_lower.upper()}: "

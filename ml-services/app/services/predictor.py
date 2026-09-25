@@ -2,7 +2,6 @@
 predictor.py
 Memuat model yang sudah dilatih dan menyediakan prediksi per kecamatan per penyakit.
 """
-import json
 import logging
 from pathlib import Path
 from typing import Optional, Tuple
@@ -14,12 +13,10 @@ import pandas as pd
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from config import (
-    DATASET_CLEAN_DIR,
     DISEASE_CONFIG,
     DISEASES,
     FEATURE_COLUMNS,
     KECAMATAN_SEMARANG,
-    MODELS_DIR,
 )
 
 from app.services.risk_classifier import (
@@ -35,22 +32,12 @@ from app.services.feature_frame import (
 )
 from training.conformal import difficulty, interval as conformal_interval
 from training.ensemble import DBDEnsembleModel, ISPAEnsembleModel, LeptospirosisEnsembleModel
+from app.services.model_releases import active_artifacts
 
 logger = logging.getLogger(__name__)
 
-# Cache: model + data per penyakit
-_model_cache: dict = {}
-_data_cache: dict = {}
-_metadata_cache: dict = {}
-
-
-def _load_metadata() -> dict:
-    """Load metadata.json."""
-    path = MODELS_DIR / "metadata.json"
-    if path.exists():
-        with open(path, "r") as f:
-            return json.load(f)
-    return {}
+# Model, features, and metadata are cached as one release snapshot.
+_release_cache: dict = {}
 
 
 def single_thread(model):
@@ -72,42 +59,39 @@ def single_thread(model):
 
 
 def _load_model(disease: str):
-    """Load model pkl dan historical features untuk penyakit tertentu."""
+    """Compatibility entry point for consumers needing model and features."""
+    model, features, _ = _load_bundle(disease)
+    return model, features
+
+
+def _load_bundle(disease: str):
+    """Keep model, features, and metadata from the same immutable release."""
     disease_lower = disease.lower()
-    if disease_lower in _model_cache:
-        return _model_cache[disease_lower], _data_cache[disease_lower]
-
-    cfg = DISEASE_CONFIG.get(disease_lower)
-    if cfg is None:
+    if disease_lower not in DISEASE_CONFIG:
         raise ValueError(f"Penyakit '{disease}' tidak dikonfigurasi.")
-
-    model_path = MODELS_DIR / cfg["model_file"]
+    release_id, model_path, feature_path, model_meta = active_artifacts(disease_lower)
+    cached = _release_cache.get(disease_lower)
+    if cached is not None and cached[0] == release_id:
+        return cached[1]
     if not model_path.exists():
         raise FileNotFoundError(f"Model belum dilatih: {model_path}")
-
     model = single_thread(joblib.load(model_path))
-
-    feature_path = DATASET_CLEAN_DIR / cfg["feature_file"]
     if feature_path.exists():
         df_hist = pd.read_csv(feature_path)
     else:
         df_hist = pd.DataFrame()
-
-    _model_cache[disease_lower] = model
-    _data_cache[disease_lower] = df_hist
-
+    bundle = (model, df_hist, model_meta)
+    _release_cache[disease_lower] = (release_id, bundle)
     logger.info(f"Model loaded: {model_path.name} ({len(df_hist)} historical rows)")
-    return model, df_hist
+    return bundle
 
 
 def get_loaded_models_info() -> dict:
     """Info model yang tersedia untuk health check."""
-    metadata = _load_metadata()
     info = {}
     for d in DISEASES:
-        cfg = DISEASE_CONFIG.get(d, {})
-        model_exists = (MODELS_DIR / cfg.get("model_file", "")).exists() if cfg else False
-        meta = metadata.get(d, {})
+        _, model_path, _, meta = active_artifacts(d)
+        model_exists = model_path.exists()
         info[d] = {
             "model_exists": model_exists,
             "version": meta.get("version", "unknown"),
@@ -216,9 +200,7 @@ def predict_single(
     disease_lower = disease.lower()
     disease_upper = disease.upper()
 
-    model, df_hist = _load_model(disease_lower)
-    metadata = _load_metadata()
-    model_meta = metadata.get(disease_lower, {})
+    model, df_hist, model_meta = _load_bundle(disease_lower)
     cfg = DISEASE_CONFIG[disease_lower]
 
     # Cari data kecamatan ini di historical features
@@ -314,9 +296,7 @@ def predict_batch(disease: str, month: str) -> list:
     disease_lower = disease.lower()
     disease_upper = disease.upper()
 
-    model, df_hist = _load_model(disease_lower)
-    metadata = _load_metadata()
-    model_meta = metadata.get(disease_lower, {})
+    model, df_hist, model_meta = _load_bundle(disease_lower)
     cfg = DISEASE_CONFIG[disease_lower]
     version = model_meta.get("version", "unknown")
 
@@ -488,9 +468,13 @@ def _bracket(point: float, lower: float, upper: float) -> Tuple[int, int]:
 
 
 def reload_models():
-    """Clear cache sehingga model di-load ulang saat request berikutnya."""
-    _model_cache.clear()
-    _data_cache.clear()
-    _metadata_cache.clear()
+    """Forget cached releases after an explicit data or model refresh."""
+    _release_cache.clear()
     reload_weather()
     logger.info("Model cache cleared — will reload on next request.")
+
+
+def activate_release(disease: str, release_id: str, model, features: pd.DataFrame, metadata: dict) -> None:
+    """Make a validated release ready in this worker immediately after publication."""
+    reload_weather()
+    _release_cache[disease] = (release_id, (model, features, metadata))

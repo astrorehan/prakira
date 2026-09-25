@@ -8,7 +8,7 @@ router = APIRouter()
 
 @router.post("", response_model=PredictionResult)
 @router.post("/", response_model=PredictionResult)
-async def predict(req: PredictRequest):
+def predict(req: PredictRequest):
     """Prediksi risiko untuk satu kecamatan, satu penyakit, satu bulan."""
     try:
         result = predict_single(
@@ -26,7 +26,7 @@ async def predict(req: PredictRequest):
 
 
 @router.post("/batch", response_model=BatchPredictionResponse)
-async def predict_batch_endpoint(req: BatchPredictRequest):
+def predict_batch_endpoint(req: BatchPredictRequest):
     """Prediksi risiko untuk semua 16 kecamatan sekaligus."""
     try:
         results = predict_batch(disease=req.disease, month=req.month)

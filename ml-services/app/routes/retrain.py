@@ -1,19 +1,27 @@
+import asyncio
+import shutil
+from threading import Lock
+
+import joblib
+import numpy as np
 from fastapi import APIRouter, HTTPException
 from app.schemas.request import RetrainRequest
 from app.schemas.response import RetrainResponse, BacktestMetrics
-from app.services.predictor import reload_models
+from app.services.predictor import activate_release, single_thread
+from app.services.model_releases import active_artifacts, new_release_dir, publish_release
 
 import sys
 import json
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
-from config import DATASET_CLEAN_DIR, DISEASE_CONFIG, MODELS_DIR
+from config import DATASET_CLEAN_DIR, DISEASE_CONFIG, FEATURE_COLUMNS
 
 import pandas as pd
 
 from features.citizen_signal import assess, normalise
 
 router = APIRouter()
+_retrain_lock = Lock()
 
 
 @router.post("", response_model=RetrainResponse)
@@ -30,9 +38,6 @@ async def retrain(req: RetrainRequest):
     if disease_lower not in DISEASE_CONFIG:
         raise HTTPException(status_code=400, detail=f"Disease '{req.disease}' not supported.")
 
-    cfg = DISEASE_CONFIG[disease_lower]
-    meta_path = MODELS_DIR / "metadata.json"
-
     # Kelayakan sinyal warga diputuskan sebelum pelatihan dimulai, dan
     # penolakannya membawa angka alasannya.
     #
@@ -46,53 +51,22 @@ async def retrain(req: RetrainRequest):
         citizen_signal = _eligible_signal(disease_lower, req)
 
     # Baca versi sebelumnya sebelum retrain
-    previous_version = None
-    if meta_path.exists():
-        with open(meta_path, "r") as f:
-            old_meta = json.load(f)
-        previous_version = old_meta.get(disease_lower, {}).get("version")
+    _, _, _, old_meta = active_artifacts(disease_lower)
+    previous_version = old_meta.get("version")
 
     try:
-        # Rekalkulasi fitur deret waktu dan lag cuaca/kasus dari dataset observasi terkini
-        from features.build_features import build_features
-        build_features(disease=disease_lower)
-
-        if disease_lower == "dbd":
-            from training.train_dbd import train_dbd_model
-            result = train_dbd_model(
-                citizen_signal=citizen_signal,
-                citizen_family=req.citizen_family,
-            )
-        elif disease_lower == "ispa":
-            from training.train_ispa import train_ispa_model
-            result = train_ispa_model(
-                citizen_signal=citizen_signal,
-                citizen_family=req.citizen_family,
-            )
-        elif disease_lower == "leptospirosis":
-            from training.train_leptospirosis import train_leptospirosis_model
-            result = train_leptospirosis_model(
-                citizen_signal=citizen_signal,
-                citizen_family=req.citizen_family,
-            )
-        else:
-            raise HTTPException(status_code=501, detail=f"Retrain for '{req.disease}' not implemented yet.")
-
-        if result is None:
-            raise HTTPException(status_code=500, detail="Training failed — check logs.")
-
-        _model, new_meta = result
-
+        # Training runs in a worker thread, leaving the event loop free to serve
+        # predictions from the old immutable release until publication.
+        new_meta = await asyncio.to_thread(
+            _train_and_publish, disease_lower, citizen_signal, req.citizen_family
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Retrain error: {str(e)}")
-
-    # Clear model cache agar prediksi berikutnya memakai model baru
-    reload_models()
 
     # Tentukan apakah ada improvement
     improved = False
     if previous_version:
-        old_mae = old_meta.get(disease_lower, {}).get("metrics", {}).get("mae", float("inf"))
+        old_mae = old_meta.get("metrics", {}).get("mae", float("inf"))
         new_mae = new_meta.get("metrics", {}).get("mae", float("inf"))
         improved = new_mae < old_mae
 
@@ -111,6 +85,56 @@ async def retrain(req: RetrainRequest):
         previous_version=previous_version,
         improved=improved,
     )
+
+
+def _train_and_publish(disease: str, citizen_signal, citizen_family: str | None) -> dict:
+    if not _retrain_lock.acquire(blocking=False):
+        raise RuntimeError("Pelatihan model lain sedang berlangsung.")
+    root = None
+    published = False
+    try:
+        release_id, root = new_release_dir(disease)
+        from features.build_features import build_features
+        feature_path = root / "features.csv"
+        if build_features(disease=disease, output_path=feature_path) is None:
+            raise RuntimeError("Pembuatan fitur gagal.")
+
+        if disease == "dbd":
+            from training.train_dbd import train_dbd_model as train
+        elif disease == "ispa":
+            from training.train_ispa import train_ispa_model as train
+        else:
+            from training.train_leptospirosis import train_leptospirosis_model as train
+
+        result = train(
+            citizen_signal=citizen_signal,
+            citizen_family=citizen_family,
+            feature_path=feature_path,
+            model_output_path=root / "model.pkl",
+            persist_metadata=False,
+        )
+        if result is None:
+            raise RuntimeError("Pelatihan model gagal.")
+        _, meta = result
+        (root / "metadata.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
+
+        # Verify the serialized artifact that future workers will actually load.
+        model = single_thread(joblib.load(root / "model.pkl"))
+        features = pd.read_csv(feature_path)
+        if features.empty:
+            raise RuntimeError("Fitur model baru kosong.")
+        prediction = np.asarray(model.predict(features[FEATURE_COLUMNS].head(1)), dtype=float)
+        if prediction.size != 1 or not np.isfinite(prediction).all():
+            raise RuntimeError("Model baru menghasilkan prediksi tidak valid.")
+
+        publish_release(disease, release_id)
+        published = True
+        activate_release(disease, release_id, model, features, meta)
+        return meta
+    finally:
+        if root is not None and not published:
+            shutil.rmtree(root, ignore_errors=True)
+        _retrain_lock.release()
 
 
 def _eligible_signal(disease: str, req: RetrainRequest):

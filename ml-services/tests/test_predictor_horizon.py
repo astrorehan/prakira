@@ -16,13 +16,12 @@ def test_single_step_keeps_interval_but_recursive_step_does_not(monkeypatch):
         "month_start": "2025-12-01",
         "cases": 2,
     }])
-    monkeypatch.setattr(predictor, "_load_model", lambda disease: (FixedModel(), history))
-    monkeypatch.setattr(predictor, "_load_metadata", lambda: {
-        "dbd": {"version": "test", "conformal": {
+    monkeypatch.setattr(predictor, "_load_bundle", lambda disease: (FixedModel(), history, {
+        "version": "test", "conformal": {
             "method": "one_step", "target_coverage": 0.8,
             "empirical_coverage": 0.9,
-        }}
-    })
+        }
+    }))
     monkeypatch.setattr(predictor, "assess_data_coverage", lambda *args: "high")
     monkeypatch.setattr(
         predictor, "build_feature_row", lambda *args, **kwargs: pd.DataFrame([{"x": 1}])

@@ -36,12 +36,15 @@ def train_leptospirosis_model(
     split_date: str = "2025-01-01",
     citizen_signal=None,
     citizen_family: str | None = None,
+    feature_path: Path | None = None,
+    model_output_path: Path | None = None,
+    persist_metadata: bool = True,
 ):
     """Train Leptospirosis Monthly Model using Ensemble Blending."""
     logger.info("Starting Leptospirosis Model Training (Ensemble Blending)...")
 
     cfg = DISEASE_CONFIG["leptospirosis"]
-    feature_file = DATASET_CLEAN_DIR / cfg["feature_file"]
+    feature_file = feature_path or DATASET_CLEAN_DIR / cfg["feature_file"]
     if not feature_file.exists():
         logger.error(f"Feature dataset not found: {feature_file}")
         return
@@ -143,7 +146,7 @@ def train_leptospirosis_model(
         )
 
     version_str = f"ensemble-monthly-leptospirosis-{datetime.now().strftime('%Y.%m.%d')}"
-    model_path = MODELS_DIR / cfg["model_file"]
+    model_path = model_output_path or MODELS_DIR / cfg["model_file"]
     joblib.dump(model, model_path)
     logger.info(f"Model saved to: {model_path}")
 
@@ -186,9 +189,10 @@ def train_leptospirosis_model(
         "top_features": feat_importance_df.head(5).to_dict(orient="records"),
     }
 
-    with open(metadata_path, "w") as f:
-        json.dump(metadata, f, indent=2)
-    logger.info(f"Metadata updated: {metadata_path}")
+    if persist_metadata:
+        with open(metadata_path, "w") as f:
+            json.dump(metadata, f, indent=2)
+        logger.info(f"Metadata updated: {metadata_path}")
 
     # Dikembalikan dengan bentuk yang sama seperti `train_dbd` dan `train_ispa`
     # supaya `/retrain` bisa memanggil ketiganya lewat jalur yang identik.

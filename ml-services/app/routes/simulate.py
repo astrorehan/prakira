@@ -22,7 +22,7 @@ router = APIRouter()
 
 @router.post("", response_model=SimulateResponse)
 @router.post("/", response_model=SimulateResponse)
-async def simulate(req: SimulateRequest):
+def simulate(req: SimulateRequest):
     try:
         model, df_hist = load_for_disease(req.disease)
         result = simulate_batch(

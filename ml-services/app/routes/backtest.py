@@ -1,4 +1,3 @@
-import json
 from fastapi import APIRouter, HTTPException, Query
 from app.schemas.response import (
     BacktestResponse,
@@ -11,7 +10,7 @@ from app.schemas.response import (
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
-from config import MODELS_DIR, DATASET_CLEAN_DIR, DISEASE_CONFIG, FEATURE_COLUMNS, TARGET_COLUMN
+from config import DISEASE_CONFIG, FEATURE_COLUMNS, TARGET_COLUMN
 
 import pandas as pd
 import numpy as np
@@ -19,13 +18,14 @@ import joblib
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from app.services.risk_classifier import classify_risk, calculate_risk_score, assess_data_coverage
 from app.services.predictor import single_thread
+from app.services.model_releases import active_artifacts
 
 router = APIRouter()
 
 
 @router.get("", response_model=BacktestResponse)
 @router.get("/", response_model=BacktestResponse)
-async def backtest(disease: str = Query(..., description="Nama penyakit sesuai DISEASE_CONFIG, mis. DBD, ISPA, LEPTOSPIROSIS")):
+def backtest(disease: str = Query(..., description="Nama penyakit sesuai DISEASE_CONFIG, mis. DBD, ISPA, LEPTOSPIROSIS")):
     """Endpoint backtesting — evaluasi model pada data test historis.
 
     Digunakan oleh halaman /model (transparansi model, PRD section 5.7).
@@ -36,27 +36,17 @@ async def backtest(disease: str = Query(..., description="Nama penyakit sesuai D
 
     cfg = DISEASE_CONFIG[disease_lower]
 
-    # Load metadata
-    meta_path = MODELS_DIR / "metadata.json"
-    if not meta_path.exists():
-        raise HTTPException(status_code=503, detail="metadata.json not found. Train model first.")
-
-    with open(meta_path, "r") as f:
-        metadata = json.load(f)
-
-    model_meta = metadata.get(disease_lower)
+    _, model_path, feature_path, model_meta = active_artifacts(disease_lower)
     if not model_meta:
         raise HTTPException(status_code=503, detail=f"No metadata for disease '{disease}'.")
 
     # Load model
-    model_path = MODELS_DIR / cfg["model_file"]
     if not model_path.exists():
         raise HTTPException(status_code=503, detail=f"Model file not found: {cfg['model_file']}")
 
     model = single_thread(joblib.load(model_path))
 
     # Load features dataset
-    feature_path = DATASET_CLEAN_DIR / cfg["feature_file"]
     if not feature_path.exists():
         raise HTTPException(status_code=503, detail=f"Features file not found: {cfg['feature_file']}")
 

@@ -34,12 +34,15 @@ def train_dbd_model(
     split_date: str = "2025-01-01",
     citizen_signal=None,
     citizen_family: str | None = None,
+    feature_path: Path | None = None,
+    model_output_path: Path | None = None,
+    persist_metadata: bool = True,
 ):
     """Train DBD Monthly Model using Ensemble Blending."""
     logger.info("Starting DBD Model Training (Ensemble Blending)...")
 
     cfg = DISEASE_CONFIG["dbd"]
-    feature_file = DATASET_CLEAN_DIR / cfg["feature_file"]
+    feature_file = feature_path or DATASET_CLEAN_DIR / cfg["feature_file"]
     if not feature_file.exists():
         logger.error(f"Feature dataset not found: {feature_file}")
         return
@@ -128,7 +131,7 @@ def train_dbd_model(
         )
 
     version_str = f"ensemble-monthly-dbd-{datetime.now().strftime('%Y.%m.%d')}"
-    model_path = MODELS_DIR / cfg["model_file"]
+    model_path = model_output_path or MODELS_DIR / cfg["model_file"]
     joblib.dump(model, model_path)
     logger.info(f"Model saved to: {model_path}")
 
@@ -180,9 +183,10 @@ def train_dbd_model(
         "top_features": feat_importance_df.head(5).to_dict(orient="records"),
     }
 
-    with open(metadata_path, "w") as f:
-        json.dump(metadata, f, indent=2)
-    logger.info(f"Metadata updated: {metadata_path}")
+    if persist_metadata:
+        with open(metadata_path, "w") as f:
+            json.dump(metadata, f, indent=2)
+        logger.info(f"Metadata updated: {metadata_path}")
 
     return model, metadata["dbd"]
 

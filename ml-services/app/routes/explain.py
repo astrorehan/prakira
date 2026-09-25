@@ -21,7 +21,7 @@ router = APIRouter()
 
 @router.post("", response_model=ExplainResponse)
 @router.post("/", response_model=ExplainResponse)
-async def explain(req: ExplainRequest):
+def explain(req: ExplainRequest):
     try:
         model, df_hist = load_for_disease(req.disease)
         df_kec = district_history(df_hist, req.kecamatan_id)
