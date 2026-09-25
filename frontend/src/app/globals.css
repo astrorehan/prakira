@@ -270,6 +270,35 @@
     opacity: 0.7;
   }
 
+  /* Halftone: the printed-dot field from the rob banner. Dense in one corner,
+     fading out, so it reads as texture rather than a grid. `--dot` sets the
+     ink; the light variant is for dark `grad-ocean` bands. */
+  .halftone {
+    --dot: rgba(11, 74, 87, 0.16);
+    background-image: radial-gradient(circle at center, var(--dot) 1.2px, transparent 1.6px);
+    background-size: 14px 14px;
+    -webkit-mask-image: radial-gradient(110% 90% at 100% 0%, #000 0%, transparent 62%);
+    mask-image: radial-gradient(110% 90% at 100% 0%, #000 0%, transparent 62%);
+  }
+  .halftone-light {
+    --dot: rgba(178, 232, 237, 0.26);
+  }
+  .halftone-bl {
+    -webkit-mask-image: radial-gradient(110% 90% at 0% 100%, #000 0%, transparent 62%);
+    mask-image: radial-gradient(110% 90% at 0% 100%, #000 0%, transparent 62%);
+  }
+
+  /* Frosted tile for dark ocean bands — the three stat cards on the banner. */
+  .glass-tile {
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.04) 100%);
+    border: 1px solid rgba(178, 232, 237, 0.26);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    backdrop-filter: blur(14px) saturate(140%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.18),
+      0 24px 48px -28px rgba(3, 27, 32, 0.7);
+  }
+
   /* Used by popovers that do not already have a gesture animation. The
      transform and blur are paired so the surface materializes instead of
      merely fading in. */

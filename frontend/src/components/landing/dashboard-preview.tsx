@@ -85,7 +85,7 @@ export function TrustSection() {
   ];
 
   return (
-    <section id="bukti" className="scroll-mt-24 bg-grad-paper py-16 md:py-24">
+    <section id="bukti" className="scroll-mt-24 bg-white py-16 md:py-24">
       <div className="container">
         <SectionHeading
           kicker="Akurasi & sumber"
@@ -104,9 +104,14 @@ export function TrustSection() {
         {/* Metrics — ruled columns, not four floating boxes. */}
         <div className="mt-12 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
           {METRICS.map((m, i) => (
-            <Reveal key={m.label} delay={i * 90} className="border-t border-sand-200 pt-5">
-              <p className="tabular text-metric text-foreground">
-                <CountUp to={m.value} decimals={m.decimals} />
+            <Reveal
+              key={m.label}
+              delay={i * 90}
+              className="relative rounded-3xl border border-ocean-100 bg-grad-aqua-soft p-6 pt-7"
+            >
+              <span aria-hidden className="absolute left-6 top-0 h-[3px] w-12 rounded-full bg-grad-ink" />
+              <p className="tabular text-metric-xl">
+                <CountUp to={m.value} decimals={m.decimals} className="bg-grad-ink bg-clip-text text-transparent" />
               </p>
               <p className="mt-2 text-body font-medium text-foreground">{m.label}</p>
               <p className="mt-1.5 text-body-sm leading-relaxed text-paper-600">
@@ -118,7 +123,7 @@ export function TrustSection() {
 
         {/* Sources */}
         <Reveal delay={120} className="mt-12">
-          <details className="group rounded-2xl border border-sand-200 bg-sand-50">
+          <details className="group rounded-2xl border border-ocean-100 bg-ocean-50/60">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 text-body-sm font-medium text-foreground marker:hidden">
               <span>Dari mana data ini berasal?</span>
               <span className="text-brand-700 transition-transform duration-fast group-open:rotate-45" aria-hidden>
@@ -126,7 +131,7 @@ export function TrustSection() {
               </span>
             </summary>
 
-            <div className="grid gap-8 border-t border-sand-200 px-5 py-5 md:grid-cols-12 md:px-7 md:py-7">
+            <div className="grid gap-8 border-t border-ocean-100 px-5 py-5 md:grid-cols-12 md:px-7 md:py-7">
               <div className="md:col-span-4">
                 <h3 className="text-h3 text-foreground">Sumber data</h3>
                 <p className="mt-2 text-body-sm text-paper-600">
@@ -139,9 +144,11 @@ export function TrustSection() {
                 {SOURCES.map(({ icon: Icon, name, detail }) => (
                   <li
                     key={name}
-                    className="flex gap-4 border-t border-sand-200 py-4 first:border-t-0 first:pt-0"
+                    className="flex gap-4 border-t border-ocean-100 py-4 first:border-t-0 first:pt-0"
                   >
-                    <Icon className="mt-0.5 h-5 w-5 shrink-0 text-brand-500" aria-hidden />
+                    <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-ocean-100 text-ocean-600">
+                      <Icon className="h-5 w-5" aria-hidden />
+                    </span>
                     <div>
                       <p className="text-body-sm font-medium text-foreground">{name}</p>
                       <p className="mt-1 text-caption text-paper-600">{detail}</p>
@@ -156,7 +163,7 @@ export function TrustSection() {
         {/* The honest caveat, stated plainly rather than buried in a footer. */}
         <Reveal
           delay={80}
-          className="mt-6 flex flex-col items-start justify-between gap-5 border-t border-sand-200 pt-6 md:flex-row md:items-center"
+          className="mt-6 flex flex-col items-start justify-between gap-5 border-t border-ocean-100 pt-6 md:flex-row md:items-center"
         >
           <p className="max-w-2xl text-body-sm leading-relaxed text-paper-600">
             Alat bantu keputusan, bukan diagnosis. Rentang prakiraan dan data tipis

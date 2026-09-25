@@ -8,7 +8,10 @@ import tailwindcssAnimate from "tailwindcss-animate";
  * Rules enforced here:
  *  - Neutrals are a custom low-chroma ramp tinted toward the brand hue (~192deg),
  *    never Tailwind's stock `slate`. This is what makes the surface read as paper.
- *  - Saturation is reserved for risk. Brand, surfaces and nav speak in neutrals.
+ *  - Risk owns green, amber and red. Everything else that needs colour draws
+ *    from the cool side of the wheel instead: `ocean` (brand, the rob banner)
+ *    and `dz` (one identity hue per disease). Neither ever encodes risk, so a
+ *    colourful page still never says "Siaga" by accident.
  *  - Risk fills descend monotonically in lightness so the ordinal survives
  *    grayscale, color blindness and print.
  *  - Legacy aliases (primary-*, risk-*, shadow-glass-*) are kept so existing
@@ -113,6 +116,43 @@ const config: Config = {
           rain: "#2E6F8E",
           temp: "#B4552A",
           humid: "#4E8C7E",
+        },
+
+        /* ── Ocean: the rob banner, as a ramp ───────────────────────────────
+           Deep petrol at the bottom (brand-700 sits at 700), vivid aqua in
+           the middle for highlights on dark bands. 400 and lighter are for
+           dark surfaces or decoration only — they fail AA as text on white. */
+        ocean: {
+          50: "#EEFAFB",
+          100: "#D9F4F6",
+          200: "#B2E8ED",
+          300: "#74D3DC",
+          400: "#2EB6C4",
+          500: "#1296A6",
+          600: "#0E7482",
+          700: "#0B4A57",
+          800: "#093843",
+          900: "#06282F",
+          950: "#031B20",
+        },
+
+        /* ── Disease identity: one hue per disease, never risk ─────────────
+           Violet for DBD (the mosquito), sky for ISPA (the air), aqua for
+           Leptospirosis (the flood water). `ink` passes AA on white and on
+           its own `bg`; `fill` is for dots, bars and icons. */
+        dz: {
+          "dbd-ink": "#5B3CC4",
+          "dbd-fill": "#7C5CE6",
+          "dbd-bg": "#F2EEFE",
+          "dbd-br": "#D9CEFA",
+          "ispa-ink": "#1F66B3",
+          "ispa-fill": "#3B8BE0",
+          "ispa-bg": "#EAF3FD",
+          "ispa-br": "#C6DDF7",
+          "lepto-ink": "#0B6E7A",
+          "lepto-fill": "#15A3B3",
+          "lepto-bg": "#E6F7F8",
+          "lepto-br": "#B7E6EB",
         },
 
         /* ── Semantic slots (shadcn-compatible) ─────────────────────────── */
@@ -280,6 +320,19 @@ const config: Config = {
         "grad-bar-high": "linear-gradient(90deg, #E08A6E 0%, #C95E42 58%, #A8442C 100%)",
         "grad-bar-medium": "linear-gradient(90deg, #F2C67F 0%, #E5AA52 58%, #D4933A 100%)",
         "grad-bar-low": "linear-gradient(90deg, #A5C79F 0%, #7AA876 58%, #4A7C4E 100%)",
+
+        /* ── Colour gradients (ocean + disease hues, never risk) ─────────── */
+        "grad-aurora":
+          "radial-gradient(900px 520px at 6% -6%, rgba(46,182,196,.22) 0%, transparent 60%), radial-gradient(760px 480px at 96% 2%, rgba(124,92,230,.14) 0%, transparent 58%), radial-gradient(820px 520px at 70% 110%, rgba(59,139,224,.16) 0%, transparent 62%), linear-gradient(180deg, #FFFFFF 0%, #EEFAFB 100%)",
+        "grad-ocean":
+          "radial-gradient(700px 420px at 85% -10%, rgba(46,182,196,.38) 0%, transparent 60%), radial-gradient(600px 380px at 0% 120%, rgba(59,139,224,.22) 0%, transparent 60%), linear-gradient(160deg, #06282F 0%, #0B4A57 48%, #0E7482 100%)",
+        "grad-ocean-btn": "linear-gradient(135deg, #1296A6 0%, #0B4A57 100%)",
+        "grad-ink": "linear-gradient(95deg, #0E7482 0%, #1F66B3 55%, #5B3CC4 100%)",
+        "grad-ink-light": "linear-gradient(95deg, #74D3DC 0%, #B2E8ED 50%, #FFFFFF 100%)",
+        "grad-aqua-soft": "linear-gradient(180deg, #EEFAFB 0%, #D9F4F6 100%)",
+        "grad-dz-dbd": "linear-gradient(150deg, #F2EEFE 0%, #FFFFFF 70%)",
+        "grad-dz-ispa": "linear-gradient(150deg, #EAF3FD 0%, #FFFFFF 70%)",
+        "grad-dz-lepto": "linear-gradient(150deg, #E6F7F8 0%, #FFFFFF 70%)",
 
         hatch:
           "repeating-linear-gradient(45deg, rgba(255,255,255,.32) 0 2px, transparent 2px 6px)",

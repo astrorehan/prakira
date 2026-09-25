@@ -38,11 +38,20 @@ export function SectionHeading({
     >
       <div
         className={cn(
-          "flex items-baseline gap-4 border-t border-sand-200 pt-4",
+          "relative flex items-baseline gap-4 border-t border-ocean-100 pt-4",
           centered && "justify-center",
         )}
       >
-        <span className="font-mono text-overline uppercase text-paper-600">
+        {/* The rule keeps its hairline; a short ocean-to-violet stroke on top
+            is the one splash of colour every section shares. */}
+        <span
+          aria-hidden
+          className={cn(
+            "absolute -top-px h-[3px] w-16 rounded-full bg-grad-ink",
+            centered ? "left-1/2 -translate-x-1/2" : "left-0",
+          )}
+        />
+        <span className="font-mono text-overline uppercase text-ocean-600">
           {kicker}
         </span>
       </div>

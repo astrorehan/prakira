@@ -9,6 +9,7 @@ import { formatMonth } from "@/lib/period";
 import type { DiseaseType, RiskLevel } from "@/types";
 
 import { Reveal } from "./reveal";
+import { diseaseTone } from "@/lib/disease-tone";
 import { SectionHeading } from "./section-heading";
 
 const RISK: Record<RiskLevel, { word: string; bar: string; ink: string; tint: string }> = {
@@ -75,7 +76,7 @@ export function DistrictBoard({
   const predictionLabel = formatMonth(predictionMonth);
 
   return (
-    <section id="peta" className="scroll-mt-24 bg-grad-paper py-16 md:py-24">
+    <section id="peta" className="scroll-mt-24 bg-white py-16 md:py-24">
       <div className="container">
         <SectionHeading
           kicker="Peta risiko"
@@ -85,7 +86,7 @@ export function DistrictBoard({
             <div
               role="tablist"
               aria-label="Pilih penyakit"
-              className="inline-flex rounded-full border border-sand-200 bg-sand-50 p-1"
+              className="inline-flex rounded-full border border-ocean-100 bg-white p-1 shadow-xs"
             >
               {diseases.map((d) => (
                 <button
@@ -95,12 +96,19 @@ export function DistrictBoard({
                   type="button"
                   onClick={() => setDisease(d)}
                   className={cn(
-                    "rounded-full px-4 py-2 text-sm font-medium transition-colors duration-fast",
+                    "inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors duration-fast",
                     disease === d
-                      ? "bg-brand-700 text-white"
+                      ? diseaseTone(d).tabActive
                       : "text-paper-600 hover:text-foreground",
                   )}
                 >
+                  <span
+                    aria-hidden
+                    className={cn(
+                      "h-2 w-2 rounded-full",
+                      disease === d ? "bg-white/80" : diseaseTone(d).fill,
+                    )}
+                  />
                   {d}
                 </button>
               ))}

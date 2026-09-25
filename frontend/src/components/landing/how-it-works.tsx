@@ -309,7 +309,8 @@ export function HowItWorks() {
   ];
 
   return (
-    <section id="cara-kerja" className="scroll-mt-24 bg-grad-sand py-16 md:py-24">
+    <section id="cara-kerja" className="relative isolate scroll-mt-24 overflow-hidden bg-grad-aqua-soft py-16 md:py-24">
+      <div aria-hidden className="halftone pointer-events-none absolute inset-0 -z-10 opacity-70" />
       <div className="container">
         <SectionHeading
           kicker="Cara kerja"
@@ -317,16 +318,16 @@ export function HowItWorks() {
           lead="Tiga langkah: baca cuaca, cari pola, lalu terbitkan rentang prakiraan."
         />
 
-        <div ref={ref} className="mt-12 grid gap-px overflow-hidden rounded-3xl border border-sand-200 bg-sand-200 md:grid-cols-3">
+        <div ref={ref} className="mt-12 grid gap-px overflow-hidden rounded-3xl border border-ocean-200 bg-ocean-200 shadow-card md:grid-cols-3">
           {steps.map((step, i) => {
             const Chart = step.chart;
             return (
               <Reveal
                 key={step.n}
                 delay={i * 120}
-                className="flex flex-col bg-grad-paper p-7"
+                className="flex flex-col bg-white p-7"
               >
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-grad-brand-soft text-overline font-semibold text-brand-700">
+                <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-grad-ocean-btn text-overline font-semibold text-white shadow-[0_6px_14px_-6px_rgba(18,150,166,.7)]">
                   {step.n}
                 </span>
                 <h3 className="mt-3 text-h3 text-foreground">{step.title}</h3>
@@ -341,7 +342,7 @@ export function HowItWorks() {
                     trend={trendPoints}
                     disease={disease}
                   />
-                  <p className="mt-2 border-t border-sand-200 pt-2 font-mono text-3xs uppercase tracking-wider text-paper-600">
+                  <p className="mt-2 border-t border-ocean-100 pt-2 font-mono text-3xs uppercase tracking-wider text-paper-600">
                     {step.legend}
                   </p>
                 </div>

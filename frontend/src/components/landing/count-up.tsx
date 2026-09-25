@@ -12,6 +12,8 @@ interface CountUpProps {
   duration?: number;
   prefix?: string;
   suffix?: string;
+  /** Titik ribuan gaya Indonesia (63.450). Hanya untuk bilangan bulat. */
+  grouped?: boolean;
   className?: string;
 }
 
@@ -28,6 +30,7 @@ export function CountUp({
   duration = 1400,
   prefix = "",
   suffix = "",
+  grouped = false,
   className,
 }: CountUpProps) {
   const { ref, inView } = useInView<HTMLSpanElement>({ threshold: 0.4 });
@@ -58,7 +61,9 @@ export function CountUp({
   return (
     <span ref={ref} className={cn("tabular", className)}>
       {prefix}
-      {value.toFixed(decimals)}
+      {grouped
+        ? Math.round(value).toLocaleString("id-ID")
+        : value.toFixed(decimals)}
       {suffix}
     </span>
   );

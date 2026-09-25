@@ -4,6 +4,7 @@ import * as React from "react";
 import { useState } from "react";
 import { AlertCircle, Bug, Rat, Wind } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { diseaseTone } from "@/lib/disease-tone";
 import type { DiseaseType } from "@/types";
 
 import { Reveal } from "./reveal";
@@ -116,9 +117,10 @@ export function EducationSection() {
   const [active, setActive] = useState<DiseaseType>("DBD");
   const guide = GUIDES.find((g) => g.key === active) ?? GUIDES[0];
   const Icon = guide.icon;
+  const tone = diseaseTone(guide.key);
 
   return (
-    <section id="edukasi" className="scroll-mt-24 bg-grad-sand py-16 md:py-24">
+    <section id="edukasi" className="scroll-mt-24 bg-grad-aqua-soft py-16 md:py-24">
       <div className="container">
         <SectionHeading
           kicker="Pencegahan"
@@ -128,7 +130,7 @@ export function EducationSection() {
             <div
               role="tablist"
               aria-label="Pilih panduan pencegahan"
-              className="inline-flex flex-wrap gap-1 rounded-full border border-sand-200 bg-white p-1"
+              className="inline-flex flex-wrap gap-1 rounded-full border border-ocean-100 bg-white p-1 shadow-xs"
             >
               {GUIDES.map((g) => (
                 <button
@@ -138,12 +140,19 @@ export function EducationSection() {
                   aria-selected={active === g.key}
                   onClick={() => setActive(g.key)}
                   className={cn(
-                    "rounded-full px-4 py-2 text-sm font-medium transition-colors duration-fast",
+                    "inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors duration-fast",
                     active === g.key
-                      ? "bg-brand-700 text-white"
+                      ? diseaseTone(g.key).tabActive
                       : "text-paper-600 hover:text-foreground",
                   )}
                 >
+                  <g.icon
+                    aria-hidden
+                    className={cn(
+                      "h-4 w-4",
+                      active === g.key ? "text-white" : diseaseTone(g.key).ink,
+                    )}
+                  />
                   {g.tab}
                 </button>
               ))}
@@ -154,12 +163,22 @@ export function EducationSection() {
         <Reveal
           key={guide.key}
           delay={60}
-          className="mt-10 overflow-hidden rounded-3xl border border-sand-200 bg-grad-paper"
+          className={cn(
+            "relative isolate mt-10 overflow-hidden rounded-3xl border shadow-card",
+            tone.border,
+            tone.surface,
+          )}
         >
+          <div aria-hidden className="halftone pointer-events-none absolute inset-0 -z-10 opacity-60" />
           <div className="grid gap-10 p-7 md:grid-cols-12 md:p-10">
             <div className="md:col-span-4">
-              <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-grad-brand-soft">
-                <Icon className="h-6 w-6 text-brand-700" aria-hidden />
+              <span
+                className={cn(
+                  "inline-flex h-14 w-14 items-center justify-center rounded-2xl text-white shadow-card",
+                  tone.fill,
+                )}
+              >
+                <Icon className="h-7 w-7" aria-hidden />
               </span>
               <h3 className="mt-5 text-h2 text-balance text-foreground">
                 {guide.headline}
@@ -178,8 +197,8 @@ export function EducationSection() {
             <ol className="grid gap-x-8 gap-y-7 md:col-span-8 md:grid-cols-2">
               {guide.steps.map((step, i) => (
                 <li key={step.title}>
-                  <div className="flex items-baseline gap-3 border-t border-sand-200 pt-4">
-                    <span className="tabular font-mono text-overline text-brand-500">
+                  <div className={cn("flex items-baseline gap-3 border-t pt-4", tone.border)}>
+                    <span className={cn("tabular font-mono text-overline font-semibold", tone.ink)}>
                       {String(i + 1).padStart(2, "0")}
                     </span>
                     <div>

@@ -108,8 +108,8 @@ function KecamatanSearch({
         className={cn(
           "relative flex items-center rounded-2xl border bg-white p-1.5 pl-5 transition-all duration-base",
           open
-            ? "border-brand-500 shadow-lift"
-            : "border-sand-200 shadow-card hover:border-sand-300",
+            ? "border-ocean-400 shadow-lift ring-4 ring-ocean-100"
+            : "border-ocean-100 shadow-card hover:border-ocean-200",
         )}
       >
         <Search className="h-5 w-5 shrink-0 text-paper-600" aria-hidden />
@@ -143,7 +143,7 @@ function KecamatanSearch({
             if (target) commit(target);
           }}
           aria-label="Cek risiko kecamatan"
-          className="inline-flex h-12 w-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-brand-700 text-sm font-semibold text-white transition-colors duration-fast hover:bg-brand-600 sm:w-auto sm:px-5"
+          className="inline-flex h-12 w-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-grad-ocean-btn text-sm font-semibold text-white shadow-[0_8px_20px_-8px_rgba(18,150,166,.6)] transition-[filter,box-shadow] duration-fast hover:brightness-110 sm:w-auto sm:px-5"
         >
           <span className="hidden sm:inline">Cek Risiko</span>
           <ArrowRight className="h-4 w-4" />
@@ -274,34 +274,29 @@ export function Hero({ selectedKecamatan, onSelectKecamatan }: HeroProps) {
   );
 
   return (
-    <section className="relative isolate overflow-hidden bg-grad-page">
-      {/* Printed-page texture: a fine dot field, hairline column rules, and one
-          warm wash. No blurred colour orbs — this surface should read as paper. */}
+    <section className="relative isolate overflow-hidden bg-grad-aurora">
+      {/* The banner's language on a light ground: a halftone field in the
+          top corner and three soft washes, one per disease hue. */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div
-          className="absolute inset-0 opacity-[0.5]"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 1px 1px, rgba(11,74,87,.14) 1px, transparent 0)",
-            backgroundSize: "26px 26px",
-            maskImage:
-              "radial-gradient(120% 90% at 20% 0%, #000 0%, transparent 70%)",
-            WebkitMaskImage:
-              "radial-gradient(120% 90% at 20% 0%, #000 0%, transparent 70%)",
-          }}
-        />
-        <div className="absolute -right-32 top-[-18%] h-[38rem] w-[38rem] rounded-full bg-[radial-gradient(circle,rgba(214,233,236,.75)_0%,rgba(239,245,249,0)_68%)]" />
-        <div className="absolute -left-40 bottom-[-30%] h-[32rem] w-[32rem] rounded-full bg-[radial-gradient(circle,rgba(127,184,192,.40)_0%,rgba(239,245,249,0)_70%)]" />
+        <div className="halftone absolute inset-0 opacity-80" />
+        <div className="absolute -right-24 top-[-22%] h-[36rem] w-[36rem] rounded-full bg-[radial-gradient(circle,rgba(46,182,196,.28)_0%,rgba(238,250,251,0)_68%)]" />
+        <div className="absolute right-[28%] top-[40%] h-[22rem] w-[22rem] rounded-full bg-[radial-gradient(circle,rgba(124,92,230,.14)_0%,rgba(238,250,251,0)_70%)]" />
+        <div className="absolute -left-40 bottom-[-30%] h-[32rem] w-[32rem] rounded-full bg-[radial-gradient(circle,rgba(59,139,224,.20)_0%,rgba(238,250,251,0)_70%)]" />
       </div>
 
       <div className="container relative pb-12 pt-12 md:pb-16 md:pt-16">
         <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-14">
           {/* ── Copy + search ── */}
           <div className="min-w-0 lg:col-span-7">
-            <p className="animate-fade-in text-overline uppercase leading-5 tracking-[0.1em] text-paper-600">
+            <p className="animate-fade-in inline-flex flex-wrap items-center gap-x-2 gap-y-1 rounded-2xl border border-ocean-200 sm:rounded-full bg-white/70 py-1 pl-2 pr-3.5 text-overline uppercase leading-5 tracking-[0.1em] text-ocean-600 shadow-xs">
+              <span className="flex gap-0.5" aria-hidden>
+                <span className="h-2 w-2 rounded-full bg-dz-lepto-fill" />
+                <span className="h-2 w-2 rounded-full bg-dz-ispa-fill" />
+                <span className="h-2 w-2 rounded-full bg-dz-dbd-fill" />
+              </span>
               Peringatan dini penyakit iklim
-              <span className="mx-2 hidden text-paper-300 sm:inline">/</span>
-              <span className="block sm:inline">Kota Semarang</span>
+              <span className="text-ocean-300">/</span>
+              <span className="text-brand-700">Kota Semarang</span>
             </p>
 
             {/* The first screen should name the job before it explains the
@@ -311,13 +306,13 @@ export function Hero({ selectedKecamatan, onSelectKecamatan }: HeroProps) {
               <br />{" "}
               <span className="relative inline-block">
                 <span
-                  className="relative z-10 bg-grad-risk-signal bg-clip-text text-transparent"
+                  className="relative z-10 bg-grad-ink bg-clip-text text-transparent"
                 >
                   wilayah Anda
                 </span>
                 <span
                   aria-hidden
-                  className="absolute inset-x-0 bottom-[0.08em] -z-0 h-[0.2em] rounded-full bg-risk-medium-fill/40"
+                  className="absolute inset-x-0 bottom-[0.08em] -z-0 h-[0.2em] rounded-full bg-gradient-to-r from-ocean-300/60 via-dz-ispa-fill/30 to-dz-dbd-fill/30"
                 />
               </span>
             </h1>
@@ -335,7 +330,7 @@ export function Hero({ selectedKecamatan, onSelectKecamatan }: HeroProps) {
                   type="button"
                   onClick={locate}
                   disabled={locateStatus === "locating"}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-brand-300 bg-white px-3 py-1 text-xs font-semibold text-brand-700 transition-colors duration-fast hover:border-brand-500 hover:bg-brand-50 disabled:opacity-60"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-ocean-200 bg-ocean-50 px-3 py-1 text-xs font-semibold text-ocean-600 transition-colors duration-fast hover:border-ocean-400 hover:bg-ocean-100 disabled:opacity-60"
                 >
                   {locateStatus === "locating" ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
@@ -388,14 +383,14 @@ export function Hero({ selectedKecamatan, onSelectKecamatan }: HeroProps) {
 
       {/* Masthead rule: the seam between the hero and the answer below. */}
       <div className="container">
-        <div className="flex items-center justify-between gap-6 border-t border-sand-200 py-5">
+        <div className="flex items-center justify-between gap-6 border-t border-ocean-100 py-5">
           <p className="hidden font-mono text-overline uppercase text-paper-600 sm:block">
             Sumber · deret iklim & rekapitulasi kasus bulanan · laporan warga terverifikasi
           </p>
           <button
             type="button"
             onClick={scrollToResults}
-            className="group flex items-center gap-2 font-mono text-overline uppercase text-paper-600 transition-colors duration-base hover:text-brand-700"
+            className="group flex items-center gap-2 font-mono text-overline uppercase text-ocean-600 transition-colors duration-base hover:text-brand-700"
           >
             Lihat hasilnya
             <ArrowDown className="h-3.5 w-3.5 animate-rise-fall" />

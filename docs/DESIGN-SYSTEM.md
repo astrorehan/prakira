@@ -137,6 +137,33 @@ Kembaran nilai JavaScript didefinisikan dalam `CLIMATE_COLORS` (`src/lib/utils.t
 | `bg-grad-risk-medium` | `risk-medium-bg` → `#FFFFFF` | Latar kartu status waspada |
 | `bg-grad-risk-high` | `risk-high-bg` → `#FFFFFF` | Latar kartu status siaga |
 | `bg-grad-bar-{level}` | Gradien bar visualisasi R² | Bar kalibrasi evaluasi model |
+| `bg-grad-aurora` | Putih → `ocean-50` + tiga kabut (aqua, ungu, biru) | Kanvas hero landing page |
+| `bg-grad-ocean` | `ocean-900` → `ocean-700` → `ocean-600` + cahaya aqua | Pita gelap "Masalahnya" dan panel Lapor |
+| `bg-grad-ocean-btn` | `ocean-500` → `ocean-700` | Tombol aksi utama di hero |
+| `bg-grad-ink` | `ocean-600` → `dz-ispa-ink` → `dz-dbd-ink` | Teks judul bergradasi, garis aksen kicker |
+| `bg-grad-aqua-soft` | `ocean-50` → `ocean-100` | Latar seksi berselang (Cara kerja, Pencegahan, Lapor) |
+| `bg-grad-dz-{penyakit}` | `dz-*-bg` → `#FFFFFF` | Kartu panduan pencegahan per penyakit |
+
+### 2.8 Warna Non-Risiko — "Laut" (`ocean-*`) dan Identitas Penyakit (`dz-*`)
+
+Diturunkan dari banner kampanye banjir rob. Aturannya: **hijau, kuning, dan merah tetap
+milik `risk-*`**; semua warna lain yang dibutuhkan halaman diambil dari sisi dingin roda
+warna, sehingga halaman bisa berwarna tanpa pernah terbaca sebagai status risiko.
+
+| Token | Hex | Penerapan UI |
+|---|---|---|
+| `ocean-50` – `ocean-200` | `#EEFAFB` – `#B2E8ED` | Latar seksi, border lembut, teks sekunder di atas pita gelap |
+| `ocean-300` – `ocean-400` | `#74D3DC` – `#2EB6C4` | Sorotan di atas permukaan gelap saja (gagal AA di atas putih) |
+| `ocean-500` – `ocean-600` | `#1296A6` – `#0E7482` | Kicker, ikon, tautan; `ocean-600` lolos AA di atas putih |
+| `ocean-700` – `ocean-950` | `#0B4A57` – `#031B20` | Permukaan gelap; `ocean-700` = `brand-700` |
+| `dz-dbd-*` | ink `#5B3CC4` · fill `#7C5CE6` | DBD — ungu (nyamuk) |
+| `dz-ispa-*` | ink `#1F66B3` · fill `#3B8BE0` | ISPA — biru langit (udara) |
+| `dz-lepto-*` | ink `#0B6E7A` · fill `#15A3B3` | Leptospirosis — aqua (air banjir) |
+
+Warna `dz-*` menandai *nama* penyakit (tab, ikon, titik legenda), tidak pernah tingkat
+risikonya. Pakai `diseaseTone()` di `src/lib/disease-tone.ts`, bukan kelas ditulis tangan.
+Utilitas pendukung: `.halftone` (+ `.halftone-light`, `.halftone-bl`) dan `.glass-tile`
+di `globals.css`.
 
 ---
 
