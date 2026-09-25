@@ -28,6 +28,7 @@ import { Badge } from "./ui/badge";
 import { RiskGauge } from "./ui/risk-gauge";
 import { WhyThisNumber } from "./why-this-number";
 import { REPORT_KIND } from "@/lib/reports";
+import { ReportPhoto } from "./report-photo";
 
 interface DistrictDetailPanelProps {
   district: KecamatanData | undefined;
@@ -334,6 +335,10 @@ export function DistrictDetailPanel({
                     {r.kelurahan ? `Kel. ${r.kelurahan} ` : ""}{r.rtRw ? `(RT/RW ${r.rtRw}) ` : ""}
                     &ldquo;{r.description}&rdquo;
                   </p>
+                  {/* Foto hanya bisa diambil petugas puskesmas dan dinkes. */}
+                  {r.hasPhoto && (userRole === "puskesmas" || userRole === "dinas") && (
+                    <ReportPhoto id={r.id} compact />
+                  )}
                   <div className="flex items-center justify-between text-2xs text-paper-500 pt-0.5 border-t border-paper-200">
                     <span>{relativeAge(r.submittedAt)}</span>
                     {isPending || isInfo ? (
