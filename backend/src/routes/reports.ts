@@ -434,18 +434,37 @@ reportsRouter.get(
     const requestedStatus =
       typeof req.query.status === "string" ? req.query.status : undefined;
 
+    const role = req.session?.role;
+    const scope = sessionScope(req);
+
     let rows: ReportRow[];
-    if (isStaff) {
+    if (role === "puskesmas") {
+      const kec = scope ?? requestedKec;
       rows = await listReports({
-        kecamatan: requestedKec,
-        status:
-          requestedStatus && requestedStatus !== "semua" && requestedStatus !== "all"
-            ? (requestedStatus as ReportStatus)
-            : undefined,
+        kecamatan: kec,
         excludeRejected: true,
         order: "desc",
       });
+      // Di Puskesmas: MAP hanya menampilkan laporan yang masuk dan belum diverifikasi (belum dikirim ke dinkes)
+      rows = rows.filter((r) => r.status === "menunggu" || r.status === "perlu_informasi");
+    } else if (role === "dinas" || role === "admin") {
+      rows = await listReports({
+        kecamatan: requestedKec,
+        status: "terverifikasi",
+        excludeRejected: true,
+        order: "desc",
+      });
+      // Di Dinkes: MAP menampilkan laporan yang masuk dan terverifikasi oleh puskesmas (yang sudah dikirim ke dinkes) namun belum ditangani
+      rows = rows.filter((r) => {
+        if (r.status !== "terverifikasi") return false;
+        // Sudah ditangani (misal sudah diteruskan ke instansi terkait)
+        if (r.forward_state === "diteruskan") return false;
+        // Laporan mandiri warga yang selesai di tingkat puskesmas dan tidak dikirim ke dinkes
+        if (r.handling_mode === "mandiri_warga" && !r.forward_state) return false;
+        return true;
+      });
     } else {
+      // Publik hanya melihat sinyal terverifikasi
       rows = await listReports({
         kecamatan: requestedKec,
         status: "terverifikasi",
@@ -457,7 +476,6 @@ reportsRouter.get(
     const limit = Math.min(Number(req.query.limit ?? 250) || 250, 500);
     const sliced = rows.slice(0, limit);
     const risk = isStaff ? await riskContextFor(sliced) : new Map();
-    const scope = sessionScope(req);
 
     const data = sliced.map((row) => ({
       ...publicView(row, null, risk.get(riskKey(row)), isStaff ? "staff" : "public"),

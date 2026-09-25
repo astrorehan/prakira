@@ -9,7 +9,10 @@ import {
   ArrowLeft,
   ArrowRight,
   Clock,
-  CheckCircle2,
+  Bug,
+  Droplets,
+  Trash2,
+  Waves,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -19,27 +22,30 @@ import {
   formatMaybeNumber,
   riskConfigOf,
 } from "@/lib/utils";
-import { formatMonth, formatMonthShort, relativeAge } from "@/lib/period";
+import { formatMonthShort, relativeAge } from "@/lib/period";
 import type { DiseaseType, DistrictTriggerSummary, KecamatanData, CitizenReport } from "@/types";
+import { Badge } from "./ui/badge";
 import { RiskGauge } from "./ui/risk-gauge";
 import { WhyThisNumber } from "./why-this-number";
+import { REPORT_KIND } from "@/lib/reports";
 
 interface DistrictDetailPanelProps {
   district: KecamatanData | undefined;
   disease: DiseaseType;
   trigger?: DistrictTriggerSummary;
   reports?: CitizenReport[];
+  userRole?: string | null;
   /** Bila ada, kepala panel menampilkan tombol kembali ke daftar prioritas. */
   onBack?: () => void;
   className?: string;
 }
 
-const KIND_EMOJIS: Record<string, string> = {
-  gejala: "🌡️",
-  jentik: "🦟",
-  genangan: "💧",
-  sampah: "🗑️",
-  saluran: "🌊",
+const KIND_ICONS: Record<string, React.ElementType> = {
+  gejala: Thermometer,
+  jentik: Bug,
+  genangan: Droplets,
+  sampah: Trash2,
+  saluran: Waves,
 };
 
 /** Label pemicu warga — daftar, bukan lima kartu mini berwarna. */
@@ -83,6 +89,7 @@ export function DistrictDetailPanel({
   disease,
   trigger,
   reports = [],
+  userRole,
   onBack,
   className,
 }: DistrictDetailPanelProps) {
@@ -264,93 +271,85 @@ export function DistrictDetailPanel({
         />
       </div>
 
-      {/* 6. Laporan warga real-time di wilayah ini (masuk & terverifikasi) */}
+      {/* 6. Laporan warga di wilayah ini */}
       <div className="shrink-0 rounded-xl border border-border bg-paper-50 p-3 space-y-2">
         <div className="flex items-center justify-between gap-3">
           <p className="flex items-center gap-1.5 overline text-foreground">
-            <Clock className="h-3.5 w-3.5 shrink-0 text-amber-600" aria-hidden="true" />
+            <Clock className="h-3.5 w-3.5 shrink-0 text-brand-600" aria-hidden="true" />
             <span>Laporan Warga Terkini</span>
           </p>
-          <div className="flex items-center gap-1.5 text-2xs">
+          <div className="flex items-center gap-1.5">
             {reports.filter((r) => r.status === "menunggu").length > 0 && (
-              <span className="px-1.5 py-0.5 rounded-full font-bold bg-amber-100 text-amber-900 border border-amber-300">
+              <Badge variant="risk-medium" size="sm">
                 {reports.filter((r) => r.status === "menunggu").length} Masuk
-              </span>
-            )}
-            {reports.filter((r) => r.status === "terverifikasi").length > 0 && (
-              <span className="px-1.5 py-0.5 rounded-full font-bold bg-teal-100 text-teal-900 border border-teal-300">
-                {reports.filter((r) => r.status === "terverifikasi").length} Terverif
-              </span>
+              </Badge>
             )}
             {reports.filter((r) => r.status === "perlu_informasi").length > 0 && (
-              <span className="px-1.5 py-0.5 rounded-full font-bold bg-sky-100 text-sky-900 border border-sky-300">
+              <Badge variant="secondary" size="sm">
                 {reports.filter((r) => r.status === "perlu_informasi").length} Info
-              </span>
+              </Badge>
+            )}
+            {reports.filter((r) => r.status === "terverifikasi").length > 0 && (
+              <Badge variant="official" size="sm">
+                {reports.filter((r) => r.status === "terverifikasi").length} Terverifikasi
+              </Badge>
             )}
           </div>
         </div>
 
         {reports.length === 0 ? (
           <p className="text-caption text-paper-500 italic">
-            Belum ada laporan warga di kecamatan ini.
+            {userRole === "puskesmas"
+              ? "Tidak ada laporan warga yang menunggu verifikasi di kecamatan ini."
+              : "Tidak ada laporan terverifikasi yang menunggu penanganan di kecamatan ini."}
           </p>
         ) : (
           <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
             {reports.slice(0, 15).map((r) => {
               const isPending = r.status === "menunggu";
-              const isVerified = r.status === "terverifikasi";
+              const isInfo = r.status === "perlu_informasi";
+              const Icon = KIND_ICONS[r.kind] ?? AlertTriangle;
+              const kindLabel = REPORT_KIND[r.kind]?.label ?? TRIGGER_LABEL[r.kind] ?? r.kind;
               const statusCfg = isPending
-                ? {
-                    label: "Masuk",
-                    badge: "bg-amber-200 text-amber-900",
-                    card: "bg-amber-50/80 border-amber-200 text-amber-950",
-                  }
-                : isVerified
-                  ? {
-                      label: "Terverif",
-                      badge: "bg-teal-100 text-teal-900",
-                      card: "bg-white border-border text-paper-800",
-                    }
-                  : {
-                      label: "Perlu Info",
-                      badge: "bg-sky-100 text-sky-900",
-                      card: "bg-sky-50/60 border-sky-200 text-sky-950",
-                    };
+                ? { label: "Masuk", variant: "risk-medium" as const }
+                : isInfo
+                  ? { label: "Perlu Info", variant: "secondary" as const }
+                  : { label: "Terverifikasi", variant: "official" as const };
 
               return (
                 <div
                   key={r.id}
-                  className={cn(
-                    "p-2 rounded-lg border text-caption flex flex-col gap-1 transition-colors",
-                    statusCfg.card,
-                  )}
+                  className="p-2.5 rounded-lg border border-border bg-white text-caption flex flex-col gap-1 shadow-xs"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-semibold flex items-center gap-1">
-                      <span>{KIND_EMOJIS[r.kind] ?? "📍"}</span>
-                      <span>{TRIGGER_LABEL[r.kind] ?? r.kind}</span>
+                    <span className="font-semibold text-foreground flex items-center gap-1.5">
+                      <Icon className="h-3.5 w-3.5 text-paper-500 shrink-0" aria-hidden="true" />
+                      <span>{kindLabel}</span>
                     </span>
-                    <span
-                      className={cn(
-                        "text-2xs font-bold px-1.5 py-0.5 rounded-full uppercase",
-                        statusCfg.badge,
-                      )}
-                    >
+                    <Badge variant={statusCfg.variant} size="sm">
                       {statusCfg.label}
-                    </span>
+                    </Badge>
                   </div>
                   <p className="text-2xs text-paper-600 line-clamp-2">
                     {r.kelurahan ? `Kel. ${r.kelurahan} ` : ""}{r.rtRw ? `(RT/RW ${r.rtRw}) ` : ""}
                     &ldquo;{r.description}&rdquo;
                   </p>
-                  <div className="flex items-center justify-between text-2xs text-paper-500 pt-0.5 border-t border-paper-200/50">
+                  <div className="flex items-center justify-between text-2xs text-paper-500 pt-0.5 border-t border-paper-200">
                     <span>{relativeAge(r.submittedAt)}</span>
-                    {isPending && (
+                    {isPending || isInfo ? (
                       <Link
                         href="/verifikasi"
                         className="text-brand-700 font-semibold hover:underline flex items-center gap-0.5"
                       >
                         <span>Periksa</span>
+                        <ArrowRight className="h-2.5 w-2.5" />
+                      </Link>
+                    ) : (
+                      <Link
+                        href="/tindakan"
+                        className="text-brand-700 font-semibold hover:underline flex items-center gap-0.5"
+                      >
+                        <span>Tindak Lanjut</span>
                         <ArrowRight className="h-2.5 w-2.5" />
                       </Link>
                     )}

@@ -147,3 +147,42 @@ test("scoping forMyDistrict menandai laporan di wilayah kerja puskesmas dengan b
   assert.equal(flagOutOfScope, false, "Laporan di luar wilayah kerja puskesmas harus bernilai false");
 });
 
+test("filter peta Puskesmas hanya meloloskan laporan masuk belum diverifikasi di wilayahnya", () => {
+  const scope = "Tugu";
+  const reports = [
+    dummyReport({ id: "R1", kecamatan: "Tugu", status: "menunggu" }),
+    dummyReport({ id: "R2", kecamatan: "Tugu", status: "perlu_informasi" }),
+    dummyReport({ id: "R3", kecamatan: "Tugu", status: "terverifikasi" }),
+    dummyReport({ id: "R4", kecamatan: "Tugu", status: "ditolak" }),
+    dummyReport({ id: "R5", kecamatan: "Banyumanik", status: "menunggu" }),
+  ];
+
+  const puskesmasView = reports.filter((r) => {
+    if (r.kecamatan.toLowerCase() !== scope.toLowerCase()) return false;
+    return r.status === "menunggu" || r.status === "perlu_informasi";
+  });
+
+  assert.deepEqual(puskesmasView.map((r) => r.id), ["R1", "R2"]);
+});
+
+test("filter peta Dinkes hanya meloloskan laporan terverifikasi puskesmas yang belum selesai ditangani", () => {
+  const reports = [
+    dummyReport({ id: "D1", status: "menunggu" }), // Belum diverifikasi puskesmas
+    dummyReport({ id: "D2", status: "terverifikasi", kind: "gejala" }), // Gejala terverifikasi -> masuk dinkes, belum ditangani
+    dummyReport({ id: "D3", status: "terverifikasi", kind: "genangan", handling_mode: "mandiri_warga", forward_state: null }), // Selesai di tingkat warga puskesmas, tidak dikirim ke dinkes
+    dummyReport({ id: "D4", status: "terverifikasi", kind: "genangan", handling_mode: "mandiri_warga", forward_state: "diusulkan" }), // Eskalasi berulang -> dikirim ke dinkes/DLH, belum ditangani
+    dummyReport({ id: "D5", status: "terverifikasi", kind: "sampah", forward_state: "perlu_diteruskan" }), // Masuk dinkes/DLH, belum diteruskan
+    dummyReport({ id: "D6", status: "terverifikasi", kind: "sampah", forward_state: "diteruskan" }), // Sudah ditangani/diteruskan -> selesai
+  ];
+
+  const dinkesView = reports.filter((r) => {
+    if (r.status !== "terverifikasi") return false;
+    if (r.forward_state === "diteruskan") return false;
+    if (r.handling_mode === "mandiri_warga" && !r.forward_state) return false;
+    return true;
+  });
+
+  assert.deepEqual(dinkesView.map((r) => r.id), ["D2", "D4", "D5"]);
+});
+
+
