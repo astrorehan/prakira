@@ -511,7 +511,6 @@ export function trackReport(code: string): Promise<{ data: CitizenReport }> {
 }
 
 export type VerifiedSignal = {
-  id: string;
   kind: ReportKind;
   kecamatan: string;
   submittedAt: string;
@@ -861,5 +860,4 @@ export function retrainModel(
     }),
   });
 }
-
 

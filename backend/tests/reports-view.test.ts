@@ -12,6 +12,7 @@ import assert from "node:assert/strict";
 import {
   REPORT_COLUMNS,
   toPublicView,
+  toVerifiedSignal,
   type ReportRow,
 } from "../src/services/reports.js";
 import {
@@ -65,6 +66,15 @@ test("bentuk publik tidak membawa foto maupun sidik jari perangkat", () => {
   assert.ok(!keys.includes("photo"), "foto tidak boleh ikut di daftar");
   assert.ok(!keys.includes("device_hash"), "sidik jari perangkat tidak boleh keluar dari server");
   assert.equal(view.hasPhoto, true, "keberadaan foto tetap harus diberitahukan");
+});
+
+test("sinyal terverifikasi tidak membagikan kode lacak atau isi laporan", () => {
+  assert.deepEqual(toVerifiedSignal(row({ status: "terverifikasi" })), {
+    kind: "genangan",
+    kecamatan: "Tembalang",
+    submittedAt: "2026-08-31T02:15:00.000Z",
+    reviewedAt: null,
+  });
 });
 
 test("hasPhoto mengikuti kenyataan barisnya", () => {

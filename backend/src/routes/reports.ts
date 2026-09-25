@@ -22,6 +22,7 @@ import {
   riskContextFor,
   riskKey,
   summarizeQueue,
+  toVerifiedSignal,
   toPublicView as publicView,
   ForwardStateError,
   ReportAlreadyReviewedError,
@@ -292,13 +293,7 @@ reportsRouter.get(
     const rows = verified
       .sort((a, b) => b.submitted_at.localeCompare(a.submitted_at))
       .slice(0, limit)
-      .map((r) => ({
-        id: r.id,
-        kind: r.kind,
-        kecamatan: r.kecamatan,
-        submittedAt: r.submitted_at,
-        reviewedAt: r.reviewed_at,
-      }));
+      .map(toVerifiedSignal);
 
     res.json({ data: rows });
   }),
@@ -641,4 +636,3 @@ reportsRouter.get(
     });
   }),
 );
-

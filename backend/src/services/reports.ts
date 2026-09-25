@@ -109,7 +109,7 @@ export const MANDIRI_PATTERN = { minReports: 3, windowDays: 14 };
 const RISK_DISEASES: Partial<Record<ReportKind, string[]>> = {
   genangan: ["DBD", "LEPTOSPIROSIS"],
   saluran: ["LEPTOSPIROSIS", "DBD"],
-  sampah: ["DBD", "LEPTOSPIROSIS", "DIARE"],
+  sampah: ["DBD", "LEPTOSPIROSIS"],
 };
 
 export type RiskContext = {
@@ -324,6 +324,16 @@ export type ReportRow = {
   /** Jumlah laporan mandiri serupa bila laporan ini naik karena berulang. */
   forward_pattern: number | null;
 };
+
+/** Sinyal publik tanpa kode lacak atau isi laporan warga. */
+export function toVerifiedSignal(row: ReportRow) {
+  return {
+    kind: row.kind,
+    kecamatan: row.kecamatan,
+    submittedAt: row.submitted_at,
+    reviewedAt: row.reviewed_at,
+  };
+}
 
 /* Proyeksi kolom yang dipakai setiap kueri baca laporan. Ditulis sekali di
    sini, bukan `SELECT *` di lima tempat: satu kolom besar yang ikut terbawa
@@ -1279,4 +1289,3 @@ export async function getTriggerSummaryByDistrict(
 
   return Array.from(byDistrict.values());
 }
-

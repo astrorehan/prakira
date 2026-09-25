@@ -142,9 +142,9 @@ function VerifiedNearby({
       </p>
 
       <ul className="mt-4 space-y-2.5">
-        {recent.map((r) => (
+        {recent.map((r, index) => (
           <li
-            key={r.id}
+            key={`${r.kind}-${r.kecamatan}-${r.submittedAt}-${index}`}
             className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl border border-sand-200 bg-white px-4 py-3"
           >
             <Check className="h-4 w-4 shrink-0 text-risk-low" aria-hidden="true" />
