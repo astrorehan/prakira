@@ -56,7 +56,8 @@ function R2GaugeBar({ r2, percentage }: { r2: number; percentage: number }) {
   return (
     <div className="space-y-1.5 pt-1">
       <div className="flex items-center justify-between text-caption font-medium text-paper-600">
-        <span>0,0 (Acak)</span>
+        {/* R² = 0 adalah menebak rata-rata, bukan menebak acak. */}
+        <span>0,0 (Rata-rata)</span>
         <span className="font-semibold text-paper-700">0,40 (Moderat)</span>
         <span className="font-semibold text-paper-700">0,70 (Kuat)</span>
         <span>1,0 (Sempurna)</span>
@@ -130,6 +131,7 @@ function BacktestSelectorCard({
   const r2Eval = evaluateR2(metric.r2);
   const testPeriodInfo = formatPeriodRange(metric.test_period);
   const isLimitedSample = (metric.sample_size ?? 0) <= 3;
+  const baseline = metric.baselines?.summary ?? null;
 
   return (
     <Card
@@ -193,7 +195,9 @@ function BacktestSelectorCard({
               <span className="text-caption font-semibold text-paper-600">R²</span>
             </div>
             <p className="text-caption text-paper-600">
-              {r2Eval.percentage}% ragam kasus data uji terjelaskan
+              {metric.r2 < 0
+                ? r2Eval.description
+                : `${r2Eval.percentage}% ragam kasus data uji terjelaskan`}
             </p>
           </div>
 
@@ -205,6 +209,30 @@ function BacktestSelectorCard({
         {/* Visual Calibration Gauge */}
         <R2GaugeBar r2={metric.r2} percentage={r2Eval.percentage} />
       </div>
+
+      {/* Pembanding naif — R² sendirian tidak menjawab "lebih baik daripada
+          tidak memodelkan sama sekali?" */}
+      {baseline && (
+        <div
+          className={cn(
+            "mt-3 flex items-start gap-1.5 rounded-lg border px-2.5 py-1.5 text-caption text-paper-800",
+            baseline.model_beats_all_baselines
+              ? "border-risk-low-br bg-risk-low-bg"
+              : "border-risk-high-br bg-risk-high-bg",
+          )}
+        >
+          {baseline.model_beats_all_baselines ? (
+            <Check className="mt-px h-3.5 w-3.5 shrink-0 text-risk-low" />
+          ) : (
+            <AlertTriangle className="mt-px h-3.5 w-3.5 shrink-0 text-risk-high" />
+          )}
+          <span className="leading-tight">
+            {baseline.model_beats_all_baselines
+              ? `Meleset ${formatNumber(Math.abs(baseline.mae_improvement_pct), { maximumFractionDigits: 1 })}% lebih sedikit daripada pembanding terbaik (“${baseline.best_baseline_label}”).`
+              : `Kalah dari pembanding “${baseline.best_baseline_label}”: meleset ${formatNumber(Math.abs(baseline.mae_improvement_pct), { maximumFractionDigits: 1 })}% lebih banyak (MAE ${formatNumber(baseline.best_baseline_mae, { maximumFractionDigits: 2 })} vs ${formatNumber(baseline.model_mae, { maximumFractionDigits: 2 })}).`}
+          </span>
+        </div>
+      )}
 
       {/* 2x2 Metric Grid */}
       <div className="mt-4 grid grid-cols-2 gap-2.5">

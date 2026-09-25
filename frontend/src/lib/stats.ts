@@ -296,12 +296,27 @@ export function evaluateR2(r2: number | null | undefined): R2Evaluation {
     };
   }
 
+  /* R² negatif bukan "0 % terjelaskan": artinya tebakan rata-rata periode uji
+     saja sudah lebih dekat ke kenyataan daripada model. Memotongnya ke nol
+     menyembunyikan tepat hal yang paling perlu diketahui pembaca. */
+  if (r2 < 0) {
+    return {
+      tier: "low",
+      label: "Di Bawah Rata-rata",
+      badgeVariant: "risk-high",
+      color: "#A8442C",
+      percentage: 0,
+      description: "Lebih meleset daripada menebak rata-rata periode uji.",
+      recommendation: "Jangan dipakai sebagai prakiraan tunggal; pembanding sederhana lebih andal.",
+    };
+  }
+
   return {
     tier: "low",
     label: "Kesesuaian Terbatas",
     badgeVariant: "risk-high",
     color: "#A8442C",
-    percentage: Math.max(0, percentage),
+    percentage,
     description: `${percentage}% variasi terjelaskan. Fluktuasi kasus nyata memiliki faktor lokal di luar variabel model.`,
     recommendation: "Perlakukan hasil sebagai indikasi awal dan kombinasikan dengan pengawasan epidemiologis manual.",
   };
