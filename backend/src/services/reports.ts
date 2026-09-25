@@ -1202,12 +1202,21 @@ export type DistrictTriggerSummary = {
  * Mengelompokkan pemicu lingkungan (genangan, jentik, sampah, saluran) dan
  * gejala kesehatan tanpa mengekspos koordinat presisi atau identitas pelapor,
  * sesuai PRD §8 (privasi).
+ *
+ * Hanya laporan yang masuk dalam `TRIGGER_WINDOW_DAYS` terakhir yang dihitung.
+ * Peta membaca angka ini sebagai kondisi sekarang; jentik yang dilaporkan
+ * berbulan-bulan lalu tidak boleh terus menandai kecamatan sebagai bermasalah.
  */
+export const TRIGGER_WINDOW_DAYS = 30;
+
 export async function getTriggerSummaryByDistrict(
   kecamatanFilter?: string,
 ): Promise<DistrictTriggerSummary[]> {
-  const params: unknown[] = [];
-  let where = "WHERE status = 'terverifikasi'";
+  /* `submitted_at` disimpan sebagai TEXT ISO-8601 UTC, jadi perbandingan
+     string dengan cutoff berformat sama sudah urut secara waktu. */
+  const cutoff = new Date(Date.now() - TRIGGER_WINDOW_DAYS * 24 * 3600_000).toISOString();
+  const params: unknown[] = [cutoff];
+  let where = "WHERE status = 'terverifikasi' AND submitted_at >= ?";
   if (kecamatanFilter) {
     where += " AND LOWER(kecamatan) = LOWER(?)";
     params.push(kecamatanFilter);

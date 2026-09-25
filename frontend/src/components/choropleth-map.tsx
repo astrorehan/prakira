@@ -351,6 +351,7 @@ export default function ChoroplethMap({
                   <div className="text-caption text-amber-700 font-medium mt-0.5">
                     {trigger.total} Laporan Lingkungan Terverifikasi
                   </div>
+                  <div className="text-caption text-muted-foreground">30 hari terakhir</div>
                   <div className="text-caption text-muted-foreground mt-1 space-y-0.5">
                     {trigger.byKind.jentik > 0 && <div>• {trigger.byKind.jentik} Titik Jentik</div>}
                     {trigger.byKind.genangan > 0 && (
