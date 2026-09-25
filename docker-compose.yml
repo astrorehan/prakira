@@ -82,6 +82,8 @@ services:
       SESSION_SECRET: prakira-luring-session-secret
       SEED_ADMIN_EMAIL: admin@prakira.id
       SEED_ADMIN_PASSWORD: prakira2026
+      SEED_DINKES_PASSWORD: dinkes123
+      SEED_PUSKESMAS_PASSWORD: puskesmas123
       CORS_ORIGINS: http://localhost:3000
       # Tidak ada proksi di depan gateway di sini; membaca `X-Forwarded-For`
       # berarti mempercayai header yang ditulis klien. Lihat `trustProxy`.

@@ -94,6 +94,8 @@ export const env = {
   /* Supabase mewajibkan TLS. Dimatikan hanya untuk Postgres lokal tanpa
      sertifikat. */
   databaseSsl: (process.env.DATABASE_SSL ?? "true").toLowerCase() !== "false",
+  /** CA Supabase tidak ada di trust store Node; lihat docs/DEPLOY.md §2.1. */
+  databaseCaCertPath: process.env.DATABASE_CA_CERT_PATH?.trim() ?? "",
 
   /** Direktori `ml-services`, sumber dataset historis untuk seeding. */
   datasetRoot: process.env.DATASET_ROOT ?? path.join(REPO_ROOT, "ml-services"),
@@ -126,6 +128,8 @@ export const env = {
   seedAdminPassword: requiredInProduction("SEED_ADMIN_PASSWORD", "admin123"),
   seedAdminLabel:
     process.env.SEED_ADMIN_LABEL ?? "Administrator Sistem",
+  seedDinkesPassword: requiredInProduction("SEED_DINKES_PASSWORD", "dinkes123"),
+  seedPuskesmasPassword: requiredInProduction("SEED_PUSKESMAS_PASSWORD", "puskesmas123"),
 
   /** §5.4 — batas laporan warga per perangkat. */
   reportRateLimit: {

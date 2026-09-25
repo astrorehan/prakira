@@ -63,3 +63,6 @@ temp
 # presentation docs (internal)
 docs/MATERI-PRESENTASI.md
 docs/SLIDE-PROMPTS.md
+
+# Sertifikat CA database
+backend/certs/

@@ -71,6 +71,14 @@ satu proses dengan kueri pendek, jadi kolam kecil sudah cukup
 
 Skema diterapkan sendiri oleh gateway saat start; tidak ada migrasi manual.
 
+Gateway memverifikasi sertifikat TLS database. Sertifikat Supabase
+ditandatangani CA milik Supabase yang tidak ada di trust store Node, jadi
+unduh dari **Project Settings > Database > SSL Configuration > Download
+certificate** (`prod-ca-2021.crt`). Untuk pengembangan, taruh di
+`backend/certs/` (diabaikan git) dan isi
+`DATABASE_CA_CERT_PATH=certs/prod-ca-2021.crt`. Tanpa itu gateway gagal start
+dengan `SELF_SIGNED_CERT_IN_CHAIN`.
+
 ### 2.2 Render
 
 `render.yaml` di akar repositori adalah Blueprint untuk kedua layanan.
@@ -81,6 +89,8 @@ Variabel bertanda `sync: false` harus diisi tangan di dasbor:
 | `prakira-gateway` | `DATABASE_URL` | Connection string Supabase |
 | | `SEED_ADMIN_EMAIL` | Email akun dinas |
 | | `SEED_ADMIN_PASSWORD` | Kata sandi akun dinas |
+| | `SEED_DINKES_PASSWORD` | Kata sandi awal akun Dinkes |
+| | `SEED_PUSKESMAS_PASSWORD` | Kata sandi awal akun puskesmas |
 | | `CORS_ORIGINS` | Asal frontend Vercel, mis. `https://prakira.vercel.app` |
 | | `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | Server, akun, kata sandi, dan alamat pengirim email rujukan. `SMTP_PORT` bawaan 587 dengan STARTTLS; untuk port 465 isi `SMTP_PORT=465` dan `SMTP_SECURE=true`. |
 | | `REPORT_EMAIL_TO` | Inbox satu-satunya penerima email laporan. Wajib diisi agar tombol kirim email berfungsi. |
@@ -93,15 +103,26 @@ laporan tetap berada di antrean penerusan.
 Setelah email terkirim, laporan tetap di antrean sampai petugas menekan
 "Sudah diteruskan" untuk mencatat penyampaian ke instansi.
 
+Sertifikat CA Supabase diunggah lewat **prakira-gateway > Environment >
+Secret Files** dengan nama berkas `prod-ca-2021.crt`. Render memasangnya di
+`/etc/secrets/prod-ca-2021.crt`, path yang sudah diisi Blueprint ke
+`DATABASE_CA_CERT_PATH`.
+
 Sisanya diisi Blueprint: `SESSION_SECRET` dan `ML_API_TOKEN` dibangkitkan,
 `ML_SERVICE_URL` ditulis apa adanya karena `fromService property: host` hanya
 mengembalikan nama internal.
 
 Gateway **menolak start** bila `SESSION_SECRET`, `ML_API_TOKEN`,
-`SEED_ADMIN_PASSWORD`, atau `DATABASE_URL` kosong saat `NODE_ENV=production`.
+`SEED_ADMIN_PASSWORD`, `SEED_DINKES_PASSWORD`, `SEED_PUSKESMAS_PASSWORD`,
+atau `DATABASE_URL` kosong saat `NODE_ENV=production`.
 Itu disengaja: nilai bawaan yang aman untuk pengembangan bukan nilai yang aman
 untuk alamat publik, dan kegagalan saat start jauh lebih mudah dilacak
 daripada rahasia bawaan yang diam-diam terpakai.
+Mengisi variabel seed tidak mengganti kata sandi akun yang sudah ada di database.
+Untuk akun yang telanjur dibuat dengan kata sandi lama, isi ketiga variabel
+`SEED_*_PASSWORD` lalu jalankan `npm run rotate:seed-passwords` dari direktori
+`backend` dengan `DATABASE_URL` yang mengarah ke database yang benar. Perintah
+itu juga mencabut sesi lama ketiga akun.
 
 ### 2.3 Vercel
 

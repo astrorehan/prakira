@@ -51,9 +51,10 @@ muncul di antarmuka prediksi. Daftar penyakit yang tampil di seluruh antarmuka
 dibentuk dinamis dari isi tabel `observasi`, bukan ditulis mati di frontend:
 menambahkan dataset baru cukup untuk memunculkannya di seluruh sistem.
 
-Tidak ada koneksi langsung ke server BMKG. Data iklim masuk sebagai berkas
-dataset yang di-seed ke basis data; halaman admin melaporkan pekerjaan ingest
-yang benar-benar berjalan, bukan status koneksi yang tidak ada.
+Data iklim historis diambil lewat API Open-Meteo Archive berbasis grid oleh
+`ml-services/etl/etl_cuaca.py`, lalu dataset hasil ETL di-seed ke basis data.
+Belum ada penjadwal otomatis atau koneksi langsung ke server BMKG. Nilai grid
+yang sama dapat dipakai beberapa kecamatan.
 
 ---
 
@@ -106,7 +107,7 @@ prakira/
 │  ├─ src/app/              # 20 rute publik & konsol dinas (dashboard, buletin, model, dll.)
 │  └─ src/components/       # choropleth map, panel analisis, form laporan, draf dokumen
 ├─ ml-services/             # FastAPI + model ensemble terlatih (port 8001)
-│  ├─ dataset_raw/          # sumber mentah (kasus, cuaca BMKG, wilayah BPS)
+│  ├─ dataset_raw/          # sumber mentah (kasus, cuaca Open-Meteo, wilayah BPS)
 │  ├─ dataset_clean/        # deret bulanan siap latih (DBD, ISPA, Leptospirosis)
 │  ├─ models/               # model .pkl + metadata.json
 │  └─ training/             # skrip pelatihan & ensemble blending
@@ -164,15 +165,20 @@ Akun awal dibuat gateway saat seeding:
 | Akun | Peran | Kata sandi |
 |---|---|---|
 | `admin@prakira.id` | Administrator sistem — akun, impor data, penyegaran prediksi, latih ulang model. Tidak memutuskan laporan atau menugaskan | `SEED_ADMIN_PASSWORD` |
-| `dinkes@prakira.id` | Dinas Kesehatan — seluruh kota: memutuskan laporan, menugaskan tindakan ke puskesmas, satu-satunya yang mengirim laporan ke DLH/DPU | `dinkes123` |
-| `puskesmas@prakira.id` | Puskesmas Pandanaran — hanya Semarang Selatan: memutuskan laporan wilayahnya, menandai yang perlu ke DLH/DPU, mengerjakan tugas dari Dinkes | `puskesmas123` |
+| `dinkes@prakira.id` | Dinas Kesehatan — seluruh kota: memutuskan laporan, menugaskan tindakan ke puskesmas, satu-satunya yang mengirim laporan ke DLH/DPU | `SEED_DINKES_PASSWORD` |
+| `puskesmas@prakira.id` | Puskesmas Pandanaran — hanya Semarang Selatan: memutuskan laporan wilayahnya, menandai yang perlu ke DLH/DPU, mengerjakan tugas dari Dinkes | `SEED_PUSKESMAS_PASSWORD` |
 
 Untuk live demo kasus Tugu, `npm run demo:prep` menambahkan `puskesmas.tugu@prakira.id` /
 `puskesmas123` beserta tugas dan rekap contohnya. Rinciannya ada di [docs/demo](docs/demo/README.md).
 
-Ganti akun admin lewat `SEED_ADMIN_EMAIL` dan `SEED_ADMIN_PASSWORD` sebelum dipakai di luar
-pengembangan — di `NODE_ENV=production`, gateway menolak jalan tanpa
-`SESSION_SECRET` dan `SEED_ADMIN_PASSWORD`.
+Isi `SEED_ADMIN_PASSWORD`, `SEED_DINKES_PASSWORD`, dan `SEED_PUSKESMAS_PASSWORD`
+dengan kata sandi unik sebelum dipakai di luar pengembangan. Di
+`NODE_ENV=production`, gateway menolak jalan bila salah satunya kosong.
+Saat pengembangan, dua akun petugas masih memakai nilai bawaan untuk demo lokal
+bila variabelnya tidak diisi.
+Variabel seed hanya dipakai saat akun belum ada; ubah kata sandi akun yang sudah
+terbentuk dengan `cd backend && npm run rotate:seed-passwords` setelah ketiga
+variabel tersebut diisi. Perintah ini juga mencabut sesi ketiga akun.
 
 ### 4. Seeding Basis Data & Nyalakan Aplikasi
 

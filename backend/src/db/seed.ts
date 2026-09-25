@@ -361,7 +361,7 @@ async function seedAdminUser(tx: Tx): Promise<void> {
     dinkesEmail,
   );
   if (!existingDinkes) {
-    const { hash, salt } = await hashPassword("dinkes123");
+    const { hash, salt } = await hashPassword(env.seedDinkesPassword);
     await tx.run(
       `INSERT INTO users (id, email, password_hash, salt, role, label, home, created_at)
        VALUES (?, ?, ?, ?, 'dinas', 'Dinas Kesehatan Kota Semarang', '/dashboard', ?)`,
@@ -379,7 +379,7 @@ async function seedAdminUser(tx: Tx): Promise<void> {
     puskesmasEmail,
   );
   if (!existingPuskesmas) {
-    const { hash, salt } = await hashPassword("puskesmas123");
+    const { hash, salt } = await hashPassword(env.seedPuskesmasPassword);
     await tx.run(
       `INSERT INTO users (id, email, password_hash, salt, role, label, home, created_at, kecamatan_id)
        VALUES (?, ?, ?, ?, 'puskesmas', 'Puskesmas Pandanaran', '/dashboard', ?,

@@ -35,6 +35,10 @@ services:
       # Connection string Supabase, Session pooler port 5432.
       - key: DATABASE_URL
         sync: false
+      # Sertifikat CA Supabase diunggah sebagai Secret File bernama
+      # `prod-ca-2021.crt`; Render memasangnya di /etc/secrets.
+      - key: DATABASE_CA_CERT_PATH
+        value: /etc/secrets/prod-ca-2021.crt
       # Layanan ML paket gratis butuh ~50 detik untuk bangun dari tidur.
       - key: ML_TIMEOUT_MS
         value: "60000"
@@ -55,6 +59,10 @@ services:
       - key: CRON_SECRET
         sync: false
       - key: SEED_ADMIN_PASSWORD
+        sync: false
+      - key: SEED_DINKES_PASSWORD
+        sync: false
+      - key: SEED_PUSKESMAS_PASSWORD
         sync: false
       - key: SEED_ADMIN_EMAIL
         sync: false

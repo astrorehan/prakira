@@ -29,15 +29,31 @@ pg.types.setTypeParser(pg.types.builtins.INT8, (value) => Number(value));
 let pool: pg.Pool | null = null;
 let ready: Promise<pg.Pool> | null = null;
 
+/** Kunci advisory untuk penerapan skema; angka bebas, asal tetap. */
+const SCHEMA_LOCK_KEY = 0x70726b; // "prk"
+
 function createPool(): pg.Pool {
+  const databaseUrl = new URL(env.databaseUrl);
+  /* Parameter TLS di URL dapat menimpa `ssl` pada konfigurasi pg. Buang
+     parameter itu agar verifikasi sertifikat di bawah tidak bisa dilewati. */
+  for (const key of ["ssl", "sslmode", "sslrootcert", "sslcert", "sslkey", "sslnegotiation", "uselibpqcompat"]) {
+    databaseUrl.searchParams.delete(key);
+  }
   return new pg.Pool({
-    connectionString: env.databaseUrl,
+    connectionString: databaseUrl.toString(),
     /* Supabase menutup koneksi menganggur; kolam kecil dengan idle timeout
        pendek lebih cocok daripada menahan koneksi yang sudah mati. */
     max: env.databasePoolMax,
     idleTimeoutMillis: 30_000,
     connectionTimeoutMillis: 15_000,
-    ssl: env.databaseSsl ? { rejectUnauthorized: false } : undefined,
+    ssl: env.databaseSsl
+      ? {
+          rejectUnauthorized: true,
+          ...(env.databaseCaCertPath
+            ? { ca: fs.readFileSync(env.databaseCaCertPath, "utf8") }
+            : {}),
+        }
+      : undefined,
   });
 }
 
@@ -58,7 +74,23 @@ export function db(): Promise<pg.Pool> {
     if (!schemaPath)
       throw new Error("schema.sql tidak ditemukan di " + candidates.join(", "));
 
-    await pool.query(fs.readFileSync(schemaPath, "utf8"));
+    /* Dua proses yang menerapkan skema bersamaan saling menunggu lock tabel
+       dan salah satunya dibatalkan Postgres sebagai deadlock — terjadi saat
+       `tsx watch` restart sementara sesi lama belum selesai, atau dua
+       instance start berbarengan. Advisory lock membuat mereka antre. Lock
+       ini milik sesi, jadi harus satu klien; Session pooler Supabase
+       mempertahankan sesi itu, dan lock ikut lepas bila koneksinya putus. */
+    const client = await pool.connect();
+    try {
+      await client.query("SELECT pg_advisory_lock($1)", [SCHEMA_LOCK_KEY]);
+      try {
+        await client.query(fs.readFileSync(schemaPath, "utf8"));
+      } finally {
+        await client.query("SELECT pg_advisory_unlock($1)", [SCHEMA_LOCK_KEY]);
+      }
+    } finally {
+      client.release();
+    }
     return pool;
   })();
 

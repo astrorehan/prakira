@@ -184,6 +184,7 @@ cp frontend/.env.local.example frontend/.env.local
 - `ML_SERVICE_URL`: Alamat layanan ML (default lokal: `http://127.0.0.1:8001`).
 - `CORS_ORIGINS`: Daftar origin yang diizinkan (default: `http://localhost:3000,http://127.0.0.1:3000`).
 - `SEED_ADMIN_EMAIL` & `SEED_ADMIN_PASSWORD`: Akun awal dinas untuk login konsol.
+- `SEED_DINKES_PASSWORD` & `SEED_PUSKESMAS_PASSWORD`: Kata sandi akun awal petugas; wajib di produksi.
 
 #### Variabel Inti di `frontend/.env.local`:
 - `API_PROXY_TARGET`: Target proxy gateway untuk rute `/api/*` (default: `http://127.0.0.1:4200`).
