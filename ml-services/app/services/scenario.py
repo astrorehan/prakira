@@ -34,6 +34,7 @@ from app.services.feature_frame import (
     build_feature_row,
     clamp_physical,
     recompute_derived,
+    warm_forecast_chain,
 )
 from app.services.risk_classifier import (
     assess_data_coverage,
@@ -130,7 +131,21 @@ def simulate_batch(
     total_months = df_hist["month_start"].nunique() if not df_hist.empty else 0
     disease_upper = disease.upper()
 
+    # Sama seperti `predict_batch`: rantai bulan antara dilalui sekali untuk
+    # seluruh kota. Tanpanya, permintaan pertama sesudah layanan dinyalakan
+    # menyusurinya per kecamatan dengan prediksi satu baris — puluhan detik
+    # bila beberapa geseran datang bersamaan.
+    warm_forecast_chain(df_hist, month, model)
+
     rows: List[dict] = []
+    # Kecamatan yang bisa diprakirakan: (indeks di `rows`, riwayat kasus).
+    # Barisnya dikumpulkan dulu lalu diprediksi dalam satu panggilan. Ensemble
+    # dipanggil per baris memakan ~60 ms tiap kali — 32 kali per permintaan,
+    # dua detik lebih — sedangkan 32 baris sekaligus selesai dalam puluhan ms.
+    # Dua detik itu yang membuat beberapa geseran beruntun saling mengantre
+    # sampai gateway menyerah pada batas tunggunya.
+    pending: List[Tuple[int, list]] = []
+    base_rows: List[pd.DataFrame] = []
 
     for kec in KECAMATAN_SEMARANG:
         kecamatan_id = kec["id"]
@@ -155,37 +170,55 @@ def simulate_batch(
             else df_hist["cases"].values.tolist()
         )
 
-        baseline_value = float(max(0.0, float(model.predict(base_row)[0])))
-        baseline_int = int(round(baseline_value))
-        baseline_score = calculate_risk_score(baseline_int, historical)
-
-        adjusted_row = _apply_adjustment(
-            base_row, rainfall_pct, temp_delta_c, humidity_delta_pct
-        )
-        adjusted_value = float(max(0.0, float(model.predict(adjusted_row)[0])))
-        adjusted_int = int(round(adjusted_value))
-        adjusted_score = calculate_risk_score(adjusted_int, historical)
-
         rows.append(
             {
                 "kecamatan_id": kecamatan_id,
                 "kecamatan_nama": kec["name"],
                 "data_coverage": coverage,
-                "baseline_cases": baseline_int,
-                "baseline_risk_score": baseline_score,
-                "baseline_risk_class": classify_risk(baseline_score),
-                "baseline_expected": round(baseline_value, 2),
-                "scenario_cases": adjusted_int,
-                "scenario_risk_score": adjusted_score,
-                "scenario_risk_class": classify_risk(adjusted_score),
-                "scenario_expected": round(adjusted_value, 2),
-                "rainfall_baseline": round(float(base_row.iloc[0]["rainfall_lag1"]), 1),
-                "rainfall_scenario": round(
-                    float(adjusted_row.iloc[0]["rainfall_lag1"]), 1
-                ),
-                "beyond_training": _beyond_training(adjusted_row, ranges),
             }
         )
+        pending.append((len(rows) - 1, historical))
+        base_rows.append(base_row)
+
+    if base_rows:
+        base_frame = pd.concat(base_rows, ignore_index=True)
+        adjusted_frame = _apply_adjustment(
+            base_frame, rainfall_pct, temp_delta_c, humidity_delta_pct
+        )
+        predicted = model.predict(
+            pd.concat([base_frame, adjusted_frame], ignore_index=True)
+        )
+        count = len(base_rows)
+
+        for i, (index, historical) in enumerate(pending):
+            baseline_value = float(max(0.0, float(predicted[i])))
+            baseline_int = int(round(baseline_value))
+            baseline_score = calculate_risk_score(baseline_int, historical)
+
+            adjusted_value = float(max(0.0, float(predicted[count + i])))
+            adjusted_int = int(round(adjusted_value))
+            adjusted_score = calculate_risk_score(adjusted_int, historical)
+
+            adjusted_row = adjusted_frame.iloc[[i]]
+            rows[index].update(
+                {
+                    "baseline_cases": baseline_int,
+                    "baseline_risk_score": baseline_score,
+                    "baseline_risk_class": classify_risk(baseline_score),
+                    "baseline_expected": round(baseline_value, 2),
+                    "scenario_cases": adjusted_int,
+                    "scenario_risk_score": adjusted_score,
+                    "scenario_risk_class": classify_risk(adjusted_score),
+                    "scenario_expected": round(adjusted_value, 2),
+                    "rainfall_baseline": round(
+                        float(base_frame.iloc[i]["rainfall_lag1"]), 1
+                    ),
+                    "rainfall_scenario": round(
+                        float(adjusted_frame.iloc[i]["rainfall_lag1"]), 1
+                    ),
+                    "beyond_training": _beyond_training(adjusted_row, ranges),
+                }
+            )
 
     _assign_ranks(rows, "baseline_risk_score", "baseline_rank")
     _assign_ranks(rows, "scenario_risk_score", "scenario_rank")
